@@ -23,49 +23,49 @@ cniConfig:
   name: none
 
 nodes:
-  - hostname: "talos-dev-cp-01"
-    ipAddress: "192.168.0.196"
+  - hostname: "talos-cp-dev-00"
+    ipAddress: "192.168.0.68"
     installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/01658f53c9c6cc24f4fa3605c9765e1f4bc254ef8c5faf054c1d1285ac8aff23
+    talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
     controlPlane: true
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "bc:24:11:af:79:ff"
+          hardwareAddr: "bc:24:11:3e:92:d5"
         dhcp: false
         addresses:
-          - "192.168.0.196/24"
+          - "192.168.0.68/16"
         routes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
         vip:
           ip: "192.168.3.130"
-  - hostname: "talos-dev-worker-01"
+  - hostname: "talos-worker-dev-00"
     ipAddress: "192.168.0.112"
     installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/01658f53c9c6cc24f4fa3605c9765e1f4bc254ef8c5faf054c1d1285ac8aff23
+    talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
     controlPlane: false
     networkInterfaces:
       - deviceSelector:
           hardwareAddr: "bc:24:11:4c:99:a8"
         dhcp: false
         addresses:
-          - "192.168.0.112/24"
+          - "192.168.0.112/16"
         routes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
-  - hostname: "talos-dev-worker-01"
+  - hostname: "talos-worker-dev-01"
     ipAddress: "192.168.0.223"
     installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/01658f53c9c6cc24f4fa3605c9765e1f4bc254ef8c5faf054c1d1285ac8aff23
+    talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
     controlPlane: false
     networkInterfaces:
       - deviceSelector:
           hardwareAddr: "bc:24:11:05:93:87"
         dhcp: false
         addresses:
-          - "192.168.0.223/24"
+          - "192.168.0.223/16"
         routes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
