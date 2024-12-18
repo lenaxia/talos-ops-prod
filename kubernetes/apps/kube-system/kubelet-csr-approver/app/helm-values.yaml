@@ -1,3 +1,3 @@
 ---
-providerRegex: ^(talos-cp-dev-00|talos-worker-dev-00|talos-worker-dev-01)$
+providerRegex: ^(talos-dev-cp-00|talos-dev-worker-00|talos-dev-worker-01)$
 bypassDnsResolution: true
