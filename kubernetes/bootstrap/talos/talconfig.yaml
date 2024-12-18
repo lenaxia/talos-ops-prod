@@ -5,7 +5,7 @@ talosVersion: v1.8.4
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 kubernetesVersion: v1.31.3
 
-clusterName: "talos-ops-prod"
+clusterName: "talos-ops-dev"
 endpoint: https://192.168.3.130:6443
 
 clusterPodNets:
@@ -23,7 +23,7 @@ cniConfig:
   name: none
 
 nodes:
-  - hostname: "talos-cp-dev-00"
+  - hostname: "talos-dev-cp-00"
     ipAddress: "192.168.0.68"
     installDisk: "/dev/sda"
     talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
@@ -40,7 +40,7 @@ nodes:
         mtu: 1500
         vip:
           ip: "192.168.3.130"
-  - hostname: "talos-worker-dev-00"
+  - hostname: "talos-dev-worker-00"
     ipAddress: "192.168.0.112"
     installDisk: "/dev/sda"
     talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
@@ -55,7 +55,7 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
-  - hostname: "talos-worker-dev-01"
+  - hostname: "talos-dev-worker-01"
     ipAddress: "192.168.0.223"
     installDisk: "/dev/sda"
     talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
