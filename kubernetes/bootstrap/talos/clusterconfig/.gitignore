@@ -1,3 +1,9 @@
 talos-ops-prod-talos-dev-cp-01.yaml
 talos-ops-prod-talos-dev-worker-01.yaml
 talosconfig
+talos-ops-dev-talos-dev-cp-00.yaml
+talos-ops-dev-talos-dev-worker-00.yaml
+talos-ops-dev-talos-dev-worker-01.yaml
+talos-dev-talos-dev-cp-00.yaml
+talos-dev-talos-dev-cp-01.yaml
+talos-dev-talos-dev-cp-02.yaml
