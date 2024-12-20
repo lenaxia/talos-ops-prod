@@ -16,7 +16,7 @@ metadata:
   name: flux
   namespace: flux-system
 spec:
-  interval: 10m
+  interval: 5m
   path: ./
   prune: true
   wait: true
