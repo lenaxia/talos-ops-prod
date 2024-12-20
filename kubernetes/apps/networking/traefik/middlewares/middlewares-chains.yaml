@@ -1,0 +1,71 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-no-auth-local
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-rate-limit
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-no-auth
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-rate-limit
+      - name: middlewares-secure-headers
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-basic-auth
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-rate-limit
+      - name: middlewares-secure-headers
+      - name: middlewares-basic-auth
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-authelia
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-rate-limit
+      - name: middlewares-secure-headers
+      - name: middlewares-authelia
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-authelia-x-remote-user
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-rate-limit
+      - name: middlewares-secure-headers
+      - name: middlewares-authelia
+      - name: middlewares-add-x-remote-user
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-ldapauth
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-rate-limit
+      - name: middlewares-secure-headers
+      - name: middlewares-ldapauth
+      - name: middlewares-add-x-remote-user-from-username
