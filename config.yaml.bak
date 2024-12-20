@@ -5,10 +5,10 @@
 #
 
 # (REQUIRED) Cluster name; affects Cilium and Talos
-bootstrap_cluster_name: "talos-ops-dev"
+bootstrap_cluster_name: "talos-dev"
 
 # (REQUIRED) Generated schematic id from https://factory.talos.dev/
-bootstrap_schematic_id: "0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b"
+bootstrap_schematic_id: "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
 
 # (REQUIRED) The network (in CIDR notation) your nodes are on (e.g. 192.168.1.0/24)
 bootstrap_node_network: "192.168.0.0/16"
@@ -17,18 +17,18 @@ bootstrap_node_network: "192.168.0.0/16"
 #   Worker nodes are optional
 bootstrap_node_inventory: 
     - name: "talos-dev-cp-00"            # (REQUIRED) Name of the node (must match [a-z0-9-\]+)
-      address: "192.168.0.68"         # (REQUIRED) IP address of the node
+      address: "192.168.0.27"         # (REQUIRED) IP address of the node
       controller: true    # (REQUIRED) Set to true if this is a controller node
       disk: "/dev/sda"            # (REQUIRED) Device path or serial number of the disk for this node (talosctl disks -n <ip> --insecure)
-      mac_addr: "BC:24:11:3E:92:D5"        # (REQUIRED) MAC address of the NIC for this node (talosctl get links -n <ip> --insecure)
-    - name: "talos-dev-worker-00"            # (REQUIRED) Name of the node (must match [a-z0-9-\]+)
+      mac_addr: "bc:24:11:da:62:dc"        # (REQUIRED) MAC address of the NIC for this node (talosctl get links -n <ip> --insecure)
+    - name: "talos-dev-cp-01"            # (REQUIRED) Name of the node (must match [a-z0-9-\]+)
       address: "192.168.0.112"         # (REQUIRED) IP address of the node
-      controller: false # (REQUIRED) Set to true if this is a controller node
+      controller: true # (REQUIRED) Set to true if this is a controller node
       disk: "/dev/sda"            # (REQUIRED) Device path or serial number of the disk for this node (talosctl disks -n <ip> --insecure)
       mac_addr: "BC:24:11:4C:99:A8"        # (REQUIRED) MAC address of the NIC for this node (talosctl get links -n <ip> --insecure)
-    - name: "talos-dev-worker-01"            # (REQUIRED) Name of the node (must match [a-z0-9-\]+)
+    - name: "talos-dev-cp-02"            # (REQUIRED) Name of the node (must match [a-z0-9-\]+)
       address: "192.168.0.223"         # (REQUIRED) IP address of the node
-      controller: false   # (REQUIRED) Set to true if this is a controller node
+      controller: true # (REQUIRED) Set to true if this is a controller node
       disk: "/dev/sda"            # (REQUIRED) Device path or serial number of the disk for this node (talosctl disks -n <ip> --insecure)
       mac_addr: "BC:24:11:05:93:87"        # (REQUIRED) MAC address of the NIC for this node (talosctl get links -n <ip> --insecure)
     # - name: ""            # (REQUIRED) Name of the node (must match [a-z0-9-\]+)
@@ -52,7 +52,8 @@ bootstrap_node_inventory:
 
 # (REQUIRED) The DNS servers to use for the cluster nodes.
 bootstrap_dns_servers:
-  - "192.168.0.5"
+  - "1.1.1.1"
+  - "1.0.0.1"
 
 # (REQUIRED) The NTP servers to use for the cluster nodes.
 bootstrap_ntp_servers:

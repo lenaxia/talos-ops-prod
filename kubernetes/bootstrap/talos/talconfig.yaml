@@ -5,7 +5,7 @@ talosVersion: v1.8.4
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 kubernetesVersion: v1.31.3
 
-clusterName: "talos-ops-dev"
+clusterName: "talos-dev"
 endpoint: https://192.168.3.130:6443
 
 clusterPodNets:
@@ -24,27 +24,27 @@ cniConfig:
 
 nodes:
   - hostname: "talos-dev-cp-00"
-    ipAddress: "192.168.0.68"
+    ipAddress: "192.168.0.27"
     installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
+    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
     controlPlane: true
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "bc:24:11:3e:92:d5"
+          hardwareAddr: "bc:24:11:da:62:dc"
         dhcp: false
         addresses:
-          - "192.168.0.68/16"
+          - "192.168.0.27/16"
         routes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
         vip:
           ip: "192.168.3.130"
-  - hostname: "talos-dev-worker-00"
+  - hostname: "talos-dev-cp-01"
     ipAddress: "192.168.0.112"
     installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
-    controlPlane: false
+    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
+    controlPlane: true
     networkInterfaces:
       - deviceSelector:
           hardwareAddr: "bc:24:11:4c:99:a8"
@@ -55,11 +55,13 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
-  - hostname: "talos-dev-worker-01"
+        vip:
+          ip: "192.168.3.130"
+  - hostname: "talos-dev-cp-02"
     ipAddress: "192.168.0.223"
     installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/0e836ccfbe2fb6f29dfccf390816052f32f622c8d895be195b1e34279667414b
-    controlPlane: false
+    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
+    controlPlane: true
     networkInterfaces:
       - deviceSelector:
           hardwareAddr: "bc:24:11:05:93:87"
@@ -70,6 +72,8 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
+        vip:
+          ip: "192.168.3.130"
 
 # Global patches
 patches:
