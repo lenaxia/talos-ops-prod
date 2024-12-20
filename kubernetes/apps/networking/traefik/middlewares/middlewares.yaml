@@ -1,0 +1,138 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-secure-headers
+  namespace: networking
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - OPTIONS
+      - PUT
+    accessControlMaxAge: 100
+    hostsProxyHeaders:
+      - "X-Forwarded-Host"
+    stsSeconds: 63072000
+    stsIncludeSubdomains: true
+    stsPreload: true
+    frameDeny: true
+    forceSTSHeader: true
+    # frameDeny: true #overwritten by customFrameOptionsValue
+    customFrameOptionsValue: "allow-from https:${SECRET_DEV_DOMAIN}" #CSP takes care of this but may be needed for organizr.
+    contentTypeNosniff: true
+    browserXssFilter: true
+    referrerPolicy: "origin-when-cross-origin"
+      #referrerPolicy: "same-origin"
+    # Setting contentSecurityPolicy is more secure but it can break things. Proper auth will reduce the risk.
+    # the below line also breaks some apps due to 'none' - sonarr, radarr, etc.
+    # contentSecurityPolicy: "frame-ancestors '*.example.com:*';object-src 'none';script-src 'none';"
+    permissionsPolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
+    customResponseHeaders:
+      X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex,"
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-basic-auth
+  namespace: networking
+spec:
+  basicAuth:
+    secret: authsecret
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-rate-limit
+  namespace: networking
+spec:
+  rateLimit:
+    average: 100
+    burst: 200
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-bitwarden-strip-prefix
+  namespace: networking
+spec:
+  stripPrefix:
+    prefixes:
+      - "/notifications/hub"
+    forceSlash: false
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-add-x-remote-user
+  namespace: networking
+spec:
+  plugin:
+    htransformation:
+      Rules:
+        - Name: 'X-Remote-User Create'
+          Header: 'X-Remote-User'
+          Value: ''  # Setting it to empty
+          Type: 'Set'
+        - Name: 'X-Remote-User Copy'
+          Header: 'X-Remote-User'
+          HeaderPrefix: '^'
+          Sep: ' ' #cant use empty separators so just use space, it will remove it
+          Values:
+              - '^remote-user'
+          Type: 'Join'
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-add-x-remote-user-from-username
+  namespace: networking
+spec:
+  plugin:
+    htransformation:
+      Rules:
+        - Name: 'X-Remote-User Create'
+          Header: 'X-Remote-User'
+          Value: ''  # Setting it to empty
+          Type: 'Set'
+        - Name: 'X-Remote-User Copy'
+          Header: 'X-Remote-User'
+          HeaderPrefix: '^'
+          Sep: ' ' #cant use empty separators so just use space, it will remove it
+          Values:
+              - '^username'
+          Type: 'Join'
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-authelia
+  namespace: networking
+spec:
+  forwardAuth:
+    address: http://authelia/api/verify?rd=https://authelia.${SECRET_DEV_DOMAIN}
+    trustForwardHeader: true
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Name
+      - Remote-Email
+      - Remote-Groups
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+    name: middlewares-ldapauth
+    namespace: networking
+spec:
+    plugin:
+        ldapAuth:
+            Attribute: uid
+            BaseDn: dc=kao,dc=family
+            SearchFilter: (&({{.Attribute}}={{.Username}})(objectClass=posixAccount))
+            #AllowedGroups:
+            #  - ou=mathematicians,dc=example,dc=com
+            Enabled: "true"
+            LogLevel: DEBUG
+            ServerList:
+                - Port: "389"
+                  Url: ldap://192.168.0.120
