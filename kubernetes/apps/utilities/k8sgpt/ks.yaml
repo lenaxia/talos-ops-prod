@@ -8,8 +8,6 @@ metadata:
   labels:
     substitution.flux.home.arpa/enabled: "true"
 spec:
-  dependsOn:
-    - name: cluster-storage-longhorn
   path: ./kubernetes/apps/utilities/k8sgpt/app
   prune: true
   sourceRef:
