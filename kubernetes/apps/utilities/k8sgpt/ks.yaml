@@ -10,7 +10,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
-  path: ./cluster/apps/utilities/k8sgpt/app
+  path: ./kubernetes/apps/utilities/k8sgpt/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -35,7 +35,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-utilities-k8sgpt
-  path: ./cluster/apps/utilities/k8sgpt/config
+  path: ./kubernetes/apps/utilities/k8sgpt/config
   prune: true
   sourceRef:
     kind: GitRepository
