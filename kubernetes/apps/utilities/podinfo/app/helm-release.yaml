@@ -20,7 +20,7 @@ spec:
     image:
       pullPolicy: Always
     service:
-      type: ClusterIP
+      type: LoadBalancer
     ingress:
       enabled: true
       className: "traefik"
