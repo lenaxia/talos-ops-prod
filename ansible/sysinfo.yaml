@@ -1,0 +1,51 @@
+---
+- name: Fetch and return system information
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - name: Gather basic facts
+      ansible.builtin.setup:
+      register: system_facts
+
+    - name: Fetch CPU model name
+      ansible.builtin.set_fact:
+        cpu_model: "{{ ansible_facts['processor'][2] | trim }}"
+
+    - name: Fetch hostname
+      ansible.builtin.set_fact:
+        hostname: "{{ ansible_facts['hostname'] }}"
+
+    - name: Fetch OS and version
+      ansible.builtin.set_fact:
+        os_info: "{{ ansible_facts['os_family'] }} {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
+
+    - name: Fetch physical IP addresses
+      ansible.builtin.set_fact:
+        ip_address: "{{ ansible_facts['default_ipv4']['address'] }}"
+
+    - name: Fetch physical MAC addresses
+      ansible.builtin.set_fact:
+        mac_address: "{{ ansible_facts['default_ipv4']['macaddress'] }}"
+
+    - name: Fetch physical disks and their capacity and type
+      ansible.builtin.set_fact:
+        physical_disks: "{{ physical_disks | default([]) + [ { 'name': item.key, 'size': item.value['size'], 'model': item.value['model'] } ] }}"
+      loop: "{{ ansible_facts['devices'] | dict2items | selectattr('value.model', 'defined') | selectattr('value.model', '!=', 'VIRTUAL-DISK') | selectattr('value.model') | selectattr('value.size', '!=', '0.00 Bytes') | list }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when: ansible_facts['devices'] is defined
+
+    - name: Fetch physical memory
+      ansible.builtin.set_fact:
+        memory_mb: "{{ ansible_facts['memory_mb']['real']['total'] }}"
+
+    - name: Aggregate and display system information
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ hostname }}"
+          - "OS: {{ os_info }}"
+          - "CPU: {{ cpu_model }}"
+          - "IP: {{ ip_address }}"
+          - "MAC: {{ mac_address }}"
+          - "Disks: {{ physical_disks | map(attribute='name') | zip(physical_disks | map(attribute='model'), physical_disks | map(attribute='size')) | map('join', ':') | list | join('|') }}"
+          - "Memory: {{ memory_mb }}"

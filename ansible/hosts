@@ -1,0 +1,12 @@
+[all]
+k3s-cp-00 ansible_host=192.168.3.10 ansible_user=yin
+k3s-cp-01 ansible_host=192.168.3.11 ansible_user=yin
+k3s-cp-02 ansible_host=192.168.3.12 ansible_user=yin
+k3s-worker-00 ansible_host=192.168.3.20 ansible_user=yin
+k3s-worker-01 ansible_host=192.168.3.21 ansible_user=yin
+k3s-worker-02 ansible_host=192.168.3.22 ansible_user=yin
+k3s-worker-03 ansible_host=192.168.3.23 ansible_user=yin
+lumiere ansible_host=192.168.3.1 ansible_user=root
+
+[talos]
+melfina ansible_host=192.168.3.1 ansible_user=root
