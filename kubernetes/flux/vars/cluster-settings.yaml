@@ -2,7 +2,63 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cluster-settings
   namespace: flux-system
+  name: cluster-settings
 data:
-  SETTING_EXAMPLE: Global settings for your cluster go in this file, this file is NOT encrypted
+  RURI_ADDR: "192.168.0.125"
+  NAS_ADDR: "192.168.0.120"
+  ADGUARD_ADDR: "192.168.0.5"
+  TIMEZONE: "America/Los_Angeles"
+  LATITUDE: "47.678796"
+  LONGITUDE: "-122.374477"
+  ELEVATION: "500"
+
+  MULTUS_IOT_HASS: "192.168.5.5"
+
+  SVC_TRAEFIK_ADDR: "192.168.5.10"
+  SVC_AUTHELIA_ADDR: "192.168.5.11"
+
+  #SVC_HOME_ASSISTANT_ADDR: "192.168.5.5"
+  SVC_MOSQUITTO_ADDR: "192.168.5.6"
+  SVC_PLEX_ADDR: "192.168.5.104"
+  SVC_JELLYFIN_ADDR: "192.168.5.105"
+  SVC_QBITTORRENT_ADDR: "192.168.5.106"
+  SVC_SYSLOG_ADDR: "192.168.5.111"
+  SVC_NGINX_ADDR: "192.168.5.101"
+
+  SVC_MARIADB_PRIMARY_ADDR: "192.168.5.15"
+  SVC_MARIADB_SECONDARY_ADDR: "192.168.5.16"
+  SVC_REDIS_ADDR: "192.168.5.17"
+  SVC_REDIS: "redis-lb.databases.svc.cluster.local"
+  SVC_POSTGRES: "defaultpg-rw.databases.svc.cluster.local"
+  SVC_POSTGRES_VER: "14.5"
+
+  METALLB_POOL_DEFUALT: "192.168.5.68-192.168.5.255"
+  METALLB_POOL_DEVINFRA: "192.168.5.1-192.168.5.67"
+
+  SVC_HERCULES_CLASSIC_ADDR: "192.168.5.200"
+  SVC_HERCULES_RENEWAL_ADDR: "192.168.5.201"
+  SVC_RATHENA_CLASSIC_ADDR: "192.168.5.210"
+  SVC_RATHENA_RENEWAL_ADDR: "192.168.5.211"
+  
+  S3_CNPG: "cnpg-5wxuej"
+  S3_NEXTCLOUD: "nextcloud-oh7iqq"
+  S3_OUTLINE: "outline-3eyxnvg6"
+  S3_LOKI: "loki-9fy7zg"
+
+  NFS_NEXTCLOUD: "/volume1/nextcloud/prod"
+  NFS_VSCODE: "/volume3/k8s-nfs/vscode"
+  NFS_GAMEVAULT_IMAGES: "/volume3/k8s-nfs/gamevault-images"
+  NFS_GAMEVAULT_FILES: "/volume3/k8s-nfs/gamevault-files"
+  NFS_FRIGATE: "/volume3/k8s-nfs/frigate"
+  NFS_MINIO: "/volume3/minio"
+  NFS_KOPIA: "/volume1/backups/kopia"
+  NFS_PAPERLESS: "/volume3/paperless"
+  NFS_VAULTWARDEN: "/volume1/backups/vaultwarden"
+  NFS_READARR: "/volume1/backups/readarr"
+  NFS_NZBHYDRA: "/volume1/backups/nzbhydra2"
+  NFS_TAUTULLI: "/volume1/backups/tautulli"
+  NFS_BAZARR: "/volume1/backups/bazarr"
+  NFS_ARR: "/volume1/backups/arr"
+  NFS_METUBE: "/volume2/downloads/[Plex Temp Library]/YouTube"
+  NFS_NZBGET: "/volume3/k8s-nfs/nzbget"
