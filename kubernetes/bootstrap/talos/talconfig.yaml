@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
 ---
 # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-talosVersion: v1.8.4
+talosVersion: v1.9.1
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
-kubernetesVersion: v1.31.3
+kubernetesVersion: v1.32.0
 
-clusterName: "talos-dev"
-endpoint: https://192.168.3.130:6443
+clusterName: "home-ops"
+endpoint: https://192.168.3.30:6443
 
 clusterPodNets:
   - "10.69.0.0/16"
@@ -14,7 +14,7 @@ clusterSvcNets:
   - "10.96.0.0/16"
 
 additionalApiServerCertSans: &sans
-  - "192.168.3.130"
+  - "192.168.3.30"
   - "127.0.0.1"
 additionalMachineCertSans: *sans
 
@@ -23,57 +23,94 @@ cniConfig:
   name: none
 
 nodes:
-  - hostname: "talos-dev-cp-00"
-    ipAddress: "192.168.0.27"
-    installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
+  - hostname: "cp-00"
+    ipAddress: "192.168.3.10"
+    installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "bc:24:11:da:62:dc"
+          hardwareAddr: "f4:4d:30:68:a3:b3"
         dhcp: false
         addresses:
-          - "192.168.0.27/16"
+          - "192.168.3.10/16"
         routes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
         vip:
-          ip: "192.168.3.130"
-  - hostname: "talos-dev-cp-01"
-    ipAddress: "192.168.0.112"
-    installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
+          ip: "192.168.3.30"
+  - hostname: "cp-02"
+    ipAddress: "192.168.3.12"
+    installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "bc:24:11:4c:99:a8"
+          hardwareAddr: "b8:ae:ed:ea:42:de"
         dhcp: false
         addresses:
-          - "192.168.0.112/16"
+          - "192.168.3.12/16"
         routes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
         vip:
-          ip: "192.168.3.130"
-  - hostname: "talos-dev-cp-02"
-    ipAddress: "192.168.0.223"
+          ip: "192.168.3.30"
+  - hostname: "cp-proxmox"
+    ipAddress: "192.168.0.226"
     installDisk: "/dev/sda"
-    talosImageURL: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba
     controlPlane: true
     networkInterfaces:
       - deviceSelector:
           hardwareAddr: "bc:24:11:05:93:87"
         dhcp: false
         addresses:
-          - "192.168.0.223/16"
+          - "192.168.0.226/16"
         routes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
         vip:
-          ip: "192.168.3.130"
+          ip: "192.168.3.30"
+  - hostname: "worker-01"
+    ipAddress: "192.168.3.21"
+    installDisk: "/dev/sda"
+    controlPlane: false
+    nodeLabels: 
+      node-role.kubernetes.io/worker: true
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "00:e0:4c:68:00:a1"
+        dhcp: false
+        addresses:
+          - "192.168.3.21/16"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "192.168.0.1"
+        mtu: 1500
+    machineDisks:
+      - device: "/dev/nvme0n1"
+        partitions:
+          - mountpoint: /var/lib/longhorn
+  - hostname: "worker-02"
+    ipAddress: "192.168.3.22"
+    installDisk: "/dev/sda"
+    controlPlane: false
+    nodeLabels: 
+      node-role.kubernetes.io/worker: true
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "00:e0:4c:68:00:0e"
+        dhcp: false
+        addresses:
+          - "192.168.3.22/16"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "192.168.0.1"
+        mtu: 1500
+    machineDisks:
+      - device: "/dev/nvme0n1"
+        partitions:
+          - mountpoint: /var/lib/longhorn
 
 # Global patches
 patches:
@@ -95,3 +132,13 @@ controlPlane:
     - "@./patches/controller/disable-admission-controller.yaml"
     - "@./patches/controller/etcd.yaml"
 
+worker:
+  schematic:
+    customization:
+      systemExtensions:
+          officialExtensions:
+              - siderolabs/i915
+              - siderolabs/intel-ucode
+              - siderolabs/iscsi-tools
+              - siderolabs/thunderbolt
+              - siderolabs/util-linux-tools

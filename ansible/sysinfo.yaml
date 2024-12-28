@@ -7,35 +7,39 @@
       ansible.builtin.setup:
       register: system_facts
 
-    - name: Fetch CPU model name
-      ansible.builtin.set_fact:
-        cpu_model: "{{ ansible_facts['processor'][2] | trim }}"
+    - name: Debug
+      ansible.builtin.debug:
+        msg: "{{ ansible_facts['default_ipv4'] }}"
 
-    - name: Fetch hostname
+    - name: Set hostname
       ansible.builtin.set_fact:
         hostname: "{{ ansible_facts['hostname'] }}"
 
-    - name: Fetch OS and version
+    - name: Set CPU model name
+      ansible.builtin.set_fact:
+        cpu_model: "{{ ansible_facts['processor'][2] | trim }}"
+
+    - name: Set OS and version
       ansible.builtin.set_fact:
         os_info: "{{ ansible_facts['os_family'] }} {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
 
-    - name: Fetch physical IP addresses
+    - name: Set physical IP addresses
       ansible.builtin.set_fact:
         ip_address: "{{ ansible_facts['default_ipv4']['address'] }}"
 
-    - name: Fetch physical MAC addresses
+    - name: Set physical MAC addresses
       ansible.builtin.set_fact:
         mac_address: "{{ ansible_facts['default_ipv4']['macaddress'] }}"
 
-    - name: Fetch physical disks and their capacity and type
+    - name: Fetch physical disks and their capacity, type, and first links.id
       ansible.builtin.set_fact:
-        physical_disks: "{{ physical_disks | default([]) + [ { 'name': item.key, 'size': item.value['size'], 'model': item.value['model'] } ] }}"
-      loop: "{{ ansible_facts['devices'] | dict2items | selectattr('value.model', 'defined') | selectattr('value.model', '!=', 'VIRTUAL-DISK') | selectattr('value.model') | selectattr('value.size', '!=', '0.00 Bytes') | list }}"
+        physical_disks: "{{ physical_disks | default([]) + [ { 'name': item.key, 'size': item.value['size'], 'model': item.value['model'], 'first_link_id': item.value.links.ids | first | default('N/A') } ] }}"
+      loop: "{{ ansible_facts['devices'] | dict2items | selectattr('value.model', 'defined') | selectattr('value.model', '!=', 'VIRTUAL-DISK') | selectattr('value.size', '!=', '0.00 Bytes') | list }}"
       loop_control:
         label: "{{ item.key }}"
       when: ansible_facts['devices'] is defined
 
-    - name: Fetch physical memory
+    - name: Set physical memory
       ansible.builtin.set_fact:
         memory_mb: "{{ ansible_facts['memory_mb']['real']['total'] }}"
 
@@ -47,5 +51,5 @@
           - "CPU: {{ cpu_model }}"
           - "IP: {{ ip_address }}"
           - "MAC: {{ mac_address }}"
-          - "Disks: {{ physical_disks | map(attribute='name') | zip(physical_disks | map(attribute='model'), physical_disks | map(attribute='size')) | map('join', ':') | list | join('|') }}"
+          - "Disks: {{ physical_disks | map(attribute='name') | zip(physical_disks | map(attribute='model'), physical_disks | map(attribute='size'), physical_disks | map(attribute='first_link_id')) | map('join', ':') | list | join('|') }}"
           - "Memory: {{ memory_mb }}"
