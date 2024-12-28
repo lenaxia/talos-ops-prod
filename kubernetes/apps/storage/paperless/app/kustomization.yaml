@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: storage
+commonLabels:
+  app.kubernetes.io/name: &app paperless
+  app.kubernetes.io/instance: *app
+resources:
+  - helm-release.yaml
+  - config-pvc.yaml
+  - secret.sops.yaml
+patches:
+  - path: patches/patch-postgres.yaml
+    target:
+      group: helm.toolkit.fluxcd.io
+      version: v2
+      kind: HelmRelease
+      name: paperless
+  #- patches/patch-postgres.yaml
+configMapGenerator:
+  - name: openai-configmap
+    files:
+      - openai.py=./config/openai.py
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
