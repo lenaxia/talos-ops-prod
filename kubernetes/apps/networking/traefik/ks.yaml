@@ -8,7 +8,7 @@ metadata:
   labels:
     substitution.flux.home.arpa/enabled: "true"
 spec:
-  path: ./cluster/apps/networking/traefik/app
+  path: ./kubernetes/apps/networking/traefik/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -33,7 +33,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-networking-traefik
-  path: ./cluster/apps/networking/traefik/middlewares
+  path: ./kubernetes/apps/networking/traefik/middlewares
   prune: true
   sourceRef:
     kind: GitRepository
@@ -54,7 +54,7 @@ spec:
   dependsOn:
     - name: cluster-networking-traefik
     - name: cluster-networking-traefik-middlewares
-  path: ./cluster/apps/networking/traefik/ingresses
+  path: ./kubernetes/apps/networking/traefik/ingresses
   prune: true
   sourceRef:
     kind: GitRepository
