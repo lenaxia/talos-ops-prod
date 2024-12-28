@@ -12,6 +12,3 @@ resources:
   - ./prometheus-community.yaml
   - ./spegel.yaml
   - ./stakater.yaml
-  - ./ealenn.yaml
-  - ./k8sgpt.yaml
-  - ./podinfo.yaml

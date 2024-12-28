@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged-debug-pod
+  labels:
+    app: debug
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: k3s-worker-02  # Use the hostname label to target the specific node
+  containers:
+  - name: debug-container
+    image: ubuntu
+    command: ["/bin/sh"]
+    args: ["-c", "sleep infinity"]  # Keep the pod running indefinitely
+    securityContext:
+      privileged: true
