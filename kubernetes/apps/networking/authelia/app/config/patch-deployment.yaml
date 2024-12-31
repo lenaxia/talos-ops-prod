@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doesNotMatter
+  namespace: networking
+spec:
+  template:
+    spec:
+      initContainers:
+        name: init-db
+        image: ghcr.io/onedr0p/postgres-init:16.6
+        env:
+          - name: INIT_POSTGRES_HOST
+            value: defaultpg-rw.databases.svc.cluster.local
+          - name: INIT_POSTGRES_DBNAME
+            value: authelia
+          - name: INIT_POSTGRES_SUPER_PASS
+            valueFrom:
+              secretKeyRef:
+                name: postgres-superuser
+                key: password
+                namespace: databases
+          - name: INIT_POSTGRES_USER
+            value: authelia
+          - name: INIT_POSTGRES_PASS
+            value: authelia
+
