@@ -97,9 +97,9 @@ spec:
     persistence:
       data:
         enabled: true
-        storageClass: longhorn
+        storageClass: openebs-hostpath
         type: persistentVolumeClaim
-        accessMode: ReadWriteMany
+        accessMode: ReadWriteOnce
         size: 5Gi 
         globalMounts:
           - path: /data

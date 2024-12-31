@@ -41,7 +41,7 @@ spec:
       name: replica
       replicaCount: 3
       persistence:
-        storageClass: local-path
+        storageClass: openebs-hostpath
     metrics:
       enabled: true
       resourcesPreset: none
