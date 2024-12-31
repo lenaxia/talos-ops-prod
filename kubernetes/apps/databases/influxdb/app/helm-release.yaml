@@ -29,6 +29,9 @@ spec:
       retention_policy: "30d"
       existingSecret: influxdb-auth
 
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
+
     initScripts:
       enabled: true
       scripts:
