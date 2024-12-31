@@ -12,8 +12,10 @@ spec:
   storageClassName: minio-nfs
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: ${NAS_ADDR}
-    path: ${NFS_MINIO}
+    #server: ${NAS_ADDR}
+    #path: ${NFS_MINIO}
+    server: 192.168.0.120
+    path: /volume3/minio 
   mountOptions:
     - nfsvers=3
     - nconnect=8
