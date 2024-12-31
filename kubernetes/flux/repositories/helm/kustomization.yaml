@@ -30,8 +30,6 @@ resources:
   - influxdata-charts.yaml
   - intel.yaml
   - jetstack-charts.yaml
-  - k8s-at-home.yaml
-  - k8s-at-home.yaml
   - k8sgpt-charts.yaml
   - kubereboot.yaml
   - kyverno-charts.yaml
