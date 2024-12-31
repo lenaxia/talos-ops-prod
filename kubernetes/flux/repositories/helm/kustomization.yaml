@@ -49,7 +49,6 @@ resources:
   - nvidia.yaml
   - piraeus.yaml
   - podinfo-charts.yaml
-  - prometheus-community-charts.yaml
   - skater-charts.yaml
   - spotahome-redis-operator-charts.yaml
   - timescale-charts.yaml
