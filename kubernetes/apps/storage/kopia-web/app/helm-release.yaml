@@ -116,8 +116,10 @@ spec:
       snapshots:
         enabled: true
         type: nfs
-        server: ${NAS_ADDR}
-        path: ${NFS_KOPIA}
+          #server: ${NAS_ADDR}
+          #path: ${NFS_KOPIA}
+        server: 192.168.0.120
+        path: /volume1/backups/kopia
         globalMounts:
           - path: /snapshots
     podAnnotations:
