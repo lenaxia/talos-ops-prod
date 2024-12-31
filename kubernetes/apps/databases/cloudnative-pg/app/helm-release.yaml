@@ -39,4 +39,5 @@ spec:
   values:
     nodeSelector:
       node-role.kubernetes.io/worker: 'true'
-
+    crds:
+      create: true
