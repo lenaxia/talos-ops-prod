@@ -23,11 +23,6 @@ cniConfig:
   name: none
 
 nodes:
-  - hostname: "cp-proxmox"
-    ipAddress: "192.168.0.226"
-    installDisk: "/dev/sda"
-    controlPlane: true
-
   - hostname: "cp-00"
     ipAddress: "192.168.3.10"
     installDisk: "/dev/nvme0n1"
@@ -43,25 +38,7 @@ nodes:
             gateway: "192.168.0.1"
         mtu: 1500
         vip:
-          ip: "192.168.3.30"  
-
-            #  - hostname: "cp-01"
-            #    ipAddress: "192.168.3.11"
-            #    installDisk: "/dev/nvme0n1"
-            #    controlPlane: true
-            #    networkInterfaces:
-            #      - deviceSelector:
-            #          hardwareAddr: "b8:ae:ed:eb:51:4f"
-            #        dhcp: false
-            #        addresses:
-            #          - "192.168.3.11/16"
-            #        routes:
-            #          - network: 0.0.0.0/0
-            #            gateway: "192.168.0.1"
-            #        mtu: 1500
-            #        vip:
-            #          ip: "192.168.3.30"  
-
+          ip: "192.168.3.30"
   - hostname: "cp-02"
     ipAddress: "192.168.3.12"
     installDisk: "/dev/nvme0n1"
@@ -77,31 +54,27 @@ nodes:
             gateway: "192.168.0.1"
         mtu: 1500
         vip:
-          ip: "192.168.3.30"  
-
-            #  - hostname: "worker-00"
-            #    ipAddress: "192.168.3.20"
-            #    installDisk: "/dev/sda"
-            #    controlPlane: false
-            #    networkInterfaces:
-            #      - deviceSelector:
-            #          hardwareAddr: "00:e0:4c:68:00:4d"
-            #        dhcp: false
-            #        addresses:
-            #          - "192.168.3.20/16"
-            #        routes:
-            #          - network: 0.0.0.0/0
-            #            gateway: "192.168.0.1"
-            #        mtu: 1500
-            #    machineDisks:
-            #      - device: /dev/disk/by-id/nvme-WDC_WDS100T2B0C-00PXH0_213845805380
-            #        partitions:
-            #          - mountpoint: /var/lib/longhorn
-
+          ip: "192.168.3.30"
+  - hostname: "cp-proxmox"
+    ipAddress: "192.168.0.226"
+    installDisk: "/dev/sda"
+    controlPlane: true
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "bc:24:11:05:93:87"
+        dhcp: false
+        addresses:
+          - "192.168.0.226/16"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "192.168.0.1"
+        mtu: 1500
   - hostname: "worker-01"
     ipAddress: "192.168.3.21"
     installDisk: "/dev/sda"
     controlPlane: false
+    nodeLabels: 
+      node-role.kubernetes.io/worker: true
     networkInterfaces:
       - deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:a1"
@@ -116,11 +89,12 @@ nodes:
       - device: "/dev/nvme0n1"
         partitions:
           - mountpoint: /var/lib/longhorn
-
   - hostname: "worker-02"
     ipAddress: "192.168.3.22"
     installDisk: "/dev/sda"
     controlPlane: false
+    nodeLabels: 
+      node-role.kubernetes.io/worker: true
     networkInterfaces:
       - deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:0e"
@@ -155,7 +129,6 @@ controlPlane:
     - "@./patches/controller/cluster.yaml"
     - "@./patches/controller/disable-admission-controller.yaml"
     - "@./patches/controller/etcd.yaml"
-
 
 worker:
   schematic:
