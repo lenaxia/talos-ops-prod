@@ -31,7 +31,6 @@ l2announcements:
 loadBalancer:
   algorithm: maglev
   mode: "dsr"
-  ipam: "l2-pool"
 localRedirectPolicy: true
 operator:
   replicas: 1
