@@ -18,9 +18,11 @@ spec:
     createNamespace: true
     remediation:
       retries: 3
+    crds: CreateReplace
   upgrade:
     remediation:
       retries: 3
+    crds: CreateReplace
   postRenderers:
     - kustomize:
         patches:
@@ -37,3 +39,4 @@ spec:
   values:
     nodeSelector:
       node-role.kubernetes.io/worker: 'true'
+
