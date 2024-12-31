@@ -9,3 +9,8 @@ resources:
   - ./reloader/ks.yaml
   - ./kubelet-csr-approver/ks.yaml
   - ./spegel/ks.yaml
+  
+  ## My services
+  - ./intel-device-plugin/ks.yaml
+  - ./node-feature-discovery/ks.yaml
+  - ./nvidia-gpu-operator/ks.yaml
