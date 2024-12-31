@@ -5,7 +5,7 @@ talosVersion: v1.9.1
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 kubernetesVersion: v1.32.0
 
-clusterName: "home-ops"
+clusterName: "home-kubernetes"
 endpoint: https://192.168.3.30:6443
 
 clusterPodNets:
@@ -69,8 +69,6 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
-        vip:
-          ip: "192.168.3.30"
   - hostname: "worker-01"
     ipAddress: "192.168.3.21"
     installDisk: "/dev/sda"
