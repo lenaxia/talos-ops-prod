@@ -1,0 +1,105 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: defaultpg-scheduled-backup
+  namespace: databases
+spec:
+  schedule: "0 0 11 * * *"
+  backupOwnerReference: self
+  cluster:
+    name: defaultpg
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: defaultpg
+  namespace: databases
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.3
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 20Gi
+    storageClass: local-path
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: postgres-superuser
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
+  monitoring:
+    enablePodMonitor: true
+  postgresql:
+    parameters:
+      max_connections: "300"
+      shared_buffers: 512MB
+  backup:
+    retentionPolicy: 30d
+    barmanObjectStore:
+      wal:
+        compression: bzip2
+        maxParallel: 8
+      destinationPath: "s3://${S3_CNPG}/pg16"
+      endpointURL: http://minio.storage.svc.cluster.local:9000
+      serverName: defaultpg-backup-v02
+      s3Credentials:
+        accessKeyId:
+          name: postgres-minio
+          key: MINIO_ACCESS_KEY
+        secretAccessKey:
+          name: postgres-minio
+          key: MINIO_SECRET_KEY
+        region:
+          name: postgres-minio
+          key: MINIO_REGION
+
+# CNPG Recovery
+# https://cloudnative-pg.io/documentation/1.15/bootstrap/#bootstrap-from-a-backup-recovery
+
+  bootstrap:
+    recovery:
+      source: defaultpgBackup
+
+  externalClusters:
+    - name: defaultpgBackup
+      barmanObjectStore:
+        wal:
+          compression: bzip2
+          maxParallel: 8
+        destinationPath: "s3://${S3_CNPG}/pg16"
+        endpointURL: http://minio.storage.svc.cluster.local:9000
+        serverName: defaultpg-backup-v01
+        s3Credentials:
+          accessKeyId:
+            name: postgres-minio
+            key: MINIO_ACCESS_KEY
+          secretAccessKey:
+            name: postgres-minio
+            key: MINIO_SECRET_KEY
+          region:
+            name: postgres-minio
+            key: MINIO_REGION
+              #    - name: defaultpg16
+              #      connectionParameters:
+              #        host: defaultpg16-rw.databases.svc.cluster.local
+              #        user: postgres
+              #        dbname: postgres
+              #        sslmode: disable
+              #      password:
+              #        name: postgres-superuser
+              #        key: password
+
+##########################
+#### PG 16 upgrade #######
+
+#  bootstrap:
+#    initdb:
+#      import:
+#        type: monolith
+#        databases:
+#          - "*" # Import all databases
+#        roles:
+#          - "*" # Import all roles
+#        source:
+#          externalCluster: defaultpg16
