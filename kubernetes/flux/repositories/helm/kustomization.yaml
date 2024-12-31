@@ -34,7 +34,6 @@ resources:
   - kubereboot.yaml
   - kyverno-charts.yaml
   - longhorn-charts.yaml
-  - magicmirror-charts.yaml
   - metallb-charts.yaml
   - metrics-server-charts.yaml
   - minio-charts.yaml
