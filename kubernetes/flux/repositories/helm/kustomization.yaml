@@ -44,7 +44,6 @@ resources:
   - nicholaswilde-charts.yaml
   - node-feature-discovery-charts.yaml
   - nvidia.yaml
-  - nvidia.yaml
   - piraeus.yaml
   - podinfo-charts.yaml
   - skater-charts.yaml
