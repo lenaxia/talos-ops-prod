@@ -129,6 +129,13 @@ controlPlane:
     - "@./patches/controller/cluster.yaml"
     - "@./patches/controller/disable-admission-controller.yaml"
     - "@./patches/controller/etcd.yaml"
+  schematic:
+    customization:
+      systemExtensions:
+          officialExtensions:
+              - siderolabs/intel-ucode
+              - siderolabs/iscsi-tools
+              - siderolabs/util-linux-tools
 
 worker:
   schematic:
