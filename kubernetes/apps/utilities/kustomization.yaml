@@ -4,5 +4,5 @@ kind: Kustomization
 resources:
   - ./namespace.yaml
   - ./k8sgpt/ks.yaml
-    #- ./echo-server/ks.yaml
+  - ./echo-server/ks.yaml
   - ./podinfo/ks.yaml
