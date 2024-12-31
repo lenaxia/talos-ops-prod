@@ -34,6 +34,6 @@ spec:
               kind: CustomResourceDefinition
               metadata:
                 name: not-used
-values:
-  nodeSelector:
-    node-role.kubernetes.io/worker: 'true'
+  values:
+    nodeSelector:
+      node-role.kubernetes.io/worker: 'true'
