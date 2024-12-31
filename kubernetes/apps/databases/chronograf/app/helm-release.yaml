@@ -1,0 +1,79 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname chronograf
+  namespace: databases
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: chronograf
+      version: 1.2.6
+      sourceRef:
+        kind: HelmRepository
+        name: influxdata-charts
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    podLabels:
+      app: chronograf 
+
+        #influxdb:
+        #  existingSecret: influxdb-auth
+
+    persistence:
+      enabled: false
+      useExisting: true
+      name: chronograf-data-volume
+
+    oauth:
+      enabled: false
+      generic:
+        enabled: false
+        # client_id: CHANGE_ME
+        # client_secret: CHANGE_ME
+        api_key: ""
+        scopes: ""
+        # eg. http://chronograf.foobar.com
+        public_url: ""
+        auth_url: ""
+        token_url: ""
+        api_url: ""
+        # optional
+        # name: "generic"
+        # domains: ""
+
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
+
+    service:
+      type: ClusterIP
+      port: 80
+      targetPort: 8086
+      annotations:
+        metallb.universe.tf/address-pool: dev-infra
+      labels:
+        app: chronograf 
+      portName: http
+
+    ingress:
+      enabled: true
+      ingressClassName: "traefik"
+      annotations: 
+          hajimari.io/enable: "true"
+          hajimari.io/icon: "mdiPlayNetwork"
+          cert-manager.io/cluster-issuer: "letsencrypt-production"
+          traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+      hostname: &uri chronograf.${SECRET_DEV_DOMAIN}
+
+      tls: true
+      secretName: *uri
+      path: /
+
