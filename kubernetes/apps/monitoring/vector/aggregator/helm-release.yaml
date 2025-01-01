@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2beta1.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app vector-aggregator
+  namespace: monitoring
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    defaultPodOptions:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: &app vector-aggregator
+    controllers:
+      main:
+        replicas: 3
+      #strategy: RollingUpdate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              repository: docker.io/timberio/vector
+              tag: 0.43.1-debian
+            args: [--config, /etc/vector/vector.yaml]
+    service:
+      main:
+        type: LoadBalancer
+        #externalIPs: ["${SVC_SYSLOG_ADDR}"]
+        externalIPs: [192.168.5.111]
+        externalTrafficPolicy: Local
+        ports:
+          http:
+            port: 8686
+          journald-logs:
+            port: 6000
+            enabled: true
+          kubernetes-logs:
+            port: 6010
+            enabled: true
+          opnsense-logs:
+            port: 5140
+            enabled: true
+        primary: true
+        controller: main
+    persistence:
+      config:
+        enabled: true
+        type: configMap
+        name: vector-aggregator-configmap
+        globalMounts:
+          - path: /etc/vector/vector.yaml
+            subPath: vector.yaml
+      data:
+        enabled: true
+        type: emptyDir
+        globalMounts:
+          - path: /vector-data-dir
+      geoip:
+        enabled: true
+        type: emptyDir
+        globalMounts:
+          - path: /usr/share/GeoIP
