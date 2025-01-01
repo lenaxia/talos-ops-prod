@@ -22,4 +22,3 @@ resources:
   - ./mosquitto/ks.yaml
   - ./rathena/ks.yaml
   - ./openkore/ks.yaml
-  - ./radicale/ks.yaml
