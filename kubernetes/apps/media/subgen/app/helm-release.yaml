@@ -1,0 +1,137 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname subgen
+  namespace: &namespace media
+spec:
+  releaseName: *appname
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  interval: 6m
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+        fsGroupChangePolicy: OnRootMismatch
+
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        type: statefulset
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              repository: mccloud/subgen
+              tag: latest
+              pullPolicy: Always
+            env:
+              DEBUG: true
+              TRANSCRIBE_DEVICE: "cpu"
+              WHISPER_MODEL: "medium"
+              CONCURRENT_TRANSCRIPTIONS: "2"
+              WHISPER_THREADS: "4"
+              PROCADDEDMEDIA: true # will gen subtitles for all media added regardless of existing external/embedded subtitles (based off of SKIPIFINTERNALSUBLANG)
+              PROCMEDIAONPLAY: true # will gen subtitles for all played media regardless of existing external/embedded subtitles (based off of SKIPIFINTERNALSUBLANG)
+              NAMESUBLANG: "AA" # allows you to pick what it will name the subtitle. Instead of using EN, I'm using AA, so it doesn't mix with exiting external EN subs, and AA will populate higher on the list in Plex.
+              SKIPIFINTERNALSUBLANG: 'eng' #Will not generate a subtitle if the file has an internal sub matching the 3 letter code of this variable
+              PLEXSERVER: "http://plex.media.svc.cluster.local:32400"
+            envFrom:
+              - secretRef:
+                  name: &appname subgen
+            probes:
+              liveness: &probes
+                enabled: false
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 9000
+
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
+
+
+    service:
+      main:
+        type: ClusterIP
+
+        ports:
+          http:
+            port: 9000
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: television-box
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri subgen.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+        className: traefik
+    persistence:
+      omoikane:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: /volume1/omoikane
+        globalMounts:
+          - path: /omoikane
+      backups:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: ${NFS_ARR}
+        globalMounts:
+          - path: /config/Backups
+      downloads:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: /volume2/downloads
+        globalMounts:
+          - path: /downloads
+    volumeClaimTemplates:
+      - name: config
+        mountPath: /config
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        storageClass: longhorn
+    podLabels:
+      app: *appname
