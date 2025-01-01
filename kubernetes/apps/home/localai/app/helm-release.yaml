@@ -1,0 +1,210 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname localai
+  namespace: home
+spec:
+  releaseName: *appname
+  interval: 5m
+  chart:
+    spec:
+      chart: local-ai
+      version: 3.4.2
+      interval: 5m
+      sourceRef:
+        kind: HelmRepository
+        name: go-skynet-charts
+        namespace: flux-system
+  upgrade:
+    remediation:
+      retries: 4
+  postRenderers:
+  - kustomize:
+      patches:
+        - target:
+            version: v1
+            kind: Deployment
+            name: localai
+          patch: |
+            - op: add
+              path: /spec/template/spec/runtimeClassName
+              value: nvidia
+            #- op: add
+            #  path: /spec/template/spec/containers/0/command
+            #  value: ["/build/entrypoint.sh", "--p2p"]
+  # See https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+  values:
+    fullnameOverride: localai
+    replicaCount: 1
+
+    deployment:
+      image:
+        repository: quay.io/go-skynet/local-ai
+        tag: v2.24.2-cublas-cuda12-ffmpeg
+      pullPolicy: IfNotPresent
+      #pullPolicy: Always 
+      #args:
+      #  - --p2p
+      env:
+        #LOCALAI_P2P_TOKEN: b3RwOgogIGRodDoKICAgIGludGVydmFsOiAzNjAKICAgIGtleTogbDFiTEdXZFRLU1AwUFI4ZlJqZTJjMzZHM0Z6bDVPaGM0OWp5WnFWOE1ZdgogICAgbGVuZ3RoOiA0MwogIGNyeXB0bzoKICAgIGludGVydmFsOiA5MDAwCiAgICBrZXk6IHZVTjdqZUJ6TkxiSHdPTEVHVFJmSE5yZnhVUmUxWVVpcUMybkwxeVpOVDEKICAgIGxlbmd0aDogNDMKcm9vbTogbzBoaVpLNFNCM2Nqb0JLdUxpY0pVMklBVFd5alZoYWVnTldUQkJHbUtOcgpyZW5kZXp2b3VzOiB2TGFIbXBuWU1CWlpmY3VVT3FGSzU2M2hVUDBSTXNRNzZDRmlKWlFZVlBICm1kbnM6IFV5WENNaUFMNFdQc2NvcXgyQUhyV2VyNmxqSUF4SHFudERXN1VJQ2pCeDIKbWF4X21lc3NhZ2Vfc2l6ZTogMjA5NzE1MjAK
+        DEBUG: true
+        LD_LIBRARY_PATH: "/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"
+        NVIDIA_VISIBLE_DEVICES: 0
+        NVIDIA_DRIVER_CAPABILITIES: "all"
+        PYTHON_GRPC_MAX_WORKERS: 2
+        LLAMACPP_PARALLEL: 2
+        LOCALAI_PARALLEL_REQUESTS: true
+        LOCALAI_CONTEXT_SIZE: 8192
+        SINGLE_ACTIVE_BACKEND: true
+        #GALLERIES: '[{"name":"huggingface", "url": "github:go-skynet/model-gallery/huggingface.yaml"}]'
+        #PRELOAD_MODELS: '[{"id": "model-gallery@bert-embeddings"}, {"url": "github:go-skynet/model-gallery/stablediffusion.yaml"}]'
+        COMPEL: 0
+        threads: 4
+        context_size: 8192
+      modelsPath: "/models"
+      download_model:
+        # To use cloud provided (eg AWS) image, provide it like: 1234356789.dkr.ecr.us-REGION-X.amazonaws.com/busybox
+        image: busybox
+      prompt_templates:
+        # To use cloud provided (eg AWS) image, provide it like: 1234356789.dkr.ecr.us-REGION-X.amazonaws.com/busybox
+        image: busybox
+      imagePullSecrets: []
+        # - name: secret-names
+    
+    resources:
+      requests:
+        nvidia.com/gpu: "1"
+        cpu: 200m
+        memory: 2000Mi
+      limits:
+        nvidia.com/gpu: "1"
+        memory: 20000Mi
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      # requests:
+      #   cpu: 100m
+      #   memory: 128Mi
+    
+    # Prompt templates to include
+    # Note: the keys of this map will be the names of the prompt template files
+    #promptTemplates:
+    #   ggml-gpt4all-j.tmpl: |
+    #     The prompt below is a question to answer, a task to complete, or a conversation to respond to; decide which and write an appropriate response.
+    #     ### Prompt:
+    #     {{.Input}}
+    #     ### Response:
+    #   WizardLM-7B-uncensored.Q2_K.tmpl: |
+    #     The prompt below is a question to answer, a task to complete, or a conversation to respond to; decide which and write an appropriate response.
+    #     ### Prompt:
+    #     {{.Input}}
+    #     ### Response:
+    
+    # Models to download at runtime
+    models:
+      # Whether to force download models even if they already exist
+      forceDownload: false
+    
+      # The list of URLs to download models from
+      # Note: the name of the file will be the name of the loaded model
+      #list:
+      #  - url: "https://gpt4all.io/models/ggml-gpt4all-j.bin"
+          # basicAuth: base64EncodedCredentials
+    
+
+    initContainers: []
+    # Example:
+    # - name: my-init-container
+    #   image: my-init-image
+    #   imagePullPolicy: IfNotPresent
+    #   command: ["/bin/sh", "-c", "echo init"]
+    #   volumeMounts:
+    #     - name: my-volume
+    #       mountPath: /path/to/mount
+    
+    sidecarContainers: []
+    # Example:
+    # - name: my-sidecar-container
+    #   image: my-sidecar-image
+    #   imagePullPolicy: IfNotPresent
+    #   ports:
+    #     - containerPort: 1234
+    
+    # Persistent storage for models and prompt templates.
+    # PVC and HostPath are mutually exclusive. If both are enabled,
+    # PVC configuration takes precedence. If neither are enabled, ephemeral
+    # storage is used.
+    persistence:
+      #nvidia:
+      #  enabled: true
+      #  type: hostPath
+      #  storageClass: local-path
+      #  hostPath: /usr/lib/x86_64-linux-gnu
+      #  accessModes: ReadWriteOnce
+      #  size: 2Gi
+      models: 
+        enabled: true
+        annotations: {}
+        storageClass: longhorn
+        accessModes: ReadWriteMany
+        size: 200Gi
+        globalMount: /models
+      output:
+        enabled: true
+        annotations: {}
+        storageClass: longhorn
+        accessModes: ReadWriteMany
+        size: 10Gi
+        globalMount: /tmp/generated
+        retain: true
+    
+    service:
+      type: LoadBalancer
+      # If deferring to an internal only load balancer
+      # externalTrafficPolicy: Local
+      port: 8080
+      annotations: {}
+      # If using an AWS load balancer, you'll need to override the default 60s load balancer idle timeout
+      # service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "1200"
+    
+    ingress:
+      enabled: true
+      name: localai
+      annotations:
+        hajimari.io/enable: 'true'
+        hajimari.io/icon: resistor-nodes
+        hajimari.io/appName: LocalAI
+        hajimari.io/group: Home
+        cert-manager.io/cluster-issuer: letsencrypt-production
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+      hosts:
+        - host: &uri ai.${SECRET_DEV_DOMAIN}
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - hosts:
+            - *uri
+          secretName: *uri
+      className: traefik
+    
+    nodeSelector: 
+      nvidia.com/gpu.present: 'true'
+    
+    tolerations: []
+    
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - localai
+            topologyKey: kubernetes.io/hostname
