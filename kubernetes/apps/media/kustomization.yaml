@@ -13,7 +13,7 @@ resources:
   - ./jellyfin/ks.yaml
   - ./mediarequests/ks.yaml
   - ./metube/ks.yaml
-    #- ./nzbget/ks.yaml
+  - ./nzbget/ks.yaml
   - ./nzbhydra2/ks.yaml
     #- ./plexmetamanager/ks.yaml
   - ./radarr/ks.yaml
