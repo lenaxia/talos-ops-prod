@@ -1,0 +1,77 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname gamevault
+  namespace: &ns home
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      interval: 16m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  # See https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: phalcode/gamevault-backend
+              tag: 13.1.0
+
+            envFrom:
+              - secretRef:
+                  name: &appname gamevault
+
+    service:
+      main:
+        ports:
+          http:
+            port: 8080
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: baby-bottle-outline
+          hajimari.io/info: *appname
+          hajimari.io/group: &ns home
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri games.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+    persistence:
+      files:
+        enabled: true
+        existingClaim: gamevault-files-nfs
+        type: persistentVolumeClaim
+      images:
+        enabled: true
+        existingClaim: gamevault-images-nfs
+
+    # -- Configures service settings for the chart.
+    # @default -- See values.yaml
+        type: persistentVolumeClaim
+    podAnnotations:
+      secret.reloader.stakater.com/reload: *appname
