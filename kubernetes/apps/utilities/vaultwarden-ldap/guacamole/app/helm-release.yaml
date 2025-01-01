@@ -1,0 +1,114 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app guacamole
+  namespace: utilities
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+
+    controllers:
+      main:
+        replicas: 1
+        strategy: RollingUpdate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              repository: docker.io/maxwaldorf/guacamole
+              tag: latest
+              pullPolicy: Always
+            env:
+              TZ: ${TIMEZONE}
+              EXTENSIONS: auth-header
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &port 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
+    service:
+      main:
+        ports:
+          http:
+            port: *port
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: remote-desktop
+          hajimari.io/group: Utilities
+          cert-manager.io/cluster-issuer: letsencrypt-production
+            ##cert-manager.io/cluster-issuer: "ca-issuer"
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri guac.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+
+        className: traefik
+    persistence:
+      config:
+        enabled: true
+        existingClaim: guacamole-config-volume
+#      usermapping-cm:
+#        enabled: true
+#        type: configMap
+#        name: usermapping-cm
+#        subPath: user-mapping.xml
+#        mountPath: /config/guacamole/user-mapping.xml
+#        defaultMode: 0777
+#      guacprop-cm:
+#        enabled: true
+#        type: configMap
+#        name: guacprop-cm 
+#        subPath: guacamole.properties
+#        mountPath: /config/guacamole/guacamole.properties
+#        defaultMode: 0777
+#    resources:
+#      requests:
+#        cpu: 10m
+#        memory: 50Mi
+#      limits:
+#        memory: 500Mi
+        type: persistentVolumeClaim
