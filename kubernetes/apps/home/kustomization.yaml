@@ -18,7 +18,7 @@ resources:
   - ./esphome/ks.yaml
   #- ./magicmirror/ks.yaml
   #- ./frigate/ks.yaml
-  - ./zwavejs/ks.yaml
+  #- ./zwavejs/ks.yaml
   - ./mosquitto/ks.yaml
   - ./rathena/ks.yaml
     #- ./openkore/ks.yaml
