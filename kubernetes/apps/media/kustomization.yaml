@@ -17,8 +17,8 @@ resources:
   - ./nzbhydra2/ks.yaml
     #- ./plexmetamanager/ks.yaml
   - ./radarr/ks.yaml
-  - ./recyclarr/ks.yaml
+    #- ./recyclarr/ks.yaml
   - ./sonarr/ks.yaml
-  - ./subgen/ks.yaml
+    #- ./subgen/ks.yaml
   - ./tautulli/ks.yaml
     #- ./transmission/ks.yaml
