@@ -1,0 +1,72 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname webfinger
+  namespace: networking
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      interval: 16m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    podAnnotations:
+      secret.reloader.stakater.com/reload: *appname
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: httpd
+              tag: 2.4.62
+#            envFrom:
+#              - secretRef:
+#                  name: *appname 
+            env:
+              TZ: ${TIMEZONE}
+    service:
+      main:
+        ports:
+          http:
+            port: 80
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: baby-bottle-outline
+          hajimari.io/info: *appname
+          hajimari.io/group: Home
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri ${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+    persistence:
+      configmap:
+        enabled: true
+        type: configMap
+        name: webfinger
+        globalMounts:
+          - path: /usr/local/apache2/htdocs/.well-known/webfinger  
+            subPath: webfinger.json
