@@ -9,7 +9,7 @@ resources:
   - ./calibre/ks.yaml
   - ./ersatztv/ks.yaml
   - ./imaginary/ks.yaml
-  - ./invidious/ks.yaml
+    #- ./invidious/ks.yaml
   - ./jellyfin/ks.yaml
   - ./mediarequests/ks.yaml
   - ./metube/ks.yaml
