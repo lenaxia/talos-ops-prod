@@ -1,0 +1,102 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname nzbget
+  namespace: media
+  labels:
+    app: *appname
+spec:
+  releaseName: *appname
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  interval: 5m
+  values:
+    defaultPodOptions:
+      securityContext:
+        fsGroup: 568
+
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: lscr.io/linuxserver/nzbget
+              tag: v21.1-ls136
+              pullPolicy: Always
+
+            env:
+              TZ: ${TIMEZONE}
+    service:
+      main:
+        type: ClusterIP
+
+        ports:
+          http:
+            port: 6789
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: download-box
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri nzbget.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+        className: traefik
+    persistence:
+      config:
+        enabled: true
+        existingClaim: nzbget-config-volume
+        type: persistentVolumeClaim
+      nfs:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: ${NFS_NZBGET}
+        globalMounts:
+          - path: /nfs
+      omoikane:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: /volume1/omoikane
+        globalMounts:
+          - path: /omoikane
+      downloads:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: /volume2/downloads
+        globalMounts:
+          - path: /downloads
+    podLabels:
+      app: &appname nzbget

@@ -5,3 +5,21 @@ resources:
   - ./namespace.yaml
   - ./plex/ks.yaml
   - ./outline/ks.yaml
+  - ./bazarr/ks.yaml
+  - ./calibre/ks.yaml
+  - ./ersatztv/ks.yaml
+  - ./imaginary/ks.yaml
+  - ./invidious/ks.yaml
+  - ./jellyfin/ks.yaml
+  - ./mediarequests/ks.yaml
+  - ./metube/ks.yaml
+  - ./nzbget/ks.yaml
+  - ./nzbhydra2/ks.yaml
+  - ./plexmetamanager/ks.yaml
+  - ./radarr/ks.yaml
+  - ./readarr/ks.yaml
+  - ./recyclarr/ks.yaml
+  - ./sonarr/ks.yaml
+  - ./subgen/ks.yaml
+  - ./tautulli/ks.yaml
+  - ./transmission/ks.yaml
