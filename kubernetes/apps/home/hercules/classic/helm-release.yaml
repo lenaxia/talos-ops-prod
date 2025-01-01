@@ -1,0 +1,129 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname hercules-classic
+  namespace: home
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      interval: 16m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  # See https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        initContainers:
+          0-prep-db:
+            command: [/bin/sh, -c]
+            args:
+              - |
+                apt-get update && apt-get install -y curl &&
+                curl https://s3.thekao.cloud/public/ragnarok/ro-herc-classic-sql.tar.gz -o sql-files.tar.gz &&
+                tar -xzf sql-files.tar.gz -C /docker-entrypoint-initdb.d/ &&
+                rm sql-files.tar.gz
+                ls -la /docker-entrypoint-initdb.d
+            image:            # use an image with curl
+              repository: ubuntu
+              tag: latest
+          1-init-db:
+            command: [sh, -c]
+            args:
+              - |
+                apt-get update && apt-get install -y mysql-client &&
+                /entrypoint.sh
+            env:
+              - name: INIT_MYSQL_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-secret
+                    key: host
+              - name: INIT_MYSQL_SUPER_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-secret
+                    key: mariadb-root-password
+              - name: INIT_MYSQL_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: hercules-classic
+                    key: MYSQL_USERNAME
+              - name: INIT_MYSQL_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: hercules-classic
+                    key: MYSQL_PASSWORD
+              - name: INIT_MYSQL_DBNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: hercules-classic
+                    key: MYSQL_DATABASE
+              - name: INIT_MYSQL_SUPER_USER
+                value: root
+            image:
+              repository: ubuntu
+              tag: latest
+
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/hercules
+              tag: classic-20190605
+            envFrom:
+              - secretRef:
+                  name: &appname hercules-classic
+            env:
+              - name: MYSQL_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-secret
+                    key: ip
+              - name: MYSQL_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-secret
+                    key: port
+
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${SVC_HERCULES_CLASSIC_ADDR}
+        externalTrafficPolicy: Local
+        ports:
+          http:
+            port: 6900
+          char:
+            port: 6121
+          map:
+            port: 5121
+        primary: true
+        controller: main
+    persistence:
+      config:
+        enabled: true
+        existingClaim: hercules-classic-volume
+        type: persistentVolumeClaim
+      db-scripts:
+        enabled: true
+        type: emptyDir
+        globalMounts:
+          - path: /docker-entrypoint-initdb.d
+      entrypoint-sh:
+        enabled: true
+        type: configMap
+        name: entrypoint-sh
+        defaultMode: 0777
+        globalMounts:
+          - path: /entrypoint.sh
+            subPath: entrypoint.sh
+
+    podAnnotations:
+      secret.reloader.stakater.com/reload: *appname
