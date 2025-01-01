@@ -1,0 +1,97 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname calibre-web
+  namespace: media
+spec:
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      interval: 15m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  interval: 15m
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        initContainers:
+          update-volume-permission:
+            command: [sh, -c, chown -R 1000:1000 /config]
+            securityContext:
+              runAsUser: 0
+            image:
+              repository: busybox@sha256
+              tag: 3fbc632167424a6d997e74f52b878d7cc478225cffac6bc977eedfe51c7f4e79
+        containers:
+          main:
+            image:
+              repository: ghcr.io/linuxserver/calibre-web
+              tag: version-0.6.19
+              pullPolicy: Always
+            env:
+              DOCKER_MODS: ghcr.io/linuxserver/mods:universal-calibre
+              PGID: '65539'
+              PUID: '1000'
+            resources:
+              requests:
+                cpu: 50m
+                memory: 249M
+    service:
+      main:
+        ports:
+          http:
+            port: 8083
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: bookshelf
+          hajimari.io/appName: The Library
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri library.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+        className: traefik
+    persistence:
+      config:
+        enabled: true
+        existingClaim: calibre-web-config-volume
+        type: persistentVolumeClaim
+        advancedMounts:
+          main:
+            update-volume-permission:
+              - path: /config
+      media:
+        enabled: true
+        existingClaim: calibre-media-volume
+        globalMounts:
+          - path: /library
+        type: persistentVolumeClaim

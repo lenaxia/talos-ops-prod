@@ -1,0 +1,127 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname transmission
+  namespace: &namespace media
+  labels:
+    app: *appname
+spec:
+  releaseName: *appname
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  interval: 6m
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        type: statefulset
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              repository: ghcr.io/onedr0p/transmission
+              tag: 4.0.5
+              pullPolicy: Always
+
+            env:
+              TZ: ${TIMEZONE}
+              TRANSMISSION__BLOCKLIST_URL: https://mirror.codebucket.de/transmission/blocklist.p2p.gz
+              TRANSMISSION__DOWNLOAD_DIR: /downloads/[Torrents]/Finished
+              TRANSMISSION__INCOMPLETE_DIR_ENABLED: true
+              TRANSMISSION__INCOMPLETE_DIR: /unfinished
+              TRANSMISSION__RPC_PORT: &port 9091
+              TRANSMISSION__PEER_PORT: &peerport 51413
+              TRANSMISSION__RATIO_LIMIT: 1
+              TRANSMISSION__RATIO_LIMIT_ENABLED: true
+              TRANSMISSION__SPEED_LIMIT_UP_ENABLED: true
+              TRANSMISSION__SPEED_LIMIT_UP: 8000
+              TRANSMISSION__UTP_ENABLED: false
+              TRANSMISSION__UMASK: 7
+              TRANSMISSION__WATCH_DIR: /downloads/[Torrents]/Autoload
+              TRANSMISSION__WATCH_DIR_ENABLED: true
+              TRANSMISSION__WATCH_FORCE_GENERIC: true
+
+        statefulset:
+          volumeClaimTemplates:
+            - name: config
+              accessMode: ReadWriteOnce
+              size: 1Gi
+              storageClass: longhorn
+              globalMounts:
+                - path: /config
+    service:
+      main:
+        enabled: true
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+        ports:
+          http:
+            port: *port
+          utptcp:
+            port: *peerport
+            enabled: true
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: mdi:cloud-download
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri transmission.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+        className: traefik
+    persistence:
+      unfinished:
+        enabled: true
+        type: emptyDir
+        medium: Memory
+      omoikane:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: /volume1/omoikane
+        globalMounts:
+          - path: /omoikane
+      downloads:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: /volume2/downloads
+        globalMounts:
+          - path: /downloads
+    podLabels:
+      app: &appname transmission

@@ -1,0 +1,118 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app metube
+  namespace: media
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 8
+  upgrade:
+    remediation:
+      retries: 8
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+#    resources:
+#      requests:
+#        cpu: 10m
+#        memory: 50Mi
+#      limits:
+#        memory: 500Mi
+    controllers:
+      main:
+        type: statefulset
+        replicas: 1
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              repository: docker.io/alexta69/metube
+              tag: latest
+              pullPolicy: Always
+            env:
+              TZ: ${TIMEZONE}
+              OUTPUT_TEMPLATE: '%(upload_date)s - %(title)s [%(id)s].%(ext)s'
+              YTDL_OPTIONS: '{"writethumbnail": true, "writesubtitles": true, "subtitleslangs":
+                ["en", "-live_chat"], "merge_output_format": "mp4", "postprocessors":
+                [{"key": "Exec", "exec_cmd": "chmod 0664", "when": "after_move"},
+                {"key": "FFmpegEmbedSubtitle", "already_have_subtitle": false}, {"key":
+                "FFmpegMetadata", "add_metadata": true, "add_chapters": true}, { "key":
+                "EmbedThumbnail", "already_have_thumbnail": true}]}'
+        statefulset:
+          volumeClaimTemplates:
+            - name: config
+              accessMode: ReadWriteOnce
+              size: 3Gi
+              storageClass: longhorn
+              globalMounts:
+                - path: /config
+    service:
+      main:
+        type: ClusterIP
+        ports:
+          http:
+            port: &port 8081
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: youtube
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri dl.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+#    probes:
+#      liveness: &probes
+#        enabled: true
+#        custom: true
+#        spec:
+#          httpGet:
+#            path: /health
+#            port: *port
+#          initialDelaySeconds: 0
+#          periodSeconds: 10
+#          timeoutSeconds: 1
+#          failureThreshold: 3
+#      readiness: *probes
+#      startup:
+#        enabled: false
+
+        className: traefik
+    persistence:
+      downloads:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: ${NFS_METUBE}
+        globalMounts:
+          - path: /downloads

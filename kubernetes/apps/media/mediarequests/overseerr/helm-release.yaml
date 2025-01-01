@@ -1,0 +1,109 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app overseerr
+  namespace: media
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+#    resources:
+#      requests:
+#        cpu: 10m
+#        memory: 50Mi
+#      limits:
+#        memory: 500Mi
+    controllers:
+      main:
+        type: statefulset
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              #repository: ghcr.io/linuxserver/overseerr
+              repository: ghcr.io/lenaxia/overseerr-oidc
+              tag: oidc-support
+              pullPolicy: Always
+            env:
+              TZ: ${TIMEZONE}
+              PUID: 1000
+              PGID: 1000
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &port 5055
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
+        statefulset:
+          volumeClaimTemplates:
+            - name: config
+              accessMode: ReadWriteOnce
+              size: 1Gi
+              storageClass: longhorn
+              globalMounts:
+                - path: /app/config
+
+    service:
+      main:
+        ports:
+          http:
+            port: *port
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: eye-circle
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri request.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+        className: traefik
+    persistence:
+      config:
+        enabled: true
+        existingClaim: overseerr-config-volume
+        type: persistentVolumeClaim
+    podLabels:
+      app: &app overseerr

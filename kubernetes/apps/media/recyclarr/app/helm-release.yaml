@@ -1,0 +1,85 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname recyclarr
+  namespace: &namespace media
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        type: statefulset
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        initContainers:
+          01-init-config:
+            command: [/bin/sh, -c, cp /tmp/config/recyclarr.yml /config/recyclarr.yml]
+            image:
+              repository: public.ecr.aws/docker/library/busybox
+              tag: latest
+        containers:
+          main:
+            image:
+              repository: ghcr.io/recyclarr/recyclarr
+              tag: 7.4.0
+            envFrom:
+              - secretRef:
+                  name: &appname recyclarr
+            env:
+              TZ: ${TIMEZONE}
+            resources:
+              requests:
+                cpu: 15m
+                memory: 80M
+              limits:
+                memory: 150M
+        statefulset:
+          volumeClaimTemplates:
+            - name: config
+              accessMode: ReadWriteOnce
+              size: 1Gi
+              storageClass: longhorn
+              globalMounts:
+                - path: /config
+    service:
+      main:
+        enabled: false
+        primary: true
+        controller: main
+    persistence:
+      config-file:
+        enabled: true
+        type: configMap
+        name: recyclarr-configmap
+        globalMounts:
+          - path: '/tmp/config'
+        advancedMounts:
+          main:
+            01-init-config:
+              - path: /tmp/config
