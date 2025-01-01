@@ -48,7 +48,7 @@ spec:
       main:
         annotations:
           metallb.universe.tf/address-pool: dev-infra
-        type: LoadBalancer
+        type: ClusterIP
         externalTrafficPolicy: Local
 
         ports:
