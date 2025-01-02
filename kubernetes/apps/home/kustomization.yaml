@@ -8,7 +8,7 @@ resources:
   - ./browserless/ks.yaml
   - ./langserver/ks.yaml
   #- ./gamevault/ks.yaml
-  - ./node-red/ks.yaml
+  #- ./node-red/ks.yaml
   - ./stirling-pdf/ks.yaml
   - ./redlib/ks.yaml
   - ./roskills/ks.yaml
