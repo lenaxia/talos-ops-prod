@@ -5,7 +5,7 @@ resources:
   - ./namespace.yaml
   - ./vaultwarden/ks.yaml
   - ./vaultwarden-ldap/ks.yaml
-  - ./uptimekuma/ks.yaml
+    #- ./uptimekuma/ks.yaml
   - ./smokeping/ks.yaml
   - ./changedetection/ks.yaml
   - ./librespeed/ks.yaml
