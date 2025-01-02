@@ -57,9 +57,9 @@ spec:
 # CNPG Recovery
 # https://cloudnative-pg.io/documentation/1.15/bootstrap/#bootstrap-from-a-backup-recovery
 
-#  bootstrap:
-#    recovery:
-#      source: defaultpgBackup
+  bootstrap:
+    recovery:
+      source: defaultpgBackup
 
   externalClusters:
     - name: defaultpgBackup
