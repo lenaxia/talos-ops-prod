@@ -32,7 +32,7 @@ spec:
 #        memory: 500Mi
     controllers:
       main:
-        type: statefulset
+        type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
@@ -61,15 +61,6 @@ spec:
               readiness: *probes
               startup:
                 enabled: false
-        statefulset:
-          volumeClaimTemplates:
-            - name: config
-              accessMode: ReadWriteOnce
-              size: 1Gi
-              storageClass: longhorn
-              globalMounts:
-                - path: /app/config
-
     service:
       main:
         ports:
