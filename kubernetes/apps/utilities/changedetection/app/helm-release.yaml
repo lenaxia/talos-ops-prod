@@ -49,7 +49,6 @@ spec:
         annotations:
           metallb.universe.tf/address-pool: dev-infra
         type: ClusterIP
-        externalTrafficPolicy: Local
 
         ports:
           http:
