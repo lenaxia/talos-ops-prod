@@ -15,3 +15,4 @@ resources:
   - omoikane-ldap.yaml
   - overseerr-oidc.yaml
   - overseerr-oidc2.yaml
+  - pikvm.yaml
