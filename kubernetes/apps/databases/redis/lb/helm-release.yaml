@@ -55,6 +55,8 @@ spec:
         type: LoadBalancer
         annotations:
           coredns.io/hostname: redis.${SECRET_DEV_DOMAIN}
+        labels:
+          cilium.io/l2-ip-pool: reserved
         loadBalancerIP: ${SVC_REDIS_ADDR}
         externalTrafficPolicy: Local
         ports:

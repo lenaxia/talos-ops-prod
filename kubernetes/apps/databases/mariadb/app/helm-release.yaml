@@ -37,6 +37,8 @@ spec:
       service:
         type: LoadBalancer
         loadBalancerIP: ${SVC_MARIADB_PRIMARY_ADDR}
+        labels:
+          cilium.io/l2-ip-pool: reserved
     secondary:
       name: replica
       replicaCount: 3

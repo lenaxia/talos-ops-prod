@@ -44,6 +44,8 @@ spec:
         externalTrafficPolicy: Local
         annotations:
           metallb.universe.tf/address-pool: dev-infra
+        labels:
+          cilium.io/l2-ip-pool: reserved
         ports:
           http:
             port: 80
