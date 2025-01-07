@@ -99,6 +99,8 @@ spec:
         ports:
           http:
             port: 3000
+        primary: true
+        controller: main
     ingress:
       main:
         enabled: true
