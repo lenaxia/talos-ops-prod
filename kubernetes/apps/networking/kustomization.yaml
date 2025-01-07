@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - ./namespace.yaml
     #- ./multus/ks.yaml
-  #- ./traefik/ks.yaml
+  - ./traefik/ks.yaml
   - ./authelia/ks.yaml
     #- ./cloudflare-ddns/ks.yaml
   - ./webfinger/ks.yaml
