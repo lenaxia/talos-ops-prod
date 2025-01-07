@@ -5,8 +5,8 @@ metadata:
   namespace: flux-system
   name: cluster-settings
 data:
-  APP_UID: 568
-  APP_GID: 568
+  APP_UID: "568"
+  APP_GID: "568"
 
   NAS_ADDR: "192.168.0.120"
   ADGUARD_ADDR: "192.168.0.5"
