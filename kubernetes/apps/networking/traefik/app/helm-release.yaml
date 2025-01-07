@@ -40,10 +40,9 @@ spec:
       enabled: true
       type: LoadBalancer
       spec:
-        loadBalancerIP: "${SVC_TRAEFIK_ADDR}"
+        #loadBalancerIP: "${SVC_TRAEFIK_ADDR}"
         externalTrafficPolicy: Local
       annotations:
-        metallb.universe.tf/address-pool: dev-infra
         external-dns.home.arpa/enabled: "true"
         external-dns.alpha.kubernetes.io/hostname: "${SECRET_DEV_DOMAIN}"
     logs:
