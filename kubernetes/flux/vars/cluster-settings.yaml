@@ -5,7 +5,9 @@ metadata:
   namespace: flux-system
   name: cluster-settings
 data:
-  RURI_ADDR: "192.168.0.125"
+  APP_UID: 568
+  APP_GID: 568
+
   NAS_ADDR: "192.168.0.120"
   ADGUARD_ADDR: "192.168.0.5"
   TIMEZONE: "America/Los_Angeles"
@@ -15,7 +17,7 @@ data:
 
   MULTUS_IOT_HASS: "192.168.5.5"
 
-  SVC_TRAEFIK_ADDR: "192.168.5.12"
+  SVC_TRAEFIK_ADDR: "192.168.5.10"
   SVC_AUTHELIA_ADDR: "192.168.5.11"
 
   #SVC_HOME_ASSISTANT_ADDR: "192.168.5.5"
