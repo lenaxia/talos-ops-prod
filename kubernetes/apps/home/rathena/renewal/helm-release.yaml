@@ -98,6 +98,8 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${SVC_RATHENA_RENEWAL_ADDR}
         externalTrafficPolicy: Local
+        labels:
+          cilium.io/l2-ip-pool: reserved
         ports:
           http:
             port: 6900
