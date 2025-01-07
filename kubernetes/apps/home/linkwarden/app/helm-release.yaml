@@ -78,7 +78,7 @@ spec:
               - name: NEXT_PUBLIC_AUTHELIA_ENABLED
                 value: "true"
               - name: AUTHELIA_WELLKNOWN_URL
-                value: https://authelia.${SECRET_DOMAIN}/.well-known/openid-configuration
+                value: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
               - name: HOME
                 value: /data/storage
               - name: DATABASE_URL
