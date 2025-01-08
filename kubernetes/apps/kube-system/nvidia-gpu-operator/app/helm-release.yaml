@@ -34,18 +34,9 @@ spec:
     nfd:
       enabled: false
     driver:
-      enabled: false
+      enabled: true
     toolkit:
       enabled: true
-      env:
-        - name: CONTAINERD_CONFIG
-          value: /var/lib/rancher/k3s/agent/etc/containerd/config.toml
-        - name: CONTAINERD_SOCKET
-          value: /run/k3s/containerd/containerd.sock
-        - name: CONTAINERD_RUNTIME_CLASS
-          value: nvidia
-        - name: CONTAINERD_SET_AS_DEFAULT
-          value: "true"
     devicePlugin:
       config:
         create: true
