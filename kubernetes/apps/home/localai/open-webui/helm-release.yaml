@@ -40,6 +40,7 @@ spec:
               WEBUI_URL: https://chat.${SECRET_DEV_DOMAIN}
               WEBUI_NAME: The Kao Cloud
               ENABLE_LOGIN_FORM: false
+              DEFAULT_USER_ROLE: user
               DEFAULT_MODELS: exl2-qwen2.5-72b-instruct_4_25 
               ENABLE_OLLAMA_API: false
               # OAuth
