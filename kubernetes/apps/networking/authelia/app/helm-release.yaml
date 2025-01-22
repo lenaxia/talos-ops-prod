@@ -303,7 +303,7 @@ spec:
 
         # LiteLLM API
         - domain:
-            - "llm.${SECRET_DEV_DOMAIN}"
+            - "ai.${SECRET_DEV_DOMAIN}"
           resources:
             - "^/v1/models"
             - "^/v1/model/.*$"
@@ -326,7 +326,7 @@ spec:
             - "jelly.${SECRET_DEV_DOMAIN}"
             - "ai.${SECRET_DEV_DOMAIN}"
             - "tabby.${SECRET_DEV_DOMAIN}"
-            - "llm.${SECRET_DEV_DOMAIN}"
+            - "ai.${SECRET_DEV_DOMAIN}"
             - "ollama.${SECRET_DEV_DOMAIN}"
             - "overseerr.${SECRET_DEV_DOMAIN}"
           policy: bypass
