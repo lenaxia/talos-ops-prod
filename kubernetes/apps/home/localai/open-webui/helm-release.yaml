@@ -41,7 +41,7 @@ spec:
               WEBUI_NAME: The Kao Cloud
               ENABLE_LOGIN_FORM: false
               DEFAULT_USER_ROLE: user
-              DEFAULT_MODELS: exl2-qwen2.5-72b-instruct_4_25 
+              DEFAULT_MODELS: default
               ENABLE_OLLAMA_API: false
               # OAuth
               ENABLE_OAUTH_SIGNUP: true
