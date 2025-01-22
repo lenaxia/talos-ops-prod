@@ -139,7 +139,7 @@ spec:
                 #    api_key: doesnotmatter
 
                 # Tabby API 
-                - model_name: default
+                - model_name: default-model
                   litellm_params:
                     model: openai/Qwen2.5-72B-Instruct-exl2-4_25
                     api_base: http://tabbyapi.default.svc.cluster.local:5000/v1
