@@ -55,6 +55,11 @@ spec:
 
     alertmanager:
       enabled: true
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: openebs-hostpath
       config:
         global:
           resolve_timeout: 5m
