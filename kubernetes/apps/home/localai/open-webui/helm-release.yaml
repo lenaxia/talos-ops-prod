@@ -2,7 +2,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &appname open-webui
+  name: &appname openwebui
   namespace: &namespace home
 spec:
   interval: 15m
@@ -30,6 +30,24 @@ spec:
         type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
+        initContainers:
+          01-init-db:
+            image:
+             repository: ghcr.io/onedr0p/postgres-init
+             tag: 16.1
+            env:
+              - name: INIT_POSTGRES_HOST
+                value: defaultpg-rw.databases.svc.cluster.local
+              - name: INIT_POSTGRES_DBNAME
+                value: *appname
+              - name: INIT_POSTGRES_SUPER_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-superuser
+                    key: password
+            envFrom:
+              - secretRef:
+                  name: *appname
         containers:
           main:
             image:
