@@ -11,7 +11,7 @@ resources:
   - ./imaginary/ks.yaml
     #- ./invidious/ks.yaml
   - ./jellyfin/ks.yaml
-    #- ./mediarequests/ks.yaml
+  - ./mediarequests/ks.yaml
   - ./metube/ks.yaml
   - ./nzbget/ks.yaml
   - ./nzbhydra2/ks.yaml
