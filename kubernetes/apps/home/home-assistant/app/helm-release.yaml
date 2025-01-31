@@ -58,7 +58,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/home-assistant
-              tag: 2024.12.2@sha256:8e66e5ee5cd9e484bb03b85cbb7c2571ea97f65091308c2f1c7418d5ec9f0db2
+              tag: 2025.1.4@sha256:a9369ffd29441d94b4dd1bcab9ff37fa178be52387cd6225946ee7a54dfeb239
             envFrom:
               - secretRef:
                   name: home-assistant-secret
