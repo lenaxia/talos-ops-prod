@@ -28,14 +28,8 @@ kubeProxyReplacement: true
 kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
 l2announcements:
   enabled: false
-bgp:
+bgpControlPlane:
   enabled: true
-  announce:
-    loadbalancerIP: true
-  peers:
-    - peerAddress: "192.168.0.6"  # Raspberry Pi's IP
-      peerAsn: 64513               # Pi's ASN
-      ebgpMultihop: true
 loadBalancer:
   algorithm: maglev
   mode: "dsr"
