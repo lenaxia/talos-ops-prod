@@ -6,7 +6,7 @@ metadata:
     app: debug
 spec:
   nodeSelector:
-    kubernetes.io/hostname: k3s-worker-02  # Use the hostname label to target the specific node
+    kubernetes.io/hostname: worker-00  # Use the hostname label to target the specific node
   containers:
   - name: debug-container
     image: ubuntu

@@ -29,3 +29,5 @@ home-kubernetes-cp-02.yaml
 home-kubernetes-cp-proxmox.yaml
 home-kubernetes-worker-01.yaml
 home-kubernetes-worker-02.yaml
+home-kubernetes-cp-01.yaml
+home-kubernetes-worker-00.yaml
