@@ -9,8 +9,8 @@ bpf:
   #masquerade: false # Required for Talos `.machine.features.hostDNS.forwardKubeDNSToHost`
   preallocateMaps: true
   tproxy: true
-bgpControlPlane:
-  enabled: true
+#bgpControlPlane:
+#  enabled: true
 cgroup:
   automount:
     enabled: false
