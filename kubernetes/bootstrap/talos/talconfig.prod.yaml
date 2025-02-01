@@ -39,6 +39,22 @@ nodes:
         mtu: 1500
         vip:
           ip: "192.168.3.30"
+  - hostname: "cp-01"
+    ipAddress: "192.168.3.11"
+    installDisk: "/dev/nvme0n1"
+    controlPlane: true
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "b8:ae:ed:eb:51:4f"
+        dhcp: false
+        addresses:
+          - "192.168.3.11/16"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "192.168.0.1"
+        mtu: 1500
+        vip:
+          ip: "192.168.3.30"
   - hostname: "cp-02"
     ipAddress: "192.168.3.12"
     installDisk: "/dev/nvme0n1"
@@ -55,23 +71,46 @@ nodes:
         mtu: 1500
         vip:
           ip: "192.168.3.30"
-  - hostname: "cp-proxmox"
-    ipAddress: "192.168.0.226"
-    installDisk: "/dev/sda"
-    controlPlane: true
+            #  - hostname: "cp-proxmox"
+            #    ipAddress: "192.168.0.226"
+            #    installDisk: "/dev/sda"
+            #    controlPlane: true
+            #    networkInterfaces:
+            #      - deviceSelector:
+            #          hardwareAddr: "bc:24:11:05:93:87"
+            #        dhcp: false
+            #        addresses:
+            #          - "192.168.0.226/16"
+            #        routes:
+            #          - network: 0.0.0.0/0
+            #            gateway: "192.168.0.1"
+            #        mtu: 1500
+  - hostname: "worker-00"
+    ipAddress: "192.168.3.20"
+    image: factory.talos.dev/installer/a515a78d438e5622a13c01a7f40d24e9e4719370dbfef7eee25bf7d012ee7bc7:v1.9.1
+    installDiskSelector:
+      wwid: naa.5002538e405b5f41
+    controlPlane: false
+    nodeLabels:
+      node-role.kubernetes.io/worker: true
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "bc:24:11:05:93:87"
+          hardwareAddr: "00:e0:4c:68:00:4d"
         dhcp: false
         addresses:
-          - "192.168.0.226/16"
+          - "192.168.3.20/16"
         routes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
+    machineDisks:
+      - device: "/dev/nvme0n1"
+        partitions:
+          - mountpoint: /var/lib/longhorn
   - hostname: "worker-01"
     ipAddress: "192.168.3.21"
-    installDisk: "/dev/sda"
+    installDiskSelector: 
+      wwid: naa.5002538e4019fdec
     controlPlane: false
     nodeLabels: 
       node-role.kubernetes.io/worker: true
@@ -91,8 +130,9 @@ nodes:
           - mountpoint: /var/lib/longhorn
   - hostname: "worker-02"
     ipAddress: "192.168.3.22"
-    installDisk: "/dev/sda"
     controlPlane: false
+    installDiskSelector:
+      wwid: naa.5002538e40bfb2cc
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:

@@ -1,5 +1,6 @@
 machine:
   network:
     nameservers:
+      - 192.168.0.2
       - 192.168.0.5
       - 192.168.0.6
