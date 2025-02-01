@@ -41,7 +41,7 @@ spec:
           01-init-db:
             image:
              repository: ghcr.io/onedr0p/postgres-init
-             tag: 16.1
+             tag: 16.6
             env:
               - name: INIT_POSTGRES_HOST
                 value: defaultpg-rw.databases.svc.cluster.local
@@ -60,7 +60,7 @@ spec:
           main:
             image:
               repository: ghcr.io/linkwarden/linkwarden
-              tag: v2.9.1
+              tag: v2.9.3
             resources:
               requests:
                 memory: 512Mi
