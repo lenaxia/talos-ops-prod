@@ -14,26 +14,51 @@ spec:
         kind: HelmRepository
         name: bjw-s
         namespace: flux-system
-  postRenderers:
-  - kustomize:
-      patches:
-        - target:
-            version: v1
-            kind: Deployment
-            name: *appname
-          patch: |
-            - op: add
-              path: /spec/template/spec/runtimeClassName
-              value: nvidia
+#  postRenderers:
+#  - kustomize:
+#      patches:
+#        - target:
+#            version: v1
+#            kind: Deployment
+#            name: *appname
+#          patch: |
+#            - op: add
+#              path: /spec/template/spec/runtimeClassName
+#              value: nvidia
   # See https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
   values:
-
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
 
     controllers:
       main:
+        #        initContainers:
+        #          download-model:
+        #            image:
+        #              repository: python
+        #              tag: 3.13-slim
+        #            command:
+        #              - /bin/sh
+        #              - -c
+        #            args:
+        #              - |
+        #                pip install --no-cache-dir huggingface_hub
+        #                MODEL_DIR="/models/Qwen2.5-72B-Instruct-exl2-4_25"
+        #                REPO_ID="bartowski/Qwen2.5-72B-Instruct-exl2"
+        #                REVISION="4_25"
+        #                if [ ! -f "$MODEL_DIR/config.json" ] || [ ! -f "$MODEL_DIR/tokenizer.json" ] || [ ! -f "$MODEL_DIR/output-00001-of-00005.safetensors" ]; then
+        #                  echo "Model files not found. Downloading..."
+        #                  rm -rf "$MODEL_DIR"
+        #                  mkdir -p "$MODEL_DIR"
+        #                  huggingface-cli download $REPO_ID --revision $REVISION --local-dir "$MODEL_DIR"
+        #                  echo "Download completed."
+        #                else
+        #                  echo "Model files found. Skipping download."
+        #                fi
+        #            volumeMounts:
+        #              - name: models
+        #                mountPath: /models
         containers:
           main:
             image:
@@ -59,7 +84,6 @@ spec:
                   httpGet:
                     path: /healthz
                     port: &port 5000
-
                   initialDelaySeconds: 300
                   periodSeconds: 30
                   timeoutSeconds: 1

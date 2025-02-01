@@ -81,11 +81,6 @@ spec:
                 value: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
               - name: HOME
                 value: /data/storage
-              - name: DATABASE_URL
-                valueFrom:
-                  secretKeyRef:
-                    name: *appname
-                    key: DATABASE_URL
               - name: POSTGRES_PASSWORD
                 valueFrom:
                   secretKeyRef:
