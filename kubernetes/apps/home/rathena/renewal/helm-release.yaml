@@ -42,17 +42,17 @@ spec:
               - name: INIT_MYSQL_USER
                 valueFrom:
                   secretKeyRef:
-                    name: rathena-classic
+                    name: rathena-renewal
                     key: MYSQL_USERNAME
               - name: INIT_MYSQL_PASS
                 valueFrom:
                   secretKeyRef:
-                    name: rathena-classic
+                    name: rathena-renewal
                     key: MYSQL_PASSWORD
               - name: INIT_MYSQL_DBNAME
                 valueFrom:
                   secretKeyRef:
-                    name: rathena-classic
+                    name: rathena-renewal
                     key: MYSQL_DATABASE
               - name: INIT_MYSQL_SUPER_USER
                 value: root
