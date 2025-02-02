@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  main:
+    image: ghcr.io/lenaxia/docker-rathena/rathena-packetver20200401:renewal-20240805
+    ports:
+      - 6900:6900
+      - 6121:6121
+      - 5121:5121
+    
+    environment:
+      # These values can be overridden by values from the env_file(s)
+      # or via environment variable substitution.
+      MYSQL_HOST: 192.168.5.15
+      MYSQL_PORT: 3306
+      ADD_SUBNET_MAP1: "255.255.0.0:192.168.2.103:192.168.2.103"
+      SET_CHAR_PUBLIC_IP: 192.168.2.103
+      SET_MAP_PUBLIC_IP: 192.168.2.103
+      MYSQL_ACCOUNTSANDCHARS: "1"
+      SET_SERVER_NAME: "KaoCloudRO Renewal"
+      SET_NEW_ACCOUNT: "yes"
+      MYSQL_USERNAME: ragnarok
+      MYSQL_PASSWORD: oiDzEqNerL7HeA3fU
+      MYSQL_DATABASE: rathena_renewal
+      # The user name and password for the inter-server communication
+      # account.
+      SET_INTERSERV_USERID: s1
+      SET_INTERSERV_PASSWD: p1
+      # New settings
+      SET_PINCODE_ENABLED: no
+      MYSQL_DROP_DB: 0
