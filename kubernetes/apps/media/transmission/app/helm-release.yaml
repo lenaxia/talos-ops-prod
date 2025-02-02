@@ -35,7 +35,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/transmission
-              tag: 4.0.6
+              tag: 4.0.6@sha256:bd117f3b8f08691a5b728800fc335cca1eddc978a41184f02e9cc9ddc2ccdf08
               pullPolicy: Always
 
             env:
