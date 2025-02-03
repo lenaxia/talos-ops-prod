@@ -1,8 +1,8 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &appname rathena-classic
-  namespace: home
+  name: &appname rathena-renewal
+  namespace: ragnarok
 spec:
   interval: 5m
   chart:
@@ -42,17 +42,17 @@ spec:
               - name: INIT_MYSQL_USER
                 valueFrom:
                   secretKeyRef:
-                    name: rathena-classic
+                    name: rathena-renewal
                     key: MYSQL_USERNAME
               - name: INIT_MYSQL_PASS
                 valueFrom:
                   secretKeyRef:
-                    name: rathena-classic
+                    name: rathena-renewal
                     key: MYSQL_PASSWORD
               - name: INIT_MYSQL_DBNAME
                 valueFrom:
                   secretKeyRef:
-                    name: rathena-classic
+                    name: rathena-renewal
                     key: MYSQL_DATABASE
               - name: INIT_MYSQL_SUPER_USER
                 value: root
@@ -64,11 +64,18 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/docker-rathena/rathena-packetver20200401
-              tag: classic-20240805
+              tag: renewal-20240805
               pullPolicy: Always
+            ports:
+              - containerPort: 6900
+                name: login-server
+              - containerPort: 5121
+                name: map-server
+              - containerPort: 6121
+                name: char-server
             envFrom:
               - secretRef:
-                  name: &appname rathena-classic
+                  name: *appname 
             env:
               - name: MYSQL_HOST
                 valueFrom:
@@ -81,38 +88,48 @@ spec:
                     name: mariadb-secret
                     key: port
               - name: ADD_SUBNET_MAP1
-                value: "255.255.255.0:${SVC_RATHENA_CLASSIC_ADDR}:${SVC_RATHENA_CLASSIC_ADDR}"
+                #value: "255.255.255.0:${SVC_RATHENA_RENEWAL_ADDR}:${SVC_RATHENA_RENEWAL_ADDR}"
+                value: "255.255.255.255:10.96.255.255"
               - name: SET_CHAR_PUBLIC_IP
-                value: ${SVC_RATHENA_CLASSIC_ADDR} 
+                value: ${SVC_RATHENA_RENEWAL_ADDR}
               - name: SET_MAP_PUBLIC_IP
-                value: ${SVC_RATHENA_CLASSIC_ADDR}
+                value: ${SVC_RATHENA_RENEWAL_ADDR}
               - name: MYSQL_ACCOUNTSANDCHARS
                 value: "1"
               - name: SET_SERVER_NAME
-                value: "KaoCloudRO"
+                value: "KaoCloudRO Renewal"
               - name: SET_NEW_ACCOUNT
                 value: "yes"
+              - name: MYSQL_DROP_DB
+                value: "0"
+              - name: SET_PINCODE_ENABLED
+                value: "no"
+              #- name: SET_START_POINT
+              #  value: "prontera,155,182"
 
     service:
       main:
         type: LoadBalancer
-        loadBalancerIP: ${SVC_RATHENA_CLASSIC_ADDR}
+        loadBalancerIP: ${SVC_RATHENA_RENEWAL_ADDR}
         externalTrafficPolicy: Local
         labels:
           cilium.io/l2-ip-pool: reserved
         ports:
-          http:
+          - name: login
+            protocol: TCP
             port: 6900
-          char:
-            port: 6121
-          map:
+          - name: map
+            protocol: TCP
             port: 5121
+          - name: char
+            protocol: TCP
+            port: 6121
         primary: true
         controller: main
     persistence:
       config:
         enabled: true
-        existingClaim: rathena-classic-volume
+        existingClaim: rathena-renewal-volume
         type: persistentVolumeClaim
       entrypoint-sh:
         enabled: true

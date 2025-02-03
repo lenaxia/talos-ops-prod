@@ -20,7 +20,7 @@ spec:
     - apiVersion: helm.toolkit.fluxcd.io/v2beta1
       kind: HelmRelease
       name: rathena-classic
-      namespace: home
+      namespace: ragnarok
   interval: 30m
   wait: true
   retryInterval: 1m
@@ -47,7 +47,7 @@ spec:
     - apiVersion: helm.toolkit.fluxcd.io/v2beta1
       kind: HelmRelease
       name: rathena-renewal
-      namespace: home
+      namespace: ragnarok
   interval: 30m
   wait: true
   retryInterval: 1m
