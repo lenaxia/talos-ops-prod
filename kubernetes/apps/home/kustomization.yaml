@@ -11,7 +11,6 @@ resources:
   #- ./node-red/ks.yaml
   - ./stirling-pdf/ks.yaml
   - ./redlib/ks.yaml
-  - ./roskills/ks.yaml
   - ./localai/ks.yaml
   #- ./stablediffusion/ks.yaml
   - ./home-assistant/ks.yaml
@@ -20,6 +19,4 @@ resources:
   #- ./frigate/ks.yaml
   - ./zwavejs/ks.yaml
   - ./mosquitto/ks.yaml
-  - ./rathena/ks.yaml
-  #- ./openkore/ks.yaml
   - ./linkwarden/ks.yaml
