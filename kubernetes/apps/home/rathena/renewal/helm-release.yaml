@@ -36,6 +36,16 @@ spec:
               - secretRef:
                   name: *appname
             env:
+              - name: MYSQL_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-secret
+                    key: ip
+              - name: MYSQL_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-secret
+                    key: port
               - name: SET_SERVER_NAME
                 value: "rAthena"
               - name: MYSQL_DROP_DB
