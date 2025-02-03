@@ -9,9 +9,9 @@ metadata:
     substitution.flux.home.arpa/enabled: "true"
 spec:
   dependsOn:
-    - name: cluster-home-rathena-classic
-    - name: cluster-home-rathena-renewal
-  path: ./kubernetes/apps/home/openkore/primary
+    - name: cluster-ragnarok-rathena-classic
+    - name: cluster-ragnorok-rathena-renewal
+  path: ./kubernetes/apps/ragnarok/openkore/primary
   prune: true
   sourceRef:
     kind: GitRepository
@@ -35,9 +35,9 @@ metadata:
     substitution.flux.home.arpa/enabled: "true"
 spec:
   dependsOn:
-    - name: cluster-home-rathena-classic
-    - name: cluster-home-rathena-renewal
-  path: ./kubernetes/apps/home/openkore/botijo
+    - name: cluster-ragnarok-rathena-classic
+    - name: cluster-ragnarok-rathena-renewal
+  path: ./kubernetes/apps/ragnarok/openkore/botijo
   prune: true
   sourceRef:
     kind: GitRepository
