@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: cluster-home-rathena-classic
+  name: cluster-ragnarok-rathena-classic
   namespace: flux-system
   labels:
     substitution.flux.home.arpa/enabled: "true"
@@ -11,7 +11,7 @@ spec:
   dependsOn:
     - name: cluster-storage-longhorn
     - name: cluster-databases-mariadb
-  path: ./kubernetes/apps/home/rathena/classic
+  path: ./kubernetes/apps/ragnarok/rathena/classic
   prune: true
   sourceRef:
     kind: GitRepository
@@ -30,7 +30,7 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: cluster-home-rathena-renewal
+  name: cluster-ragnarok-rathena-renewal
   namespace: flux-system
   labels:
     substitution.flux.home.arpa/enabled: "true"
@@ -38,7 +38,7 @@ spec:
   dependsOn:
     - name: cluster-storage-longhorn
     - name: cluster-databases-mariadb
-  path: ./kubernetes/apps/home/rathena/renewal
+  path: ./kubernetes/apps/ragnarok/rathena/renewal
   prune: true
   sourceRef:
     kind: GitRepository
