@@ -1,0 +1,134 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: rathena-renewal
+stringData:
+    # The user name and password to use for accessing the database.
+    MYSQL_USERNAME: ragnarok
+    MYSQL_PASSWORD: oiDzEqNerL7HeA3fU
+    MYSQL_DATABASE: rathena_renewal
+    # The user name and password for the inter-server communication
+    # account.
+    SET_INTERSRV_USERID: s1
+    SET_INTERSRV_PASSWD: p1
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname rathena-renewal
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      interval: 16m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+
+    controllers:
+      main:
+        enabled: true
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        pod:
+          hostNetwork: true
+        containers:
+          server:
+            image:
+              repository: ghcr.io/lenaxia/docker-rathena/rathena-packetver20200401
+              tag: renewal-20240805
+            envFrom:
+              - secretRef:
+                  name: *appname
+            env:
+              - name: MYSQL_HOST
+                value: "192.168.5.15"
+              - name: MYSQL_USERNAME
+                value: "ragnarok"
+              - name: MYSQL_DATABASE
+                value: "rathena_renewal"
+              - name: SET_SERVER_NAME
+                value: "rAthena"
+              - name: MYSQL_DROP_DB
+                value: "0"
+              - name: SET_PINCODE_ENABLED
+                value: "no"
+              - name: SET_START_POINT
+                value: "prontera,155,182"
+              - name: ADD_SUBNET_MAP1
+                value: "255.255.255.255:10.96.255.255"
+              - name: SET_CHAR_PUBLIC_IP
+                value: "192.168.5.105"
+              - name: SET_MAP_PUBLIC_IP
+                value: "192.168.5.105"
+              - name: MYSQL_ACCOUNTSANDCHARS
+                value: "1"
+
+                  #          login-proxy-tcp:
+                  #            image:
+                  #              repository: k8s.gcr.io/proxy-to-service
+                  #              tag: v2
+                  #            args: ["tcp", "6900", "rathena-server"]
+                  #            ports:
+                  #              - name: login
+                  #                containerPort: 6900
+                  #                hostPort: 6900
+                  #                protocol: TCP
+                  #
+                  #          char-proxy-tcp:
+                  #            image:
+                  #              repository: k8s.gcr.io/proxy-to-service
+                  #              tag: v2
+                  #            args: ["tcp", "6121", "rathena-server"]
+                  #            ports:
+                  #              - name: char
+                  #                containerPort: 6121
+                  #                hostPort: 6121
+                  #                protocol: TCP
+                  #
+                  #          map-proxy-tcp:
+                  #            image:
+                  #              repository: k8s.gcr.io/proxy-to-service
+                  #              tag: v2
+                  #            args: ["tcp", "5121", "rathena-server"]
+                  #            ports:
+                  #              - name: map
+                  #                containerPort: 5121
+                  #                hostPort: 5121
+                  #                protocol: TCP
+
+          debug:
+            image:
+              repository: alpine
+              tag: latest
+            command: ["/bin/sh", "-c", "sleep 60m"]
+
+    service:
+      main:
+        enabled: true
+        type: LoadBalancer
+        controller: main
+        labels:
+          app: rathena
+        ports:
+          login:
+            enabled: true
+            port: 6900
+            protocol: TCP
+          char:
+            enabled: true
+            port: 6121
+            protocol: TCP
+          map:
+            enabled: true
+            port: 5121
+            protocol: TCP
