@@ -36,12 +36,6 @@ spec:
               - secretRef:
                   name: *appname
             env:
-              - name: MYSQL_HOST
-                value: "192.168.5.15"
-              - name: MYSQL_USERNAME
-                value: "ragnarok"
-              - name: MYSQL_DATABASE
-                value: "rathena_renewal"
               - name: SET_SERVER_NAME
                 value: "rAthena"
               - name: MYSQL_DROP_DB
