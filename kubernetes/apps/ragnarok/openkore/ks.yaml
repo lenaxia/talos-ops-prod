@@ -10,7 +10,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-ragnarok-rathena-classic
-    - name: cluster-ragnorok-rathena-renewal
+    - name: cluster-ragnarok-rathena-renewal
   path: ./kubernetes/apps/ragnarok/openkore/primary
   prune: true
   sourceRef:
