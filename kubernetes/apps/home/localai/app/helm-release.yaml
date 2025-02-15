@@ -150,14 +150,16 @@ spec:
         enabled: true
         annotations: {}
         storageClass: longhorn
-        accessModes: ReadWriteMany
+        accessModes: 
+          - ReadWriteMany
         size: 200Gi
         globalMount: /models
       output:
         enabled: true
         annotations: {}
         storageClass: longhorn
-        accessModes: ReadWriteMany
+        accessModes: 
+          - ReadWriteMany
         size: 10Gi
         globalMount: /tmp/generated
         retain: true
