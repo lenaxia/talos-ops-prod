@@ -35,7 +35,7 @@ spec:
   # See https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
   values:
     fullnameOverride: localai
-    replicaCount: 1
+    replicaCount: 0
 
     deployment:
       image:
