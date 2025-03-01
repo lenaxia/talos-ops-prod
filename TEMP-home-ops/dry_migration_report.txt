@@ -1,0 +1,401 @@
+Migration Report:
+
+The following changes would be made:
+
+./kyverno/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-kyverno
+  - Updated path from "./cluster/apps/kyverno/app" to "./kubernetes/apps/kyverno/app" in Kustomization cluster-kyverno
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-kyverno-policies
+  - Updated path from "./cluster/apps/kyverno/policies" to "./kubernetes/apps/kyverno/policies" in Kustomization cluster-kyverno-policies
+
+./kube-system/node-feature-discovery/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-node-feature-discovery
+  - Updated path from "./cluster/apps/kube-system/node-feature-discovery/app" to "./kubernetes/apps/kube-system/node-feature-discovery/app" in Kustomization cluster-apps-node-feature-discovery
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-node-feature-discovery-rules
+  - Updated path from "./cluster/apps/kube-system/node-feature-discovery/rules" to "./kubernetes/apps/kube-system/node-feature-discovery/rules" in Kustomization cluster-apps-node-feature-discovery-rules
+
+./kube-system/kured/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-kured
+  - Updated path from "./cluster/apps/kube-system/kured/app" to "./kubernetes/apps/kube-system/kured/app" in Kustomization cluster-apps-kured
+
+./kube-system/intel-device-plugin/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-intel-device-plugin-operator
+  - Updated path from "./cluster/apps/kube-system/intel-device-plugin/app" to "./kubernetes/apps/kube-system/intel-device-plugin/app" in Kustomization cluster-apps-intel-device-plugin-operator
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-intel-device-plugin-gpu
+  - Updated path from "./cluster/apps/kube-system/intel-device-plugin/gpu" to "./kubernetes/apps/kube-system/intel-device-plugin/gpu" in Kustomization cluster-apps-intel-device-plugin-gpu
+
+./kube-system/nvidia-gpu-operator/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-nvidia-gpu-operator
+  - Updated path from "./cluster/apps/kube-system/nvidia-gpu-operator/app" to "./kubernetes/apps/kube-system/nvidia-gpu-operator/app" in Kustomization cluster-apps-nvidia-gpu-operator
+
+./utilities/uptimekuma/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-uptimekuma
+  - Updated path from "./cluster/apps/utilities/uptimekuma/app" to "./kubernetes/apps/utilities/uptimekuma/app" in Kustomization cluster-utilities-uptimekuma
+
+./utilities/librespeed/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-librespeed
+  - Updated path from "./cluster/apps/utilities/librespeed/app" to "./kubernetes/apps/utilities/librespeed/app" in Kustomization cluster-utilities-librespeed
+
+./utilities/vaultwarden/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-vaultwarden
+  - Updated path from "./cluster/apps/utilities/vaultwarden/app" to "./kubernetes/apps/utilities/vaultwarden/app" in Kustomization cluster-utilities-vaultwarden
+
+./utilities/it-tools/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-it-tools
+  - Updated path from "./cluster/apps/utilities/it-tools/app" to "./kubernetes/apps/utilities/it-tools/app" in Kustomization cluster-utilities-it-tools
+
+./utilities/adguard/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-adguard
+  - Updated path from "./cluster/apps/utilities/adguard/app" to "./kubernetes/apps/utilities/adguard/app" in Kustomization cluster-utilities-adguard
+
+./utilities/k8sgpt/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-k8sgpt
+  - Updated path from "./cluster/apps/utilities/k8sgpt/app" to "./kubernetes/apps/utilities/k8sgpt/app" in Kustomization cluster-utilities-k8sgpt
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-k8sgpt-config
+  - Updated path from "./cluster/apps/utilities/k8sgpt/config" to "./kubernetes/apps/utilities/k8sgpt/config" in Kustomization cluster-utilities-k8sgpt-config
+
+./utilities/pgadmin/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-pgadmin
+  - Updated path from "./cluster/apps/utilities/pgadmin/app" to "./kubernetes/apps/utilities/pgadmin/app" in Kustomization cluster-utilities-pgadmin
+
+./utilities/echo-server/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-echo-server
+  - Updated path from "./cluster/apps/utilities/echo-server/app" to "./kubernetes/apps/utilities/echo-server/app" in Kustomization cluster-utilities-echo-server
+
+./utilities/smokeping/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-smokeping
+  - Updated path from "./cluster/apps/utilities/smokeping/app" to "./kubernetes/apps/utilities/smokeping/app" in Kustomization cluster-utilities-smokeping
+
+./utilities/vaultwarden-ldap/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-vaultwarden-ldap
+  - Updated path from "./cluster/apps/utilities/vaultwarden-ldap/app" to "./kubernetes/apps/utilities/vaultwarden-ldap/app" in Kustomization cluster-utilities-vaultwarden-ldap
+
+./utilities/podinfo/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-podinfo
+  - Updated path from "./cluster/apps/utilities/podinfo/app" to "./kubernetes/apps/utilities/podinfo/app" in Kustomization cluster-utilities-podinfo
+
+./utilities/changedetection/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-changedetection
+  - Updated path from "./cluster/apps/utilities/changedetection/app" to "./kubernetes/apps/utilities/changedetection/app" in Kustomization cluster-utilities-changedetection
+
+./utilities/brother-ql-web/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-brother-ql-web
+  - Updated path from "./cluster/apps/utilities/brother-ql-web/app" to "./kubernetes/apps/utilities/brother-ql-web/app" in Kustomization cluster-utilities-brother-ql-web
+
+./utilities/guacamole/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-utilities-guacamole
+  - Updated path from "./cluster/apps/utilities/guacamole/app" to "./kubernetes/apps/utilities/guacamole/app" in Kustomization cluster-utilities-guacamole
+
+./media/metube/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-metube
+  - Updated path from "./cluster/apps/media/metube/app" to "./kubernetes/apps/media/metube/app" in Kustomization cluster-media-metube
+
+./media/readarr/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-readarr
+  - Updated path from "./cluster/apps/media/readarr/app" to "./kubernetes/apps/media/readarr/app" in Kustomization cluster-media-readarr
+
+./media/mediarequests/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-jellyseerr
+  - Updated path from "./cluster/apps/media/mediarequests/jellyseerr" to "./kubernetes/apps/media/mediarequests/jellyseerr" in Kustomization cluster-media-jellyseerr
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-overseerr
+  - Updated path from "./cluster/apps/media/mediarequests/overseerr" to "./kubernetes/apps/media/mediarequests/overseerr" in Kustomization cluster-media-overseerr
+
+./media/imaginary/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-imaginary
+  - Updated path from "./cluster/apps/media/imaginary/app" to "./kubernetes/apps/media/imaginary/app" in Kustomization cluster-media-imaginary
+
+./media/recyclarr/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-recyclarr
+  - Updated path from "./cluster/apps/media/recyclarr/app" to "./kubernetes/apps/media/recyclarr/app" in Kustomization cluster-media-recyclarr
+
+./media/nzbhydra2/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-nzbhydra2
+  - Updated path from "./cluster/apps/media/nzbhydra2/app" to "./kubernetes/apps/media/nzbhydra2/app" in Kustomization cluster-media-nzbhydra2
+
+./media/tautulli/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-tautulli
+  - Updated path from "./cluster/apps/media/tautulli/app" to "./kubernetes/apps/media/tautulli/app" in Kustomization cluster-media-tautulli
+
+./media/bazarr/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-bazarr
+  - Updated path from "./cluster/apps/media/bazarr/app" to "./kubernetes/apps/media/bazarr/app" in Kustomization cluster-media-bazarr
+
+./media/plexmetamanager/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-plexmetamanager
+  - Updated path from "./cluster/apps/media/plexmetamanager/app" to "./kubernetes/apps/media/plexmetamanager/app" in Kustomization cluster-media-plexmetamanager
+
+./media/jellyfin/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-jellyfin
+  - Updated path from "./cluster/apps/media/jellyfin/app" to "./kubernetes/apps/media/jellyfin/app" in Kustomization cluster-media-jellyfin
+
+./media/ersatztv/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-ersatztv
+  - Updated path from "./cluster/apps/media/ersatztv/app" to "./kubernetes/apps/media/ersatztv/app" in Kustomization cluster-media-ersatztv
+
+./media/transmission/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-transmission
+  - Updated path from "./cluster/apps/media/transmission/app" to "./kubernetes/apps/media/transmission/app" in Kustomization cluster-media-transmission
+
+./media/nzbget/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-nzbget
+  - Updated path from "./cluster/apps/media/nzbget/app" to "./kubernetes/apps/media/nzbget/app" in Kustomization cluster-media-nzbget
+
+./media/invidious/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-invidious
+  - Updated path from "./cluster/apps/media/invidious/app" to "./kubernetes/apps/media/invidious/app" in Kustomization cluster-media-invidious
+
+./media/subgen/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-subgen
+  - Updated path from "./cluster/apps/media/subgen/app" to "./kubernetes/apps/media/subgen/app" in Kustomization cluster-media-subgen
+
+./media/plex/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-plex
+  - Updated path from "./cluster/apps/media/plex/app" to "./kubernetes/apps/media/plex/app" in Kustomization cluster-media-plex
+
+./media/sonarr/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-sonarr-base
+  - Updated path from "./cluster/apps/media/sonarr/base" to "./kubernetes/apps/media/sonarr/base" in Kustomization cluster-media-sonarr-base
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-sonarr
+  - Updated path from "./cluster/apps/media/sonarr/app-4k" to "./kubernetes/apps/media/sonarr/app-4k" in Kustomization cluster-media-sonarr
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-sonarr-4k
+  - Updated path from "./cluster/apps/media/sonarr/app" to "./kubernetes/apps/media/sonarr/app" in Kustomization cluster-media-sonarr-4k
+
+./media/calibre/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-calibre
+  - Updated path from "./cluster/apps/media/calibre/server" to "./kubernetes/apps/media/calibre/server" in Kustomization cluster-media-calibre
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-calibre-web
+  - Updated path from "./cluster/apps/media/calibre/web" to "./kubernetes/apps/media/calibre/web" in Kustomization cluster-media-calibre-web
+
+./media/radarr/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-radarr-base
+  - Updated path from "./cluster/apps/media/radarr/base" to "./kubernetes/apps/media/radarr/base" in Kustomization cluster-media-radarr-base
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-radarr
+  - Updated path from "./cluster/apps/media/radarr/app" to "./kubernetes/apps/media/radarr/app" in Kustomization cluster-media-radarr
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-radarr-4k
+  - Updated path from "./cluster/apps/media/radarr/app-4k" to "./kubernetes/apps/media/radarr/app-4k" in Kustomization cluster-media-radarr-4k
+
+./media/outline/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-media-outline
+  - Updated path from "./cluster/apps/media/outline/app" to "./kubernetes/apps/media/outline/app" in Kustomization cluster-media-outline
+
+./networking/metallb/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-metallb
+  - Updated path from "./cluster/apps/networking/metallb/app" to "./kubernetes/apps/networking/metallb/app" in Kustomization cluster-networking-metallb
+
+./networking/cert-manager/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-cert-manager
+  - Updated path from "./cluster/apps/networking/cert-manager/app" to "./kubernetes/apps/networking/cert-manager/app" in Kustomization cluster-cert-manager
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-cert-manager-issuers
+  - Updated path from "./cluster/apps/networking/cert-manager/issuers" to "./kubernetes/apps/networking/cert-manager/issuers" in Kustomization cluster-cert-manager-issuers
+
+./networking/authelia/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-authelia
+  - Updated path from "./cluster/apps/networking/authelia/app" to "./kubernetes/apps/networking/authelia/app" in Kustomization cluster-networking-authelia
+
+./networking/external-dns/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-external-dns
+  - Updated path from "./cluster/apps/networking/external-dns/app" to "./kubernetes/apps/networking/external-dns/app" in Kustomization cluster-networking-external-dns
+
+./networking/webfinger/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-webfinger
+  - Updated path from "./cluster/apps/networking/webfinger/app" to "./kubernetes/apps/networking/webfinger/app" in Kustomization cluster-networking-webfinger
+
+./networking/traefik/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-traefik
+  - Updated path from "./cluster/apps/networking/traefik/app" to "./kubernetes/apps/networking/traefik/app" in Kustomization cluster-networking-traefik
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-traefik-middlewares
+  - Updated path from "./cluster/apps/networking/traefik/middlewares" to "./kubernetes/apps/networking/traefik/middlewares" in Kustomization cluster-networking-traefik-middlewares
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-traefik-ingresses
+  - Updated path from "./cluster/apps/networking/traefik/ingresses" to "./kubernetes/apps/networking/traefik/ingresses" in Kustomization cluster-networking-traefik-ingresses
+
+./networking/multus/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-multus
+  - Updated path from "./cluster/apps/networking/multus/app" to "./kubernetes/apps/networking/multus/app" in Kustomization cluster-networking-multus
+
+./networking/cloudflare-ddns/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-networking-cloudflareddns
+  - Updated path from "./cluster/apps/networking/cloudflare-ddns/app" to "./kubernetes/apps/networking/cloudflare-ddns/app" in Kustomization cluster-networking-cloudflareddns
+
+./storage/minio/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-storage-minio
+  - Updated path from "./cluster/apps/storage/minio/app" to "./kubernetes/apps/storage/minio/app" in Kustomization cluster-storage-minio
+
+./storage/kopia-web/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-storage-kopia
+  - Updated path from "./cluster/apps/storage/kopia-web/app" to "./kubernetes/apps/storage/kopia-web/app" in Kustomization cluster-storage-kopia
+
+./storage/longhorn/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-storage-longhorn
+  - Updated path from "./cluster/apps/storage/longhorn/app" to "./kubernetes/apps/storage/longhorn/app" in Kustomization cluster-storage-longhorn
+
+./storage/paperless/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-storage-paperless
+  - Updated path from "./cluster/apps/storage/paperless/app" to "./kubernetes/apps/storage/paperless/app" in Kustomization cluster-storage-paperless
+
+./home/fasten/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-fasten
+  - Updated path from "./cluster/apps/home/fasten/app" to "./kubernetes/apps/home/fasten/app" in Kustomization cluster-home-fasten
+
+./home/stablediffusion/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-stablediffusion
+  - Updated path from "./cluster/apps/home/stablediffusion/app" to "./kubernetes/apps/home/stablediffusion/app" in Kustomization cluster-home-stablediffusion
+
+./home/babybuddy/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-babybuddy
+  - Updated path from "./cluster/apps/home/babybuddy/app" to "./kubernetes/apps/home/babybuddy/app" in Kustomization cluster-home-babybuddy
+
+./home/monica/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-monica
+  - Updated path from "./cluster/apps/home/monica/app" to "./kubernetes/apps/home/monica/app" in Kustomization cluster-home-monica
+
+./home/openkore/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-openkore-primary
+  - Updated path from "./cluster/apps/home/openkore/primary" to "./kubernetes/apps/home/openkore/primary" in Kustomization cluster-openkore-primary
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-openkore-botijo
+  - Updated path from "./cluster/apps/home/openkore/botijo" to "./kubernetes/apps/home/openkore/botijo" in Kustomization cluster-openkore-botijo
+
+./home/langserver/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-langserver
+  - Updated path from "./cluster/apps/home/langserver/app" to "./kubernetes/apps/home/langserver/app" in Kustomization cluster-home-langserver
+
+./home/rathena/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-rathena-classic
+  - Updated path from "./cluster/apps/home/rathena/classic" to "./kubernetes/apps/home/rathena/classic" in Kustomization cluster-home-rathena-classic
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-rathena-renewal
+  - Updated path from "./cluster/apps/home/rathena/renewal" to "./kubernetes/apps/home/rathena/renewal" in Kustomization cluster-home-rathena-renewal
+
+./home/mosquitto/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-mosquitto
+  - Updated path from "./cluster/apps/home/mosquitto/app" to "./kubernetes/apps/home/mosquitto/app" in Kustomization cluster-home-mosquitto
+
+./home/hajimari/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-hajimari
+  - Updated path from "./cluster/apps/home/hajimari/app" to "./kubernetes/apps/home/hajimari/app" in Kustomization cluster-home-hajimari
+
+./home/browserless/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-browserless
+  - Updated path from "./cluster/apps/home/browserless/app" to "./kubernetes/apps/home/browserless/app" in Kustomization cluster-home-browserless
+
+./home/magicmirror/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-magicmirror
+  - Updated path from "./cluster/apps/home/magicmirror/app" to "./kubernetes/apps/home/magicmirror/app" in Kustomization cluster-home-magicmirror
+
+./home/redlib/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-redlib
+  - Updated path from "./cluster/apps/home/redlib/app" to "./kubernetes/apps/home/redlib/app" in Kustomization cluster-home-redlib
+
+./home/radicale/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-radicale
+  - Updated path from "./cluster/apps/home/radicale/app" to "./kubernetes/apps/home/radicale/app" in Kustomization cluster-home-radicale
+
+./home/gamevault/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-gamevault
+  - Updated path from "./cluster/apps/home/gamevault/app" to "./kubernetes/apps/home/gamevault/app" in Kustomization cluster-home-gamevault
+
+./home/hercules/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-hercules-classic
+  - Updated path from "./cluster/apps/home/hercules/classic" to "./kubernetes/apps/home/hercules/classic" in Kustomization cluster-home-hercules-classic
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-hercules-renewal
+  - Updated path from "./cluster/apps/home/hercules/renewal" to "./kubernetes/apps/home/hercules/renewal" in Kustomization cluster-home-hercules-renewal
+
+./home/esphome/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-esphome
+  - Updated path from "./cluster/apps/home/esphome/app" to "./kubernetes/apps/home/esphome/app" in Kustomization cluster-home-esphome
+
+./home/localai/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-big-agi
+  - Updated path from "./cluster/apps/home/localai/big-agi" to "./kubernetes/apps/home/localai/big-agi" in Kustomization cluster-home-big-agi
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-open-webui
+  - Updated path from "./cluster/apps/home/localai/open-webui" to "./kubernetes/apps/home/localai/open-webui" in Kustomization cluster-home-open-webui
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-litellm
+  - Updated path from "./cluster/apps/home/localai/litellm" to "./kubernetes/apps/home/localai/litellm" in Kustomization cluster-home-litellm
+
+./home/frigate/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-frigate
+  - Updated path from "./cluster/apps/home/frigate/app" to "./kubernetes/apps/home/frigate/app" in Kustomization cluster-apps-frigate
+
+./home/home-assistant/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-home-assistant
+  - Updated path from "./cluster/apps/home/home-assistant/app" to "./kubernetes/apps/home/home-assistant/app" in Kustomization cluster-home-home-assistant
+
+./home/babybuddy-pandaria/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-babybuddy-pandaria
+  - Updated path from "./cluster/apps/home/babybuddy-pandaria/app" to "./kubernetes/apps/home/babybuddy-pandaria/app" in Kustomization cluster-home-babybuddy-pandaria
+
+./home/stirling-pdf/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-stirling-pdf
+  - Updated path from "./cluster/apps/home/stirling-pdf/app" to "./kubernetes/apps/home/stirling-pdf/app" in Kustomization cluster-home-stirling-pdf
+
+./home/zwavejs/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-zwavejs
+  - Updated path from "./cluster/apps/home/zwavejs/app" to "./kubernetes/apps/home/zwavejs/app" in Kustomization cluster-home-zwavejs
+
+./home/roskills/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-roskills
+  - Updated path from "./cluster/apps/home/roskills/app" to "./kubernetes/apps/home/roskills/app" in Kustomization cluster-home-roskills
+
+./home/node-red/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-node-red
+  - Updated path from "./cluster/apps/home/node-red/app" to "./kubernetes/apps/home/node-red/app" in Kustomization cluster-home-node-red
+
+./home/node-red/app/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-home-babybuddy
+  - Updated path from "./cluster/apps/home/babybuddy/app" to "./kubernetes/apps/home/babybuddy/app" in Kustomization cluster-home-babybuddy
+
+./monitoring/loki/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-monitoring-loki
+  - Updated path from "./cluster/apps/monitoring/loki/app" to "./kubernetes/apps/monitoring/loki/app" in Kustomization cluster-monitoring-loki
+
+./monitoring/vector/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-vector-aggregator
+  - Updated path from "./cluster/apps/monitoring/vector/aggregator" to "./kubernetes/apps/monitoring/vector/aggregator" in Kustomization cluster-apps-vector-aggregator
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-apps-vector-agent
+  - Updated path from "./cluster/apps/monitoring/vector/agent" to "./kubernetes/apps/monitoring/vector/agent" in Kustomization cluster-apps-vector-agent
+
+./monitoring/prometheus-stack/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-monitoring-prometheus-stack
+  - Updated path from "./cluster/apps/monitoring/prometheus-stack/app" to "./kubernetes/apps/monitoring/prometheus-stack/app" in Kustomization cluster-monitoring-prometheus-stack
+
+./monitoring/grafana/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-monitoring-grafana
+  - Updated path from "./cluster/apps/monitoring/grafana/app" to "./kubernetes/apps/monitoring/grafana/app" in Kustomization cluster-monitoring-grafana
+
+./system-upgrade/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-system-upgrade-controller
+  - Updated path from "./cluster/apps/system-upgrade/app" to "./kubernetes/apps/system-upgrade/app" in Kustomization cluster-system-upgrade-controller
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-system-upgrade-controller-plans
+  - Updated path from "./cluster/apps/system-upgrade/plans" to "./kubernetes/apps/system-upgrade/plans" in Kustomization cluster-system-upgrade-controller-plans
+
+./databases/mariadb/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-mariadb
+  - Updated path from "./cluster/apps/databases/mariadb/app" to "./kubernetes/apps/databases/mariadb/app" in Kustomization cluster-databases-mariadb
+
+./databases/redis-operator/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-redis-operator-crds
+  - Updated path from "./cluster/apps/databases/redis-operator/crds" to "./kubernetes/apps/databases/redis-operator/crds" in Kustomization cluster-databases-redis-operator-crds
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-redis-operator
+  - Updated path from "./cluster/apps/databases/redis-operator/app" to "./kubernetes/apps/databases/redis-operator/app" in Kustomization cluster-databases-redis-operator
+
+./databases/redis/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-redis
+  - Updated path from "./cluster/apps/databases/redis/app" to "./kubernetes/apps/databases/redis/app" in Kustomization cluster-databases-redis
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-redis-lb
+  - Updated path from "./cluster/apps/databases/redis/lb" to "./kubernetes/apps/databases/redis/lb" in Kustomization cluster-databases-redis-lb
+
+./databases/influxdb/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-influxdb
+  - Updated path from "./cluster/apps/databases/influxdb/app" to "./kubernetes/apps/databases/influxdb/app" in Kustomization cluster-databases-influxdb
+
+./databases/chronograf/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-chronograf
+  - Updated path from "./cluster/apps/databases/chronograf/app" to "./kubernetes/apps/databases/chronograf/app" in Kustomization cluster-databases-chronograf
+
+./databases/telegraf/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-telegraf
+  - Updated path from "./cluster/apps/databases/telegraf/app" to "./kubernetes/apps/databases/telegraf/app" in Kustomization cluster-databases-telegraf
+
+./databases/cloudnative-pg/ks.yaml:
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-postgres-operator
+  - Updated path from "./cluster/apps/databases/cloudnative-pg/app" to "./kubernetes/apps/databases/cloudnative-pg/app" in Kustomization cluster-databases-postgres-operator
+  - Updated sourceRef.name from "flux-system" to "home-ops" in Kustomization cluster-databases-postgres-clusters
+  - Updated path from "./cluster/apps/databases/cloudnative-pg/clusters" to "./kubernetes/apps/databases/cloudnative-pg/clusters" in Kustomization cluster-databases-postgres-clusters

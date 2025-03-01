@@ -1,0 +1,188 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2beta1.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname home-assistant
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.5.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 4
+  uninstall:
+    keepHistory: false
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        supplementalGroups:
+          - 100
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        type: statefulset
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        initContainers:
+          init-db:
+            env:
+              - name: INIT_POSTGRES_SUPER_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-superuser
+                    key: password
+            envFrom:
+              - secretRef:
+                  name: home-assistant-secret
+            image:
+              repository: ghcr.io/onedr0p/postgres-init
+              tag: '16.6'
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/home-assistant
+              tag: 2024.12.2@sha256:8e66e5ee5cd9e484bb03b85cbb7c2571ea97f65091308c2f1c7418d5ec9f0db2
+            envFrom:
+              - secretRef:
+                  name: home-assistant-secret
+            env:
+              TZ: ${TIMEZONE}
+              POSTGRES_HOST: defaultpg-rw.default.svc.cluster.local
+              POSTGRES_DB: home_assistant
+            resources:
+              requests:
+                cpu: 10m
+                memory: 100Mi
+              limits:
+                memory: 750Mi
+            probes:
+              liveness:
+                enabled: false
+              readiness:
+                enabled: false
+              startup:
+                enabled: false
+          code-server:
+            image:
+              repository: ghcr.io/coder/code-server
+              tag: 4.95.3@sha256:6d74583d68179cbb6ddadc2518b450d2ac3eaec2d342474fe1941e03371cd2cf
+            args: [
+              "--auth", "none",
+              "--user-data-dir", "/config/.vscode",
+              "--extensions-dir", "/config/.vscode",
+              "--port", "12321",
+              "/config"
+            ]
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 512Mi
+        statefulset:
+          volumeClaimTemplates:
+            - name: config
+              accessMode: ReadWriteOnce
+              size: 20Gi
+              storageClass: longhorn
+              labels:
+                snapshot.home.arpa/enabled: 'true'
+              globalMounts:
+                - path: /config
+    persistence:
+      ldap-auth-py:
+        type: configMap
+        name: ldap-auth-py
+        globalMounts:
+          - path: /config/ldap-auth
+        defaultMode: 0777
+      logs:
+        type: emptyDir
+        globalMounts:
+          - path: /config/logs
+      tts:
+        type: emptyDir
+        globalMounts:
+          - path: /config/tts
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+    service:
+      main:
+        type: LoadBalancer
+          #externalIPs: ["${SVC_HOME_ASSISTANT_ADDR}"]
+          #externalTrafficPolicy: Local
+        ports:
+          http:
+            port: 8123
+          code-server:
+            port: 12321
+          ocpp:
+            port: 9000
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: home-assistant
+          hajimari.io/group: &namespace home
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        hosts:
+          - host: &host hass.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+              - path: /ocpp
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: ocpp
+        tls:
+          - hosts:
+              - *host
+            secretName: *host
+        className: traefik
+      code-server:
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: home-assistant
+          hajimari.io/group: *namespace 
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        className: traefik
+        hosts:
+          - host: &host2 hass-code.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                service:
+                  identifier: main
+                  port: code-server
+        tls:
+          - hosts:
+              - *host2
+            secretName: *host2
+    podAnnotations:
+      k8s.v1.cni.cncf.io/networks: macvlan-static-iot-hass
