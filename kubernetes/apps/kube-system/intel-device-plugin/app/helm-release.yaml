@@ -27,7 +27,7 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
-values:
-  manager:
-    devices:
-      gpu: true
+  values:
+    manager:
+      devices:
+        gpu: true
