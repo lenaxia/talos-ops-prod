@@ -28,7 +28,8 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - deviceSelector:
+      - interface: "eth0"
+        deviceSelector:
           hardwareAddr: "f4:4d:30:68:a3:b3"
         dhcp: false
         addresses:
@@ -44,7 +45,8 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - deviceSelector:
+      - interface: "eth0"
+        deviceSelector:
           hardwareAddr: "b8:ae:ed:eb:51:4f"
         dhcp: false
         addresses:
@@ -60,7 +62,8 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - deviceSelector:
+      - interface: "eth0"
+        deviceSelector:
           hardwareAddr: "b8:ae:ed:ea:42:de"
         dhcp: false
         addresses:
@@ -93,7 +96,8 @@ nodes:
     nodeLabels:
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - deviceSelector:
+      - interface: "eth0"
+        deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:4d"
         dhcp: false
         addresses:
@@ -114,7 +118,8 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - deviceSelector:
+      - interface: "eth0"
+        deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:a1"
         dhcp: false
         addresses:
@@ -135,7 +140,8 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - deviceSelector:
+      - interface: "eth0"
+        deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:0e"
         dhcp: false
         addresses:
