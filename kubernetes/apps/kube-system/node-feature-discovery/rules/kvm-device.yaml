@@ -1,0 +1,13 @@
+apiVersion: nfd.k8s-sigs.io/v1alpha1
+ kind: NodeFeatureRule
+ metadata:
+   name: kvm-device
+ spec:
+   rules:
+     - name: kvm.device
+       labels:
+         kvm.feature.node.kubernetes.io/present: "true"
+       matchFeatures:
+         - feature: system.devices
+           matchExpressions:
+             deviceClass: { op: In, value: ["10:232"] }  # Major:Minor for /dev/kvm
