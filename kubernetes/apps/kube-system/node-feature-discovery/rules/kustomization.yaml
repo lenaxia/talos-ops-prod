@@ -7,4 +7,4 @@ resources:
   - ./zooz-zwave-device.yaml
   - ./nortek-zwave-device.yaml
   - ./google-coral-device.yaml
-  - ./kvm-device.yaml
+  #- ./kvm-device.yaml
