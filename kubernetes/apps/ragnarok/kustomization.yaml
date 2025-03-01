@@ -5,4 +5,4 @@ resources:
   - ./namespace.yaml
   - ./rathena/ks.yaml
   - ./roskills/ks.yaml
-  - ./openkore/ks.yaml
+  #- ./openkore/ks.yaml
