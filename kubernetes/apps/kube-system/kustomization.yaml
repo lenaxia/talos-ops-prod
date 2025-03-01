@@ -12,7 +12,7 @@ resources:
 
 
   ## My services
-  - ./intel-device-plugin/ks.yaml
-  - ./node-feature-discovery/ks.yaml
+  #- ./intel-device-plugin/ks.yaml
+  #- ./node-feature-discovery/ks.yaml
   #- ./nvidia-gpu-operator/ks.yaml
   - ./nvidia-device-plugin/ks.yaml
