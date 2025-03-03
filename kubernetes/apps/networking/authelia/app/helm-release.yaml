@@ -480,7 +480,7 @@ spec:
       ##
       session:
         name: authelia_auth_session
-        same_site: none
+        same_site: lax
         expiration: 1h
         inactivity: 5m
         remember_me_duration: 1M
