@@ -480,11 +480,11 @@ spec:
       ##
       session:
         name: authelia_auth_session
-        same_site: lax
+        same_site: none
         expiration: 1h
         inactivity: 5m
         remember_me_duration: 1M
-    
+
         ##
         ## Redis Provider
         ##
