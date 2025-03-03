@@ -158,6 +158,25 @@ spec:
                     output_cost_per_token: 0.00001
                     max_tokens: 40960
 
+                # Deepseek
+                - model_name: deepseek-v3-chat
+                  litellm_params:
+                    model: deepseek/deekseek-chat
+                - model_name: deepseek-r1-reasoning
+                  litellm_params:
+                    model: deepseek/deekseek-reasoner
+
+                ## OpenAI
+                #- model_name: o3-mini-reasoning
+                #  litellm_params:
+                #    model: openai/o3-mini
+                #- model_name: gpt-4o
+                #  litellm_params:
+                #    model: openai/gpt-4o
+                #- model_name: gpt-4o-mini
+                #  litellm_params:
+                #    model: openai/gpt-4o-mini
+
                 ## Bedrock
                 #- model_name: bedrock-claude-sonnet-3-5
                 #  litellm_params:
