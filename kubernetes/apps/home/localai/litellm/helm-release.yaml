@@ -161,10 +161,10 @@ spec:
                 # Deepseek
                 - model_name: deepseek-v3-chat
                   litellm_params:
-                    model: deepseek/deekseek-chat
+                    model: deepseek/deepseek-chat
                 - model_name: deepseek-r1-reasoning
                   litellm_params:
-                    model: deepseek/deekseek-reasoner
+                    model: deepseek/deepseek-reasoner
 
                 ## OpenAI
                 #- model_name: o3-mini-reasoning
