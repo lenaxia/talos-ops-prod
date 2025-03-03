@@ -66,6 +66,7 @@ spec:
               OAUTH_PROVIDER_NAME: The Kao Cloud Login
               OAUTH_CLIENT_ID: open-webui
               OAUTH_CLIENT_SECRET: ${SECRET_OPEN_WEBUI_OAUTH_CLIENT_SECRET}
+              OAUTH_SCOPES: "openid email profile"
               OPENID_PROVIDER_URL: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
               # OpenAI
               OPENAI_API_BASE_URL: https://ai.${SECRET_DEV_DOMAIN}/v1
