@@ -69,6 +69,9 @@ spec:
               OAUTH_SCOPES: "openid email profile"
               OPENID_PROVIDER_URL: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
               WEBUI_SESSION_COOKIE_SAME_SITE: none
+              WEBUI_SESSION_COOKIE_SECURE: true
+              WEBUI_AUTH_COOKIE_SAME_SITE: none
+              WEBUI_AUTH_COOKIE_SECURE: true
               # OpenAI
               OPENAI_API_BASE_URL: https://ai.${SECRET_DEV_DOMAIN}/v1
 
