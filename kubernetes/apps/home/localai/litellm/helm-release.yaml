@@ -166,16 +166,19 @@ spec:
                   litellm_params:
                     model: deepseek/deepseek-reasoner
 
-                ## OpenAI
-                #- model_name: o3-mini-reasoning
-                #  litellm_params:
-                #    model: openai/o3-mini
-                #- model_name: gpt-4o
-                #  litellm_params:
-                #    model: openai/gpt-4o
-                #- model_name: gpt-4o-mini
-                #  litellm_params:
-                #    model: openai/gpt-4o-mini
+                # OpenAI
+                - model_name: o3-mini-reasoning
+                  litellm_params:
+                    model: openai/o3-mini
+                - model_name: gpt-4o
+                  litellm_params:
+                    model: openai/gpt-4o
+                - model_name: gpt-4o-mini
+                  litellm_params:
+                    model: openai/gpt-4o-mini
+                - model_name: dalle3
+                  litellm_params:
+                    model: openai/dall-e-3
 
                 ## Bedrock
                 #- model_name: bedrock-claude-sonnet-3-5
