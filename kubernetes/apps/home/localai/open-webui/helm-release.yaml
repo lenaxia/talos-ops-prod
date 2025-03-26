@@ -54,6 +54,7 @@ spec:
               repository: ghcr.io/open-webui/open-webui
               tag: v0.5.18
             env:
+              GLOBAL_LOG_LEVEL: DEBUG
               TZ: ${TIMEZONE}
               WEBUI_URL: https://chat.${SECRET_DEV_DOMAIN}
               WEBUI_NAME: The Kao Cloud
@@ -61,6 +62,7 @@ spec:
               DEFAULT_USER_ROLE: user
               DEFAULT_MODELS: default
               ENABLE_OLLAMA_API: false
+              ENABLE_RAG_WEB_SEARCH: true
               # OAuth
               ENABLE_OAUTH_SIGNUP: true
               OAUTH_PROVIDER_NAME: The Kao Cloud Login
