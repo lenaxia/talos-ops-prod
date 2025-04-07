@@ -52,7 +52,7 @@ spec:
           main:
             image:
               repository: ghcr.io/open-webui/open-webui
-              tag: v0.6.0
+              tag: v0.6.2
             env:
               GLOBAL_LOG_LEVEL: DEBUG
               TZ: ${TIMEZONE}
