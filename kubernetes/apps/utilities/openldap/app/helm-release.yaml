@@ -1,0 +1,93 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname ldap-backup
+  namespace: utilities
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    podAnnotations:
+      secret.reloader.stakater.com/reload: *appname
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: osixia/openldap
+              tag: latest
+              pullPolicy: Always
+            envFrom:
+              - secretRef:
+                  name: *appname
+            env:
+              LDAP_ORGANISATION: "Backup LDAP"
+              LDAP_DOMAIN: "kao.family"
+              LDAP_READONLY_USER: "true"
+              LDAP_REPLICATION: "true"
+              LDAP_PRIMARY_HOST: "192.168.0.120"
+              LDAP_SYNREPL_CONFIG: |
+                syncrepl rid=001
+                provider=ldap://192.168.0.120
+                type=refreshAndPersist
+                interval=00:00:05
+                searchbase="dc=kao,dc=family"
+                filter="(objectClass=*)"
+                scope=sub
+                attrs="*,+"
+                schemachecking=off
+                binddn="cn=replicator,dc=kao,dc=family"
+                credentials=${LDAP_PASSWORD}
+    service:
+      main:
+        ports:
+          ldap:
+            port: 389
+          ldaps:
+            port: 636
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: key-outline
+          hajimari.io/info: *appname
+          hajimari.io/group: Auth
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        hosts:
+          - host: &uri ldap2.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: ldap
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+    persistence:
+      data:
+        enabled: true
+        type: pvc
+        globalMounts:
+          - path: /var/lib/ldap
+      schema:
+        enabled: true
+        type: pvc
+        globalMounts:
+          - path: /etc/ldap/schema
+
