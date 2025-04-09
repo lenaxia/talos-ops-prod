@@ -82,12 +82,14 @@ spec:
     persistence:
       data:
         enabled: true
-        type: pvc
+        type: persistentVolumeClaim
+        size: 2Gi
         globalMounts:
           - path: /var/lib/ldap
       schema:
         enabled: true
-        type: pvc
+        type: persistentVolumeClaim
+        size: 2Gi
         globalMounts:
           - path: /etc/ldap/schema
 
