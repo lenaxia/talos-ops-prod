@@ -84,12 +84,14 @@ spec:
         enabled: true
         type: persistentVolumeClaim
         size: 2Gi
+        accessMode: ReadWriteOnce
         globalMounts:
           - path: /var/lib/ldap
       schema:
         enabled: true
         type: persistentVolumeClaim
         size: 2Gi
+        accessMode: ReadWriteOnce
         globalMounts:
           - path: /etc/ldap/schema
 
