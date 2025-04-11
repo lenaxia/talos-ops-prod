@@ -34,9 +34,10 @@ spec:
               LDAP_ORGANISATION: "Backup LDAP"
               LDAP_DOMAIN: "kao.family"
               LDAP_READONLY_USER: "true"
-                #LDAP_REPLICATION: "true"
-                #LDAP_PRIMARY_HOST: "192.168.0.120"
+              LDAP_REPLICATION: "true"
+              LDAP_PRIMARY_HOST: "192.168.0.120"
               LDAP_SYNREPL_CONFIG: |
+                # Replicate the main directory
                 syncrepl rid=001
                 provider=ldap://192.168.0.120
                 type=refreshAndPersist
@@ -46,8 +47,21 @@ spec:
                 scope=sub
                 attrs="*,+"
                 schemachecking=off
-                binddn="cn=replicator,dc=kao,dc=family"
+                binddn="uid=replicator,cn=users,dc=kao,dc=family"
                 credentials=${LDAP_PASSWORD}
+
+                ## Replicate the cn=config branch
+                #syncrepl rid=002
+                #provider=ldap://192.168.0.120
+                #type=refreshAndPersist
+                #interval=00:00:05
+                #searchbase="cn=config"
+                #filter="(objectClass=*)"
+                #scope=sub
+                #attrs="*,+"
+                #schemachecking=off
+                #binddn="uid=replicator,cn=users,dc=kao,dc=family"
+                #credentials=${LDAP_PASSWORD}
     service:
       main:
         ports:
@@ -89,9 +103,9 @@ spec:
           - path: /var/lib/ldap
       schema:
         enabled: true
-        type: persistentVolumeClaim
-        size: 2Gi
-        accessMode: ReadWriteOnce
+        type: configMap
+        name: ldap-schema
         globalMounts:
           - path: /etc/ldap/schema
-
+          - path: /container/service/slapd/assets/config/bootstrap/ldif/02-schema.ldif
+            subPath: schema.ldif
