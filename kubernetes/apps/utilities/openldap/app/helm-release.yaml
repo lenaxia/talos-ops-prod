@@ -21,12 +21,6 @@ spec:
       secret.reloader.stakater.com/reload: *appname
     controllers:
       main:
-        initContainers:
-          copy-schema:
-            image: 
-              repository: busybox
-              tag: latest
-            command: ["sh", "-c", "cp /schema-config/schema.ldif /etc/ldap/schema/ && ls -la /etc/ldap/schema"]
         containers:
           main:
             image:
@@ -107,15 +101,10 @@ spec:
         accessMode: ReadWriteOnce
         globalMounts:
           - path: /var/lib/ldap
-      schema:
-        enabled: true
-        type: emptyDir
-        globalMounts:
-          - path: /etc/ldap/schema
       schema-config:
         enabled: true
         type: configMap
         name: schemaldif
         globalMounts:
-          - path: /schema-config/schema.ldif
+          - path: /schemas/schema.ldif
             subPath: schema.ldif
