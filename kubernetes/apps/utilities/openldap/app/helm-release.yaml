@@ -36,32 +36,6 @@ spec:
               LDAP_READONLY_USER: "true"
               LDAP_REPLICATION: "false"
               LDAP_PRIMARY_HOST: "192.168.0.120"
-              LDAP_SYNREPL_CONFIG: |
-                # Replicate the main directory
-                syncrepl rid=001
-                provider=ldap://192.168.0.120
-                type=refreshAndPersist
-                interval=00:00:05
-                searchbase="dc=kao,dc=family"
-                filter="(objectClass=*)"
-                scope=sub
-                attrs="*,+"
-                schemachecking=off
-                binddn="uid=replicator,cn=users,dc=kao,dc=family"
-                credentials=${LDAP_PASSWORD}
-
-                ## Replicate the cn=config branch
-                #syncrepl rid=002
-                #provider=ldap://192.168.0.120
-                #type=refreshAndPersist
-                #interval=00:00:05
-                #searchbase="cn=config"
-                #filter="(objectClass=*)"
-                #scope=sub
-                #attrs="*,+"
-                #schemachecking=off
-                #binddn="uid=replicator,cn=users,dc=kao,dc=family"
-                #credentials=${LDAP_PASSWORD}
     service:
       main:
         ports:
