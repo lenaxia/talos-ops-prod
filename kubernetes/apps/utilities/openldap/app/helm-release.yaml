@@ -34,7 +34,7 @@ spec:
               LDAP_ORGANISATION: "Backup LDAP"
               LDAP_DOMAIN: "kao.family"
               LDAP_READONLY_USER: "true"
-              LDAP_REPLICATION: "true"
+              LDAP_REPLICATION: "false"
               LDAP_PRIMARY_HOST: "192.168.0.120"
     service:
       main:
@@ -67,11 +67,11 @@ spec:
           - hosts:
               - *uri
             secretName: *uri
-              #    persistence:
-              #      schema-config:
-              #        enabled: true
-              #        type: configMap
-              #        name: schemaldif
-              #        globalMounts:
-              #          - path: /schemas/schema.ldif
-              #            subPath: schema.ldif
+    persistence:
+      schema-config:
+        enabled: true
+        type: configMap
+        name: schemaldif
+        globalMounts:
+          - path: /schemas/schema.ldif
+            subPath: schema.ldif
