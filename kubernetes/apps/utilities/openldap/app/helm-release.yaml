@@ -23,8 +23,9 @@ spec:
       main:
         initContainers:
           copy-schema:
-            repository: busybox
-            tag: latest
+            image: 
+              repository: busybox
+              tag: latest
             command: ["sh", "-c", "cp /schema-config/schema.ldif /etc/ldap/schema/ && ls -la /etc/ldap/schema"]
         containers:
           main:
@@ -116,7 +117,6 @@ spec:
         enabled: true
         type: configMap
         name: schemaldif
-        defaultMode: 0644
         globalMounts:
           - path: /schema-config/schema.ldif
             subPath: schema.ldif
