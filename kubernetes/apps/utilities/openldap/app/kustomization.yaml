@@ -13,3 +13,8 @@ configMapGenerator:
       - ./config/schema.ldif
 generatorOptions:
   disableNameSuffixHash: true
+spec: 
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: openldap
