@@ -30,26 +30,26 @@ spec:
             envFrom:
               - secretRef:
                   name: *appname
-            env:
-              LDAP_ORGANISATION: "Backup LDAP"
-              LDAP_DOMAIN: "kao.family"
-              LDAP_READONLY_USER: "true"
-              LDAP_REPLICATION: "true"
-              LDAP_PRIMARY_HOST: "192.168.0.120"
-              LDAP_SYNREPL_CONFIG: |
-                # Replicate the main directory
-                syncrepl rid=001
-                provider=ldap://192.168.0.120
-                type=refreshAndPersist
-                interval=00:00:05
-                searchbase="dc=kao,dc=family"
-                filter="(objectClass=*)"
-                scope=sub
-                attrs="*,+"
-                schemachecking=off
-                binddn="uid=replicator,cn=users,dc=kao,dc=family"
-                credentials=${LDAP_PASSWORD}
-
+#            env:
+#              LDAP_ORGANISATION: "Backup LDAP"
+#              LDAP_DOMAIN: "kao.family"
+#              LDAP_READONLY_USER: "true"
+#              LDAP_REPLICATION: "true"
+#              LDAP_PRIMARY_HOST: "192.168.0.120"
+#              LDAP_SYNREPL_CONFIG: |
+#                # Replicate the main directory
+#                syncrepl rid=001
+#                provider=ldap://192.168.0.120
+#                type=refreshAndPersist
+#                interval=00:00:05
+#                searchbase="dc=kao,dc=family"
+#                filter="(objectClass=*)"
+#                scope=sub
+#                attrs="*,+"
+#                schemachecking=off
+#                binddn="uid=replicator,cn=users,dc=kao,dc=family"
+#                credentials=${LDAP_PASSWORD}
+#
                 ## Replicate the cn=config branch
                 #syncrepl rid=002
                 #provider=ldap://192.168.0.120
@@ -101,10 +101,10 @@ spec:
         accessMode: ReadWriteOnce
         globalMounts:
           - path: /var/lib/ldap
-      schema-config:
-        enabled: true
-        type: configMap
-        name: schemaldif
-        globalMounts:
-          - path: /schemas/schema.ldif
-            subPath: schema.ldif
+#      schema-config:
+#        enabled: true
+#        type: configMap
+#        name: schemaldif
+#        globalMounts:
+#          - path: /schemas/schema.ldif
+#            subPath: schema.ldif
