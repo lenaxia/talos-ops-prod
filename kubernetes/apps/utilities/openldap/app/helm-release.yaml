@@ -110,7 +110,6 @@ spec:
       schema:
         enabled: true
         type: emptyDir
-        name: ldap-schema
         globalMounts:
           - path: /etc/ldap/schema
       schema-config:
