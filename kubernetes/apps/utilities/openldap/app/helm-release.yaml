@@ -107,5 +107,7 @@ spec:
         name: ldap-schema
         globalMounts:
           - path: /etc/ldap/schema
+            readOnly: false
           - path: /container/service/slapd/assets/config/bootstrap/ldif/02-schema.ldif
             subPath: schema.ldif
+            readOnly: false
