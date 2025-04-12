@@ -23,7 +23,8 @@ spec:
       main:
         initContainers:
           copy-schema:
-            image: busybox
+            repository: busybox
+            tag: latest
             command: ["sh", "-c", "cp /schema-config/schema.ldif /etc/ldap/schema/ && ls -la /etc/ldap/schema"]
         containers:
           main:
