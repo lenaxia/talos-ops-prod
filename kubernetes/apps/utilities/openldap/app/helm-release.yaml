@@ -93,14 +93,14 @@ spec:
           - hosts:
               - *uri
             secretName: *uri
-    persistence:
-      data:
-        enabled: true
-        type: persistentVolumeClaim
-        size: 2Gi
-        accessMode: ReadWriteOnce
-        globalMounts:
-          - path: /var/lib/ldap
+#    persistence:
+#      data:
+#        enabled: true
+#        type: persistentVolumeClaim
+#        size: 2Gi
+#        accessMode: ReadWriteOnce
+#        globalMounts:
+#          - path: /var/lib/ldap
 #      schema-config:
 #        enabled: true
 #        type: configMap
