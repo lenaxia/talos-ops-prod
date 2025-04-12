@@ -7,7 +7,6 @@ commonLabels:
 resources:
   - helm-release.yaml
   - secret.sops.yaml
-  - config/schema.yaml
 configMapGenerator:
   - name: schemaldif
     files:
