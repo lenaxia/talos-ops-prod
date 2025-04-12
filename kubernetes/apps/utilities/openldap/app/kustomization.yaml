@@ -8,3 +8,9 @@ resources:
   - helm-release.yaml
   - secret.sops.yaml
   - config/schema.yaml
+configMapGenerator:
+  - name: schemaldif
+    files:
+      - ./config/schema.ldif
+generatorOptions:
+  disableNameSuffixHash: true
