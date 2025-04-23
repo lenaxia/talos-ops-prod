@@ -7,6 +7,7 @@ resources:
   - ./babybuddy-pandaria/ks.yaml
   - ./browserless/ks.yaml
   - ./langserver/ks.yaml
+  - ./monica/ks.yaml
   #- ./gamevault/ks.yaml
   #- ./node-red/ks.yaml
   - ./stirling-pdf/ks.yaml
