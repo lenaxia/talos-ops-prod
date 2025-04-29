@@ -22,7 +22,7 @@ spec:
         node-role.kubernetes.io/worker: 'true'
     controllers:
       main:
-        replicas: 20
+        replicas: 1
         containers:
           main:
             image:
