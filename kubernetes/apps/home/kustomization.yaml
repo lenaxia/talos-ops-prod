@@ -21,3 +21,4 @@ resources:
   - ./zwavejs/ks.yaml
   - ./mosquitto/ks.yaml
   - ./linkwarden/ks.yaml
+  - ./vscode/ks.yaml
