@@ -1,0 +1,723 @@
+What can you infer from this log segment?
+
+```
+INFO:     192.168.0.1:0 - "GET / HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/entry/start.BwhpnGy0.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/entry.-_rlV0jT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/preload-helper.C1FmrZbK.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/entry/app.sVNszOKY.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /static/splash.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/scheduler.BUEsFZp5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.oXsFZcbB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DMbsBxcm.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /favicon/favicon.ico HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/0.2TWuB32D.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/stores.BwgXhlgq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/globals.D0QH3NT1.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.CGwCSIWv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Toaster.436keKGd.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DBHc2p4i.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/spread.CgU5AtxT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DQaMmkvv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/each.CzsD_kOT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Toaster.svelte_svelte_type_style_lang.BMvSSSfm.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BM9fxPYj.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/i18next.B1Cj3nBs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DOMFCAUa.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/_commonjsHelpers.BosuxZz1.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/0.vRRBRtXy.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BHTblBYf.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/2.CscSKv4E.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/1.s27ncHXo.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DsqDd6M9.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/marked.esm._0_gBwjO.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/ConfirmDialog.9RC9XL2T.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DgC_uEYs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.C9NGHZF6.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BeKrrA7P.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Modal.BdpuBmtX.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/dayjs.min.CnqrW7zs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Modal.B2SnuaI5.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FileSaver.min.CimDdHIv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/SensitiveInput.BBt0esme.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ConfirmDialog.IP4ltFDM.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.D5G1ZMhl.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Tooltip.CLT1uQ3E.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/UserMenu.UvJIfOid.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/menu-trigger.DF5uTpCg.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DyIcjikr.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/updater.BTt9jhxK.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BpuwIzBP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Markdown.ZJPQWc0g.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/2.C0o0Dx_d.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/RichTextInput.CkxzBt4q.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Tags.DbAN7Z1_.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Dropdown.cXqzOBK-.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/XMark.BmNInX4o.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/DocumentDuplicate.OSJdjIKU.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/GarbageBin.6GDYAsN6.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Messages.BN5bZb92.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Loader.D-MRn-DP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Spinner.dyE_yNSb.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Pencil.Ck9IKtyg.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronRight.DtCCNbWu.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/EllipsisHorizontal.C-cC0NPk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronDown.Q4vFy9t5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Check.BoeIngOl.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/UserCircleSolid.A2AWugDk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.S0oR6czP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Collapsible.Bz8ss-Zd.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.CwX8cpi5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/AccessControl.1qp-qRdQ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronUp.B2cy-iaU.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Plus.Cayr97sv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BLNLBAqA.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Cog6.Dwyk_MJT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DQfRr7yB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/AdvancedParams.B0Ww5LT2.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Cq4wGxSI.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Switch.DRgJeMuD.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/User.BNYCTgsG.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FilesOverlay.BPgUXGdq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/6.C0lVmb7G.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Cp_IjP5p.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BgGDYTxt.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Search.CRU-TmIJ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Help.DH_GpeAM.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/WrenchSolid.Ce6DkkEJ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/fuse.CU2r43ac.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.zylLC5HN.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DD63VM5V.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.B2fShsEB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/CodeEditor.BZzFmqlk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ArrowDownTray.CqjDYHOC.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Messages.C0GYVGNO.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Dnffowoi.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/relativeTime.HIEE8cw9.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Markdown.MR6v5qKe.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Drawer.D6nbDDDH.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FileItem.D5TYC1YR.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/RichTextInput.DxQMy1zR.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Vcq4gwWv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DG8ydxEQ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FolderOpen.BuApAJpd.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Badge.Cfh_fL2v.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/MagnifyingGlass.BaJqCqrT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Selector.BsCRRNji.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/MenuLines.Bpc9Sb0N.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /favicon/favicon.svg HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BjQNz3eq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Help.BzoYrNfz.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/EllipsisVertical.6w9_ZwLA.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Heart.pSwFWPsN.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /static/favicon.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/languages.DejWixTG.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/translation.BEATw_d6.js HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/33.ew8BNFsq.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/33.DyJ7AtdC.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /assets/fonts/Inter-Variable.ttf HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /assets/fonts/Archivo-Variable.ttf HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/login HTTP/1.1" 302 Found
+INFO  [open_webui.models.auths] insert_new_auth
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_VU1Kxi1pJ4dCX_uGU8dNtcyF1QwxJP95hMwZ0kHl07I.TxW5_Y41nZIAKfrGLxR1Z0JE1UiXPW3dY6KSCEYsBrQ&scope=openid+email+profile&state=rgx8hE9bpXqTsMOw9OfE8OGg6zF8eu HTTP/1.1" 307 Temporary Redirect
+INFO:     192.168.0.1:0 - "GET /auth HTTP/1.1" 200 OK
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /api/v1/auths/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/changelog HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200 OK
+INFO  [open_webui.routers.openai] get_all_models()
+INFO:     192.168.0.1:0 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/configs/banners HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/tools/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /ollama/api/version HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /user.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/channels/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/folders/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200 OK
+WARNI [open_webui.utils.oauth] OAuth callback error: mismatching_state: CSRF Warning! State not equal in request and response.
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback HTTP/1.1" 400 Bad Request
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/login HTTP/1.1" 302 Found
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_SaAbz-OJm-cgbLqWUmMbSYwtWEfVhlehHdlH0n0FvQE.LM8MQE2xo95ysgyW7WKzgcglnBiO0sJJZ3Ubrvx1eMM&scope=openid+email+profile&state=P4uRfCMDJ4pXjm7yGZimiiMnWr6BTy HTTP/1.1" 400 Bad Request
+INFO:     connection closed
+WARNI [open_webui.utils.oauth] OAuth callback error: mismatching_state: CSRF Warning! State not equal in request and response.
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_SaAbz-OJm-cgbLqWUmMbSYwtWEfVhlehHdlH0n0FvQE.LM8MQE2xo95ysgyW7WKzgcglnBiO0sJJZ3Ubrvx1eMM&scope=openid+email+profile&state=P4uRfCMDJ4pXjm7yGZimiiMnWr6BTy HTTP/1.1" 400 Bad Request
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/login HTTP/1.1" 302 Found
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_WYxpwiepQNQIOEKa1RwoN40CBrd81b3iMqKM1VyYlqQ.ms09IWTeYl0M0hAlHCLNhlC6jbN65x3XD-bWEOm4hT8&scope=openid+email+profile&state=ufKANlULQBiPCwlSNrhOCVnS0FfDeM HTTP/1.1" 400 Bad Request
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/login HTTP/1.1" 302 Found
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_oGiTCbNDyN9GKkWTTIDu4FdRNC_kc4SM4W8vtXyaG34.HjfKwL4BtW2ofIzP3ey-Sc7g2YZVn8jfKxqa66peG0A&scope=openid+email+profile&state=8GIs1LSsTtO1eAR3DIq8P4ze9BDtOp HTTP/1.1" 400 Bad Request
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /api/v1/auths/signout HTTP/1.1" 200 OK
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/login HTTP/1.1" 302 Found
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_7qpRDZ-ssuY9V0Sh7wSBAtG3g4P4sIOUEJ1ZAJx6Ajw.UADB-ozomSiSDgVzHVpWYQqwLrtjva44Cl_sHmR5N9U&scope=openid+email+profile&state=pF559nEwa954dxQKDDBcib9ezgGOJV HTTP/1.1" 307 Temporary Redirect
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /api/v1/auths/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/changelog HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200 OK
+INFO  [open_webui.routers.openai] get_all_models()
+INFO:     192.168.0.1:0 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/configs/banners HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/tools/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /ollama/api/version HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/channels/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/folders/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/auths/signout HTTP/1.1" 200 OK
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET / HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/entry/start.BwhpnGy0.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/entry.-_rlV0jT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.oXsFZcbB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DMbsBxcm.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/scheduler.BUEsFZp5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/preload-helper.C1FmrZbK.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/entry/app.sVNszOKY.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /static/splash.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /favicon/apple-touch-icon.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /favicon/favicon.svg HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.CGwCSIWv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/0.2TWuB32D.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/globals.D0QH3NT1.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DBHc2p4i.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/stores.BwgXhlgq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/each.CzsD_kOT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/spread.CgU5AtxT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Toaster.436keKGd.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Toaster.svelte_svelte_type_style_lang.BMvSSSfm.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DQaMmkvv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DOMFCAUa.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BM9fxPYj.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/i18next.B1Cj3nBs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DsqDd6M9.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/_commonjsHelpers.BosuxZz1.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BHTblBYf.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/marked.esm._0_gBwjO.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/0.vRRBRtXy.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/1.s27ncHXo.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/2.CscSKv4E.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BeKrrA7P.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FileSaver.min.CimDdHIv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.D5G1ZMhl.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/dayjs.min.CnqrW7zs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/SensitiveInput.BBt0esme.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DyIcjikr.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Modal.B2SnuaI5.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DgC_uEYs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.C9NGHZF6.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ConfirmDialog.IP4ltFDM.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Tooltip.CLT1uQ3E.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Modal.BdpuBmtX.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/ConfirmDialog.9RC9XL2T.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/UserMenu.UvJIfOid.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BpuwIzBP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/menu-trigger.DF5uTpCg.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/updater.BTt9jhxK.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Tags.DbAN7Z1_.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/XMark.BmNInX4o.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Dropdown.cXqzOBK-.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/GarbageBin.6GDYAsN6.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Pencil.Ck9IKtyg.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/DocumentDuplicate.OSJdjIKU.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Collapsible.Bz8ss-Zd.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronDown.Q4vFy9t5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronRight.DtCCNbWu.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Loader.D-MRn-DP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronUp.B2cy-iaU.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Plus.Cayr97sv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Spinner.dyE_yNSb.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Check.BoeIngOl.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.S0oR6czP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FolderOpen.BuApAJpd.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/EllipsisHorizontal.C-cC0NPk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.CwX8cpi5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/UserCircleSolid.A2AWugDk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/AccessControl.1qp-qRdQ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BLNLBAqA.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Cog6.Dwyk_MJT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/AdvancedParams.B0Ww5LT2.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Switch.DRgJeMuD.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Cq4wGxSI.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/User.BNYCTgsG.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Search.CRU-TmIJ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/2.C0o0Dx_d.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DQfRr7yB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Drawer.D6nbDDDH.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FilesOverlay.BPgUXGdq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.zylLC5HN.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DD63VM5V.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Help.DH_GpeAM.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/6.C0lVmb7G.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BgGDYTxt.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/RichTextInput.CkxzBt4q.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Vcq4gwWv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/WrenchSolid.Ce6DkkEJ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FileItem.D5TYC1YR.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/RichTextInput.DxQMy1zR.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/fuse.CU2r43ac.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.B2fShsEB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Cp_IjP5p.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/relativeTime.HIEE8cw9.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Markdown.MR6v5qKe.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Selector.BsCRRNji.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Markdown.ZJPQWc0g.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/CodeEditor.BZzFmqlk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ArrowDownTray.CqjDYHOC.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DG8ydxEQ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Dnffowoi.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Badge.Cfh_fL2v.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Messages.BN5bZb92.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/MagnifyingGlass.BaJqCqrT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Messages.C0GYVGNO.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Heart.pSwFWPsN.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BjQNz3eq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/EllipsisVertical.6w9_ZwLA.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/MenuLines.Bpc9Sb0N.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Help.BzoYrNfz.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/translation.BEATw_d6.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/languages.DejWixTG.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /static/favicon.png HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/33.ew8BNFsq.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/33.DyJ7AtdC.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /assets/fonts/Inter-Variable.ttf HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /assets/fonts/Archivo-Variable.ttf HTTP/1.1" 200 OK
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/login HTTP/1.1" 302 Found
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_Tug3XCiIgptP3EzbA8vLqFtY0AvjezzCGtbf7avPxhA.Jp8blnIgneuWRD_k5ptMc7WoXe0x05O-g1cp99E2WNI&scope=openid+email+profile&state=xv44e0jfgB0bgN4qzf52ntM5sV795P HTTP/1.1" 307 Temporary Redirect
+INFO:     192.168.0.1:0 - "GET /auth HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /api/v1/auths/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/changelog HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200 OK
+INFO  [open_webui.routers.openai] get_all_models()
+INFO:     192.168.0.1:0 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/configs/banners HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/tools/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /ollama/api/version HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /user.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/channels/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/folders/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/v1/auths/signout HTTP/1.1" 200 OK
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET / HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/entry/start.BwhpnGy0.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/scheduler.BUEsFZp5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/entry.-_rlV0jT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/preload-helper.C1FmrZbK.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DMbsBxcm.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.oXsFZcbB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/entry/app.sVNszOKY.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /static/splash.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /favicon/apple-touch-icon.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /favicon/favicon.svg HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/0.2TWuB32D.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/globals.D0QH3NT1.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.CGwCSIWv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DBHc2p4i.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/stores.BwgXhlgq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/each.CzsD_kOT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/spread.CgU5AtxT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Toaster.svelte_svelte_type_style_lang.BMvSSSfm.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Toaster.436keKGd.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DQaMmkvv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DOMFCAUa.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BM9fxPYj.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/i18next.B1Cj3nBs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DsqDd6M9.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/_commonjsHelpers.BosuxZz1.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/marked.esm._0_gBwjO.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BHTblBYf.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/0.vRRBRtXy.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BeKrrA7P.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FileSaver.min.CimDdHIv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.D5G1ZMhl.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/2.CscSKv4E.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/1.s27ncHXo.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.C9NGHZF6.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/SensitiveInput.BBt0esme.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DgC_uEYs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/dayjs.min.CnqrW7zs.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Modal.BdpuBmtX.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Modal.B2SnuaI5.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Tooltip.CLT1uQ3E.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ConfirmDialog.IP4ltFDM.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DyIcjikr.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/ConfirmDialog.9RC9XL2T.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/UserMenu.UvJIfOid.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/updater.BTt9jhxK.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BpuwIzBP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Tags.DbAN7Z1_.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/menu-trigger.DF5uTpCg.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Dropdown.cXqzOBK-.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/DocumentDuplicate.OSJdjIKU.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/XMark.BmNInX4o.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Pencil.Ck9IKtyg.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/GarbageBin.6GDYAsN6.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.S0oR6czP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Check.BoeIngOl.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronDown.Q4vFy9t5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronRight.DtCCNbWu.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Loader.D-MRn-DP.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Spinner.dyE_yNSb.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Collapsible.Bz8ss-Zd.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ChevronUp.B2cy-iaU.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Plus.Cayr97sv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Cog6.Dwyk_MJT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FolderOpen.BuApAJpd.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.CwX8cpi5.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/AccessControl.1qp-qRdQ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BLNLBAqA.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/EllipsisHorizontal.C-cC0NPk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/UserCircleSolid.A2AWugDk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/AdvancedParams.B0Ww5LT2.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/User.BNYCTgsG.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Switch.DRgJeMuD.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Cq4wGxSI.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DQfRr7yB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/2.C0o0Dx_d.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Search.CRU-TmIJ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/RichTextInput.DxQMy1zR.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/WrenchSolid.Ce6DkkEJ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BgGDYTxt.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Help.DH_GpeAM.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/6.C0lVmb7G.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FilesOverlay.BPgUXGdq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Vcq4gwWv.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Cp_IjP5p.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Drawer.D6nbDDDH.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.zylLC5HN.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/FileItem.D5TYC1YR.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.B2fShsEB.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DD63VM5V.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/RichTextInput.CkxzBt4q.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Markdown.MR6v5qKe.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/relativeTime.HIEE8cw9.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.DG8ydxEQ.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Messages.C0GYVGNO.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.Dnffowoi.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/MagnifyingGlass.BaJqCqrT.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/ArrowDownTray.CqjDYHOC.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/fuse.CU2r43ac.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/CodeEditor.BZzFmqlk.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Markdown.ZJPQWc0g.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/EllipsisVertical.6w9_ZwLA.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Help.BzoYrNfz.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Heart.pSwFWPsN.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/index.BjQNz3eq.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Selector.BsCRRNji.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/Messages.BN5bZb92.css HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/MenuLines.Bpc9Sb0N.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/Badge.Cfh_fL2v.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/languages.DejWixTG.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/chunks/translation.BEATw_d6.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /static/favicon.png HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/nodes/33.DyJ7AtdC.js HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /_app/immutable/assets/33.ew8BNFsq.css HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /assets/fonts/Inter-Variable.ttf HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /assets/fonts/Archivo-Variable.ttf HTTP/1.1" 200 OK
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/login HTTP/1.1" 302 Found
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_PB1sW5RwgKNo6eBjNjpVYMwiOIkOCOQvkjVblgyCzAk.izYjqHgU-1iZWedZoHD1w-Vn7mBNX1hJLkpgBjJHwsA&scope=openid+email+profile&state=fndKqpuhT9yOoLsUuaL8RTd6YReDCN HTTP/1.1" 400 Bad Request
+INFO:     connection closed
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/login HTTP/1.1" 302 Found
+INFO:     192.168.0.1:0 - "GET /oauth/oidc/callback?code=authelia_ac_vzvOsyE1kzaNiQrYZcgTl1KbUSK3jCkFJ_nvlnq__wk.m3Jr9JQzY5LB9ItycW2qjNutG2LCdTe_qwsJU4R43yg&scope=openid+email+profile&state=zmMTorPG5bB23CtiIfJyNQPUpvRjVj HTTP/1.1" 307 Temporary Redirect
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     ('192.168.0.1', 0) - "WebSocket /ws/socket.io/?EIO=4&transport=websocket" [accepted]
+INFO:     connection open
+INFO:     192.168.0.1:0 - "GET /api/v1/auths/ HTTP/1.1" 200 OK
+INFO:     192.168.0.1:0 - "GET /api/config HTTP/1.1" 200 OK
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
+  |     yield
+  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 190, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 815, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    |     await self.app(scope, receive, send_wrapper)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     with collapse_excgroups():
+    |   File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/app/backend/open_webui/main.py", line 723, in inspect_websocket
+    |     return await call_next(request)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 166, in call_next
+    |     raise RuntimeError("No response returned.")
+    | RuntimeError: No response returned.
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 189, in __call__
+    with collapse_excgroups():
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/backend/open_webui/main.py", line 723, in inspect_websocket
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 166, in call_next
+    raise RuntimeError("No response returned.")
+RuntimeError: No response returned.
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
+  |     yield
+  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 190, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 815, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    |     await self.app(scope, receive, send_wrapper)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     with collapse_excgroups():
+    |   File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/app/backend/open_webui/main.py", line 723, in inspect_websocket
+    |     return await call_next(request)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 166, in call_next
+    |     raise RuntimeError("No response returned.")
+    | RuntimeError: No response returned.
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 189, in __call__
+    with collapse_excgroups():
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/backend/open_webui/main.py", line 723, in inspect_websocket
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 166, in call_next
+    raise RuntimeError("No response returned.")
+RuntimeError: No response returned.
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
+  |     yield
+  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 190, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/usr/local/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 815, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    |     await self.app(scope, receive, send_wrapper)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     with collapse_excgroups():
+    |   File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/app/backend/open_webui/main.py", line 723, in inspect_websocket
+    |     return await call_next(request)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 166, in call_next
+    |     raise RuntimeError("No response returned.")
+    | RuntimeError: No response returned.
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/httptools_impl.py", line 401, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 189, in __call__
+    with collapse_excgroups():
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 93, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/backend/open_webui/main.py", line 723, in inspect_websocket
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 166, in call_next
+    raise RuntimeError("No response returned.")
+RuntimeError: No response returned.
+```
