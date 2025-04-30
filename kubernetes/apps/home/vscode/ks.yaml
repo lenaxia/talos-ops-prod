@@ -10,7 +10,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
-  path: ./cluster/apps/home/vscode/app
+  path: ./kubernetes/apps/home/vscode/app
   prune: true
   sourceRef:
     kind: GitRepository
