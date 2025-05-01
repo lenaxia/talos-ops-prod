@@ -25,7 +25,7 @@ spec:
           main:
             image:
               repository: lscr.io/linuxserver/code-server
-              tag: 4.13.0-ls163
+              tag: 4.99.3-ls268
 
             envFrom:
               - secretRef:
