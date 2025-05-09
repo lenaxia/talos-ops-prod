@@ -37,7 +37,7 @@ spec:
               tag: v0.8.5@sha256:6cf9808ca8810fc6c3fd0451c2e7784fb224590d81f7db338e7eaf3c02a33d33
             command: ["/bin/sh", "-c"]
             args: [
-              "vllm serve mistralai/Mistral-7B-Instruct-v0.3 --trust-remote-code --enable-chunked-prefill --max_num_batched_tokens 1024"
+              "vllm serve Qwen/Qwen2.5-VL-7B-Instruct-AWQ --trust-remote-code --enable-chunked-prefill --max_num_batched_tokens 1024"
             ]
             env:
               - name: TZ
@@ -71,9 +71,9 @@ spec:
       data:
         enabled: true
         type: persistentVolumeClaim
-        storageClass: longhorn
+        storageClass: openebs-hostpath
         accessMode: ReadWriteOnce
-        size: 10Gi
+        size: 50Gi
         globalMounts:
           - path: /root/.cache/huggingface
       shm:
