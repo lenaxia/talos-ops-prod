@@ -37,7 +37,7 @@ spec:
               tag: v0.8.4@sha256:b168cbb0101f51b2491047345d0a83f5a8ecbe56a6604f2a2edb81eca55ebc9e
             command: ["/bin/sh", "-c"]
             args: [
-              "vllm serve Qwen/Qwen2.5-VL-7B-Instruct-AWQ --trust-remote-code --enable-chunked-prefill --max_num_batched_tokens 1024"
+              "vllm serve Qwen/Qwen2.5-VL-7B-Instruct-AWQ --trust-remote-code --enable-chunked-prefill --max_num_batched_tokens 1024 --served-model-name qwen2.5-vl-7b Qwen/Qwen2.5-VL-7B-Instruct-AWQ"
             ]
             env:
               - name: TZ
