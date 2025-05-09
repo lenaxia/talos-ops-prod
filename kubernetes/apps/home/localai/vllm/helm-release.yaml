@@ -47,7 +47,7 @@ spec:
                   name: *appname 
             probes:
               liveness: &probe
-                enabled: true
+                enabled: false
                 custom: true
                 spec:
                   httpGet:
