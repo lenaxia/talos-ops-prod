@@ -230,13 +230,6 @@ spec:
         globalMounts:
           - path: /app/proxy_server_config.yaml
             subPath: config.yaml
-      litellm-license:
-        enabled: true
-        type: configMap
-        name: litellm-license-py
-        globalMounts:
-          - path: /app/litellm/proxy/auth/litellm_license.py
-            subPath: litellm_license.py
     service:
       app:
         ports:
