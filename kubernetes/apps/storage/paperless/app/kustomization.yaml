@@ -17,9 +17,9 @@ patches:
       name: paperless
   #- patches/patch-postgres.yaml
 configMapGenerator:
-  - name: openai-configmap
+  - name: llm-configmap
     files:
-      - openai.py=./config/openai.py
+      - llm.py=./config/llm.py
 generatorOptions:
   disableNameSuffixHash: true
   annotations:
