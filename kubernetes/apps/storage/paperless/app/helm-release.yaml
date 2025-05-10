@@ -45,7 +45,7 @@ spec:
               - secretRef:
                   name: &appname paperless
             env:
-              PAPERLESS_POST_CONSUME_SCRIPT: /openai.py
+              PAPERLESS_POST_CONSUME_SCRIPT: /llm.py
               PAPERLESS_CONSUMER_RECURSIVE: 'true'
               PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: 'true'
               PAPERLESS_CONSUMPTION_DIR: /library/consume
@@ -131,14 +131,14 @@ spec:
             secretName: *uri
         className: traefik
     persistence:
-      openai:
+      llm:
         enabled: true
         type: configMap
-        name: openai-configmap
+        name: llm-configmap
         defaultMode: 0777
         globalMounts:
-          - path: /openai.py
-            subPath: openai.py
+          - path: /llm.py
+            subPath: llm.py
       library:
         enabled: true
         existingClaim: paperless-nfs
