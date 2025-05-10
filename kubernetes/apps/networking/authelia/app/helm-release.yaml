@@ -305,6 +305,7 @@ spec:
         - domain:
             - "ai.${SECRET_DEV_DOMAIN}"
           resources:
+            - "^/models"
             - "^/v1/models"
             - "^/v1/model/.*$"
             - "^/v1/chat/completions"
