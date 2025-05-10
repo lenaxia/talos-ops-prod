@@ -34,7 +34,6 @@ spec:
     controllers:
       main:
         initContainers:
-        initContainers:
             set-gpu-power-limit:
               image: 
                 repository: nvidia/cuda
