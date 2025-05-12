@@ -19,6 +19,6 @@ resources:
   #- ./magicmirror/ks.yaml
   #- ./frigate/ks.yaml
   - ./zwavejs/ks.yaml
-  - ./mosquitto/ks.yaml
+    #- ./mosquitto/ks.yaml
   - ./linkwarden/ks.yaml
   - ./vscode/ks.yaml
