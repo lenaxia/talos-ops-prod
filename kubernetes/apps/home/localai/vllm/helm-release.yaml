@@ -90,30 +90,6 @@ spec:
         primary: true
         controller: app
         type: LoadBalancer
-    ingress:
-      app:
-        enabled: true
-        className: traefik
-        annotations:
-          hajimari.io/enable: 'true'
-          hajimari.io/icon: baby-bottle-outline
-          hajimari.io/info: ChatGPT
-          hajimari.io/group: &namespace home
-          cert-manager.io/cluster-issuer: letsencrypt-production
-          traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
-        hosts:
-          - host: &uri ai.${SECRET_DEV_DOMAIN}
-            paths:
-              - path: /
-                pathType: Prefix
-                service:
-                  identifier: app 
-                  port: http
-        tls:
-          - hosts:
-              - *uri
-            secretName: *uri
     # podSecurityContext:
     #   runAsUser: 1000
     #   runAsGroup: 1000
