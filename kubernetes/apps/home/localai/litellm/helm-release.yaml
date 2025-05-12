@@ -161,24 +161,24 @@ spec:
                     max_tokens: 40960
 
                 # vLLM
-                - model_name: qwen2.5-vl
-                  litellm_params:
-                    model: openai/Qwen/Qwen2.5-VL-7B-Instruct-AWQ
-                    api_base: http://vllm.home.svc.cluster.local:8000/v1
-                    api_key: doesnotmatter
-                  model_info:
-                    input_cost_per_token: 0.00001
-                    output_cost_per_token: 0.00001
-                    max_tokens: 40960
-                - model_name: qwen2.5-vl-7b
-                  litellm_params:
-                    model: openai/Qwen/Qwen2.5-VL-7B-Instruct-AWQ
-                    api_base: http://vllm.home.svc.cluster.local:8000/v1
-                    api_key: doesnotmatter
-                  model_info:
-                    input_cost_per_token: 0.00001
-                    output_cost_per_token: 0.00001
-                    max_tokens: 40960
+                #- model_name: qwen2.5-vl
+                #  litellm_params:
+                #    model: openai/Qwen/Qwen2.5-VL-7B-Instruct-AWQ
+                #    api_base: http://vllm.home.svc.cluster.local:8000/v1
+                #    api_key: doesnotmatter
+                #  model_info:
+                #    input_cost_per_token: 0.00001
+                #    output_cost_per_token: 0.00001
+                #    max_tokens: 40960
+                #- model_name: qwen2.5-vl-7b
+                #  litellm_params:
+                #    model: openai/Qwen/Qwen2.5-VL-7B-Instruct-AWQ
+                #    api_base: http://vllm.home.svc.cluster.local:8000/v1
+                #    api_key: doesnotmatter
+                #  model_info:
+                #    input_cost_per_token: 0.00001
+                #    output_cost_per_token: 0.00001
+                #    max_tokens: 40960
 
                 # Deepseek
                 - model_name: deepseek-v3-chat
