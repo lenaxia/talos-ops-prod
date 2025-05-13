@@ -3,7 +3,7 @@ kind: Kustomization
 metadata:
   namespace: databases
 resources:
-  - helm-release.yaml
+  #- helm-release.yaml
   - secret.sops.yaml
   - configmap.yaml
     #namespace not specifiedconfigMapGenerator:
