@@ -40,11 +40,44 @@ INITIAL_RETRY_WAIT = int(os.getenv('INITIAL_RETRY_WAIT', 5))
 
 # Validate configuration
 def validate_config():
-    if not PAPERLESS_API_KEY or not OPENAI_API_KEY:
-        logger.error("Missing API keys in environment variables")
+    """Validate required configuration with detailed error messages."""
+    missing_vars = []
+    
+    if not PAPERLESS_API_KEY:
+        missing_vars.append("PAPERLESS_APIKEY")
+    
+    if not OPENAI_API_KEY:
+        missing_vars.append("OPENAI_API_KEY")
+    
+    if missing_vars:
+        error_msg = (
+            "Missing required environment variables:\n"
+            f"- {', '.join(missing_vars)}\n\n"
+            "Configuration check failed. Please ensure these variables are set:\n"
+            "1. For Paperless API access:\n"
+            "   - PAPERLESS_APIKEY: Your Paperless-ngx API token\n"
+            "   - PAPERLESS_HOST: Paperless API endpoint (default: http://192.168.5.217/api)\n\n"
+            "2. For OpenAI/LocalAI access:\n"
+            "   - OPENAI_API_KEY: Your API key\n"
+            "   - OPENAI_API_ENDPOINT: API endpoint (default: https://ai.thekao.cloud)\n\n"
+            "These can be set in:\n"
+            "- The Paperless-ngx admin interface (for post-consume scripts)\n"
+            "- Your container environment variables\n"
+            "- The .env file for local development"
+        )
+        logger.error(error_msg)
         if __name__ == "__main__":
             sys.exit(1)
         return False
+    
+    # Additional validation for API endpoints
+    if not PAPERLESS_HOST.startswith(('http://', 'https://')):
+        logger.error(f"Invalid PAPERLESS_HOST format: {PAPERLESS_HOST}\n"
+                    "Must start with http:// or https://")
+        if __name__ == "__main__":
+            sys.exit(1)
+        return False
+    
     return True
 
 def encode_image(image_path: str) -> str:
@@ -800,17 +833,30 @@ def _handle_text(metadata: dict, doc_id: int,
         )
 
 if __name__ == "__main__":
-    if not validate_config():
-        sys.exit(1)
-    # Get document ID from command line or environment
-    document_id = None
-    if len(sys.argv) > 1:
-        document_id = sys.argv[1]
-    else:
-        document_id = os.getenv('DOCUMENT_ID')
+    try:
+        if not validate_config():
+            sys.exit(1)
+        
+        # Get document ID from command line or environment
+        document_id = None
+        if len(sys.argv) > 1:
+            document_id = sys.argv[1]
+        else:
+            document_id = os.getenv('DOCUMENT_ID')
 
-    if not document_id:
-        logger.error("No document ID provided")
+        if not document_id:
+            logger.error(
+                "No document ID provided\n\n"
+                "Usage:\n"
+                "  ./llm.py <document_id>\n"
+                "Or set DOCUMENT_ID environment variable\n\n"
+                "When run from Paperless-ngx as a post-consume script,\n"
+                "the document ID is automatically passed as the first argument."
+            )
+            sys.exit(1)
+            
+    except Exception as e:
+        logger.error(f"Initialization failed: {str(e)}")
         sys.exit(1)
 
     debug_flag = '--debug' in sys.argv
