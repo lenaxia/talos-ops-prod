@@ -21,8 +21,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Configuration
-#PAPERLESS_HOST = os.getenv('PAPERLESS_HOST', 'http://paperless.storage.svc.cluster.local:80/api')
-PAPERLESS_HOST = os.getenv('PAPERLESS_HOST', 'http://192.168.5.217/api')
+PAPERLESS_HOST = os.getenv('PAPERLESS_HOST', 'http://paperless.storage.svc.cluster.local:80/api')
+#PAPERLESS_HOST = os.getenv('PAPERLESS_HOST', 'http://192.168.5.217/api')
 PAPERLESS_API_KEY = os.getenv('PAPERLESS_APIKEY')
 OPENAI_API_ENDPOINT = os.getenv('OPENAI_API_ENDPOINT', 'https://ai.thekao.cloud')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
