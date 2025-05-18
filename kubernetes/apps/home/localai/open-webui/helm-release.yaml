@@ -60,7 +60,7 @@ spec:
               WEBUI_NAME: The Kao Cloud
               ENABLE_LOGIN_FORM: false
               DEFAULT_USER_ROLE: user
-              DEFAULT_MODELS: default
+              DEFAULT_MODELS: deepseek-v3-chat
               ENABLE_OLLAMA_API: false
               ENABLE_RAG_WEB_SEARCH: true
               # OAuth
