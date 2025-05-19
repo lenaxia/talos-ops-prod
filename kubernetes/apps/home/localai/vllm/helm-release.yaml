@@ -25,6 +25,11 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "special"
+          effect: "NoSchedule"
     controllers:
       app:
         type: deployment
