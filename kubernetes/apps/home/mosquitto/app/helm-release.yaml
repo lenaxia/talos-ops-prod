@@ -83,13 +83,13 @@ spec:
         globalMounts:
           - path: /mosquitto/config/mosquitto.conf
             subPath: mosquitto.conf
-      passwordfile:
-        enabled: true
-        type: secret
-        name: &app mosquitto
-        globalMounts:
-          - path: /mosquitto/config/mqttpassword
-            subPath: mqttpassword
+      #passwordfile:
+      #  enabled: true
+      #  type: secret
+      #  name: &app mosquitto
+      #  globalMounts:
+      #    - path: /mosquitto/config/mqttpassword
+      #      subPath: mqttpassword
     global:
       nameOverride: *app
     podAnnotations:
