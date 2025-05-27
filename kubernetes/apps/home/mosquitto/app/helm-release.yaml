@@ -47,9 +47,6 @@ spec:
         labels:
           cilium.io/l2-ip-pool: reserved
         ports:
-          http:
-            port: 80
-            enabled: false
           mqtt:
             port: 1883
             enabled: true
