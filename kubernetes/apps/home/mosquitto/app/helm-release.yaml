@@ -83,7 +83,6 @@ spec:
         existingClaim: mosquitto-data 
         globalMounts:
           - path: /mosquitto/data
-            subPath: mosquitto.conf
       config:
         enabled: true
         type: configMap
