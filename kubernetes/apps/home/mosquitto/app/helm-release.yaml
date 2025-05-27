@@ -19,13 +19,13 @@ spec:
     controllers:
       mosquitto:
         type: statefulset
-        replicas: 2
+        replicas: 1
         containers:
           app:
             command:
               - sh
               - -c
-              - exec mosquitto -c "/mosquitto/config/mosquitto.conf"
+              - exec mosquitto -c "/config/mosquitto.conf"
             image:
               repository: ghcr.io/vaskozl/mosquitto
               tag: 2.0.20@sha256:15230dee1e84bb2f7c616b1b28b5e80fa646d304298defb802727daefe2ee3d2
