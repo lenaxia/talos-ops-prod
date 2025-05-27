@@ -28,6 +28,10 @@ spec:
       main:
         containers:
           main:
+            command:
+              - sh
+              - -c
+              - exec mosquitto -c "/mosquitto/config/mosquitto.conf"
             image:
               repository: eclipse-mosquitto
               tag: 2.0.21
@@ -79,6 +83,7 @@ spec:
         existingClaim: mosquitto-data 
         globalMounts:
           - path: /mosquitto/data
+            subPath: mosquitto.conf
       config:
         enabled: true
         type: configMap
