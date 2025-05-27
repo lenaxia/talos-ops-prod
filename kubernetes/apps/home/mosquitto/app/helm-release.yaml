@@ -88,7 +88,7 @@ spec:
         type: configMap
         name: mosquitto-config
         globalMounts:
-          - path: /mosquitto/data/mosquitto.conf
+          - path: /mosquitto/config/mosquitto.conf
             subPath: mosquitto.conf
       #passwordfile:
       #  enabled: true
@@ -106,7 +106,6 @@ spec:
         enabled: true
         data:
           #password_file /mosquitto/config/mqttpassword
-          #allow_anonymous false
           mosquitto.conf: |
             listener 1883
             allow_anonymous true
