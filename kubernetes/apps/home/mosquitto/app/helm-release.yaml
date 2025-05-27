@@ -28,10 +28,6 @@ spec:
       main:
         containers:
           main:
-            command:
-              - sh
-              - -c
-              - exec mosquitto -c "/mosquitto/config/$(hostname).conf"
             image:
               repository: eclipse-mosquitto
               tag: 2.0.21
