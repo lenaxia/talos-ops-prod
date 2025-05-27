@@ -70,13 +70,14 @@ spec:
             subPath: mosquitto.conf
     service:
       app:
-        controller: mosquitto
-        loadBalancerIP: ${SVC_MOSQUITTO_ADDR}
-        externalTrafficPolicy: Local
-        type: LoadBalancer
         ports:
           mqtt:
             port: 1883
+        primary: true
+        loadBalancerIP: ${SVC_MOSQUITTO_ADDR}
+        controller: mosquitto
+        type: LoadBalancer
+        externalTrafficPolicy: Local
     configMaps:
       config:
         enabled: true
