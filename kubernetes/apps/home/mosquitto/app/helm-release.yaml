@@ -73,6 +73,10 @@ spec:
             secretName: *uri
 
     persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        existingClaim: mosquitto-data 
       config:
         enabled: true
         type: configMap
