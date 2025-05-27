@@ -1,78 +1,106 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: mosquitto
-  annotations:
-    patch.sko.ai/app-template: common
+  name: &app mosquitto
 spec:
-  interval: 1h
+  interval: 15m
   chart:
     spec:
       chart: app-template
+      version: 3.1.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
         namespace: flux-system
-      version: 3.7.3
+      interval: 15m
+  install:
+    createNamespace: true
+    remediation:
+      retries: 6
+  upgrade:
+    remediation:
+      retries: 6
   values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
     controllers:
-      mosquitto:
-        type: statefulset
-        replicas: 2
+      main:
         containers:
-          app:
+          main:
             command:
               - sh
               - -c
-              - exec mosquitto -c "/config/$(hostname).conf"
+              - exec mosquitto -c "/mosquitto/config/$(hostname).conf"
             image:
-              repository: ghcr.io/vaskozl/mosquitto
-              tag: 2.0.20@sha256:15230dee1e84bb2f7c616b1b28b5e80fa646d304298defb802727daefe2ee3d2
-            probes:
-              liveness:
-                enabled: true
-              readiness:
-                enabled: true
+              repository: eclipse-mosquitto
+              tag: 2.0.21
             resources:
-              limits:
-                memory: 200Mi
               requests:
-                cpu: 2m
-                memory: 8Mi
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              readOnlyRootFilesystem: true
-    defaultPodOptions:
-      securityContext:
-        fsGroup: 568
-        runAsGroup: 568
-        runAsNonRoot: true
-        runAsUser: 568
-        seccompProfile:
-          type: RuntimeDefault
-      shareProcessNamespace: true
-    persistence:
-      config:
-        name: mosquitto-config
-        type: configMap
-        globalMounts:
-          - path: /mosquitto/config/mosquitto.conf
-            subPath: mosquitto.conf
+                cpu: 15m
+                memory: 105Mi
+              limits:
+                memory: 105Mi
     service:
-      app:
-        annotations:
-          coredns.io/hostname: mqtt
-          minilb/host: mqtt.sko.ai
-        controller: mosquitto
+      main:
         type: LoadBalancer
-        loadBalancerClass: minilb
+        loadBalancerIP: ${SVC_MOSQUITTO_ADDR}
+        externalTrafficPolicy: Local
+        annotations:
+          metallb.universe.tf/address-pool: dev-infra
+        labels:
+          cilium.io/l2-ip-pool: reserved
         ports:
           mqtt:
             port: 1883
+            enabled: true
+        primary: true
+        controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri mqtt.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: mqtt
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        existingClaim: mosquitto-data 
+        globalMounts:
+          - path: /mosquitto/data
+      config:
+        enabled: true
+        type: configMap
+        name: mosquitto-config
+        globalMounts:
+          - path: /mosquitto/data/mosquitto.conf
+            subPath: mosquitto.conf
+      #passwordfile:
+      #  enabled: true
+      #  type: secret
+      #  name: &app mosquitto
+      #  globalMounts:
+      #    - path: /mosquitto/config/mqttpassword
+      #      subPath: mqttpassword
+    global:
+      nameOverride: *app
+    podAnnotations:
+      reloader.stakater.com/auto: 'true'
     configMaps:
       config:
         enabled: true
