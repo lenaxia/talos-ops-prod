@@ -25,7 +25,7 @@ spec:
             command:
               - sh
               - -c
-              - exec mosquitto -c "/config/mosquitto.conf"
+              - exec mosquitto -c "/mosquitto/config/mosquitto.conf"
             image:
               repository: ghcr.io/vaskozl/mosquitto
               tag: 2.0.20@sha256:15230dee1e84bb2f7c616b1b28b5e80fa646d304298defb802727daefe2ee3d2
@@ -70,12 +70,10 @@ spec:
             subPath: mosquitto.conf
     service:
       app:
-        annotations:
-          coredns.io/hostname: mqtt
-          minilb/host: mqtt.sko.ai
         controller: mosquitto
+        loadBalancerIP: ${SVC_MOSQUITTO_ADDR}
+        externalTrafficPolicy: Local
         type: LoadBalancer
-        loadBalancerClass: minilb
         ports:
           mqtt:
             port: 1883
