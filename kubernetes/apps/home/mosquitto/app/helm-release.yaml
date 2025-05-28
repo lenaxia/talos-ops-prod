@@ -1,89 +1,106 @@
+---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: mosquitto
-  annotations:
-    patch.sko.ai/app-template: common
 spec:
-  interval: 1h
+  interval: 2h
   chart:
     spec:
       chart: app-template
+      version: 3.7.3
       sourceRef:
         kind: HelmRepository
         name: bjw-s
         namespace: flux-system
-      version: 3.7.3
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
   values:
     controllers:
       mosquitto:
-        type: statefulset
-        replicas: 1
+        annotations:
+          reloader.stakater.com/auto: "true"
+#        initContainers:
+#          init-config:
+#            image:
+#              repository: docker.io/library/eclipse-mosquitto
+#              tag: 2.0.21@sha256:94f5a3d7deafa59fa3440d227ddad558f59d293c612138de841eec61bfa4d353
+#            command: ["/bin/sh", "-c"]
+#            args: ["cp /tmp/secret/* /mosquitto/external_config/ && mosquitto_passwd -U /mosquitto/external_config/mosquitto_passwd && chmod 0700 /mosquitto/external_config/mosquitto_passwd"]
         containers:
           app:
-            command:
-              - sh
-              - -c
-              - exec mosquitto -c "/mosquitto/config/mosquitto.conf"
             image:
-              repository: ghcr.io/vaskozl/mosquitto
-              tag: 2.0.20@sha256:15230dee1e84bb2f7c616b1b28b5e80fa646d304298defb802727daefe2ee3d2
+              repository: docker.io/library/eclipse-mosquitto
+              tag: 2.0.21@sha256:94f5a3d7deafa59fa3440d227ddad558f59d293c612138de841eec61bfa4d353
             probes:
               liveness:
                 enabled: true
               readiness:
                 enabled: true
             resources:
-              limits:
-                memory: 200Mi
               requests:
-                cpu: 2m
-                memory: 8Mi
+                cpu: 10m
+                memory: 10Mi
+              limits:
+                memory: 20Mi
             securityContext:
               allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
               capabilities:
                 drop:
                   - ALL
-              readOnlyRootFilesystem: true
+        pod:
+          imagePullSecrets:
+            - name: dockerhub-auth
     defaultPodOptions:
       securityContext:
-        fsGroup: 568
-        runAsGroup: 568
         runAsNonRoot: true
         runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
-      shareProcessNamespace: true
+    service:
+      app:
+        controller: mosquitto
+        loadBalancerIP: ${SVC_MOSQUITTO_ADDR}
+        type: LoadBalancer
+        #annotations:
+        #  external-dns.alpha.kubernetes.io/hostname: mosquitto.18b.haus
+        #  io.cilium/lb-ipam-ips: 192.168.40.250
+        #primary: true
+        ports:
+          http:
+            port: 1883
+        labels:
+          cilium.io/l2-ip-pool: reserved
     persistence:
-      data:
+      config:
         enabled: true
-        type: persistentVolumeClaim
         existingClaim: mosquitto-data
         globalMounts:
           - path: /mosquitto/data
-      config:
-        name: mosquitto-config
+      config-file:
         type: configMap
-        globalMounts:
-          - path: /mosquitto/config/mosquitto.conf
-            subPath: mosquitto.conf
-    service:
-      app:
-        ports:
-          mqtt:
-            port: 1883
-        primary: true
-        loadBalancerIP: ${SVC_MOSQUITTO_ADDR}
-        controller: mosquitto
-        type: LoadBalancer
-        externalTrafficPolicy: Local
+        name: mosquitto-config
+        advancedMounts:
+          mosquitto:
+            app:
+              - path: /mosquitto/config/mosquitto.conf
+                subPath: mosquitto.conf
     configMaps:
       config:
         enabled: true
         data:
-          #password_file /mosquitto/config/mqttpassword
-          #allow_anonymous false
           mosquitto.conf: |
             listener 1883
             allow_anonymous true
