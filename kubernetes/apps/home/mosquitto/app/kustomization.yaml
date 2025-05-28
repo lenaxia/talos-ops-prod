@@ -7,4 +7,4 @@ commonLabels:
 resources:
   - secret.sops.yaml
   - helm-release.yaml
-  - config-pvc.yaml
+  - pvc-config.yaml
