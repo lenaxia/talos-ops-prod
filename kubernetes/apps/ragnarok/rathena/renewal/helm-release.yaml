@@ -57,9 +57,11 @@ spec:
               - name: ADD_SUBNET_MAP1
                 value: "255.255.255.255:10.96.255.255"
               - name: SET_CHAR_PUBLIC_IP
-                value: "192.168.5.105"
+                value: "192.168.5.219"
               - name: SET_MAP_PUBLIC_IP
-                value: "192.168.5.105"
+                value: "192.168.5.219"
+              - name: SET_MAP_TO_CHAR_IP
+                value: "192.168.5.219"
               - name: MYSQL_ACCOUNTSANDCHARS
                 value: "1"
           debug:
