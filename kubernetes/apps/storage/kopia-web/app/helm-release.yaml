@@ -41,12 +41,12 @@ spec:
                 done
             image:
               repository: kopia/kopia
-              tag: 20250314.0.154831@sha256:800e482b3a6cddd4defe8faab4580f134d2ee15ab29ad5a5c368d39fa7eaf16b
+              tag: 20250607.0.184901@sha256:eab00347ee9f8c195024e50194e43fac5faa0029e9c37b15030b32fca6af8c67
         containers:
           main:
             image:
               repository: kopia/kopia
-              tag: 20250314.0.154831@sha256:800e482b3a6cddd4defe8faab4580f134d2ee15ab29ad5a5c368d39fa7eaf16b
+              tag: 20250607.0.184901@sha256:eab00347ee9f8c195024e50194e43fac5faa0029e9c37b15030b32fca6af8c67
               pullPolicy: Always
             env:
               TZ: ${TIMEZONE}
