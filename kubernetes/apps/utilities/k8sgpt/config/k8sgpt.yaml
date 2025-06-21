@@ -6,7 +6,7 @@ metadata:
 spec:
   ai:
     enabled: true
-    model: exl2-qwen2.5-72b-instruct_4_25
+    model: default
     backend: openai
     baseUrl: https://ai.thekao.cloud/v1
     secret:
