@@ -163,7 +163,7 @@ spec:
                 # vLLM
                 - model_name: default
                   litellm_params:
-                    model: hosted_vllm/default
+                    model: hosted_vllm/Qwen/Qwen2.5-7B-Instruct-AWQ
                     api_base: http://vllm.home.svc.cluster.local:8000/v1
                     api_key: doesnotmatter
                   model_info:
