@@ -41,9 +41,16 @@ spec:
               repository: vllm/vllm-openai
               tag: v0.8.4@sha256:b168cbb0101f51b2491047345d0a83f5a8ecbe56a6604f2a2edb81eca55ebc9e
             command: ["/bin/sh", "-c"]
-            args: [
-              "vllm serve Qwen/Qwen2.5-72B-Instruct-AWQ --trust-remote-code --enable-chunked-prefill --max_num_batched_tokens 1024 --served-model-name qwen2.5-72b Qwen/Qwen2.5-72B-Instruct-AWQ default --tool-call-parser hermes --enable-auto-tool-choice"
-            ]
+            args:
+              - |
+                vllm serve Qwen/Qwen2.5-72B-Instruct-AWQ \
+                  --trust-remote-code \
+                  --enable-chunked-prefill \
+                  --max_num_batched_tokens 1024 \
+                  --served-model-name qwen2.5-72b \
+                  --tensor-parallel-size 2 \
+                  --tool-call-parser hermes \
+                  --enable-auto-tool-choice
             env:
               - name: TZ
                 value: ${TIMEZONE}
