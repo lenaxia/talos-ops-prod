@@ -54,6 +54,10 @@ spec:
             env:
               - name: TZ
                 value: ${TIMEZONE}
+              - name: CUDA_LAUNCH_BLOCKING
+                value: 1
+              - name: TORCH_USE_CUDA_DSA
+                value: 1
             envFrom:
               - secretRef:
                   name: *appname 
