@@ -50,8 +50,7 @@ spec:
                   --served-model-name default qwen2.5-72b \
                   --tensor-parallel-size 2 \
                   --tool-call-parser hermes \
-                  --enable-auto-tool-choice \
-                  --gpus all
+                  --enable-auto-tool-choice 
             env:
               - name: TZ
                 value: ${TIMEZONE}
