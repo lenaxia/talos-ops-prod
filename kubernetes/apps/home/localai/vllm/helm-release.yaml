@@ -47,10 +47,11 @@ spec:
                   --trust-remote-code \
                   --enable-chunked-prefill \
                   --max_num_batched_tokens 1024 \
-                  --served-model-name default qwen2.5-7b \
+                  --served-model-name default qwen2.5-72b \
                   --tensor-parallel-size 2 \
                   --tool-call-parser hermes \
-                  --enable-auto-tool-choice
+                  --enable-auto-tool-choice \
+                  --gpus all
             env:
               - name: TZ
                 value: ${TIMEZONE}
