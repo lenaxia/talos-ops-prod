@@ -60,32 +60,32 @@ spec:
                   done
               resources:
                 limits:
-                  nvidia.com/gpu: 1  # Ensures access to GPUs
-#          download-model:
-#            image:
-#              repository: python
-#              tag: 3.13-slim
-#            command:
-#              - /bin/sh
-#              - -c
-#            args:
-#              - |
-#                pip install --no-cache-dir huggingface_hub
-#                MODEL_DIR="/models/Qwen2.5-72B-Instruct-exl2-4_25"
-#                REPO_ID="bartowski/Qwen2.5-72B-Instruct-exl2"
-#                REVISION="4_25"
-#                if [ ! -f "$MODEL_DIR/config.json" ] || [ ! -f "$MODEL_DIR/tokenizer.json" ] || [ ! -f "$MODEL_DIR/output-00001-of-00005.safetensors" ]; then
-#                  echo "Model files not found. Downloading..."
-#                  rm -rf "$MODEL_DIR"
-#                  mkdir -p "$MODEL_DIR"
-#                  huggingface-cli download $REPO_ID --revision $REVISION --local-dir "$MODEL_DIR"
-#                  echo "Download completed."
-#                else
-#                  echo "Model files found. Skipping download."
-#                fi
-#            volumeMounts:
-#              - name: models
-#                mountPath: /models
+                  nvidia.com/gpu: 2 
+            download-model:
+              image:
+                repository: python
+                tag: 3.13-slim
+              command:
+                - /bin/sh
+                - -c
+              args:
+                - |
+                  pip install --no-cache-dir huggingface_hub
+                  MODEL_DIR="/models/Qwen2.5-72B-Instruct-exl2-4_25"
+                  REPO_ID="bartowski/Qwen2.5-72B-Instruct-exl2"
+                  REVISION="4_25"
+                  if [ ! -f "$MODEL_DIR/config.json" ] || [ ! -f "$MODEL_DIR/tokenizer.json" ] || [ ! -f "$MODEL_DIR/output-00001-of-00005.safetensors" ]; then
+                    echo "Model files not found. Downloading..."
+                    rm -rf "$MODEL_DIR"
+                    mkdir -p "$MODEL_DIR"
+                    huggingface-cli download $REPO_ID --revision $REVISION --local-dir "$MODEL_DIR"
+                    echo "Download completed."
+                  else
+                    echo "Model files found. Skipping download."
+                  fi
+              volumeMounts:
+                - name: models
+                  mountPath: /models
         containers:
           main:
             image:
@@ -97,11 +97,11 @@ spec:
                 value: America/Los_Angeles
             resources:
               requests:
-                gpu.intel.com/i915: 1
+                nvidia.com/gpu: 2
                 cpu: 200m
                 memory: 2000Mi
               limits:
-                gpu.intel.com/i915: 1
+                nvidia.com/gpu: 2
                 memory: 40000Mi
             probes:
               liveness:
@@ -169,10 +169,11 @@ spec:
             subPath: config.yml
       models:
         enabled: true
-        storageClass: longhorn
-        size: 100Gi
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
+        existingClaim: tabbyapi-models
+#        storageClass: longhorn
+#        size: 100Gi
+#        type: persistentVolumeClaim
+#        accessMode: ReadWriteOnce
         globalMounts:
           - path: /app/models
 
