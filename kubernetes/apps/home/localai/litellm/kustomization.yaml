@@ -5,5 +5,5 @@ commonLabels:
   app.kubernetes.io/name: &app litellm
   app.kubernetes.io/instance: *app
 resources:
-  #- helm-release.yaml
+  - helm-release.yaml
   - secret.sops.yaml
