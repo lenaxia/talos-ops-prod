@@ -1,0 +1,104 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app komga
+  namespace: default
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.7.3
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    controllers:
+      komga:
+        containers:
+          app:
+            image:
+              repository: gotson/komga
+              tag: 1.22.0@sha256:ba892ab3e082b17e73929b06b89f1806535bc72ef4bc6c89cd3e135af725afc3
+            env:
+              TZ: "${TIMEZONE}"
+              SERVER_PORT: &port 8080
+              KOMGA_OAUTH2_ACCOUNT_CREATION: "true"
+            resources:
+              requests:
+                memory: 4282M
+                cpu: 15m
+              limits:
+                memory: 4282M
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: *port
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: subtitles
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+            ##cert-manager.io/cluster-issuer: "ca-issuer"
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri bazarr.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: app
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+    persistence:
+      config:
+        enabled: true
+        existingClaim: komga-config
+        globalMounts:
+          - path: /config
+      secret:
+        enabled: true
+        type: secret
+        name: komga-secret
+        globalMounts:
+          - path: /config/application.yml
+            readOnly: true
+            subPath: application.yml
+      media:
+        enabled: true
+        existingClaim: komga-assets
+        globalMounts:
+          - path: /mnt/storage/assets
+      media:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: "/volume1/omoikane/[Manga]"
+        globalMounts:
+          - path: /mnt/storage/assets
