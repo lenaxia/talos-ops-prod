@@ -36,7 +36,8 @@ spec:
               repository: gotson/komga
               tag: 1.22.0@sha256:ba892ab3e082b17e73929b06b89f1806535bc72ef4bc6c89cd3e135af725afc3
             env:
-              TZ: "${TIMEZONE}"
+              #TZ: "${TIMEZONE}"
+              TZ: "America/Los_Angeles"
               SERVER_PORT: &port 8080
               KOMGA_OAUTH2_ACCOUNT_CREATION: "true"
             resources:
@@ -63,7 +64,8 @@ spec:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
         hosts:
-          - host: &uri bazarr.${SECRET_DEV_DOMAIN}
+          #- host: &uri read.${SECRET_DEV_DOMAIN}
+          - host: &uri read.thekao.cloud
             paths:
               - path: /
                 pathType: Prefix
@@ -77,7 +79,7 @@ spec:
     persistence:
       config:
         enabled: true
-        existingClaim: komga-config
+        existingClaim: komga-config-volume
         globalMounts:
           - path: /config
       secret:
@@ -88,17 +90,13 @@ spec:
           - path: /config/application.yml
             readOnly: true
             subPath: application.yml
-      media:
-        enabled: true
-        existingClaim: komga-assets
-        globalMounts:
-          - path: /mnt/storage/assets
-      media:
+      manga:
         enabled: true
         type: custom
         volumeSpec:
           nfs:
-            server: ${NAS_ADDR}
+            #server: ${NAS_ADDR}
+            server: 192.168.0.120
             path: "/volume1/omoikane/[Manga]"
         globalMounts:
-          - path: /mnt/storage/assets
+          - path: /mnt/manga
