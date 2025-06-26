@@ -1,0 +1,105 @@
+# helm-release-fmd2.yaml
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: fmd2
+  namespace: media
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.7.3 
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s 
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    controllers:
+      fmd2:
+        containers:
+          app:
+            image:
+              repository: sillysuki/fmd2
+              tag: latest
+            env:
+              PUID: "1000"
+              PGID: "1000"
+              TZ: "America/Los_Angeles"
+              UMASK: "002"
+              THRESHOLD_MINUTES: "3"
+              TRANSFER_FILE_TYPE: ".cbz"
+            resources:
+              requests:
+                memory: 512Mi  # Adjust as needed
+                cpu: 100m     # Adjust as needed
+              limits:
+                memory: 1Gi   # Adjust as needed
+                cpu: 200m     # Adjust as needed
+            livenessProbe:
+              httpGet:
+                path: /health
+                port: http
+            readinessProbe:
+              httpGet:
+                path: /health
+                port: http
+    service:
+      app:
+        controller: fmd2
+        ports:
+          http:
+            port: 3000
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: subtitles
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          #- host: &uri read.${SECRET_DEV_DOMAIN}
+          - host: &uri fmd.thekao.cloud
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: app
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+    persistence:
+      config:
+        enabled: true
+        existingClaim: fmd2-config-volume
+        globalMounts:
+          - path: /app/FMD2/userdata
+      manga:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            #server: ${NAS_ADDR}
+            server: 192.168.0.120
+            path: "/volume1/omoikane/[Manga]"
+        globalMounts:
+          - path: /downloads
