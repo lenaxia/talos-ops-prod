@@ -43,7 +43,7 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                vllm serve swift/Qwen3-30B-A3B-AWQ \
+                vllm serve cognitivecomputations/Qwen3-30B-A3B-AWQ \
                   --trust-remote-code \
                   --enable-chunked-prefill \
                   --max_num_batched_tokens 1024 \

@@ -173,7 +173,7 @@ spec:
                 #    max_tokens: 40960
                 - model_name: qwen3-30a3b
                   litellm_params:
-                    model: openai/swift/Qwen3-30B-A3B-AWQ
+                    model: openai/cognitivecomputations/Qwen3-30B-A3B-AWQ
                     api_base: http://vllm.home.svc.cluster.local:8000/v1
                     api_key: doesnotmatter
                   model_info:
