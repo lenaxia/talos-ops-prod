@@ -28,7 +28,7 @@ spec:
           main:
             image:
               repository: ghcr.io/esphome/esphome
-              tag: 2025.2.2
+              tag: 2025.6.3
             probes:
               liveness:
                 enabled: false
