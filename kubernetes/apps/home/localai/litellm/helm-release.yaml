@@ -171,7 +171,7 @@ spec:
                 #    input_cost_per_token: 0.00001
                 #    output_cost_per_token: 0.00001
                 #    max_tokens: 40960
-                - model_name: qwen3-30a3b
+                - model_name: qwen3-30a3b-test
                   litellm_params:
                     model: openai/cognitivecomputations/Qwen3-30B-A3B-AWQ
                     api_base: http://vllm.home.svc.cluster.local:8000/v1
