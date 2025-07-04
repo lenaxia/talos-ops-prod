@@ -2,7 +2,7 @@
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
-  name: multus-net-2.5a
+  name: multus-net-25a
 spec:
   config: '{
       "cniVersion": "0.3.0",
@@ -24,7 +24,7 @@ spec:
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
-  name: multus-net-2.5b
+  name: multus-net-25b
 spec:
   config: '{
       "cniVersion": "0.3.0",
