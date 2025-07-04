@@ -6,7 +6,7 @@ metadata:
   name: &appname cluster-multus
   namespace: flux-system
 spec:
-  targetNamespace: network
+  targetNamespace: kube-system
   commonMetadata:
     labels:
       app.kubernetes.io/name: *appname
@@ -31,7 +31,7 @@ metadata:
   name: &appname cluster-multus-networks
   namespace: flux-system
 spec:
-  targetNamespace: network
+  targetNamespace: kube-system
   commonMetadata:
     labels:
       app.kubernetes.io/name: *appname
