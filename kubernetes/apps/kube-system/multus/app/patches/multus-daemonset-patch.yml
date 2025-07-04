@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-multus-ds
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+      - name: kube-multus
+        volumeMounts:
+        - mountPath: /var/run/netns
+          name: host-run-netns
+          mountPropagation: HostToContainer
+      volumes:
+      - name: host-run-netns
+        hostPath:
+          path: /var/run/netns/  # Updated hostPath for Talos
