@@ -27,7 +27,7 @@ spec:
     keepHistory: false
   values:
     defaultPodOptions:
-      dnsPolicy: "ClusterFirst"
+      dnsPolicy: "ClusterFirstWithHostNet"
       annotations:
         k8s.v1.cni.cncf.io/networks: kube-system/multus-net
       securityContext:
