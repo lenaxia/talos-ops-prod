@@ -7,6 +7,7 @@ spec:
   config: '{
       "cniVersion": "0.3.0",
       "type": "macvlan",
+      "capabilities": { "dns": false },
       "master": "enp0s20f0u3",
       "mode": "bridge",
       "ipam": {
