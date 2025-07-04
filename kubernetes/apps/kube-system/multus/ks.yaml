@@ -44,4 +44,4 @@ spec:
     name: home-kubernetes
   wait: true
   dependsOn:
-    - name: cluster-networking-multus
+    - name: cluster-multus
