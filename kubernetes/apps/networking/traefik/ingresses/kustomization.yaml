@@ -12,7 +12,7 @@ resources:
   - portainer.yaml
   - phpmyadmin.yaml
     #- plex.yaml
-  - omoikane-ldap.yaml
+    #- omoikane-ldap.yaml
   - overseerr-oidc.yaml
   - overseerr-oidc2.yaml
   - pikvm.yaml
