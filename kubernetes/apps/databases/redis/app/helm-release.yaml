@@ -34,7 +34,7 @@ spec:
           main:
             image:
               repository: valkey/valkey
-              tag: 7.2.9
+              tag: 8.1.2
             command:
               - sh
             args:
