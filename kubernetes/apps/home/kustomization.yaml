@@ -20,5 +20,5 @@ resources:
   #- ./frigate/ks.yaml
   - ./zwavejs/ks.yaml
   - ./mosquitto/ks.yaml
-  - ./linkwarden/ks.yaml
+  #- ./linkwarden/ks.yaml
   - ./vscode/ks.yaml
