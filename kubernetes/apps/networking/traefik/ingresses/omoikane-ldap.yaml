@@ -1,31 +1,20 @@
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
 metadata:
   name: omoikane-ldap
   namespace: networking
-  annotations:
-    coredns.io/hostname: "ldap.${SECRET_DEV_DOMAIN}"
-    cert-manager.io/cluster-issuer: letsencrypt-production
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
 spec:
-  ingressClassName: traefik
-  rules:
-    - host: &host "ldap.${SECRET_DEV_DOMAIN}"
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: omoikane-ldap
-                port:
-                  number: 636
+  entryPoints:
+    - ldaps # Traefik terminates TLS, so ldaps maps to LDAP (port 389 internally)
+  routes:
+    - match: HostSNI(`ldap.${SECRET_DEV_DOMAIN}`)
+      services:
+        - name: omoikane-ldap
+          port: 389
   tls:
-    - hosts:
-        - *host
-      secretName: *host
+    passthrough: false # TLS termination happens in Traefik
+
 ---
 apiVersion: v1
 kind: Service
@@ -35,9 +24,10 @@ metadata:
 spec:
   ports:
     - name: ldap
-      port: 636
+      port: 389  # Traefik terminates TLS, backend service should expect plain LDAP
       protocol: TCP
       targetPort: 389
+
 ---
 apiVersion: v1
 kind: Endpoints
@@ -50,3 +40,15 @@ subsets:
     ports:
       - port: 389
         name: ldap
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: MiddlewareTCP
+metadata:
+  name: omoikane-ldap
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: networking-chain-authelia
+

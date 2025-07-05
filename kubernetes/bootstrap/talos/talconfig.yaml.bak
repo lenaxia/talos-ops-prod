@@ -28,6 +28,7 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
+      #- interface: "eth0"
       - deviceSelector:
           hardwareAddr: "f4:4d:30:68:a3:b3"
         dhcp: false
@@ -44,6 +45,7 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
+      #- interface: "eth0"
       - deviceSelector:
           hardwareAddr: "b8:ae:ed:eb:51:4f"
         dhcp: false
@@ -60,6 +62,7 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
+      #- interface: "eth0"
       - deviceSelector:
           hardwareAddr: "b8:ae:ed:ea:42:de"
         dhcp: false
@@ -87,13 +90,13 @@ nodes:
             #        mtu: 1500
   - hostname: "worker-00"
     ipAddress: "192.168.3.20"
-    image: factory.talos.dev/installer/a515a78d438e5622a13c01a7f40d24e9e4719370dbfef7eee25bf7d012ee7bc7:v1.9.1
     installDiskSelector:
       wwid: naa.5002538e405b5f41
     controlPlane: false
     nodeLabels:
       node-role.kubernetes.io/worker: true
     networkInterfaces:
+      #- interface: "eth0"
       - deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:4d"
         dhcp: false
@@ -115,6 +118,7 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
+      #- interface: "eth0"
       - deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:a1"
         dhcp: false
@@ -136,6 +140,7 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
+      #- interface: "eth0"
       - deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:0e"
         dhcp: false
@@ -149,6 +154,32 @@ nodes:
       - device: "/dev/nvme0n1"
         partitions:
           - mountpoint: /var/lib/longhorn
+  - hostname: "worker-03"
+    ipAddress: "192.168.3.23"
+    installDiskSelector:
+      model: "CHN-mSATAQ3-120"
+    controlPlane: false
+    nodeLabels:
+      node-role.kubernetes.io/worker: true
+    networkInterfaces:
+      #- interface: "enp1s0"
+      #  deviceSelector:
+      #    hardwareAddr: "00:e0:67:1b:54:da"
+      #- interface: "enp2s0"
+      - deviceSelector:
+          hardwareAddr: "00:e0:67:1b:54:db"
+        dhcp: false
+        addresses:
+          - "192.168.3.23/16"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "192.168.0.1"
+        mtu: 1500
+    machineDisks:
+      - device: "/dev/sdb"
+        partitions:
+          - mountpoint: /var/lib/longhorn
+
 
 # Global patches
 patches:
