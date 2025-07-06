@@ -7,7 +7,7 @@ resources:
   - ./outline/ks.yaml
   - ./bazarr/ks.yaml
     #- ./calibre/ks.yaml
-    #- ./ersatztv/ks.yaml
+  - ./ersatztv/ks.yaml
   - ./imaginary/ks.yaml
     #- ./invidious/ks.yaml
     #- ./jellyfin/ks.yaml
