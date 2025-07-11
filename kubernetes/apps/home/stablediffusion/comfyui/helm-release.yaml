@@ -37,6 +37,30 @@ spec:
         pod:
           runtimeClassName: nvidia
 
+        initContainers:
+          fix-permissions:
+            command: [/bin/sh, -c]
+            args:
+              - |
+                # Apply base permissions recursively to entire workspace
+                chown -R root:root /workspace
+                chmod -R 775 /workspace  # Default permission for everything
+        
+                # Special cases (override the recursive settings)
+                chmod 777 /workspace/ComfyUI/temp  # Temp needs widest access
+                chmod 755 /workspace/lost+found  # System directory
+                
+                # Ensure critical directories exist
+                mkdir -p /workspace/ComfyUI/{user/default,custom_nodes/ComfyUI-Manager/.cache,output}
+                
+                # Verification
+                ls -ld /workspace
+                ls -la /workspace/ComfyUI
+            image:
+              repository: busybox
+              tag: latest
+
+
         containers:
           app:
             image:
