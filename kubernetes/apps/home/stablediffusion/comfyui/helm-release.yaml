@@ -35,7 +35,7 @@ spec:
           app:
             image:
               repository: mmartial/comfyui-nvidia-docker
-              tag: ubuntu24_cuda12.6.3-latest
+              tag: ubuntu22_cuda12.3.2-latest
             env:
               WANTED_UID: "1000"
               WANTED_GID: "1000"
