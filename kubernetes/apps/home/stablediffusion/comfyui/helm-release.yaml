@@ -54,6 +54,7 @@ spec:
               PROVISIONING_SCRIPT: "https://raw.githubusercontent.com/ai-dock/comfyui/main/config/provisioning/flux.sh"
 
             securityContext:
+              fsGroup: 1000
               privileged: true
 
             resources:
@@ -118,7 +119,6 @@ spec:
               - path: /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/config.ini
                 subPath: config.ini
                 readOnly: true
-
       cache:
         enabled: true
         type: emptyDir
