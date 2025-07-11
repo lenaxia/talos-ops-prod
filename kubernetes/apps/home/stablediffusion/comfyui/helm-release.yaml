@@ -55,11 +55,6 @@ spec:
               limits:
                 memory: 8Gi
                 nvidia.com/gpu: 1
-            volumeMounts:
-              - name: workspace
-                mountPath: /comfy/mnt
-              - name: basedir
-                mountPath: /basedir
     service:
       app:
         controller: comfyui
