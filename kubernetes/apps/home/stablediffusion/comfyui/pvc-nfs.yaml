@@ -10,7 +10,7 @@ spec:
   volumeMode: Filesystem
   resources:
     requests:
-      storage: 100Gi
+      storage: 20Gi
   storageClassName: longhorn
 ---
 apiVersion: v1
@@ -30,7 +30,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: comfyui-output
+  name: comfyui-basedir
   namespace: home
 spec:
   storageClassName: comfyui-nfs
