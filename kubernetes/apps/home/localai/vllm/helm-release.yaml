@@ -81,9 +81,9 @@ spec:
               requests:
                 cpu: 15m
                 memory: 10G
-                nvidia.com/gpu: "2"
+                nvidia.com/gpu: "1"
               limits:
-                nvidia.com/gpu: "2"
+                nvidia.com/gpu: "1"
 
     persistence:
       data:
