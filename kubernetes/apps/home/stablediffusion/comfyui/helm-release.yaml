@@ -29,8 +29,8 @@ spec:
         type: deployment
         annotations:
           reloader.stakater.com/auto: "true"
-        pod:
-          runtimeClassName: nvidia
+            #        pod:
+            #          runtimeClassName: nvidia
         containers:
           app:
             image:
