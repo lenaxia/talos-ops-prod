@@ -54,8 +54,9 @@ spec:
               PROVISIONING_SCRIPT: "https://raw.githubusercontent.com/ai-dock/comfyui/main/config/provisioning/flux.sh"
 
             securityContext:
+              runAsUser: 1000  
+              runAsGroup: 1000
               fsGroup: 1000
-              privileged: true
 
             resources:
               requests:
