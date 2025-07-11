@@ -8,7 +8,7 @@ commonLabels:
 resources:
   - helm-release.yaml
   - secret.sops.yaml
-  - nfs-pvc.yaml
+  - pvc-nfs.yaml
 configMapGenerator:
   - name: comfyui-configmap
     files:
