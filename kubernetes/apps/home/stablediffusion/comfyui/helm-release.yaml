@@ -4,7 +4,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: &app comfyui
-  namespace: ai
+  namespace: &namespace home
 spec:
   interval: 30m
   chartRef:
@@ -74,7 +74,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/icon: baby-bottle-outline
-          hajimari.io/info: *appname
+          hajimari.io/info: *app
           hajimari.io/group: *namespace
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
