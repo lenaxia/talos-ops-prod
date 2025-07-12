@@ -85,7 +85,7 @@ spec:
         enabled: true
         existingClaim: comfyui-models
         globalMounts:
-          - path: /root/models
+          - path: /root/ComfyUI/models
       output:
         enabled: true
         existingClaim: comfyui-output
