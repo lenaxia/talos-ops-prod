@@ -27,8 +27,10 @@ spec:
         pod:
           runtimeClassName: nvidia
         initContainers:
-          - name: volume-permissions
-            image: busybox
+          volume-permissions:
+            image:
+              repository: busybox
+              tag: latest
             command: ["sh", "-c", "mkdir -p /workspace/ComfyUI/temp /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache && chown -R 1000:1000 /workspace && chmod -R 755 /workspace"]
         containers:
           app:
