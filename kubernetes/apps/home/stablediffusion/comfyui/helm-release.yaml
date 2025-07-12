@@ -26,80 +26,30 @@ spec:
           reloader.stakater.com/auto: "true"
         pod:
           runtimeClassName: nvidia
-        initContainers:
-          fix-permissions:
-            image: 
-              repository: alpine
-              tag: latest
-            command: ["/bin/sh", "-c"]
-            args:
-              - |
-                #!/bin/sh
-                set -euo pipefail
-                
-                # Create required directories if they don't exist
-                mkdir -p \
-                  /workspace/ComfyUI/temp \
-                  /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache \
-                  /workspace/ComfyUI/output
-                
-                # Set directory permissions (skip errors)
-                find /workspace -type d -print0 | xargs -0 -r chmod 755 2>/dev/null || true
-                
-                # Set file permissions (skip errors)
-                find /workspace -type f -print0 | xargs -0 -r chmod 644 2>/dev/null || true
-                
-                # Change ownership recursively (skip errors)
-                find /workspace \
-                  \( -path '*@eaDir*' -o -path '*@SynoEAStream*' -o -path '*Thumbs.db*' \) -prune -o \
-                  -print0 | xargs -0 -r chown 1000:1000 2>/dev/null || true
-                
-                # Special handling for output directory
-                chown 1000:1000 /workspace/ComfyUI/output 2>/dev/null || true
-                chmod 755 /workspace/ComfyUI/output 2>/dev/null || true
-                
-                echo "Permission fixes completed (some operations may have been skipped)"
-            securityContext:
-              runAsUser: 0  # Run as root temporarily to fix permissions
         containers:
           app:
             image:
-              repository: ghcr.io/ai-dock/comfyui
-              tag: v2-cuda-12.1.1-base-22.04-v0.2.7@sha256:ca4c95d4d4743d7d5683e57f5e0358fe586bc57578f66c2a844e9fa0650cc619
+              repository: yanwk/comfyui-boot
+              tag: cu124-slim
             env:
-              - name: AUTO_UPDATE
-                value: "false"
-              - name: DIRECT_ADDRESS_GET_WAN
-                value: "true"
-              - name: SERVICEPORTAL_URL
-                value: "comfy.${SECRET_DEV_DOMAIN}"
-              - name: WEB_ENABLE_AUTH
-                value: "false"
-              - name: WORKSPACE
-                value: "/workspace"
-              - name: CF_QUICK_TUNNELS
-                value: "false"
-              - name: SERVERLESS
-                value: "false"
-              - name: PROVISIONING_SCRIPT
-                value: "https://raw.githubusercontent.com/ai-dock/comfyui/main/config/provisioning/flux.sh"
-              - name: PRE_START_SCRIPT
-                value: |
-                  #!/bin/sh
-                  mkdir -p /workspace/ComfyUI/temp
-                  mkdir -p /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache
-                  chown -R 1000:1000 /workspace
-                  chmod -R 755 /workspace
+              - name: PORT
+                value: "8188"
+              - name: CLI_ARGS
+                value: "--listen 0.0.0.0 --port 8188"
+              - name: LD_PRELOAD
+                value: "/usr/lib64/libjpeg.so.8"
+              - name: LD_LIBRARY_PATH
+                value: "/usr/local/lib64/python3.12/site-packages/torch/lib:/usr/local/lib/python3.12/site-packages/nvidia/cublas/lib:/usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib"
             securityContext:
-              privileged: true
-              fsGroup: 1000
+              runAsUser: 0  # Runs as root as per Dockerfile
+              privileged: false  # Not needed despite root
             resources:
               requests:
                 nvidia.com/gpu: 1
-                cpu: 500m
-                memory: 1Gi
+                cpu: 2000m  # Higher CPU needed for compilation
+                memory: 4Gi
               limits:
-                memory: 8Gi
+                memory: 16Gi  # Increased for CUDA workloads
                 nvidia.com/gpu: 1
     service:
       app:
@@ -131,28 +81,18 @@ spec:
               - *uri
             secretName: *uri
     persistence:
-      workspace:
+      models:
         enabled: true
-        existingClaim: comfyui-workspace
+        existingClaim: comfyui-models
         globalMounts:
-          - path: /workspace
+          - path: /root/models
       output:
         enabled: true
-        existingClaim: comfyui-basedir
+        existingClaim: comfyui-output
         globalMounts:
-          - path: /workspace/ComfyUI/output
-      config:
-        type: configMap
-        name: comfyui-configmap
-        advancedMounts:
-          comfyui:
-            app:
-              - path: /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/config.ini
-                subPath: config.ini
-                readOnly: true
-      cache:
+          - path: /root/output
+      custom-nodes:
         enabled: true
-        type: emptyDir
+        existingClaim: comfyui-custom-nodes
         globalMounts:
-          - path: /workspace/ComfyUI/temp
-          - path: /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache
+          - path: /root/custom_nodes
