@@ -27,8 +27,10 @@ spec:
         pod:
           runtimeClassName: nvidia
         initContainers:
-          - name: fix-permissions
-            image: alpine:latest
+          fix-permissions:
+            image: 
+              repository: alpine
+              tag: latest
             command: ["/bin/sh", "-c"]
             args:
               - |
