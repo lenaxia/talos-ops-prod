@@ -1,0 +1,158 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app comfyui
+  namespace: &namespace home
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+  values:
+    controllers:
+      comfyui:
+        type: deployment
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          runtimeClassName: nvidia
+        initContainers:
+          fix-permissions:
+            image: 
+              repository: alpine
+              tag: latest
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                #!/bin/sh
+                set -euo pipefail
+                
+                # Create required directories if they don't exist
+                mkdir -p \
+                  /workspace/ComfyUI/temp \
+                  /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache \
+                  /workspace/ComfyUI/output
+                
+                # Set directory permissions (skip errors)
+                find /workspace -type d -print0 | xargs -0 -r chmod 755 2>/dev/null || true
+                
+                # Set file permissions (skip errors)
+                find /workspace -type f -print0 | xargs -0 -r chmod 644 2>/dev/null || true
+                
+                # Change ownership recursively (skip errors)
+                find /workspace \
+                  \( -path '*@eaDir*' -o -path '*@SynoEAStream*' -o -path '*Thumbs.db*' \) -prune -o \
+                  -print0 | xargs -0 -r chown 1000:1000 2>/dev/null || true
+                
+                # Special handling for output directory
+                chown 1000:1000 /workspace/ComfyUI/output 2>/dev/null || true
+                chmod 755 /workspace/ComfyUI/output 2>/dev/null || true
+                
+                echo "Permission fixes completed (some operations may have been skipped)"
+            securityContext:
+              runAsUser: 0  # Run as root temporarily to fix permissions
+        containers:
+          app:
+            image:
+              repository: ghcr.io/ai-dock/comfyui
+              tag: v2-cuda-12.1.1-base-22.04-v0.2.7@sha256:ca4c95d4d4743d7d5683e57f5e0358fe586bc57578f66c2a844e9fa0650cc619
+            env:
+              - name: AUTO_UPDATE
+                value: "false"
+              - name: DIRECT_ADDRESS_GET_WAN
+                value: "true"
+              - name: SERVICEPORTAL_URL
+                value: "comfy.${SECRET_DEV_DOMAIN}"
+              - name: WEB_ENABLE_AUTH
+                value: "false"
+              - name: WORKSPACE
+                value: "/workspace"
+              - name: CF_QUICK_TUNNELS
+                value: "false"
+              - name: SERVERLESS
+                value: "false"
+              - name: PROVISIONING_SCRIPT
+                value: "https://raw.githubusercontent.com/ai-dock/comfyui/main/config/provisioning/flux.sh"
+              - name: PRE_START_SCRIPT
+                value: |
+                  #!/bin/sh
+                  mkdir -p /workspace/ComfyUI/temp
+                  mkdir -p /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache
+                  chown -R 1000:1000 /workspace
+                  chmod -R 755 /workspace
+            securityContext:
+              privileged: true
+              fsGroup: 1000
+            resources:
+              requests:
+                nvidia.com/gpu: 1
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                memory: 8Gi
+                nvidia.com/gpu: 1
+    service:
+      app:
+        controller: comfyui
+        ports:
+          http:
+            port: 8188
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: baby-bottle-outline
+          hajimari.io/info: *app
+          hajimari.io/group: *namespace
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri comfy.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: app
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+    persistence:
+      workspace:
+        enabled: true
+        existingClaim: comfyui-workspace
+        globalMounts:
+          - path: /workspace
+      output:
+        enabled: true
+        existingClaim: comfyui-basedir
+        globalMounts:
+          - path: /workspace/ComfyUI/output
+      config:
+        type: configMap
+        name: comfyui-configmap
+        advancedMounts:
+          comfyui:
+            app:
+              - path: /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/config.ini
+                subPath: config.ini
+                readOnly: true
+      cache:
+        enabled: true
+        type: emptyDir
+        globalMounts:
+          - path: /workspace/ComfyUI/temp
+          - path: /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache
