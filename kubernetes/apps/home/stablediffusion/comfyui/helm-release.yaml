@@ -21,7 +21,7 @@ spec:
   values:
     controllers:
       comfyui:
-        type: statefulset
+        type: deployment
         annotations:
           reloader.stakater.com/auto: "true"
         pod:
