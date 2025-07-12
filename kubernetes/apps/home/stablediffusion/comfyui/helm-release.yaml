@@ -85,14 +85,14 @@ spec:
         enabled: true
         existingClaim: comfyui-models
         globalMounts:
-          - path: /root/ComfyUI/models
+          - path: /root/models
       output:
         enabled: true
         existingClaim: comfyui-output
         globalMounts:
-          - path: /root/ComfyUI/output
+          - path: /root/output
       custom-nodes:
         enabled: true
         existingClaim: comfyui-custom-nodes
         globalMounts:
-          - path: /root/ComfyUI/custom_nodes
+          - path: /root/custom_nodes
