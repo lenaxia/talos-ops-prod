@@ -27,11 +27,38 @@ spec:
         pod:
           runtimeClassName: nvidia
         initContainers:
-          volume-permissions:
-            image:
-              repository: busybox
-              tag: latest
-            command: ["sh", "-c", "mkdir -p /workspace/ComfyUI/temp /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache && find /workspace \\( -name '@eaDir' -o -name '@SynoEAStream' -o -name 'Thumbs.db' \\) -prune -o -exec chmod a+rwX {} + && chown -R 1000:1000 /workspace"]
+          - name: fix-permissions
+            image: alpine:latest
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                #!/bin/sh
+                set -euo pipefail
+                
+                # Create required directories if they don't exist
+                mkdir -p \
+                  /workspace/ComfyUI/temp \
+                  /workspace/ComfyUI/custom_nodes/ComfyUI-Manager/.cache \
+                  /workspace/ComfyUI/output
+                
+                # Set directory permissions (skip errors)
+                find /workspace -type d -print0 | xargs -0 -r chmod 755 2>/dev/null || true
+                
+                # Set file permissions (skip errors)
+                find /workspace -type f -print0 | xargs -0 -r chmod 644 2>/dev/null || true
+                
+                # Change ownership recursively (skip errors)
+                find /workspace \
+                  \( -path '*@eaDir*' -o -path '*@SynoEAStream*' -o -path '*Thumbs.db*' \) -prune -o \
+                  -print0 | xargs -0 -r chown 1000:1000 2>/dev/null || true
+                
+                # Special handling for output directory
+                chown 1000:1000 /workspace/ComfyUI/output 2>/dev/null || true
+                chmod 755 /workspace/ComfyUI/output 2>/dev/null || true
+                
+                echo "Permission fixes completed (some operations may have been skipped)"
+            securityContext:
+              runAsUser: 0  # Run as root temporarily to fix permissions
         containers:
           app:
             image:
