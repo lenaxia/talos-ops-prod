@@ -6,9 +6,9 @@ commonLabels:
   app.kubernetes.io/name: &app comfyui
   app.kubernetes.io/instance: *app
 resources:
-  #- helm-release.yaml
+  - helm-release.yaml
   - secret.sops.yaml
-  #- pvc-nfs.yaml
+  - pvc-nfs.yaml
 configMapGenerator:
   - name: comfyui-configmap
     files:
