@@ -90,7 +90,7 @@ spec:
         enabled: true
         existingClaim: comfyui-output
         globalMounts:
-          - path: /root/ComfyUI
+          - path: /root/output
       custom-nodes:
         enabled: true
         existingClaim: comfyui-custom-nodes
