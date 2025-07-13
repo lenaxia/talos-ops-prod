@@ -49,7 +49,7 @@ spec:
                 cpu: 2000m  # Higher CPU needed for compilation
                 memory: 4Gi
               limits:
-                memory: 16Gi  # Increased for CUDA workloads
+                memory: 12Gi  # Increased for CUDA workloads
                 nvidia.com/gpu: 1
     service:
       app:
