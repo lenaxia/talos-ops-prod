@@ -96,3 +96,8 @@ spec:
         existingClaim: comfyui-custom-nodes
         globalMounts:
           - path: /root/custom_nodes
+      user:
+        enabled: true
+        existingClaim: comfyui-custom-user
+        globalMounts:
+          - path: /root/user
