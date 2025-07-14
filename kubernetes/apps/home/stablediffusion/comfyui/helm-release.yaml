@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: ghcr.io/lenaxia/comfyui-boot
-              tag: cu124-slim-20250714@sha256:31addec888ec3e6b0da08dd04cb554ab6123774951dee84d8e44993eabddb75a
+              tag: cu124-slim-20250714@sha256:ecc40bd5d042901520ae092d323d46af2567a01a272cba9f04c0bfd52ffb6d93
             env:
               - name: PORT
                 value: "8188"
