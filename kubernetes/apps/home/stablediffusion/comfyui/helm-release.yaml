@@ -29,8 +29,8 @@ spec:
         containers:
           app:
             image:
-              repository: yanwk/comfyui-boot
-              tag: cu124-slim
+              repository: ghcr.io/lenaxia/comfyui-boot
+              tag: cu124-slim-20250714
             env:
               - name: PORT
                 value: "8188"
