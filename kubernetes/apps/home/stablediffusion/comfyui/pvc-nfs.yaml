@@ -2,6 +2,19 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  name: comfyui-custom-user
+  namespace: home
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
   name: comfyui-custom-nodes
   namespace: home
 spec:
@@ -23,7 +36,7 @@ spec:
   volumeMode: Filesystem
   resources:
     requests:
-      storage: 100Gi
+      storage: 200Gi
   storageClassName: longhorn
 ---
 apiVersion: v1
