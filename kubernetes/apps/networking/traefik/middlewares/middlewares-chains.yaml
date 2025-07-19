@@ -1,5 +1,5 @@
 ---
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: chain-no-auth-local
@@ -9,7 +9,7 @@ spec:
     middlewares:
       - name: middlewares-rate-limit
 ---
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: chain-no-auth
@@ -20,7 +20,7 @@ spec:
       - name: middlewares-rate-limit
       - name: middlewares-secure-headers
 ---
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: chain-basic-auth
@@ -32,7 +32,7 @@ spec:
       - name: middlewares-secure-headers
       - name: middlewares-basic-auth
 ---
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: chain-authelia
@@ -44,7 +44,7 @@ spec:
       - name: middlewares-secure-headers
       - name: middlewares-authelia
 ---
-#apiVersion: traefik.io/v1alpha1
+#apiVersion: traefik.containo.us/v1alpha1
 #kind: Middleware
 #metadata:
 #  name: chain-authelia-x-remote-user
@@ -57,7 +57,7 @@ spec:
 #      - name: middlewares-authelia
 #      - name: middlewares-add-x-remote-user
 #---
-#apiVersion: traefik.io/v1alpha1
+#apiVersion: traefik.containo.us/v1alpha1
 #kind: Middleware
 #metadata:
 #  name: chain-ldapauth
