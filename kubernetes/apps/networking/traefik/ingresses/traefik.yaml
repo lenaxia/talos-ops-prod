@@ -9,8 +9,8 @@ metadata:
     hajimari.io/appName: "traefik"
     hajimari.io/enable: "true"
     hajimari.io/icon: "simple-icons:Traefik Proxy"
-    traefik.io/router.entrypoints: "websecure"
-    traefik.io/router.middlewares: networking-chain-authelia@kubernetes
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
 spec:
   ingressClassName: "traefik"
   tls:
