@@ -2,22 +2,22 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: synology-file
+  name: plex
   namespace: networking
   annotations:
-    coredns.io/hostname: "file.${SECRET_DEV_DOMAIN}"
+    coredns.io/hostname: "plex.${SECRET_DEV_DOMAIN}"
     cert-manager.io/cluster-issuer: letsencrypt-production
     traefik.io/router.entrypoints: "websecure"
-    traefik.io/router.middlewares: networking-chain-synology-file@kubernetes
+    traefik.io/router.middlewares: networking-chain-authelia@kubernetes
 spec:
   ingressClassName: traefik
   rules:
-    - host: &host "file.${SECRET_DEV_DOMAIN}"
+    - host: &host "plex.${SECRET_DEV_DOMAIN}"
       http:
         paths:
           - backend:
               service:
-                name: synology-file
+                name: plex
                 port:
                   number: 80
             path: /
@@ -30,43 +30,43 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: synology-file
+  name: plex
   namespace: networking
 spec:
   ports:
     - port: 80
       protocol: TCP
-      targetPort: 40505
+      targetPort: 32400
 ---
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: synology-file
+  name: plex
   namespace: networking
 subsets:
   - addresses:
-      - ip: "192.168.0.120"
+      - ip: "192.168.0.125"
     ports:
-      - port: 40505
+      - port: 32400 
 ---
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: middlewares-synology-file-addprefix
+  name: middlewares-plex-addprefix
   namespace: networking
 spec:
   addPrefix:
-    prefix: "/file"
+    prefix: "/web"
 ---
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: chain-synology-file
+  name: chain-authelia-plex
   namespace: networking
 spec:
   chain:
     middlewares:
       - name: middlewares-rate-limit
-      - name: middlewares-synology-file-addprefix
+      - name: middlewares-plex-addprefix
       - name: middlewares-secure-headers
       - name: middlewares-authelia
