@@ -7,8 +7,8 @@ metadata:
   annotations:
     coredns.io/hostname: "drive.${SECRET_DEV_DOMAIN}"
     cert-manager.io/cluster-issuer: letsencrypt-production
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-synology-drive@kubernetescrd
+    traefik.io/router.entrypoints: "websecure"
+    traefik.io/router.middlewares: networking-chain-synology-drive@kubernetes
 spec:
   ingressClassName: traefik
   rules:
@@ -49,7 +49,7 @@ subsets:
     ports:
       - port: 40505
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: middlewares-synology-drive-addprefix
@@ -58,7 +58,7 @@ spec:
   addPrefix:
     prefix: "/drive"
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: chain-synology-drive
