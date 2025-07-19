@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: default
+  namespace: home
   name: tabbyapi
 data: 
   config.yml: |-
@@ -39,7 +39,7 @@ data:
     # Options for logging
     logging:
       # Enable prompt logging (default: False).
-      log_prompt: false
+      log_prompt: true
     
       # Enable generation parameter logging (default: False).
       log_generation_params: false
@@ -92,7 +92,7 @@ data:
     
       # An integer array of GBs of VRAM to split between GPUs (default: []).
       # Used with tensor parallelism.
-      gpu_split: [19, 20]
+      gpu_split: [48]
     
       # Rope scale (default: 1.0).
       # Same as compress_pos_emb.
