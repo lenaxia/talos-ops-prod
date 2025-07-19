@@ -27,7 +27,7 @@ spec:
           set-gpu-power-limit:
             image: 
               repository: nvidia/cuda
-              tag: 12.4.1-runtime-ubuntu22.04 
+              tag: 12.9.1-runtime-ubuntu22.04 
             env:
               - name: GPU_3090_POWER_LIMIT
                 value: "275"  # Default to 300W for RTX 3090
