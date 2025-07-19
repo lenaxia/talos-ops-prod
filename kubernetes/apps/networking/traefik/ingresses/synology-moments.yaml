@@ -7,8 +7,8 @@ metadata:
   annotations:
     coredns.io/hostname: "moments.${SECRET_PROD_DOMAIN_KF}"
     cert-manager.io/cluster-issuer: letsencrypt-production
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-synology-moments@kubernetescrd
+    traefik.io/router.entrypoints: "websecure"
+    traefik.io/router.middlewares: networking-chain-synology-moments@kubernetes
 spec:
   ingressClassName: traefik
   rules:
@@ -60,7 +60,7 @@ subsets:
     ports:
       - port: 40505
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: middlewares-synology-moments-addprefix
@@ -69,7 +69,7 @@ spec:
   addPrefix:
     prefix: "/moments"
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: chain-synology-moments
