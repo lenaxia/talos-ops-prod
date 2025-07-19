@@ -1,0 +1,171 @@
+kind: HelmRelease
+metadata:
+  name: &appname tabbyapi
+  namespace: home
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.6.0
+      interval: 5m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  # See https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+
+    controllers:
+      main:
+        initContainers:
+          set-gpu-power-limit:
+            image: 
+              repository: nvidia/cuda
+              tag: 12.9.1-runtime-ubuntu22.04 
+            env:
+              - name: GPU_3090_POWER_LIMIT
+                value: "275"  # Default to 300W for RTX 3090
+              - name: GPU_4090_POWER_LIMIT
+                value: "325"  # Default to 450W for RTX 4090
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289"
+            command:
+              - "/bin/sh"
+              - "-c"
+              - |
+                nvidia-smi -pm 1  # Enable persistent mode
+                for i in $(nvidia-smi --query-gpu=index --format=csv,noheader); do
+                  GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader -i $i)
+                  case "$GPU_NAME" in
+                    *"RTX 3090"*) POWER_LIMIT=${GPU_3090_POWER_LIMIT:-300} ;;
+                    *"RTX 4090"*) POWER_LIMIT=${GPU_4090_POWER_LIMIT:-450} ;;
+                    *) POWER_LIMIT=250 ;;  # Fallback power limit
+                  esac
+                  nvidia-smi -i $i -pl $POWER_LIMIT
+                  echo "Power limit set to $POWER_LIMIT W on GPU $i ($GPU_NAME)"
+                done
+            resources:
+              limits:
+                nvidia.com/gpu: 1 
+          download-model:
+            image:
+              repository: python
+              tag: 3.13-slim
+            command:
+              - /bin/sh
+              - -c
+            args:
+              - |
+                pip install --no-cache-dir huggingface_hub
+                MODEL_DIR="/models/Qwen2.5-72B-Instruct-exl2-4_25"
+                REPO_ID="bartowski/Qwen2.5-72B-Instruct-exl2"
+                REVISION="4_25"
+                if [ ! -f "$MODEL_DIR/config.json" ] || [ ! -f "$MODEL_DIR/tokenizer.json" ] || [ ! -f "$MODEL_DIR/output-00001-of-00005.safetensors" ]; then
+                  echo "Model files not found. Downloading..."
+                  rm -rf "$MODEL_DIR"
+                  mkdir -p "$MODEL_DIR"
+                  huggingface-cli download $REPO_ID --revision $REVISION --local-dir "$MODEL_DIR"
+                  echo "Download completed."
+                else
+                  echo "Model files found. Skipping download."
+                fi
+            volumeMounts:
+              - name: models
+                mountPath: /models
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/tabbyapi
+              tag: latest
+              pullPolicy: IfNotPresent
+            env:
+              - name: TZ
+                value: America/Los_Angeles
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289"
+            resources:
+              requests:
+                nvidia.com/gpu: 1
+                cpu: 200m
+                memory: 2000Mi
+              limits:
+                nvidia.com/gpu: 1
+                memory: 40000Mi
+            probes:
+              liveness:
+                enabled: false
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: &port 5000
+                  initialDelaySeconds: 300
+                  periodSeconds: 30
+                  timeoutSeconds: 1
+                  failureThreshold: 6
+              readiness:
+                enabled: false
+                custom: true
+                spec:
+                  httpGet:
+                    path: /readyz
+                    port: *port
+                  initialDelaySeconds: 300
+                  periodSeconds: 30
+                  timeoutSeconds: 1
+                  failureThreshold: 6
+              startup:
+                enabled: false
+
+    service:
+      main:
+        type: LoadBalancer
+        ports:
+          http:
+            port: *port
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: eos-icons:ai
+          hajimari.io/info: Local AI
+          hajimari.io/group: Home
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri tabby.thekao.cloud
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  name: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+    persistence:
+      configyml:
+        enabled: true
+        type: configMap
+        name: *appname
+        defaultMode: 0644
+        globalMounts:
+          - path: /app/config.yml
+            subPath: config.yml
+      models:
+        enabled: true
+        existingClaim: tabbyapi-models
+#        storageClass: longhorn
+#        size: 100Gi
+#        type: persistentVolumeClaim
+#        accessMode: ReadWriteOnce
+        globalMounts:
+          - path: /app/models
+
