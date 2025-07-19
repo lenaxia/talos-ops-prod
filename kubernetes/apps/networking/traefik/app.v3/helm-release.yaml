@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: traefik
-      version: 28.0.0  # Updated chart version
+      version: 27.0.2
       sourceRef:
         kind: HelmRepository
         name: traefik
@@ -28,12 +28,14 @@ spec:
   values:
     image:
       name: traefik
-      tag: v3.0.0  # Updated Traefik version
+      tag: v2.11.13
     deployment:
       kind: Deployment
       replicas: 3
+
     nodeSelector:
       node-role.kubernetes.io/worker: "true"
+
     service:
       enabled: true
       type: LoadBalancer
@@ -52,14 +54,16 @@ spec:
       access:
         enabled: true
         format: json
+
     experimental:
-      plugins:
+      plugins: 
         htransformation:
           moduleName: github.com/tomMoulard/htransformation
           version: v0.3.1
         ldapAuth:
           moduleName: github.com/wiltonsr/ldapAuth
           version: v0.1.10
+      
     ingressClass:
       enabled: true
       isDefaultClass: true
@@ -79,21 +83,26 @@ spec:
       - "--providers.kubernetesingress.allowexternalnameservices=true"
       - "--providers.kubernetescrd.allowexternalnameservices=true"
     ports:
+      traefik:
+        expose:
+          default: true  # Assuming this port exposure is defined similarly for other services
       web:
         redirectTo:
           port: websecure
+        expose:  # If expose is needed for 'web', define it similarly as a dictionary
+          default: false  # This line might not be necessary depending on your logic
       websecure:
         tls:
           enabled: true
           options: "default"
-        transport:
-          respondingTimeouts:
-            readTimeout: 30s
-            writeTimeout: 30s
-            idleTimeout: 180s
+        expose:
+          default: true  # Ensure consistent structure for 'expose'
       metrics:
         port: 8082
+        expose:
+          default: true  # Changed from 'expose: true' to a dictionary form
         exposedPort: 8082
+    
     tlsOptions:
       default:
         minVersion: VersionTLS12
@@ -104,13 +113,33 @@ spec:
     metrics:
       prometheus:
         entryPoint: metrics
+        ## Enable metrics on routers. Default=false
         addRoutersLabels: true
+
         serviceMonitor:
+          metricRelabelings: []
+          #  - sourceLabels: [__name__]
+          #    separator: ;
+          #    regex: ^fluentd_output_status_buffer_(oldest|newest)_.+
+          #    replacement: $1
+          #    action: drop
+          relabelings: []
+          #  - sourceLabels: [__meta_kubernetes_pod_node_name]
+          #    separator: ;
+          #    regex: ^(.*)$
+          #    targetLabel: nodename
+          #    replacement: $1
+          #    action: replace
           jobLabel: traefik
           interval: 30s
           honorLabels: true
+          # (Optional)
+          # scrapeTimeout: 5s
           honorTimestamps: true
           enableHttp2: true
+          # followRedirects: true
+          # additionalLabels:
+          #   foo: bar
         prometheusRule:
           additionalLabels: {}
           rules:
@@ -123,9 +152,11 @@ spec:
               annotations:
                 summary: "Traefik Down"
                 description: "{{ $labels.pod }} on {{ $labels.nodename }} is down"
+  
     resources:
       requests:
         memory: 100Mi
         cpu: 500m
       limits:
         memory: 500Mi
+
