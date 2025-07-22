@@ -80,11 +80,11 @@ data:
       # Load model with tensor parallelism.
       # Falls back to autosplit if GPU split isn't provided.
       # This ignores the gpu_split_auto value.
-      tensor_parallel: false
+      tensor_parallel: true
     
       # Automatically allocate resources to GPUs (default: True).
       # Not parsed for single GPU users.
-      gpu_split_auto: False
+      gpu_split_auto: true
     
       # Reserve VRAM used for autosplit loading (default: 96 MB on GPU 0).
       # Represented as an array of MB per GPU.
@@ -92,7 +92,7 @@ data:
     
       # An integer array of GBs of VRAM to split between GPUs (default: []).
       # Used with tensor parallelism.
-      gpu_split: [48]
+      gpu_split: []
     
       # Rope scale (default: 1.0).
       # Same as compress_pos_emb.
@@ -107,7 +107,7 @@ data:
     
       # Enable different cache modes for VRAM savings (default: FP16).
       # Possible values: 'FP16', 'Q8', 'Q6', 'Q4'.
-      cache_mode: Q8
+      cache_mode: Q4
     
       # Size of the prompt cache to allocate (default: max_seq_len).
       # Must be a multiple of 256 and can't be less than max_seq_len.
