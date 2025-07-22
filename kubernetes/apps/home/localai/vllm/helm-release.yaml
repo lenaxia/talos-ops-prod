@@ -1,5 +1,3 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
-apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: &appname vllm
@@ -52,7 +50,7 @@ spec:
                   --tool-call-parser hermes \
                   --enable-auto-tool-choice \
                   --max-model-len 32768 \
-                  --gpu_memory_utilization 0.90
+                  --gpu_memory_utilization 0.85
             env:
               - name: TZ
                 value: ${TIMEZONE}
