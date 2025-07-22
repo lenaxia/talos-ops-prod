@@ -87,8 +87,8 @@ spec:
             env:
               - name: TZ
                 value: America/Los_Angeles
-              - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289"
+#              - name: NVIDIA_VISIBLE_DEVICES
+#                value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289"
             resources:
               requests:
                 nvidia.com/gpu: 2
