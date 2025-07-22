@@ -52,7 +52,8 @@ spec:
                   --tool-call-parser hermes \
                   --enable-auto-tool-choice \
                   --max-model-len 32768 \
-                  --gpu_memory_utilization 0.95
+                  --gpu_memory_utilization 0.95 \
+                  --enforce_eager true
             env:
               - name: TZ
                 value: ${TIMEZONE}
