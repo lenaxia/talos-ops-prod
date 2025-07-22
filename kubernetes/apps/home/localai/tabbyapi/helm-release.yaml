@@ -91,11 +91,11 @@ spec:
                 value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289"
             resources:
               requests:
-                nvidia.com/gpu: 1
+                nvidia.com/gpu: 2
                 cpu: 200m
                 memory: 2000Mi
               limits:
-                nvidia.com/gpu: 1
+                nvidia.com/gpu: 2
                 memory: 40000Mi
             probes:
               liveness:
