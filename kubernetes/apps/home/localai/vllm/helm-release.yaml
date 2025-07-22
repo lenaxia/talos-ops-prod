@@ -51,8 +51,9 @@ spec:
                   --tensor-parallel-size 2 \
                   --tool-call-parser hermes \
                   --enable-auto-tool-choice \
-                  --max-model-len 32768 \
-                  --gpu-memory-utilization 1
+                  --max-model-len 10000 \
+                  --gpu-memory-utilization 1 \
+                  --enforce-eager --max-model-len 512
             env:
               - name: TZ
                 value: ${TIMEZONE}
