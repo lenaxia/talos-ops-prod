@@ -34,7 +34,7 @@ spec:
           app:
             image:
               repository: vllm/vllm-openai
-              tag: v0.8.4@sha256:b168cbb0101f51b2491047345d0a83f5a8ecbe56a6604f2a2edb81eca55ebc9e
+              tag: v0.10.0@sha256:05a31dc4185b042e91f4d2183689ac8a87bd845713d5c3f987563c5899878271
             command: ["/bin/sh", "-c"]
             args: [
               "vllm serve Qwen/Qwen2.5-72B-Instruct-AWQ --trust-remote-code --enable-chunked-prefill --max_num_batched_tokens 1024 --served-model-name default Qwen/Qwen2.5-72B-Instruct-AWQ"
