@@ -21,7 +21,7 @@ cluster:
 cni:
   exclusive: true
 # NOTE: devices might need to be set if you have more than one active NIC on your hosts
-# devices: eno+ eth+
+devices: eno+ eth+ enp+
 enableIPv4BIGTCP: true
 endpointRoutes:
   enabled: true
