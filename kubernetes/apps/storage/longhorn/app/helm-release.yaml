@@ -45,4 +45,4 @@ spec:
       nodeDownPodDeletionPolicy: "delete-both-statefulset-and-deployment-pod"
       dataLocality: "best-effort"
       replicaAutoBalance: "best-effort"
-
+      defaultDataPath: "/var/mnt/longhorn"
