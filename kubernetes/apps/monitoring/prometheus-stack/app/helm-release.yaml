@@ -146,16 +146,16 @@ spec:
               - *alertUri
             secretName: *alertUri
 
-      alertmanagerSpec:
-        replicas: 3
-        storage:
-          volumeClaimTemplate:
-            spec:
-              storageClassName: openebs-hostpath
-              accessModes: ["ReadWriteOnce"]
-              resources:
-                requests:
-                  storage: 5Gi
+#      alertmanagerSpec:
+#        replicas: 3
+#        storage:
+#          volumeClaimTemplate:
+#            spec:
+#              storageClassName: openebs-hostpath
+#              accessModes: ["ReadWriteOnce"]
+#              resources:
+#                requests:
+#                  storage: 5Gi
 
     grafana:
       enabled: false

@@ -6,5 +6,5 @@
           [plugins."io.containerd.cri.v1.runtime"]
             [plugins."io.containerd.cri.v1.runtime".containerd]
               default_runtime_name = "nvidia"        
-      path: /etc/cri/conf.d/20-customization.part
+      path: /etc/cri/conf.d/30-customization.part
       op: create
