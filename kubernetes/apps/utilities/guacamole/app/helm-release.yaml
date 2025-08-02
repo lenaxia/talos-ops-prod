@@ -34,7 +34,7 @@ spec:
         containers:
           main:
             image:
-              repository: docker.io/maxwaldorf/guacamole
+              repository: docker.io/flcontainers/guacamole
               tag: latest
               pullPolicy: Always
             env:
