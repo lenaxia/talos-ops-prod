@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
 ---
 # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-talosVersion: v1.9.6
+talosVersion: v1.10.5
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 kubernetesVersion: v1.33.2
 
@@ -28,8 +28,7 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - interface: "eth0"
-        deviceSelector:
+      - deviceSelector:
           hardwareAddr: "f4:4d:30:68:a3:b3"
         dhcp: false
         addresses:
@@ -45,8 +44,7 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - interface: "eth0"
-        deviceSelector:
+      - deviceSelector:
           hardwareAddr: "b8:ae:ed:eb:51:4f"
         dhcp: false
         addresses:
@@ -62,8 +60,7 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - interface: "eth0"
-        deviceSelector:
+      - deviceSelector:
           hardwareAddr: "b8:ae:ed:ea:42:de"
         dhcp: false
         addresses:
@@ -96,8 +93,7 @@ nodes:
     nodeLabels:
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - interface: "eth0"
-        deviceSelector:
+      - deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:4d"
         dhcp: false
         addresses:
@@ -106,10 +102,20 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
-    machineDisks:
-      - device: "/dev/nvme0n1"
-        partitions:
-          - mountpoint: /var/lib/longhorn
+    patches:
+      - "@./patches/nvidia/gpu-worker-patch.yaml"
+      - "@./patches/nvidia/nvidia-default-runtimeclass.yaml"
+    schematic:
+      customization:
+        systemExtensions:
+            officialExtensions:
+              - siderolabs/i915
+              - siderolabs/intel-ucode
+              - siderolabs/iscsi-tools
+              - siderolabs/nvidia-container-toolkit-production
+              - siderolabs/nvidia-open-gpu-kernel-modules-production
+              - siderolabs/thunderbolt
+              - siderolabs/util-linux-tools
   - hostname: "worker-01"
     ipAddress: "192.168.3.21"
     installDiskSelector: 
@@ -118,8 +124,7 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - interface: "eth0"
-        deviceSelector:
+      - deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:a1"
         dhcp: false
         addresses:
@@ -128,10 +133,6 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
-    machineDisks:
-      - device: "/dev/nvme0n1"
-        partitions:
-          - mountpoint: /var/lib/longhorn
   - hostname: "worker-02"
     ipAddress: "192.168.3.22"
     controlPlane: false
@@ -140,8 +141,7 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - interface: "eth0"
-        deviceSelector:
+      - deviceSelector:
           hardwareAddr: "00:e0:4c:68:00:0e"
         dhcp: false
         addresses:
@@ -150,10 +150,23 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
-    machineDisks:
-      - device: "/dev/nvme0n1"
-        partitions:
-          - mountpoint: /var/lib/longhorn
+  - hostname: "worker-03"
+    ipAddress: "192.168.3.23"
+    controlPlane: false
+    installDiskSelector:
+      model: CHN-mSATAQ3-120
+    nodeLabels: 
+      node-role.kubernetes.io/worker: true
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "00:e0:67:1b:54:db"
+        dhcp: false
+        addresses:
+          - "192.168.3.23/16"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "192.168.0.1"
+        mtu: 1500
 
 # Global patches
 patches:
@@ -183,6 +196,15 @@ controlPlane:
               - siderolabs/util-linux-tools
 
 worker:
+  patches:
+    - "@./patches/worker/longhorn-extramount.yaml"
+  userVolumes:
+    - name: longhorn
+      provisioning:
+        diskSelector: 
+          match: disk.transport == 'nvme'
+        minSize: "500GiB" # Talos will autogrow the size if more is available
+        grow: true
   schematic:
     customization:
       systemExtensions:
