@@ -58,7 +58,7 @@ spec:
         labels:
           cilium.io/l2-ip-pool: reserved
         loadBalancerIP: ${SVC_REDIS_ADDR}
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         ports:
           http:
             port: 8080
