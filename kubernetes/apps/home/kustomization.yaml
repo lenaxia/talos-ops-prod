@@ -12,12 +12,12 @@ resources:
   #- ./node-red/ks.yaml
   - ./stirling-pdf/ks.yaml
   - ./redlib/ks.yaml
-  - ./localai/ks.yaml
-  - ./stablediffusion/ks.yaml
+  #- ./localai/ks.yaml
+  #- ./stablediffusion/ks.yaml
   - ./home-assistant/ks.yaml
   - ./esphome/ks.yaml
   #- ./magicmirror/ks.yaml
-  - ./frigate/ks.yaml
+  #- ./frigate/ks.yaml
   - ./zwavejs/ks.yaml
   - ./mosquitto/ks.yaml
   #- ./linkwarden/ks.yaml
