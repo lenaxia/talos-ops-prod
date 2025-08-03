@@ -47,7 +47,7 @@ spec:
         annotations:
           coredns.io/hostname: mariadb.${SECRET_DEV_DOMAIN}
         loadBalancerIPs: ['${SVC_MARIADB_ADDR}']
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         ports:
           http:
             port: 8080

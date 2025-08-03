@@ -167,7 +167,7 @@ spec:
     service:
       type: LoadBalancer
       # If deferring to an internal only load balancer
-      # externalTrafficPolicy: Local
+      # externalTrafficPolicy: Cluster
       port: 8080
       annotations: {}
       # If using an AWS load balancer, you'll need to override the default 60s load balancer idle timeout

@@ -111,7 +111,7 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${SVC_RATHENA_RENEWAL_ADDR}
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         labels:
           cilium.io/l2-ip-pool: reserved
         ports:

@@ -49,7 +49,7 @@ spec:
         annotations:
           metallb.universe.tf/address-pool: dev-infra
         type: LoadBalancer
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
 
         ports:
           http:

@@ -100,7 +100,7 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${SVC_HERCULES_RENEWAL_ADDR}
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         ports:
           http:
             port: 6900
