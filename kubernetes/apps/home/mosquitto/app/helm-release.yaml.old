@@ -45,7 +45,7 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${SVC_MOSQUITTO_ADDR}
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         annotations:
           metallb.universe.tf/address-pool: dev-infra
         labels:

@@ -68,7 +68,7 @@ spec:
       main:
         enabled: true
         type: LoadBalancer
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         ports:
           http:
             port: *port
