@@ -57,12 +57,12 @@ spec:
                   name: home-assistant-secret
             image:
               repository: ghcr.io/onedr0p/postgres-init
-              tag: '17.4'
+              tag: '16.8'
         containers:
           main:
             image:
               repository: ghcr.io/lenaxia/home-assistant
-              tag:  2025.7@sha256:d2d0f8dd89330d5ee18e4c58153be49d2d7da61d517c3b6335826ba675a4d068
+              tag: 2025.7@sha256:d2d0f8dd89330d5ee18e4c58153be49d2d7da61d517c3b6335826ba675a4d068
             envFrom:
               - secretRef:
                   name: home-assistant-secret
