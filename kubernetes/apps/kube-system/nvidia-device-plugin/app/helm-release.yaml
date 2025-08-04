@@ -9,7 +9,7 @@ spec:
   interval: 30m
   chart:
     spec:
-      # renovate: registryUrl=https://github.com/NVIDIA/gpu-operator
+      # renovate: registryUrl=https://nvidia.github.io/k8s-device-plugin
       chart: nvidia-device-plugin
       version: 0.17.2
       sourceRef:
@@ -29,3 +29,17 @@ spec:
   # https://github.com/NVIDIA/k8s-device-plugin/blob/main/deployments/helm/nvidia-device-plugin/values.yaml
   values:
     runtimeClassName: nvidia
+    devicePlugin:
+      enabled: true
+
+    gfd:
+      enabled: true
+      nameOverride: gpu-feature-discovery
+      namespaceOverride: ""
+      noTimestamp: null
+      sleepInterval: null
+      securityContext:
+        # privileged access is required for the gpu-feature-discovery to access the
+        # vgpu info on a host.
+        # TODO: This should be optional and detected automatically.
+        privileged: true
