@@ -23,7 +23,7 @@ spec:
 
     controllers:
       main:
-        #        initContainers:
+        initContainers:
         #          set-gpu-power-limit:
         #            image: 
         #              repository: nvidia/cuda
@@ -53,31 +53,31 @@ spec:
         #            resources:
         #              limits:
         #                nvidia.com/gpu: 1 
-                  #          download-model:
-                  #            image:
-                  #              repository: python
-                  #              tag: 3.13-slim
-                  #            command:
-                  #              - /bin/sh
-                  #              - -c
-                  #            args:
-                  #              - |
-                  #                pip install --no-cache-dir huggingface_hub
-                  #                MODEL_DIR="/models/Qwen2.5-72B-Instruct-exl2-4_25"
-                  #                REPO_ID="bartowski/Qwen2.5-72B-Instruct-exl2"
-                  #                REVISION="4_25"
-                  #                if [ ! -f "$MODEL_DIR/config.json" ] || [ ! -f "$MODEL_DIR/tokenizer.json" ] || [ ! -f "$MODEL_DIR/output-00001-of-00005.safetensors" ]; then
-                  #                  echo "Model files not found. Downloading..."
-                  #                  rm -rf "$MODEL_DIR"
-                  #                  mkdir -p "$MODEL_DIR"
-                  #                  huggingface-cli download $REPO_ID --revision $REVISION --local-dir "$MODEL_DIR"
-                  #                  echo "Download completed."
-                  #                else
-                  #                  echo "Model files found. Skipping download."
-                  #                fi
-                  #            volumeMounts:
-                  #              - name: models
-                  #                mountPath: /models
+          download-model:
+            image:
+              repository: python
+              tag: 3.13-slim
+            command:
+              - /bin/sh
+              - -c
+            args:
+              - |
+                pip install --no-cache-dir huggingface_hub
+                MODEL_DIR="/models/Qwen2.5-72B-Instruct-exl2-4_25"
+                REPO_ID="bartowski/Qwen2.5-72B-Instruct-exl2"
+                REVISION="4_25"
+                if [ ! -f "$MODEL_DIR/config.json" ] || [ ! -f "$MODEL_DIR/tokenizer.json" ] || [ ! -f "$MODEL_DIR/output-00001-of-00005.safetensors" ]; then
+                  echo "Model files not found. Downloading..."
+                  rm -rf "$MODEL_DIR"
+                  mkdir -p "$MODEL_DIR"
+                  huggingface-cli download $REPO_ID --revision $REVISION --local-dir "$MODEL_DIR"
+                  echo "Download completed."
+                else
+                  echo "Model files found. Skipping download."
+                fi
+            volumeMounts:
+              - name: models
+                mountPath: /models
         containers:
           main:
             image:
