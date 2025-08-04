@@ -84,7 +84,7 @@ spec:
     persistence:
       models:
         enabled: true
-        existingClaim: comfyui-models
+        existingClaim: comfyui-output
         globalMounts:
           - path: /root/mnt
 #      output:
