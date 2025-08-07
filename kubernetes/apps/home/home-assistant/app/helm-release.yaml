@@ -40,7 +40,7 @@ spec:
         node-role.kubernetes.io/worker: 'true'
     controllers:
       main:
-        type: deployment
+        type: statefulset
         annotations:
           reloader.stakater.com/auto: 'true'
         initContainers:
