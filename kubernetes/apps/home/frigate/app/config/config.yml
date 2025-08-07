@@ -38,17 +38,23 @@ snapshots:
     default: 2
 
 record:
-  enabled: true
+  enabled: True
   retain:
     days: 1
     mode: all
-  events:
+  alerts:
     retain:
-      default: 2
+      days: 30
+      mode: active_objects
+  detections:
+    retain:
+      days: 30
       mode: active_objects
 
 objects:
-  track: ["person"]
+  track: 
+    - person
+    - car
   filters:
     person:
       min_area: 5000
