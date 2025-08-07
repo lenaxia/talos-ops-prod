@@ -97,10 +97,8 @@ spec:
     persistence:
       data:
         enabled: true
-        storageClass: openebs-hostpath
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 5Gi 
+        type: emptyDir
+        medium: Memory
         globalMounts:
           - path: /data
       healthcheck:
