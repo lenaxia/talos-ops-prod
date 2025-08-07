@@ -38,10 +38,9 @@ spec:
           - 100
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
-        kubernetes.io/hostname: 'worker-01'
     controllers:
       main:
-        type: statefulset
+        type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
         initContainers:
