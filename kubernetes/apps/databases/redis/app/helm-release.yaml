@@ -19,10 +19,10 @@ spec:
   install:
     createNamespace: true
     remediation:
-      retries: 5
+      retries: 4
   upgrade:
     remediation:
-      retries: 5
+      retries: 4
   values:
     defaultPodOptions:
       nodeSelector:
