@@ -14,7 +14,7 @@ resources:
   - ./redlib/ks.yaml
   - ./localai/ks.yaml
   - ./stablediffusion/ks.yaml
-  - ./home-assistant/ks.yaml
+    #- ./home-assistant/ks.yaml
   - ./esphome/ks.yaml
   #- ./magicmirror/ks.yaml
   #- ./frigate/ks.yaml
