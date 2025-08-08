@@ -37,6 +37,21 @@ spec:
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
+          zerotier:
+            image: zerotier/zerotier:latest
+            securityContext:
+              capabilities:
+                add:
+                  - NET_ADMIN
+            command: ["sh", "-c"]
+            args:
+              - |
+                zerotier-one -d
+                zerotier-cli join a84ac5c10a2829e4
+                # wait until interface up
+                until ip link show zt0; do sleep 1; done
+                ip route replace default dev zt0
+                sleep infinity
           main:
             image:
               repository: docker.io/alexta69/metube
