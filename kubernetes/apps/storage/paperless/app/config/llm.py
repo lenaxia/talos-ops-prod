@@ -29,8 +29,8 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Model Configuration
 ENABLE_VISION = os.getenv('ENABLE_VISION', 'false').lower() == 'true'
-VISION_MODEL = os.getenv('VISION_MODEL', 'qwen2.5-vl-7b')
-VISION_MODEL_TOKENS_MAX = int(os.getenv('VISION_MODEL_TOKENS_MAX', 32000))
+VISION_MODEL = os.getenv('VISION_MODEL', 'qwen2.5-vl')
+VISION_MODEL_TOKENS_MAX = int(os.getenv('VISION_MODEL_TOKENS_MAX', 40960))
 TEXT_MODEL = os.getenv('TEXT_MODEL', 'default')
 TEXT_MODEL_TOKENS_MAX = int(os.getenv('TEXT_MODEL_TOKENS_MAX', 40960))
 MAX_RETURN_TOKENS = int(os.getenv('MAX_RETURN_TOKENS', 8192))
