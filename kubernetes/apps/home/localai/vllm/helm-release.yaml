@@ -43,12 +43,12 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                vllm serve Qwen/Qwen2.5-VL-72B-Instruct-AWQ \
+                vllm serve Qwen/Qwen2.5-VL-7B-Instruct-AWQ \
                   --trust-remote-code \
                   --enable-chunked-prefill \
                   --max_num_batched_tokens 1024 \
                   --served-model-name qwen2.5-vl \
-                  --tensor-parallel-size 2 \
+                  --tensor-parallel-size 1 \
                   --tool-call-parser hermes \
                   --enable-auto-tool-choice \
                   --max-model-len 10000 \
@@ -80,11 +80,9 @@ spec:
               readiness: *probe
             resources:
               requests:
-                cpu: 15m
-                memory: 10G
-                nvidia.com/gpu: "2"
+                nvidia.com/gpu: "1"
               limits:
-                nvidia.com/gpu: "2"
+                nvidia.com/gpu: "1"
 
     persistence:
       data:
