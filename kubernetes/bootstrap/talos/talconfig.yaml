@@ -133,6 +133,8 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
+    patches:
+      - "@./patches/global/containerd.yaml"
   - hostname: "worker-02"
     ipAddress: "192.168.3.22"
     controlPlane: false
@@ -150,6 +152,8 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
+    patches:
+      - "@./patches/global/containerd.yaml"
   - hostname: "worker-03"
     ipAddress: "192.168.3.23"
     controlPlane: false
@@ -167,11 +171,19 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
+    patches:
+      - "@./patches/global/containerd.yaml"
+    userVolumes:
+      - name: longhorn
+        provisioning:
+          diskSelector: 
+            match: disk.transport == 'sata' && !system_disk
+          minSize: "500GiB" # Talos will autogrow the size if more is available
+          grow: true
 
 # Global patches
 patches:
   - "@./patches/global/cluster-discovery.yaml"
-  - "@./patches/global/containerd.yaml"
   - "@./patches/global/disable-search-domain.yaml"
   - "@./patches/global/dns.yaml"
   - "@./patches/global/hostdns.yaml"
@@ -187,6 +199,7 @@ controlPlane:
     - "@./patches/controller/cluster.yaml"
     - "@./patches/controller/disable-admission-controller.yaml"
     - "@./patches/controller/etcd.yaml"
+    - "@./patches/global/containerd.yaml"
   schematic:
     customization:
       systemExtensions:
