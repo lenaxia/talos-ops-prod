@@ -8,3 +8,4 @@ resources:
   - ./replicationdestination.yaml
   - ./replicationsource.yaml
   - ./restic-config.yaml
+  - ./longhorn-snapshot-vsc.yaml
