@@ -26,5 +26,5 @@ spec:
       fsGroup: ${VOLSYNC_PGID:=1000}
     sourceIdentity:
       sourceName: ${APP}
-    storageClassName: "${VOLSYNC_STORAGECLASS:=ceph-block}"
-    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=csi-ceph-blockpool}"
+    storageClassName: "${VOLSYNC_STORAGECLASS:=longhorn}"
+    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=longhorn-snapshot-vsc}"
