@@ -7,3 +7,4 @@ resources:
   - ./pvc.yaml
   - ./replicationdestination.yaml
   - ./replicationsource.yaml
+  - ./restic-config.yaml
