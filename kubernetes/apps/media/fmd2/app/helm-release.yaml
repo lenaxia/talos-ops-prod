@@ -71,6 +71,7 @@ spec:
           - hosts:
               - *uri
             secretName: *uri
+        className: traefik
     persistence:
       config:
         enabled: true
