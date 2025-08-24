@@ -148,7 +148,7 @@ spec:
         type: persistentVolumeClaim
     sidecars:
       gotenburg:
-        image: thecodingmachine/gotenberg:8.21.1
+        image: thecodingmachine/gotenberg:8.22.0
         imagePullPolicy: IfNotPresent
         env:
           - {name: DISABLE_GOOGLE_CHROME, value: '1'}
