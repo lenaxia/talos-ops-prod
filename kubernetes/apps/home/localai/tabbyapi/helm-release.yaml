@@ -87,15 +87,15 @@ spec:
             env:
               - name: TZ
                 value: America/Los_Angeles
-#              - name: NVIDIA_VISIBLE_DEVICES
-#                value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289"
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93"
             resources:
               requests:
-                nvidia.com/gpu: 2
+                nvidia.com/gpu: 1
                 cpu: 200m
                 memory: 2000Mi
               limits:
-                nvidia.com/gpu: 2
+                nvidia.com/gpu: 1
                 memory: 40000Mi
             probes:
               liveness:
