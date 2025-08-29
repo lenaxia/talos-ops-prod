@@ -33,7 +33,7 @@ spec:
           main:
             image:
               repository: ghcr.io/dani-garcia/vaultwarden
-              tag: 1.34.1
+              tag: 1.34.3
 
     # -- environment variables.
             envFrom:
