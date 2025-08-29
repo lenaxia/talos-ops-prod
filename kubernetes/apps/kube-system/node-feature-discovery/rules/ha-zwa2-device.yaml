@@ -1,0 +1,17 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/nfd.k8s-sigs.io/nodefeaturerule_v1alpha1.json
+apiVersion: nfd.k8s-sigs.io/v1alpha1
+kind: NodeFeatureRule
+metadata:
+  name: ha-zwa2-device
+spec:
+  rules:
+    - name: ha.zwa2.zwave
+      labels:
+        zwa2.feature.node.kubernetes.io/zwave: "true"
+      matchFeatures:
+        - feature: usb.device
+          matchExpressions:
+            vendor: { op: In, value: ["303A"] }
+            device: { op: In, value: ["4001"] }
+
