@@ -71,6 +71,30 @@
       ],
     },
     {
+      description: 'Auto merge patch updates for Docker images',
+      matchDatasources: ['docker'],
+      matchUpdateTypes: ['patch'],
+      automerge: true,
+      automergeType: 'branch',
+      ignoreTests: true
+    },
+    {
+      description: 'Auto merge minor updates for Docker images > 1.0.0',
+      matchDatasources: ['docker'],
+      matchUpdateTypes: ['minor'],
+      matchCurrentVersion: '>=1.0.0',
+      automerge: true,
+      automergeType: 'branch',
+      ignoreTests: true
+    },
+    {
+      description: 'Do not auto merge minor updates for 0.x Docker images',
+      matchDatasources: ['docker'],
+      matchUpdateTypes: ['minor'],
+      matchCurrentVersion: '/^0\\./',
+      automerge: false
+    },
+    {
       description: [
         'Flux Group',
       ],
