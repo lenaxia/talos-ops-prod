@@ -93,8 +93,8 @@ spec:
               repository: thecodingmachine/gotenberg
               tag: 8.21.1
             env:
-              - {name: DISABLE_GOOGLE_CHROME, value: '1'}
-              tag: 8.0.2
+              - name: DISABLE_GOOGLE_CHROME
+                value: '1'
           tika:
             image:
               repository: ghcr.io/paperless-ngx/tika
