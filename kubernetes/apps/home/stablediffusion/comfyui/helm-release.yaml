@@ -32,8 +32,8 @@ spec:
               repository: ghcr.io/lenaxia/comfyui-boot
               tag: cu124-slim-20250714@sha256:a8244e3219dc1f95e16fbe779d65300e9d32c39b5ae49d0a6a2408c54579dbcc
             env:
-              - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-6726851a-d64e-09c8-a938-1537593e3106"
+              #- name: NVIDIA_VISIBLE_DEVICES
+              #  value: "GPU-6726851a-d64e-09c8-a938-1537593e3106"
               - name: PORT
                 value: "8188"
               - name: CLI_ARGS
