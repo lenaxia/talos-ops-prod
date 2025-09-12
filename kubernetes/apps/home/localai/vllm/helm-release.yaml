@@ -52,7 +52,6 @@ spec:
                   --tool-call-parser hermes \
                   --enable-auto-tool-choice \
                   --max-model-len 40960 \
-                  --gpu-memory-utilization 1 \
                   --enforce-eager 
             env:
               - name: TZ
