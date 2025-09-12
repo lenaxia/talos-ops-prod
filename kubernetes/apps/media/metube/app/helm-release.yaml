@@ -38,7 +38,9 @@ spec:
           reloader.stakater.com/auto: 'true'
         containers:
           zerotier:
-            image: zerotier/zerotier:latest
+            image: 
+              repository: zerotier/zerotier
+              tag: latest
             securityContext:
               capabilities:
                 add:
