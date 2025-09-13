@@ -127,13 +127,13 @@ spec:
               - *uri
             secretName: *uri
     persistence:
-      config-file:
-        enabled: true
-        type: configMap
-        name: frigate-configmap
-        globalMounts:
-          - path: /config/config.yml
-            subPath: config.yml
+      #      config-file:
+      #        enabled: true
+      #        type: configMap
+      #        name: frigate-configmap
+      #        globalMounts:
+      #          - path: /config/config.yml
+      #            subPath: config.yml
       media:
         type: nfs
         server: ${NAS_ADDR}
