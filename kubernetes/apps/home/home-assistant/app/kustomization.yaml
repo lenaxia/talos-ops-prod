@@ -11,6 +11,9 @@ configMapGenerator:
   - name: ldap-auth-py
     files:
       - config/ldap-auth.py
+  - name: openai-conversation-overrides
+    files:
+      - openai/
 generatorOptions:
   disableNameSuffixHash: true
   annotations:
