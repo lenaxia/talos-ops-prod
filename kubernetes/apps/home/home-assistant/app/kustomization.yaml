@@ -13,7 +13,16 @@ configMapGenerator:
       - config/ldap-auth.py
   - name: openai-conversation-overrides
     files:
-      - ./openai
+      - ./openai/__init__.py
+      - ./openai/ai_task.py
+      - ./openai/config_flow.py
+      - ./openai/const.py
+      - ./openai/conversation.py
+      - ./openai/entity.py
+      - ./openai/icons.json
+      - ./openai/manifest.json
+      - ./openai/services.yaml
+      - ./openai/strings.json
 generatorOptions:
   disableNameSuffixHash: true
   annotations:
