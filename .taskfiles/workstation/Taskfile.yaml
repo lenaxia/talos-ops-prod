@@ -55,11 +55,11 @@ tasks:
         cmd: curl -fsSL "https://i.jpillora.com/{{.ITEM}}&type=script" | bash
       - cmd: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl";
-          curl -sSfL -o sops https://github.com/getsops/sops/releases/latest/download/sops-v3.9.1.linux.amd64
+          curl -sSfL -o sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
         platforms: ['linux/amd64']
       - cmd: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl";
-          curl -sSfL -o sops https://github.com/getsops/sops/releases/latest/download/sops-v3.9.1.linux.arm64
+          curl -sSfL -o sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.arm64
         platforms: ['linux/arm64']
       - cmd: chmod +x kubectl sops
       - cmd: curl -sSfL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
