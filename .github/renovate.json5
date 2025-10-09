@@ -22,33 +22,33 @@
     '**/*.sops.*',
   ],
   flux: {
-    fileMatch: [
-      '(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$',
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$/',
     ],
   },
   'helm-values': {
-    fileMatch: [
-      '(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$',
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$/',
     ],
   },
   helmfile: {
-    fileMatch: [
-      '(^|/)helmfile\\.ya?ml(?:\\.j2)?$',
+    managerFilePatterns: [
+      '/(^|/)helmfile\\.ya?ml(?:\\.j2)?$/',
     ],
   },
   kubernetes: {
-    fileMatch: [
-      '(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$',
+    managerFilePatterns: [
+      '/(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$/',
     ],
   },
   kustomize: {
-    fileMatch: [
-      '(^|/)kustomization\\.ya?ml(?:\\.j2)?$',
+    managerFilePatterns: [
+      '/(^|/)kustomization\\.ya?ml(?:\\.j2)?$/',
     ],
   },
   pip_requirements: {
-    fileMatch: [
-      '(^|/)[\\w-]*requirements(-\\w+)?\\.(txt|pip)(?:\\.j2)?$',
+    managerFilePatterns: [
+      '/(^|/)[\\w-]*requirements(-\\w+)?\\.(txt|pip)(?:\\.j2)?$/',
     ],
   },
   commitMessageTopic: '{{depName}}',
@@ -72,27 +72,39 @@
     },
     {
       description: 'Auto merge patch updates for Docker images',
-      matchDatasources: ['docker'],
-      matchUpdateTypes: ['patch'],
+      matchDatasources: [
+        'docker',
+      ],
+      matchUpdateTypes: [
+        'patch',
+      ],
       automerge: true,
       automergeType: 'branch',
-      ignoreTests: true
+      ignoreTests: true,
     },
     {
       description: 'Auto merge minor updates for Docker images > 1.0.0',
-      matchDatasources: ['docker'],
-      matchUpdateTypes: ['minor'],
+      matchDatasources: [
+        'docker',
+      ],
+      matchUpdateTypes: [
+        'minor',
+      ],
       matchCurrentVersion: '>=1.0.0',
       automerge: true,
       automergeType: 'branch',
-      ignoreTests: true
+      ignoreTests: true,
     },
     {
       description: 'Do not auto merge minor updates for 0.x Docker images',
-      matchDatasources: ['docker'],
-      matchUpdateTypes: ['minor'],
+      matchDatasources: [
+        'docker',
+      ],
+      matchUpdateTypes: [
+        'minor',
+      ],
       matchCurrentVersion: '/^0\\./',
-      automerge: false
+      automerge: false,
     },
     {
       description: [
@@ -334,8 +346,8 @@
       description: [
         'Process custom dependencies',
       ],
-      fileMatch: [
-        '(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$',
+      managerFilePatterns: [
+        '/(^|/)kubernetes/.+\\.ya?ml(?:\\.j2)?$/',
       ],
       matchStrings: [
         'datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( repository=(?<registryUrl>\\S+))?\\n.+: (&\\S+\\s)?(?<currentValue>\\S+)',
