@@ -91,7 +91,7 @@ spec:
           gotenburg:
             image:
               repository: thecodingmachine/gotenberg
-              tag: 8.21.1
+              tag: 8.24.0
             env:
               - name: DISABLE_GOOGLE_CHROME
                 value: '1'
@@ -148,7 +148,7 @@ spec:
         type: persistentVolumeClaim
     sidecars:
       gotenburg:
-        image: thecodingmachine/gotenberg:8.22.0
+        image: thecodingmachine/gotenberg:8.24.0
         imagePullPolicy: IfNotPresent
         env:
           - {name: DISABLE_GOOGLE_CHROME, value: '1'}
