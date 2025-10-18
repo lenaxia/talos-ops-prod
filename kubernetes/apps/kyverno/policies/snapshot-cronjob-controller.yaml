@@ -83,7 +83,7 @@ spec:
                     # Stagger jobs to run randomly within X seconds to avoid bringing down all apps at once
                     containers:
                       - name: snapshot
-                        image: kopia/kopia:20250822.0.54743@sha256:66d085cfa11c3cf4ecb430f799f785ba57b9141a711b9ff62f76c41e223869e8
+                        image: kopia/kopia:20251015.0.22854@sha256:322189265e63a21bca4d908c5a4056df0c1872a29b2195bdbc33a987e596d816
                         env:
                           - name: KOPIA_CACHE_DIRECTORY
                             value: /snapshots/{{ namespace }}/{{ appName }}/{{ claimName }}/cache
