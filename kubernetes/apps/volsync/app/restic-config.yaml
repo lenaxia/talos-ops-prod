@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: restic-config
-  namespace: volsync
+  namespace: storage 
 type: Opaque
 stringData:
   RESTIC_REPOSITORY: s3:https://s3.amazonaws.com/your-bucket-name/restic-repo
