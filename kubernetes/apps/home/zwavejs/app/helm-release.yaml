@@ -35,7 +35,8 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
 #        aeotec.feature.node.kubernetes.io/zwave: "true"
-        zooz.feature.node.kubernetes.io/zwave: 'true'
+#        zooz.feature.node.kubernetes.io/zwave: 'true'
+        zwa2.feature.node.kubernetes.io/zwave: "true"
     controllers:
       main:
         containers:
