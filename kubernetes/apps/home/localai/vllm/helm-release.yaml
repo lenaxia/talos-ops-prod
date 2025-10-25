@@ -60,6 +60,8 @@ spec:
                 value: 1
               - name: TORCH_USE_CUDA_DSA
                 value: 1
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
             envFrom:
               - secretRef:
                   name: *appname 
