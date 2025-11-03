@@ -43,7 +43,7 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                vllm serve Qwen/Qwen2.5-VL-7B-Instruct-AWQ \
+                vllm serve cpatonn/Qwen3-VL-32B-Instruct-AWQ-4bit \
                   --trust-remote-code \
                   --enable-chunked-prefill \
                   --max_num_batched_tokens 1024 \
