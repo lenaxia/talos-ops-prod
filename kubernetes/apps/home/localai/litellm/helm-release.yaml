@@ -180,9 +180,9 @@ spec:
                 #    input_cost_per_token: 0.00001
                 #    output_cost_per_token: 0.00001
                 #    max_tokens: 40960
-                - model_name: qwen2.5-vl
+                - model_name: qwen3-vl
                   litellm_params:
-                    model: openai/qwen2.5-vl
+                    model: openai/qwen3-vl
                     api_base: http://vllm.home.svc.cluster.local:8000/v1
                     api_key: doesnotmatter
                   model_info:
