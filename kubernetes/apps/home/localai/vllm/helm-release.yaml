@@ -47,7 +47,7 @@ spec:
                   --trust-remote-code \
                   --enable-chunked-prefill \
                   --max_num_batched_tokens 1024 \
-                  --served-model-name qwen2.5-vl \
+                  --served-model-name qwen3-vl \
                   --tensor-parallel-size 1 \
                   --tool-call-parser hermes \
                   --enable-auto-tool-choice \
