@@ -70,7 +70,8 @@ spec:
                   echo "Model files not found. Downloading..."
                   rm -rf "$MODEL_DIR"
                   mkdir -p "$MODEL_DIR"
-                  python -m huggingface_hub.commands.huggingface_cli download "$REPO_ID" --revision "$REVISION" --local-dir "$MODEL_DIR"
+                  export PATH=$PATH:/usr/local/bin
+                  huggingface-cli download "$REPO_ID" --revision "$REVISION" --local-dir "$MODEL_DIR"
                   echo "Download completed."
                 else
                   echo "Model files found. Skipping download."
