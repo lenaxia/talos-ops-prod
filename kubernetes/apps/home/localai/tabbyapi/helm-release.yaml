@@ -2,7 +2,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &appname tabbyapi
+  name: tabbyapi
   namespace: home
 spec:
   interval: 5m
@@ -10,12 +10,10 @@ spec:
     spec:
       chart: app-template
       version: 2.6.0
-      interval: 5m
       sourceRef:
         kind: HelmRepository
         name: bjw-s
         namespace: flux-system
-  # See https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
   values:
     defaultPodOptions:
       nodeSelector:
@@ -24,55 +22,29 @@ spec:
     controllers:
       main:
         initContainers:
-        #          set-gpu-power-limit:
-        #            image: 
-        #              repository: nvidia/cuda
-        #              tag: 12.4.1-runtime-ubuntu22.04 
-        #            env:
-        #              - name: GPU_3090_POWER_LIMIT
-        #                value: "275"  # Default to 300W for RTX 3090
-        #              - name: GPU_4090_POWER_LIMIT
-        #                value: "325"  # Default to 450W for RTX 4090
-        #              - name: NVIDIA_VISIBLE_DEVICES
-        #                value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289"
-        #            command:
-        #              - "/bin/sh"
-        #              - "-c"
-        #              - |
-        #                nvidia-smi -pm 1  # Enable persistent mode
-        #                for i in $(nvidia-smi --query-gpu=index --format=csv,noheader); do
-        #                  GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader -i $i)
-        #                  case "$GPU_NAME" in
-        #                    *"RTX 3090"*) POWER_LIMIT=${GPU_3090_POWER_LIMIT:-300} ;;
-        #                    *"RTX 4090"*) POWER_LIMIT=${GPU_4090_POWER_LIMIT:-450} ;;
-        #                    *) POWER_LIMIT=250 ;;  # Fallback power limit
-        #                  esac
-        #                  nvidia-smi -i $i -pl $POWER_LIMIT
-        #                  echo "Power limit set to $POWER_LIMIT W on GPU $i ($GPU_NAME)"
-        #                done
-        #            resources:
-        #              limits:
-        #                nvidia.com/gpu: 1 
           download-model:
             image:
-              repository: python
-              tag: 3.13-slim
+              repository: ghcr.io/theroyallab/tabbyapi
+              tag: 2025.10.25
             command:
               - /bin/sh
               - -c
             args:
               - |
-                pip install --no-cache-dir huggingface_hub
-                python /scripts/download_model.py
+                # Download model using built-in CLI
+                MODEL_REPO="bartowski/Qwen2.5-72B-Instruct-exl2"
+                REVISION="4_25"
+                mkdir -p /app/models
+                ./start.sh download $MODEL_REPO --revision $REVISION --directory /app/models
             volumeMounts:
               - name: models
-                mountPath: /models
+                mountPath: /app/models
+
         containers:
           main:
             image:
               repository: ghcr.io/lenaxia/tabbyapi
               tag: 2025.10.25
-              pullPolicy: IfNotPresent
             env:
               - name: TZ
                 value: America/Los_Angeles
@@ -86,51 +58,29 @@ spec:
               limits:
                 nvidia.com/gpu: 1
                 memory: 40000Mi
-            probes:
-              liveness:
-                enabled: false
-                custom: true
-                spec:
-                  httpGet:
-                    path: /healthz
-                    port: &port 5000
-                  initialDelaySeconds: 300
-                  periodSeconds: 30
-                  timeoutSeconds: 1
-                  failureThreshold: 5
-              readiness:
-                enabled: false
-                custom: true
-                spec:
-                  httpGet:
-                    path: /readyz
-                    port: *port
-                  initialDelaySeconds: 300
-                  periodSeconds: 30
-                  timeoutSeconds: 1
-                  failureThreshold: 5
-              startup:
-                enabled: false
+            volumeMounts:
+              - name: models
+                mountPath: /app/models
+              - name: config
+                mountPath: /app/config.yml
+                subPath: config.yml
 
     service:
       main:
         type: LoadBalancer
         ports:
           http:
-            port: *port
+            port: 5000
+
     ingress:
       main:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/icon: eos-icons:ai
-          hajimari.io/info: Local AI
-          hajimari.io/group: Home
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
         hosts:
-          - host: &uri tabby.thekao.cloud
+          - host: tabby.thekao.cloud
             paths:
               - path: /
                 pathType: Prefix
@@ -139,32 +89,16 @@ spec:
                   port: http
         tls:
           - hosts:
-              - *uri
-            secretName: *uri
+              - tabby.thekao.cloud
+            secretName: tabby.thekao.cloud
+
     persistence:
       configyml:
         enabled: true
         type: configMap
-        name: *appname
+        name: tabbyapi
         defaultMode: 0644
-        globalMounts:
-          - path: /app/config.yml
-            subPath: config.yml
-      download-model:
-        enabled: true
-        type: configMap
-        name: download-model
-        defaultMode: 0644
-        globalMounts:
-          - path: /scripts/download_model.py
-            subPath: download_model.py
       models:
         enabled: true
         existingClaim: tabbyapi-models
-#        storageClass: longhorn
-#        size: 100Gi
-#        type: persistentVolumeClaim
-#        accessMode: ReadWriteOnce
-        globalMounts:
-          - path: /app/models
 
