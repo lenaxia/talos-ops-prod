@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: download-model
+  namespace: home
+data:
+  download_model.py: |
+    #!/usr/bin/env python3
+    import os
+    from huggingface_hub import hf_hub_download
+
+    model_dir = os.environ.get("MODEL_DIR", "/models/Qwen2.5-72B-Instruct-exl2-4_25")
+    repo_id = os.environ.get("REPO_ID", "bartowski/Qwen2.5-72B-Instruct-exl2")
+    revision = os.environ.get("REVISION", "4_25")
+
+    os.makedirs(model_dir, exist_ok=True)
+    required_files = ["config.json", "tokenizer.json", "output-00001-of-00005.safetensors"]
+
+    if not all(os.path.exists(os.path.join(model_dir, f)) for f in required_files):
+        print("Model files not found. Downloading...")
+        for filename in required_files:
+            hf_hub_download(repo_id=repo_id, revision=revision, filename=filename, local_dir=model_dir)
+        print("Download completed.")
+    else:
+        print("Model files found. Skipping download.")
+

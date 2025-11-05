@@ -5,6 +5,7 @@ commonLabels:
   app.kubernetes.io/name: &app tabbyapi
   app.kubernetes.io/instance: *app
 resources:
-  - configmap.yaml
+  - config/config.yaml
+  - config/download-model.yaml
   - pvc-models.yaml
   - helm-release.yaml
