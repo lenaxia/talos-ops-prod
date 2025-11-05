@@ -67,32 +67,29 @@ spec:
                 REPO_ID="bartowski/Qwen2.5-72B-Instruct-exl2"
                 REVISION="4_25"
                 python - <<'EOF'
-            import os
-            from huggingface_hub import hf_hub_download
-            
-            model_dir = os.environ["MODEL_DIR"]
-            repo_id = os.environ["REPO_ID"]
-            revision = os.environ["REVISION"]
-            
-            os.makedirs(model_dir, exist_ok=True)
-            
-            # List of required files
-            required_files = ["config.json", "tokenizer.json", "output-00001-of-00005.safetensors"]
-            
-            # Check if all required files exist
-            if not all(os.path.exists(os.path.join(model_dir, f)) for f in required_files):
-                print("Model files not found. Downloading...")
-                for filename in required_files:
-                    hf_hub_download(repo_id=repo_id, revision=revision, filename=filename, local_dir=model_dir)
-                print("Download completed.")
-            else:
-                print("Model files found. Skipping download.")
-            EOF
-            
-            
+                  import os
+                  from huggingface_hub import hf_hub_download
+
+                  model_dir = os.environ["MODEL_DIR"]
+                  repo_id = os.environ["REPO_ID"]
+                  revision = os.environ["REVISION"]
+
+                  os.makedirs(model_dir, exist_ok=True)
+
+                  required_files = ["config.json", "tokenizer.json", "output-00001-of-00005.safetensors"]
+
+                  if not all(os.path.exists(os.path.join(model_dir, f)) for f in required_files):
+                      print("Model files not found. Downloading...")
+                      for filename in required_files:
+                          hf_hub_download(repo_id=repo_id, revision=revision, filename=filename, local_dir=model_dir)
+                      print("Download completed.")
+                  else:
+                      print("Model files found. Skipping download.")
+                EOF
             volumeMounts:
               - name: models
                 mountPath: /models
+
         containers:
           main:
             image:
