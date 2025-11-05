@@ -63,33 +63,10 @@ spec:
             args:
               - |
                 pip install --no-cache-dir huggingface_hub
-                MODEL_DIR="/models/Qwen2.5-72B-Instruct-exl2-4_25"
-                REPO_ID="bartowski/Qwen2.5-72B-Instruct-exl2"
-                REVISION="4_25"
-                python - <<'EOF'
-                  import os
-                  from huggingface_hub import hf_hub_download
-
-                  model_dir = os.environ["MODEL_DIR"]
-                  repo_id = os.environ["REPO_ID"]
-                  revision = os.environ["REVISION"]
-
-                  os.makedirs(model_dir, exist_ok=True)
-
-                  required_files = ["config.json", "tokenizer.json", "output-00001-of-00005.safetensors"]
-
-                  if not all(os.path.exists(os.path.join(model_dir, f)) for f in required_files):
-                      print("Model files not found. Downloading...")
-                      for filename in required_files:
-                          hf_hub_download(repo_id=repo_id, revision=revision, filename=filename, local_dir=model_dir)
-                      print("Download completed.")
-                  else:
-                      print("Model files found. Skipping download.")
-                EOF
+                python /scripts/download_model.py
             volumeMounts:
               - name: models
                 mountPath: /models
-
         containers:
           main:
             image:
@@ -173,6 +150,14 @@ spec:
         globalMounts:
           - path: /app/config.yml
             subPath: config.yml
+      download-model:
+        enabled: true
+        type: configMap
+        name: download-model
+        defaultMode: 0644
+        globalMounts:
+          - path: /scripts/download_model.py
+            subPath: download_model.py
       models:
         enabled: true
         existingClaim: tabbyapi-models
