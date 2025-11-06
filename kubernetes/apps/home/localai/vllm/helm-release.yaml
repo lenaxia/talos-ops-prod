@@ -43,20 +43,20 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                vllm serve cpatonn/GLM-4.5V-AWQ-4bit \
-                    --dtype float16 \
-                    --tensor-parallel-size 3 \
-                    --tool-call-parser glm45 \
-                    --reasoning-parser glm45 \
-                    --enable-auto-tool-choice \
+                vllm serve \
+                    QuantTrio/Qwen3-VL-32B-Instruct-AWQ \
+                    --served-model-name qwen3-vl \
+                    --swap-space 4 \
+                    --max-num-seqs 8 \
                     --max-model-len 40960 \
-                    --max_num_batched_tokens 1024 \
+                    --gpu-memory-utilization 0.9 \
+                    --tensor-parallel-size 1 \
+                    --trust-remote-code \
+                    --disable-log-requests \
+                    --host 0.0.0.0 \
                     --enable-chunked-prefill \
                     --enforce-eager 
-                    --served-model-name glm-4.5v \
-                    --trust-remote-code \
-                    --allowed-local-media-path / \
-                    --media-io-kwargs '{"video": {"num_frames": -1}}'
+                    --port 8000
             env:
               - name: TZ
                 value: ${TIMEZONE}
@@ -64,7 +64,8 @@ spec:
                 value: 1
               - name: TORCH_USE_CUDA_DSA
                 value: 1
-              #- name: NVIDIA_VISIBLE_DEVICES
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289" # 4090
               #  value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
             envFrom:
               - secretRef:
