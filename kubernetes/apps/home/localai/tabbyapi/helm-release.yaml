@@ -71,7 +71,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/tabbyapi
-              tag: 2025.10.25
+              tag: "2025.10.25"
               pullPolicy: IfNotPresent
             env:
               - name: TZ
