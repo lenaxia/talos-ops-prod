@@ -66,7 +66,7 @@ data:
       # An initial model to load.
       # Make sure the model is located in the model directory!
       # REQUIRED: This must be filled out to load a model on startup.
-      model_name: Qwen2.5-72B-Instruct-exl2-4_25
+      #model_name: Qwen2.5-72B-Instruct-exl2-4_25
     
       # Names of args to use as a fallback for API load requests (default: []).
       # For example, if you always want cache_mode to be Q4 instead of on the inital model load, add "cache_mode" to this array.
