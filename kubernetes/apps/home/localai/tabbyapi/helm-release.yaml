@@ -24,7 +24,7 @@ spec:
         initContainers:
           download-model:
             image:
-              repository: ghcr.io/theroyallab/tabbyapi
+              repository: ghcr.io/lenaxia/tabbyapi
               tag: 2025.10.25
             command:
               - /bin/sh
