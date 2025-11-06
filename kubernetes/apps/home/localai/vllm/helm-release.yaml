@@ -43,16 +43,20 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                vllm serve Qwen/Qwen2.5-VL-7B-Instruct-AWQ \
-                  --trust-remote-code \
-                  --enable-chunked-prefill \
-                  --max_num_batched_tokens 1024 \
-                  --served-model-name qwen2.5-vl \
-                  --tensor-parallel-size 1 \
-                  --tool-call-parser hermes \
-                  --enable-auto-tool-choice \
-                  --max-model-len 40960 \
-                  --enforce-eager 
+                vllm serve cpatonn/GLM-4.5V-AWQ-4bit \
+                    --dtype float16 \
+                    --tensor-parallel-size 3 \
+                    --tool-call-parser glm45 \
+                    --reasoning-parser glm45 \
+                    --enable-auto-tool-choice \
+                    --max-model-len 40960 \
+                    --max_num_batched_tokens 1024 \
+                    --enable-chunked-prefill \
+                    --enforce-eager 
+                    --served-model-name glm-4.5v \
+                    --trust-remote-code \
+                    --allowed-local-media-path / \
+                    --media-io-kwargs '{"video": {"num_frames": -1}}'
             env:
               - name: TZ
                 value: ${TIMEZONE}
@@ -60,8 +64,8 @@ spec:
                 value: 1
               - name: TORCH_USE_CUDA_DSA
                 value: 1
-              - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
+              #- name: NVIDIA_VISIBLE_DEVICES
+              #  value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
             envFrom:
               - secretRef:
                   name: *appname 
@@ -81,9 +85,9 @@ spec:
               readiness: *probe
             resources:
               requests:
-                nvidia.com/gpu: "1"
+                nvidia.com/gpu: "3"
               limits:
-                nvidia.com/gpu: "1"
+                nvidia.com/gpu: "3"
 
     persistence:
       data:
