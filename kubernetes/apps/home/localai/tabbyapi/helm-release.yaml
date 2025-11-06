@@ -21,34 +21,34 @@ spec:
 
     controllers:
       main:
-        initContainers:
-          - name: download-model
-            image: 
-              repository: "python"
-              tag: "3.13-slim"
-            command: ["/bin/bash", "-c"]
-            args:
-              - |
-                pip install --no-cache-dir huggingface_hub
-                python - <<'EOF'
-                import os
-                from huggingface_hub import hf_hub_download
-        
-                model_dir = "/app/models/Qwen2.5-72B-Instruct-exl2-4_25"
-                os.makedirs(model_dir, exist_ok=True)
-        
-                files = ["config.json", "tokenizer.json", "output-00001-of-00005.safetensors"]
-                for f in files:
-                    hf_hub_download(
-                        repo_id="bartowski/Qwen2.5-72B-Instruct-exl2",
-                        filename=f,
-                        revision="4_25",
-                        local_dir=model_dir
-                    )
-                EOF
-            volumeMounts:
-              - name: models
-                mountPath: /app/models
+        #        initContainers:
+        #          - name: download-model
+        #            image: 
+        #              repository: "python"
+        #              tag: "3.13-slim"
+        #            command: ["/bin/bash", "-c"]
+        #            args:
+        #              - |
+        #                pip install --no-cache-dir huggingface_hub
+        #                python - <<'EOF'
+        #                import os
+        #                from huggingface_hub import hf_hub_download
+        #        
+        #                model_dir = "/app/models/Qwen2.5-72B-Instruct-exl2-4_25"
+        #                os.makedirs(model_dir, exist_ok=True)
+        #        
+        #                files = ["config.json", "tokenizer.json", "output-00001-of-00005.safetensors"]
+        #                for f in files:
+        #                    hf_hub_download(
+        #                        repo_id="bartowski/Qwen2.5-72B-Instruct-exl2",
+        #                        filename=f,
+        #                        revision="4_25",
+        #                        local_dir=model_dir
+        #                    )
+        #                EOF
+        #            volumeMounts:
+        #              - name: models
+        #                mountPath: /app/models
         containers:
           main:
             image:
