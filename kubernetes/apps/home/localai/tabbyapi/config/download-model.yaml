@@ -9,7 +9,7 @@ data:
     import os
     from huggingface_hub import snapshot_download
 
-    model_dir = os.environ.get("MODEL_DIR", "/models/Qwen2.5-72B-Instruct-exl2-4_25")
+    model_dir = os.environ.get("MODEL_DIR", "/app/models/Qwen2.5-72B-Instruct-exl2-4_25")
     repo_id = os.environ.get("REPO_ID", "bartowski/Qwen2.5-72B-Instruct-exl2")
     revision = os.environ.get("REVISION", "4_25")
 
