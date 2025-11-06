@@ -23,7 +23,9 @@ spec:
       main:
         initContainers:
           - name: download-model
-            image: python:3.13-slim
+            image: 
+              repository: python
+              tag: 3.13-slim
             command: ["/bin/bash", "-c"]
             args:
               - |
