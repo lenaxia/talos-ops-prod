@@ -65,7 +65,7 @@ spec:
               - name: TORCH_USE_CUDA_DSA
                 value: 1
               - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-8b096136-bb5f-1677-3bbf-d8c5550c7289" # 4090
+                value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090
               #  value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
             envFrom:
               - secretRef:
