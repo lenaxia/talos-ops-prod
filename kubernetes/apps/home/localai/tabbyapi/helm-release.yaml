@@ -64,9 +64,6 @@ spec:
               - |
                 pip install --no-cache-dir huggingface_hub
                 python3 /scripts/download_model.py
-            volumeMounts:
-              - name: models
-                mountPath: /models
         containers:
           main:
             image:
