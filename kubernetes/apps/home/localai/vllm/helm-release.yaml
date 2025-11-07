@@ -86,9 +86,9 @@ spec:
               readiness: *probe
             resources:
               requests:
-                nvidia.com/gpu: "3"
+                nvidia.com/gpu: "1"
               limits:
-                nvidia.com/gpu: "3"
+                nvidia.com/gpu: "1"
 
     persistence:
       data:
