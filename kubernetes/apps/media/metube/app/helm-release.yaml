@@ -76,6 +76,8 @@ spec:
               storageClass: longhorn
               globalMounts:
                 - path: /config
+              labels:
+                snapshot.home.arpa/enabled: "true"
     service:
       main:
         type: ClusterIP
