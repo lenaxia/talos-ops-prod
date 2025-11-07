@@ -103,6 +103,10 @@ spec:
                           - /bin/bash
                           - -c
                           - |-
+                            # Random delay between 0–15 minutes
+                            DELAY=$(( RANDOM % 900 ))
+                            echo "Sleeping $DELAY seconds before starting snapshot..."
+                            sleep $DELAY
                             printf "\e[1;32m%-6s\e[m\n" "[01/10] Create repo ..."              && [[ ! -f /snapshots/kopia.repository.f ]] && kopia repository create filesystem --path=/snapshots
                             printf "\e[1;32m%-6s\e[m\n" "[02/10] Connect to repo ..."          && kopia repo connect filesystem --path=/snapshots --override-hostname=cluster --override-username=root
                             printf "\e[1;32m%-6s\e[m\n" "[03/10] Set policies ..."             && kopia policy set /data/{{ namespace }}/{{ appName }}/{{ claimName }} --compression=zstd --keep-latest 17 --keep-hourly 0 --keep-daily 7 --keep-weekly 3 --keep-monthly 2 --keep-annual 2
