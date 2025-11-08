@@ -45,7 +45,9 @@ nodes:
     controlPlane: true
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "b8:ae:ed:eb:51:4f"
+          #hardwareAddr: "b8:ae:ed:eb:51:4f"
+          physical: "enp0s25"
+        interface: eth0
         dhcp: false
         addresses:
           - "192.168.3.11/16"
