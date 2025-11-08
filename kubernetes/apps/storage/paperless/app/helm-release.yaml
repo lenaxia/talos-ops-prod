@@ -87,7 +87,7 @@ spec:
           redis:
             image:
               repository: public.ecr.aws/docker/library/redis
-              tag: 8.2.2
+              tag: 8.2.3
           gotenburg:
             image:
               repository: thecodingmachine/gotenberg
