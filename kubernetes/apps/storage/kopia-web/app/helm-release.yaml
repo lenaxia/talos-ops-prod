@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -41,12 +41,14 @@ spec:
                 done
             image:
               repository: kopia/kopia
-              tag: 20251023.0.52914@sha256:5eeea3250f7a566702f567d1d4c38736f83c766b876c8b3e7d012043abfc0cd4
+              tag: 
+                20251023.0.52914@sha256:5eeea3250f7a566702f567d1d4c38736f83c766b876c8b3e7d012043abfc0cd4
         containers:
           main:
             image:
               repository: kopia/kopia
-              tag: 20251023.0.52914@sha256:5eeea3250f7a566702f567d1d4c38736f83c766b876c8b3e7d012043abfc0cd4
+              tag: 
+                20251023.0.52914@sha256:5eeea3250f7a566702f567d1d4c38736f83c766b876c8b3e7d012043abfc0cd4
               pullPolicy: Always
             env:
               TZ: ${TIMEZONE}
@@ -75,7 +77,6 @@ spec:
             port: 8080
             enabled: true
         primary: true
-        controller: main
     ingress:
       main:
         enabled: true
@@ -85,14 +86,14 @@ spec:
           hajimari.io/group: Storage
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &host '{{ .Release.Name }}.${SECRET_DEV_DOMAIN}'
             paths:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: main
                   port: http
         tls:
           - hosts:
