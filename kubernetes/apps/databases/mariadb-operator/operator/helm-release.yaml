@@ -19,6 +19,7 @@ spec:
     crds: CreateReplace
     remediation:
       retries: 3
+    createNamespace: true
   upgrade:
     cleanupOnFail: true
     crds: CreateReplace
@@ -38,7 +39,6 @@ spec:
       serviceMonitor:
         enabled: true
     webhook:
+      enabled: false
+    crds:
       enabled: true
-      cert:
-        certManager:
-          enabled: true
