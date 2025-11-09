@@ -16,44 +16,38 @@ spec:
   install:
     createNamespace: true
     remediation:
-      retries: 8
+      retries: 3
   upgrade:
     remediation:
-      retries: 8
+      retries: 3
   values:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
-#    resources:
-#      requests:
-#        cpu: 10m
-#        memory: 50Mi
-#      limits:
-#        memory: 500Mi
     controllers:
       main:
-        type: statefulset
+        type: deployment
         replicas: 1
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
-          zerotier:
-            image:
-              repository: zerotier/zerotier
-              tag: latest
-            securityContext:
-              capabilities:
-                add:
-                  - NET_ADMIN
-            command: ["sh", "-c"]
-            args:
-              - |
-                zerotier-one -d
-                zerotier-cli join a84ac5c10a2829e4
-                # wait until interface up
-                until ip link show zt0; do sleep 1; done
-                ip route replace default dev zt0
-                sleep infinity
+#          zerotier:
+#            image:
+#              repository: zerotier/zerotier
+#              tag: latest
+#            securityContext:
+#              capabilities:
+#                add:
+#                  - NET_ADMIN
+#            command: ["sh", "-c"]
+#            args:
+#              - |
+#                zerotier-one -d
+#                zerotier-cli join a84ac5c10a2829e4
+#                # wait until interface up
+#                until ip link show zt0; do sleep 1; done
+#                ip route replace default dev zt0
+#                sleep infinity
           main:
             image:
               repository: docker.io/alexta69/metube
@@ -68,16 +62,6 @@ spec:
                 {"key": "FFmpegEmbedSubtitle", "already_have_subtitle": false}, {"key":
                 "FFmpegMetadata", "add_metadata": true, "add_chapters": true}, { "key":
                 "EmbedThumbnail", "already_have_thumbnail": true}]}'
-        statefulset:
-          volumeClaimTemplates:
-            - name: config
-              accessMode: ReadWriteOnce
-              size: 3Gi
-              storageClass: longhorn
-              globalMounts:
-                - path: /config
-              labels:
-                snapshot.home.arpa/enabled: "true"
     service:
       main:
         type: ClusterIP
@@ -88,6 +72,7 @@ spec:
     ingress:
       main:
         enabled: true
+        className: traefik
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/icon: youtube
@@ -122,8 +107,6 @@ spec:
 #      readiness: *probes
 #      startup:
 #        enabled: false
-
-        className: traefik
     persistence:
       downloads:
         enabled: true
