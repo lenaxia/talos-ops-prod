@@ -1,0 +1,59 @@
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Backup
+metadata:
+  name: mariadb-backup
+  namespace: databases
+spec:
+  mariaDbRef:
+    name: mariadb
+  
+  schedule:
+    cron: "0 0 * * *"
+    suspend: false
+  
+  maxRetention: 720h
+  
+  storage:
+    s3:
+      bucket: ${S3_MARIADB_BACKUP}
+      endpoint: minio.storage.svc.cluster.local:9000
+      region: us-east-1
+      prefix: mariadb/
+      tls:
+        enabled: false
+      accessKeyIdSecretKeyRef:
+        name: mariadb-operator-s3-secret
+        key: access-key-id
+      secretAccessKeySecretKeyRef:
+        name: mariadb-operator-s3-secret
+        key: secret-access-key
+    
+    persistentVolumeClaim:
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: longhorn
+      accessModes:
+        - ReadWriteOnce
+  
+  backoffLimit: 5
+  
+  restartPolicy: OnFailure
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 1Gi
+  
+  logLevel: info
+  
+  compression: gzip
+  
+  args:
+    - "--single-transaction"
+    - "--events"
+    - "--routines"
+    - "--triggers"
