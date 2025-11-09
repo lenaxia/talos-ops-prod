@@ -23,7 +23,7 @@ spec:
     sst: mariabackup
     replicaThreads: 1
     agent:
-      image: ghcr.io/mariadb-operator/mariadb-operator:v0.0.35
+      image: ghcr.io/mariadb-operator/mariadb-operator:0.38.1
       port: 5555
       kubernetesAuth:
         enabled: true
@@ -37,7 +37,7 @@ spec:
       podRecoveryTimeout: 5m
       podSyncTimeout: 5m
     initContainer:
-      image: ghcr.io/mariadb-operator/mariadb-operator:v0.0.35
+      image: ghcr.io/mariadb-operator/mariadb-operator:0.38.1
     config:
       reuseStorageVolume: false
       volumeClaimTemplate:
