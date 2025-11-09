@@ -143,6 +143,3 @@ spec:
       scratch:
         enabled: true
         type: emptyDir
-    serviceAccount:
-      plex-sidecar:
-        create: true
