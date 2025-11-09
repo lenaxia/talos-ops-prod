@@ -19,6 +19,7 @@ resources:
   - backube.yaml
   - bitnami-charts.yaml
   - cloudnative-pg-charts.yaml
+  - mariadb-operator-charts.yaml
   - csi-driver-nfs-charts.yaml
   - descheduler-charts.yaml
   - ealenn-charts.yaml

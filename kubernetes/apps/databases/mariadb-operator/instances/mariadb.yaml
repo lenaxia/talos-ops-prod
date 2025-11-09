@@ -49,8 +49,8 @@ spec:
           - ReadWriteOnce
   
   storage:
-    size: 10Gi
-    storageClassName: longhorn
+    size: 5Gi
+    storageClassName: openebs-hostpath
     resizeInUseVolumes: true
     waitForVolumeResize: true
   
