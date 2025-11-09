@@ -83,14 +83,14 @@ spec:
         labels:
           cilium.io/l2-ip-pool: reserved
     persistence:
-      #config:
-      #  enabled: true
-      #  existingClaim: mosquitto-data
-      #  globalMounts:
-      #    - path: /mosquitto/data
+      config:
+        enabled: true
+        existingClaim: mosquitto-data
+        globalMounts:
+          - path: /mosquitto/data
       config-file:
         type: configMap
-        name: mosquitto-config
+        name: mosquitto
         advancedMounts:
           mosquitto:
             app:
