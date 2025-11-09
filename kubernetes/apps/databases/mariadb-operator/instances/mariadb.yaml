@@ -1,0 +1,144 @@
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb
+  namespace: databases
+spec:
+  rootPasswordSecretKeyRef:
+    name: mariadb-operator-secret
+    key: root-password
+  
+  image: mariadb:11.4.4
+  
+  port: 3306
+  
+  replicas: 3
+  
+  galera:
+    enabled: true
+    primary:
+      podIndex: 0
+      automaticFailover: true
+    sst: mariabackup
+    replicaThreads: 1
+    agent:
+      image: ghcr.io/mariadb-operator/mariadb-operator:v0.0.35
+      port: 5555
+      kubernetesAuth:
+        enabled: true
+      gracefulShutdownTimeout: 5s
+    recovery:
+      enabled: true
+      minClusterSize: 50%
+      clusterMonitorInterval: 10s
+      clusterHealthyTimeout: 30s
+      clusterBootstrapTimeout: 10m
+      podRecoveryTimeout: 5m
+      podSyncTimeout: 5m
+    initContainer:
+      image: ghcr.io/mariadb-operator/mariadb-operator:v0.0.35
+    config:
+      reuseStorageVolume: false
+      volumeClaimTemplate:
+        resources:
+          requests:
+            storage: 300Mi
+        storageClassName: longhorn
+        accessModes:
+          - ReadWriteOnce
+  
+  storage:
+    size: 10Gi
+    storageClassName: longhorn
+    resizeInUseVolumes: true
+    waitForVolumeResize: true
+  
+  service:
+    type: LoadBalancer
+    annotations:
+      coredns.io/hostname: mariadb-operator.${SECRET_DEV_DOMAIN}
+    loadBalancerIP: ${SVC_MARIADB_ADDR}
+    metadata:
+      labels:
+        cilium.io/l2-ip-pool: reserved
+  
+  connection:
+    secretName: mariadb-operator-connection
+    secretTemplate:
+      key: dsn
+  
+  primaryService:
+    type: ClusterIP
+  
+  primaryConnection:
+    secretName: mariadb-operator-primary-connection
+    secretTemplate:
+      key: dsn
+  
+  secondaryService:
+    type: ClusterIP
+  
+  secondaryConnection:
+    secretName: mariadb-operator-secondary-connection
+    secretTemplate:
+      key: dsn
+  
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                  - mariadb
+          topologyKey: kubernetes.io/hostname
+  
+  tolerations:
+    - key: mariadb.mmontes.io/ha
+      operator: Exists
+      effect: NoSchedule
+  
+  podDisruptionBudget:
+    maxUnavailable: 1
+  
+  updateStrategy:
+    type: RollingUpdate
+  
+  myCnf: |
+    [mariadb]
+    bind-address=*
+    default_storage_engine=InnoDB
+    binlog_format=row
+    innodb_autoinc_lock_mode=2
+    max_allowed_packet=256M
+    max_connections=300
+    
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+  
+  livenessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+  
+  readinessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+  
+  metrics:
+    enabled: true
+    exporter:
+      image: prom/mysqld-exporter:v0.15.1
+      port: 9104
+    serviceMonitor:
+      enabled: true
+      prometheusRelease: kube-prometheus-stack
+      interval: 30s
+      scrapeTimeout: 25s
