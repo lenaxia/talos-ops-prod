@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       interval: 16m
       sourceRef:
         kind: HelmRepository
@@ -50,7 +50,6 @@ spec:
           http:
             port: 80
         primary: true
-        controller: main
     ingress:
       main:
         enabled: true
@@ -61,14 +60,14 @@ spec:
           hajimari.io/group: Home
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri ro.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: main
                   port: http
         tls:
           - hosts:

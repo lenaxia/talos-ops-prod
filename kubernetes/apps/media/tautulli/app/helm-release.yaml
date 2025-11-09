@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -37,7 +37,8 @@ spec:
           main:
             image:
               repository: ghcr.io/tautulli/tautulli
-              tag: v2.16.0@sha256:7e6ede32f7923e01899db906aa6a96d978a4a8df8e2ef0dcf44c92b2d0206221
+              tag: 
+                v2.16.0@sha256:7e6ede32f7923e01899db906aa6a96d978a4a8df8e2ef0dcf44c92b2d0206221
               pullPolicy: Always
             env:
               TZ: ${TIMEZONE}
@@ -66,7 +67,8 @@ spec:
           jbops:
             image:
               repository: registry.k8s.io/git-sync/git-sync
-              tag: v4.5.0@sha256:0e64aedb0d0ae0a3bab880349a5109b2a31891d646dd61e433ca36ed220dff1f
+              tag: 
+                v4.5.0@sha256:0e64aedb0d0ae0a3bab880349a5109b2a31891d646dd61e433ca36ed220dff1f
             env:
               GITSYNC_REPO: https://github.com/blacktwin/JBOPS
               GITSYNC_REF: master
@@ -85,7 +87,6 @@ spec:
           http:
             port: *port
         primary: true
-        controller: main
     ingress:
       main:
         enabled: true
@@ -95,14 +96,14 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri tautulli.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: main
                   port: http
         tls:
           - hosts:
