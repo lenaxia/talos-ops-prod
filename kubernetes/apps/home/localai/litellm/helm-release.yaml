@@ -246,7 +246,7 @@ spec:
       config-yaml:
         enabled: true
         type: configMap
-        name: litellm-config-yaml
+        name: litellm
         globalMounts:
           - path: /app/proxy_server_config.yaml
             subPath: config.yaml
