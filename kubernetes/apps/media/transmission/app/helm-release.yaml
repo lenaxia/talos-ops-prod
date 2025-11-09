@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -35,12 +35,14 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/transmission
-              tag: 4.0.6@sha256:2ffe8b1b1774553c5783aba8c9a34cbad6195bfc0af912ea2e5f2d40b5b60b4b
+              tag: 
+                4.0.6@sha256:2ffe8b1b1774553c5783aba8c9a34cbad6195bfc0af912ea2e5f2d40b5b60b4b
               pullPolicy: Always
 
             env:
               TZ: ${TIMEZONE}
-              TRANSMISSION__BLOCKLIST_URL: https://mirror.codebucket.de/transmission/blocklist.p2p.gz
+              TRANSMISSION__BLOCKLIST_URL: 
+                https://mirror.codebucket.de/transmission/blocklist.p2p.gz
               TRANSMISSION__DOWNLOAD_DIR: /downloads/[Torrents]/Finished
               TRANSMISSION__INCOMPLETE_DIR_ENABLED: true
               TRANSMISSION__INCOMPLETE_DIR: /unfinished
@@ -76,7 +78,6 @@ spec:
             port: *peerport
             enabled: true
         primary: true
-        controller: main
     ingress:
       main:
         enabled: true
@@ -86,14 +87,14 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri transmission.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: main
                   port: http
         tls:
           - hosts:

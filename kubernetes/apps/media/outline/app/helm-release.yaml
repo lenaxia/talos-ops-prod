@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -57,8 +57,8 @@ spec:
                 cpu: 10m
                 memory: 50Mi
 
-            command: [/bin/sh, -c, yarn db:migrate --env=production-ssl-disabled &&
-                  yarn start --env=production-ssl-disabled]
+            command: [/bin/sh, -c, yarn db:migrate --env=production-ssl-disabled
+                  && yarn start --env=production-ssl-disabled]
     service:
       main:
         type: ClusterIP
@@ -66,7 +66,6 @@ spec:
           http:
             port: 3000
         primary: true
-        controller: main
     ingress:
       main:
         enabled: true
@@ -77,14 +76,14 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri w.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: main
                   port: http
         tls:
           - hosts:

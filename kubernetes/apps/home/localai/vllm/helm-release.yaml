@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -39,7 +39,8 @@ spec:
           app:
             image:
               repository: vllm/vllm-openai
-              tag: v0.11.0@sha256:014a95f21c9edf6abe0aea6b07353f96baa4ec291c427bb1176dc7c93a85845c
+              tag: 
+                v0.11.0@sha256:014a95f21c9edf6abe0aea6b07353f96baa4ec291c427bb1176dc7c93a85845c
             command: ["/bin/sh", "-c"]
             args:
               - |
@@ -69,7 +70,7 @@ spec:
               #  value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
             envFrom:
               - secretRef:
-                  name: *appname 
+                  name: *appname
             probes:
               liveness: &probe
                 enabled: false
@@ -111,7 +112,6 @@ spec:
           http:
             port: 8000
         primary: true
-        controller: app
         type: LoadBalancer
     # podSecurityContext:
     #   runAsUser: 1000
