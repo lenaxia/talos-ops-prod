@@ -16,13 +16,11 @@ spec:
         namespace: flux-system
   maxHistory: 3
   install:
-    crds: CreateReplace
     remediation:
       retries: 3
     createNamespace: true
   upgrade:
     cleanupOnFail: true
-    crds: CreateReplace
     remediation:
       retries: 3
   uninstall:
@@ -40,5 +38,3 @@ spec:
         enabled: true
     webhook:
       enabled: false
-    crds:
-      enabled: true
