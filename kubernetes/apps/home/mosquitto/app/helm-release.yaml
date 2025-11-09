@@ -90,7 +90,7 @@ spec:
           - path: /mosquitto/data
       config-file:
         type: configMap
-        name: mosquitto-config
+        name: mosquitto
         advancedMounts:
           mosquitto:
             app:
