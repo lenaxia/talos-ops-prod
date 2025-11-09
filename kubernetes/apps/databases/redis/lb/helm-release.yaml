@@ -75,6 +75,7 @@ spec:
     ingress:
       main:
         enabled: true
+        className: traefik
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-production
         hosts:
@@ -83,23 +84,20 @@ spec:
               - path: /
                 pathType: Prefix
                 service:
-                  name: main
-                  port: http
+                  identifier: main
+                  port: 8080
         tls:
           - hosts:
               - *uri
             secretName: *uri
-
-        className: traefik
     persistence:
       config:
-        enabled: true
         type: configMap
         name: redis-lb-configmap # overriden by kustomizeconfig
-        readOnly: true
         globalMounts:
           - path: /usr/local/etc/haproxy/haproxy.cfg
             subPath: haproxy.cfg
+            readOnly: true
     serviceMonitor:
       main:
         enabled: true
