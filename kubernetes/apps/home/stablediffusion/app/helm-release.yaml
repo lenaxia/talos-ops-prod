@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
@@ -31,7 +31,8 @@ spec:
           app:
             image:
               repository: ghcr.io/gabe565/stable-diffusion/webui
-              tag: 1.10.1@sha256:340cb34074ea1436b4829cf23f4724d8b27d89c2a9f72118c63263b30e46a67f
+              tag: 
+                1.10.1@sha256:340cb34074ea1436b4829cf23f4724d8b27d89c2a9f72118c63263b30e46a67f
               pullPolicy: IfNotPresent
             args:
             #  - --medvram-sdxl
@@ -61,7 +62,6 @@ spec:
 
     service:
       stable-diffusion-webui:
-        controller: stable-diffusion-webui
         type: LoadBalancer
         ports:
           http:
@@ -77,7 +77,7 @@ spec:
             subPath: download.sh
       data:
         enabled: true
-        type: persistentVolumeClaim 
+        type: persistentVolumeClaim
         accessMode: ReadWriteOnce
         size: 100Gi
         storageClass: longhorn
@@ -91,7 +91,7 @@ spec:
         server: ${NAS_ADDR}
         path: /volume2/downloads/stablediffusion/output
         globalMounts:
-        - path: /data/outputs
+          - path: /data/outputs
     ingress:
       stable-diffusion-webui:
         enabled: true
@@ -102,14 +102,14 @@ spec:
           hajimari.io/group: Home
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri generate.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: stable-diffusion-webui
                   port: http
         tls:
           - hosts:

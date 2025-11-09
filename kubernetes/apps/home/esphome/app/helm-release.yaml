@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       interval: 30m
       sourceRef:
         kind: HelmRepository
@@ -62,7 +62,6 @@ spec:
           http:
             port: 6052
         primary: true
-        controller: main
     ingress:
       main:
         enabled: true
@@ -78,7 +77,6 @@ spec:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: main
                   port: http
         tls:
           - hosts:
