@@ -32,8 +32,8 @@ spec:
     persistentVolumeClaim:
       resources:
         requests:
-          storage: 10Gi
-      storageClassName: longhorn
+          storage: 5Gi
+      storageClassName: openebs-hostpath 
       accessModes:
         - ReadWriteOnce
   
