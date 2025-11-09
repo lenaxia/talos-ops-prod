@@ -3,11 +3,16 @@ set -e
 
 echo "=== App-Template v4 Immutable Field Fix ==="
 echo ""
-echo "This script deletes and recreates deployments that have immutable field conflicts"
-echo "when upgrading from v3 to v4."
+echo "This script deletes and recreates deployments/statefulsets that have immutable"
+echo "field conflicts when upgrading from v3 to v4."
 echo ""
 echo "The issue: v4 changes the selector labels, which are immutable in Kubernetes."
-echo "Solution: Delete the deployment and let Flux recreate it with the new labels."
+echo "Solution: Delete the deployment/statefulset and let Flux recreate it with new labels."
+echo ""
+echo "⚠️  IMPORTANT: PVCs will NOT be deleted and data will be preserved!"
+echo "   - Deployments reference existing PVCs by name"
+echo "   - StatefulSets do NOT delete PVCs when deleted"
+echo "   - All data remains intact during recreation"
 echo ""
 
 # List of applications that need deployment recreation
@@ -69,11 +74,17 @@ for app in "${APPS[@]}"; do
     
     # Check if deployment exists
     if kubectl get deployment -n "$namespace" "$name" &>/dev/null; then
-        echo "  - Deleting deployment..."
+        echo "  - Found deployment, deleting..."
         kubectl delete deployment -n "$namespace" "$name" --wait=false
         echo "  - Deployment deleted. Flux will recreate it."
+    # Check if statefulset exists
+    elif kubectl get statefulset -n "$namespace" "$name" &>/dev/null; then
+        echo "  - Found statefulset, deleting..."
+        kubectl delete statefulset -n "$namespace" "$name" --wait=false
+        echo "  - StatefulSet deleted. Flux will recreate it."
+        echo "  - Note: PVCs are preserved and will be reattached."
     else
-        echo "  - Deployment not found, skipping."
+        echo "  - Neither deployment nor statefulset found, skipping."
     fi
     
     # Small delay to avoid overwhelming the API server
