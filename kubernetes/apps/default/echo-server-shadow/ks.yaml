@@ -1,0 +1,17 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-default-echo-server-shadow
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./kubernetes/apps/default/echo-server-shadow/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  wait: true
+  dependsOn:
+    - name: cluster-default-traefik-shadow
+    - name: cluster-default-authelia-shadow
