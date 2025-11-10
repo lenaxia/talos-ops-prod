@@ -34,7 +34,7 @@ spec:
               LDAP_ORGANISATION: "Backup LDAP"
               LDAP_DOMAIN: "kao.family"
               LDAP_READONLY_USER: "true"
-              LDAP_REPLICATION: "true"
+                #LDAP_REPLICATION: "true"
               LDAP_PRIMARY_HOST: "192.168.0.120"
     service:
       main:
