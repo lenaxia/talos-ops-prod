@@ -1,0 +1,42 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-authelia-shadow
+  namespace: default
+spec:
+  forwardAuth:
+    address: http://authelia-shadow.default.svc.cluster.local/api/authz/forward-auth
+    trustForwardHeader: true
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Name
+      - Remote-Email
+      - Remote-Groups
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: middlewares-secure-headers-shadow
+  namespace: default
+spec:
+  headers:
+    browserXssFilter: true
+    contentTypeNosniff: true
+    forceSTSHeader: true
+    frameDeny: true
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 31536000
+    customFrameOptionsValue: "SAMEORIGIN"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-authelia-shadow
+  namespace: default
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-secure-headers-shadow
+      - name: middlewares-authelia-shadow
