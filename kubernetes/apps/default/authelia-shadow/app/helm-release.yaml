@@ -1,0 +1,302 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: authelia-shadow
+  namespace: default
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: authelia
+      version: 0.10.49
+      sourceRef:
+        kind: HelmRepository
+        name: authelia-charts
+        namespace: flux-system
+      interval: 5m
+  dependsOn:
+    - name: cert-manager
+      namespace: cert-manager
+  install:
+    createNamespace: true
+    remediation:
+      retries: 6
+  upgrade:
+    remediation:
+      retries: 6
+  values:
+    image:
+      registry: ghcr.io
+      repository: authelia/authelia
+      tag: 4.39.14
+      pullPolicy: IfNotPresent
+    
+    service:
+      type: ClusterIP
+      port: 80
+      annotations: {}
+    
+    pod:
+      kind: Deployment
+      replicas: 1
+      
+      selectors:
+        nodeSelector:
+          node-role.kubernetes.io/worker: "true"
+      
+      resources:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+    
+    configMap:
+      disabled: false
+      key: configuration.yaml
+      
+      log:
+        level: debug
+        format: text
+        file_path: /config/authelia.log
+      
+      telemetry:
+        metrics:
+          enabled: true
+          port: 9959
+          serviceMonitor:
+            enabled: false
+      
+      server:
+        port: 9091
+        path: ''
+        
+        endpoints:
+          automatic_authz_implementations:
+            - ForwardAuth
+            - AuthRequest
+            - ExtAuthz
+      
+      default_2fa_method: "totp"
+      
+      theme: light
+      
+      totp:
+        disable: false
+        issuer: shadow.local
+        algorithm: sha1
+        digits: 6
+        period: 30
+        skew: 1
+      
+      webauthn:
+        disable: false
+        timeout: '60 seconds'
+        display_name: shadow.local
+        attestation_conveyance_preference: indirect
+        selection_criteria:
+          user_verification: preferred
+      
+      duo_api:
+        enabled: false
+      
+      authentication_backend:
+        password_reset:
+          disable: false
+          custom_url: ""
+        
+        password_change:
+          disable: false
+        
+        refresh_interval: '5 minutes'
+        
+        ldap:
+          enabled: true
+          implementation: custom
+          address: 'ldap://${NAS_ADDR}'
+          timeout: '5 seconds'
+          start_tls: false
+          
+          tls:
+            server_name: ""
+            skip_verify: false
+            minimum_version: TLS1.2
+            maximum_version: TLS1.3
+          
+          pooling:
+            enable: false
+          
+          base_dn: dc=kao,dc=family
+          
+          additional_users_dn: cn=users
+          users_filter: '(&({username_attribute}={input})(objectClass=posixAccount))'
+          
+          additional_groups_dn: cn=groups
+          groups_filter: '(&(member={dn})(objectclass=posixGroup))'
+          
+          permit_referrals: false
+          permit_unauthenticated_bind: false
+          permit_feature_detection_failure: false
+          
+          user: uid=autheliauser,cn=users,dc=kao,dc=family
+          
+          password:
+            disabled: false
+            secret_name: ~
+            value: 'RjN8GK92Wija7j'
+            path: 'authentication.ldap.password.txt'
+          
+          attributes:
+            distinguished_name: ''
+            username: uid
+            display_name: displayName
+            family_name: ''
+            given_name: ''
+            mail: mail
+            member_of: ''
+            group_name: cn
+            extra: {}
+      
+      password_policy:
+        standard:
+          enabled: false
+        zxcvbn:
+          enabled: false
+      
+      access_control:
+        default_policy: deny
+        
+        rules:
+          - domain: authelia-shadow.local
+            policy: bypass
+          
+          - domain: "*.local"
+            policy: two_factor
+      
+      session:
+        name: authelia_shadow_session
+        same_site: lax
+        expiration: '1 hour'
+        inactivity: '5 minutes'
+        remember_me: '1 month'
+        
+        encryption_key:
+          disabled: false
+          secret_name: ~
+          value: 'insecure_shadow_session_key_01'
+          path: 'session.encryption.key'
+        
+        cookies:
+          - domain: 'local'
+            subdomain: 'authelia-shadow'
+            default_redirection_url: 'http://authelia-shadow.local'
+        
+        redis:
+          enabled: true
+          deploy: true
+          host: 'authelia-shadow-redis-master'
+          port: 6379
+          username: ''
+          
+          password:
+            disabled: false
+            secret_name: ~
+            value: ''
+            path: 'session.redis.password.txt'
+          
+          database_index: 0
+          maximum_active_connections: 8
+          minimum_idle_connections: 0
+          
+          tls:
+            enabled: false
+          
+          high_availability:
+            enabled: true
+            sentinel_name: mymaster
+            username: ''
+            
+            password:
+              disabled: false
+              secret_name: ~
+              value: ''
+              path: 'session.redis.sentinel.password.txt'
+            
+            nodes: []
+            route_by_latency: false
+            route_randomly: false
+      
+      regulation:
+        modes:
+          - user
+        max_retries: 3
+        find_time: '2 minutes'
+        ban_time: '5 minutes'
+      
+      storage:
+        encryption_key:
+          disabled: false
+          secret_name: ~
+          value: 'insecure_shadow_storage_key_01'
+          path: 'storage.encryption.key'
+        
+        local:
+          enabled: true
+          path: /config/db.sqlite3
+        
+        mysql:
+          enabled: false
+        
+        postgres:
+          enabled: false
+      
+      notifier:
+        disable_startup_check: true
+        
+        filesystem:
+          enabled: true
+          filename: /config/notification.txt
+        
+        smtp:
+          enabled: false
+      
+      identity_providers:
+        oidc:
+          enabled: false
+    
+    secret:
+      existingSecret: ''
+      mountPath: /secrets
+    
+    persistence:
+      enabled: true
+      storageClass: ''
+      accessModes:
+        - ReadWriteOnce
+      size: 100Mi
+    
+    redis:
+      architecture: standalone
+      auth:
+        enabled: false
+        sentinel: true
+      master:
+        persistence:
+          enabled: false
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 50m
+          limits:
+            memory: 128Mi
+      replica:
+        replicaCount: 2
+        persistence:
+          enabled: false
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 50m
+          limits:
+            memory: 128Mi

@@ -1,0 +1,74 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: echo-server-shadow
+  namespace: default
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 3.5.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  values:
+    controllers:
+      echo-server-shadow:
+        replicas: 1
+        strategy: RollingUpdate
+        
+        containers:
+          app:
+            image:
+              repository: docker.io/ealen/echo-server
+              tag: 0.9.2
+            
+            env:
+              PORT:
+                value: "8080"
+            
+            probes:
+              liveness:
+                enabled: true
+              readiness:
+                enabled: true
+            
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+    
+    service:
+      app:
+        controller: echo-server-shadow
+        ports:
+          http:
+            port: 8080
+    
+    ingress:
+      app:
+        className: traefik-shadow
+        annotations:
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: default-chain-authelia-shadow@kubernetescrd
+        hosts:
+          - host: echo-shadow.local
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: app
+                  port: http
