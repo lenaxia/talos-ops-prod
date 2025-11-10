@@ -36,7 +36,7 @@ spec:
       defaultClass: true
       defaultFsType: ext4
       defaultMkfsParams: ""
-      defaultClassReplicaCount: 2
+      defaultClassReplicaCount: 3
       defaultDataLocality: "best-effort"
     defaultSettings:
     #  backupTargetCredentialSecret: longhorn-minio-secret
