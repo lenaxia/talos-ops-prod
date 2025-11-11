@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
   #- ./traefik-shadow/ks.yaml
   #- ./authelia-shadow/ks.yaml
-  #- ./echo-server-shadow/ks.yaml
+  - ./echo-server-shadow/ks.yaml
