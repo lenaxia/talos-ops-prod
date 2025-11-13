@@ -49,9 +49,9 @@ spec:
                     --served-model-name qwen3-vl \
                     --swap-space 4 \
                     --max-num-seqs 2 \
-                    --max-model-len 65535 \
+                    --max-model-len 80000 \
                     --gpu-memory-utilization 0.9 \
-                    --tensor-parallel-size 1 \
+                    --tensor-parallel-size 2 \
                     --trust-remote-code \
                     --disable-log-requests \
                     --host 0.0.0.0 \
@@ -65,8 +65,8 @@ spec:
                 value: 1
               - name: TORCH_USE_CUDA_DSA
                 value: 1
-              - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090
+              #- name: NVIDIA_VISIBLE_DEVICES
+              #  value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090
               #  value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
             envFrom:
               - secretRef:
@@ -87,9 +87,9 @@ spec:
               readiness: *probe
             resources:
               requests:
-                nvidia.com/gpu: "1"
+                nvidia.com/gpu: "2"
               limits:
-                nvidia.com/gpu: "1"
+                nvidia.com/gpu: "2"
 
     persistence:
       data:
