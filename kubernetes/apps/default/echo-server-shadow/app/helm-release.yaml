@@ -60,15 +60,4 @@ spec:
     
     ingress:
       app:
-        className: traefik-shadow
-        annotations:
-          traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: default-chain-authelia-shadow@kubernetescrd
-        hosts:
-          - host: echo-shadow.local
-            paths:
-              - path: /
-                pathType: Prefix
-                service:
-                  identifier: app
-                  port: http
+        enabled: false

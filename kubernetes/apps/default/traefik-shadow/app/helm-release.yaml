@@ -56,8 +56,7 @@ spec:
       defaultRuleSyntax: v2
     
     ingressClass:
-      enabled: true
-      isDefaultClass: false
+      enabled: false
     
     ingressRoute:
       dashboard:
@@ -69,13 +68,12 @@ spec:
     globalArguments:
       - "--api.insecure=true"
       - "--serverstransport.insecureskipverify=true"
-      - "--providers.kubernetesingress.ingressclass=traefik-shadow"
       - "--metrics.prometheus=true"
       - "--metrics.prometheus.entryPoint=metrics"
     
     additionalArguments:
-      - "--providers.kubernetesingress.allowexternalnameservices=true"
-      - "--providers.kubernetescrd.allowexternalnameservices=true"
+      - "--providers.kubernetescrd=false"
+      - "--providers.kubernetesingress=false"
     
     ports:
       traefik:
