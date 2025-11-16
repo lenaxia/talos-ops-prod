@@ -188,44 +188,12 @@ spec:
           path: 'session.encryption.key'
         
         cookies:
-          - domain: 'local'
-            subdomain: 'authelia-shadow'
-            default_redirection_url: 'http://authelia-shadow.local'
+          - domain: 'shadow.local'
+            subdomain: 'authelia'
+            default_redirection_url: 'https://authelia.shadow.local'
         
         redis:
-          enabled: true
-          deploy: true
-          host: 'authelia-shadow-redis-master'
-          port: 6379
-          username: ''
-          
-          password:
-            disabled: false
-            secret_name: ~
-            value: ''
-            path: 'session.redis.password.txt'
-          
-          database_index: 0
-          maximum_active_connections: 8
-          minimum_idle_connections: 0
-          
-          tls:
-            enabled: false
-          
-          high_availability:
-            enabled: true
-            sentinel_name: mymaster
-            username: ''
-            
-            password:
-              disabled: false
-              secret_name: ~
-              value: ''
-              path: 'session.redis.sentinel.password.txt'
-            
-            nodes: []
-            route_by_latency: false
-            route_randomly: false
+          enabled: false
       
       regulation:
         modes:
@@ -277,26 +245,4 @@ spec:
       size: 100Mi
     
     redis:
-      architecture: standalone
-      auth:
-        enabled: false
-        sentinel: true
-      master:
-        persistence:
-          enabled: false
-        resources:
-          requests:
-            memory: 64Mi
-            cpu: 50m
-          limits:
-            memory: 128Mi
-      replica:
-        replicaCount: 2
-        persistence:
-          enabled: false
-        resources:
-          requests:
-            memory: 64Mi
-            cpu: 50m
-          limits:
-            memory: 128Mi
+      enabled: false
