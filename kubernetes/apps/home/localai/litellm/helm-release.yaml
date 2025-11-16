@@ -189,7 +189,7 @@ spec:
                 model_info:
                   input_cost_per_token: 0.00001
                   output_cost_per_token: 0.00001
-                  max_tokens: 40960
+                  max_tokens: 100000
 
               # Deepseek
               - model_name: deepseek-v3-chat

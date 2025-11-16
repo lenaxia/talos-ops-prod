@@ -12,6 +12,3 @@ spec:
     kind: GitRepository
     name: home-kubernetes
   wait: true
-  dependsOn:
-    - name: cluster-default-traefik-shadow
-    - name: cluster-default-authelia-shadow
