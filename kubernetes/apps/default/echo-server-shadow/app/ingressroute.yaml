@@ -1,0 +1,19 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: echo-server-shadow
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`echo-shadow.local`)
+      kind: Rule
+      services:
+        - name: echo-server-shadow-app
+          port: 8080
+          namespace: default
+      middlewares:
+        - name: chain-authelia-shadow
+          namespace: default
