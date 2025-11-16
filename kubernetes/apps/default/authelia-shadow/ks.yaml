@@ -13,7 +13,7 @@ spec:
     name: home-kubernetes
   wait: true
   dependsOn:
-    - name: cluster-apps-cert-manager-cert-manager
+    - name: cert-manager
   postBuild:
     substitute: {}
     substituteFrom:
