@@ -45,7 +45,6 @@ spec:
             args:
               - |
                 vllm serve \
-                #coder3101/Qwen3-VL-32B-Instruct-Heretic \
                     QuantTrio/Qwen3-VL-32B-Instruct-AWQ \
                     --served-model-name qwen3-vl \
                     --swap-space 4 \
