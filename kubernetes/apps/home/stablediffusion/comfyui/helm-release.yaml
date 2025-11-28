@@ -30,7 +30,7 @@ spec:
           app:
             image:
               repository: ghcr.io/lenaxia/comfyui-boot
-              tag: cu124-slim-20250714@sha256:a8244e3219dc1f95e16fbe779d65300e9d32c39b5ae49d0a6a2408c54579dbcc
+              tag: cu124-slim-20251127@sha256:0ce1e0c5ed53888e94ba1e551516fa7e60f0bed701e39af0d96393a33e987dc8
             env:
               #- name: NVIDIA_VISIBLE_DEVICES
               #  value: "GPU-6726851a-d64e-09c8-a938-1537593e3106"
