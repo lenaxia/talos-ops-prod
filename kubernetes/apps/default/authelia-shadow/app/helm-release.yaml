@@ -29,7 +29,7 @@ spec:
     image:
       registry: ghcr.io
       repository: authelia/authelia
-      tag: 4.39.14
+      tag: 4.39.15
       pullPolicy: IfNotPresent
     
     service:
