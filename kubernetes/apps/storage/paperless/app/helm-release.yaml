@@ -39,7 +39,7 @@ spec:
           main:
             image:
               repository: ghcr.io/paperless-ngx/paperless-ngx
-              tag: 2.19.5
+              tag: 2.20.0
 
             envFrom:
               - secretRef:
@@ -87,11 +87,11 @@ spec:
           redis:
             image:
               repository: public.ecr.aws/docker/library/redis
-              tag: 8.2.3
+              tag: 8.4.0
           gotenburg:
             image:
               repository: thecodingmachine/gotenberg
-              tag: 8.24.0
+              tag: 8.25.0
             env:
               - name: DISABLE_GOOGLE_CHROME
                 value: '1'
