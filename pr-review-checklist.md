@@ -46,7 +46,7 @@ Generated: 2025-12-01
 **Total PRs Reviewed:** 30
 **Merged:** 28
 **Skipped:** 1 (MariaDB - Bitnami retracted charts)
-**Remaining Open:** 1 (Not reviewed yet)
+**Reverted:** 1 (vllm - CUDA requirement incompatibility)
 
 ## Summary of Actions
 
@@ -59,10 +59,13 @@ All patch, minor, and reviewed major version updates were merged successfully. T
 ### ⚠️ Skipped (1)
 - **#503 - MariaDB:** Bitnami has retracted their Helm charts
 
-### 📋 Notes
+### 🔄 Reverted (1)
+- **#486 - vllm v0.11.2:** Reverted to v0.11.0 - v0.11.2 requires CUDA 12.9 which is not supported by current NVIDIA driver
+
+### � Notes
 - All patch updates were safe bug fixes and security improvements
 - Minor updates included new features with backward compatibility
 - Major updates were either CI/CD tools, date-based versioning, or CRD updates
-- No breaking changes identified that would affect current deployments
+- **Action Required:** vllm cannot be upgraded to v0.11.2+ until NVIDIA driver is updated to support CUDA 12.9
 
 ---
