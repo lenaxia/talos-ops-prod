@@ -27,3 +27,4 @@ wiki
 .aider*
 config.*.yaml
 venv
+.tmp
