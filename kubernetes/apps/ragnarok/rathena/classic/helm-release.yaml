@@ -1,4 +1,3 @@
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -9,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       interval: 16m
       sourceRef:
         kind: HelmRepository
@@ -31,11 +30,12 @@ spec:
         containers:
           server:
             image:
-              repository: ghcr.io/lenaxia/docker-rathena/rathena-packetver20200401
+              repository: 
+                ghcr.io/lenaxia/docker-rathena/rathena-packetver20200401
               tag: classic-20240805
             envFrom:
               - secretRef:
-                  name: *appname
+                  name: &appname rathena-classic
             env:
               - name: MYSQL_HOST
                 valueFrom:
@@ -68,24 +68,20 @@ spec:
               repository: alpine
               tag: latest
             command: ["/bin/sh", "-c", "sleep 60m"]
-
     service:
       main:
         enabled: true
         type: LoadBalancer
-        controller: main
         labels:
           app: rathena
         ports:
           login:
-            enabled: true
             port: 6900
-            protocol: TCP
+            enabled: true
           char:
-            enabled: true
             port: 6121
-            protocol: TCP
-          map:
             enabled: true
+          map:
             port: 5121
-            protocol: TCP
+            enabled: true
+        primary: true

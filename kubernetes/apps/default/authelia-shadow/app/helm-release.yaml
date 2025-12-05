@@ -190,7 +190,7 @@ spec:
         cookies:
           - domain: 'shadow.local'
             subdomain: 'authelia'
-            default_redirection_url: 'https://authelia.shadow.local'
+            default_redirection_url: 'https://echo.shadow.local'
         
         redis:
           enabled: false

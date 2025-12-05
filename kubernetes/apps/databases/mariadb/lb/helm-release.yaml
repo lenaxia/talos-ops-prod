@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -54,7 +54,6 @@ spec:
           mariadb:
             port: 3306
         primary: true
-        controller: main
     ingress:
       main:
         enabled: true
@@ -66,7 +65,6 @@ spec:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: main
                   port: http
         tls:
           - hosts:

@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       interval: 15m
       sourceRef:
         kind: HelmRepository
@@ -27,7 +27,8 @@ spec:
               runAsUser: 0
             image:
               repository: busybox@sha256
-              tag: 3fbc632167424a6d997e74f52b878d7cc478225cffac6bc977eedfe51c7f4e79
+              tag: 
+                3fbc632167424a6d997e74f52b878d7cc478225cffac6bc977eedfe51c7f4e79
         containers:
           main:
             image:
@@ -54,7 +55,6 @@ spec:
             port: 8081
             enabled: true
         primary: true
-        controller: main
     ingress:
       main:
         enabled: true
@@ -64,14 +64,14 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri calibre.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
                 service:
-                  identifier: main
                   port: http
         tls:
           - hosts:
@@ -83,10 +83,6 @@ spec:
         enabled: true
         existingClaim: calibre-config-volume
         type: persistentVolumeClaim
-        advancedMounts:
-          main:
-            update-volume-permission:
-              - path: /config
       media:
         enabled: true
         existingClaim: calibre-media-volume

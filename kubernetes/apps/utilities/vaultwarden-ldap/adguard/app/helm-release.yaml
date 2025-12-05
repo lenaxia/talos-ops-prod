@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -44,7 +44,6 @@ spec:
           http:
             port: 3000
         primary: true
-        controller: main
       dns-tcp:
         annotations:
           metallb.universe.tf/allow-shared-ip: adguard-shared-ip
@@ -58,7 +57,6 @@ spec:
             port: 53
             enabled: true
         primary: false
-        controller: main
       dns-udp:
         annotations:
           metallb.universe.tf/allow-shared-ip: adguard-shared-ip
@@ -75,7 +73,6 @@ spec:
             port: 53
             enabled: true
         primary: false
-        controller: main
     ingress:
       main:
         enabled: true

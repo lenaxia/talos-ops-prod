@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -39,7 +39,8 @@ spec:
           reloader.stakater.com/auto: 'true'
         initContainers:
           01-init-config:
-            command: [/bin/sh, -c, cp /tmp/config/recyclarr.yml /config/recyclarr.yml]
+            command: [/bin/sh, -c, cp /tmp/config/recyclarr.yml 
+                  /config/recyclarr.yml]
             image:
               repository: public.ecr.aws/docker/library/busybox
               tag: latest
@@ -71,7 +72,6 @@ spec:
       main:
         enabled: false
         primary: true
-        controller: main
     persistence:
       config-file:
         enabled: true
@@ -79,7 +79,3 @@ spec:
         name: recyclarr-configmap
         globalMounts:
           - path: '/tmp/config'
-        advancedMounts:
-          main:
-            01-init-config:
-              - path: /tmp/config

@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 3.1.0
+      version: 4.3.0
       interval: 16m
       sourceRef:
         kind: HelmRepository
@@ -109,7 +109,6 @@ spec:
           map:
             port: 5121
         primary: true
-        controller: main
     persistence:
       config:
         enabled: true
@@ -120,12 +119,6 @@ spec:
         type: emptyDir
         globalMounts:
           - path: /docker-entrypoint-initdb.d
-        advancedMounts:
-          main:
-            0-prep-db:
-              - path: /docker-entrypoint-initdb.d
-            1-init-db:
-              - path: /db-scripts
       entrypoint-sh:
         enabled: true
         type: configMap
@@ -135,10 +128,5 @@ spec:
           - path: /entrypoint.sh
             subPath: entrypoint.sh
 
-        advancedMounts:
-          main:
-            1-init-db:
-              - path: /entrypoint.sh
-                subPath: entrypoint.sh
     podAnnotations:
       secret.reloader.stakater.com/reload: *appname

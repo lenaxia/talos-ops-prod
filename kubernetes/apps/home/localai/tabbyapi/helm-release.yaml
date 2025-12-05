@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 2.6.0
+      version: 4.3.0
       interval: 5m
       sourceRef:
         kind: HelmRepository
@@ -115,6 +115,7 @@ spec:
         ports:
           http:
             port: *port
+        primary: true
     ingress:
       main:
         enabled: true
@@ -125,14 +126,14 @@ spec:
           hajimari.io/group: Home
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri tabby.thekao.cloud
             paths:
               - path: /
                 pathType: Prefix
                 service:
-                  name: main
                   port: http
         tls:
           - hosts:
@@ -142,7 +143,7 @@ spec:
       configyml:
         enabled: true
         type: configMap
-        name: *appname
+        name: &appname tabbyapi
         defaultMode: 0644
         globalMounts:
           - path: /app/config.yml
@@ -161,3 +162,4 @@ spec:
         globalMounts:
           - path: /app/models
 
+        type: persistentVolumeClaim
