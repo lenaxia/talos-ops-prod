@@ -85,4 +85,4 @@ spec:
             server: 192.168.0.120
             path: "/volume1/omoikane/[Manga]"
         globalMounts:
-          - path: /downloads
+          - path: /app/FMD2/downloads
