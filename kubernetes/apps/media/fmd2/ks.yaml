@@ -10,6 +10,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
+    - name: cluster-media-komga
   path: ./kubernetes/apps/media/fmd2/app
   prune: true
   sourceRef:
