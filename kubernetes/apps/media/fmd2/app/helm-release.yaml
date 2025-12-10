@@ -82,3 +82,4 @@ spec:
         globalMounts:
           - path: /app/FMD2/media
             subpath: media
+          - path: /mnt/komga-config-volume
