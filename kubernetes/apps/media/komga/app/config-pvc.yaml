@@ -8,9 +8,8 @@ metadata:
       snapshot.home.arpa/enabled: "true"
 spec:
     accessModes:
-        - ReadWriteOnce
+        - ReadWriteMany
     storageClassName: longhorn
     resources:
         requests:
-            storage: 1Gi 
----
+            storage: 150Gi 
