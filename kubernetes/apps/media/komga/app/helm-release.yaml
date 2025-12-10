@@ -33,10 +33,11 @@ spec:
           app:
             image:
               repository: gotson/komga
-              tag: 
+              tag:
                 1.23.5@sha256:85f0be8920742341217f2b2bdafef64da1f6062ae472dcf74426a9fa549c8a05
             env:
-              TZ: "${TIMEZONE}"
+              #TZ: "${TIMEZONE}"
+              TZ: "America/Los_Angeles"
               SERVER_PORT: &port 8080
               KOMGA_OAUTH2_ACCOUNT_CREATION: "true"
             resources:
@@ -58,11 +59,13 @@ spec:
           hajimari.io/icon: subtitles
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
+            ##cert-manager.io/cluster-issuer: "ca-issuer"
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: 
+          traefik.ingress.kubernetes.io/router.middlewares:
             networking-chain-authelia@kubernetescrd
         hosts:
-          - host: &uri read.${SECRET_DEV_DOMAIN}
+          #- host: &uri read.${SECRET_DEV_DOMAIN}
+          - host: &uri read.thekao.cloud
             paths:
               - path: /
                 pathType: Prefix
