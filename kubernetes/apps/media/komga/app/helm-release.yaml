@@ -34,7 +34,7 @@ spec:
             image:
               repository: gotson/komga
               tag: 
-                1.23.5@sha256:85f0be8920742341217f2b2bdafef64da1f6062ae472dcf74426a9fa549c8a05
+                1.22.0@sha256:ba892ab3e082b17e73929b06b89f1806535bc72ef4bc6c89cd3e135af725afc3
             env:
               #TZ: "${TIMEZONE}"
               TZ: "America/Los_Angeles"
