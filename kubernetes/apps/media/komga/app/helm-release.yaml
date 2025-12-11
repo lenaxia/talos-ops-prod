@@ -34,10 +34,9 @@ spec:
             image:
               repository: gotson/komga
               tag: 
-                1.22.0@sha256:ba892ab3e082b17e73929b06b89f1806535bc72ef4bc6c89cd3e135af725afc3
+                1.23.6@sha256:09129eae6eff50337f039bd6e99d995126cb03226950c80e9864cbc05f10a661
             env:
-              #TZ: "${TIMEZONE}"
-              TZ: "America/Los_Angeles"
+              TZ: "${TIMEZONE}"
               SERVER_PORT: &port 8080
               KOMGA_OAUTH2_ACCOUNT_CREATION: "true"
             resources:
@@ -59,13 +58,11 @@ spec:
           hajimari.io/icon: subtitles
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
-            ##cert-manager.io/cluster-issuer: "ca-issuer"
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd
         hosts:
-          #- host: &uri read.${SECRET_DEV_DOMAIN}
-          - host: &uri read.thekao.cloud
+          - host: &uri read.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
@@ -82,6 +79,10 @@ spec:
         existingClaim: komga-config-volume
         globalMounts:
           - path: /config
+            subPath: config
+          - path: /mnt/manga
+            subPath: media
+          - path: /mnt/komga-config-volume
       secret:
         enabled: true
         type: secret
@@ -90,13 +91,3 @@ spec:
           - path: /config/application.yml
             readOnly: true
             subPath: application.yml
-      manga:
-        enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            #server: ${NAS_ADDR}
-            server: 192.168.0.120
-            path: "/volume1/omoikane/[Manga]"
-        globalMounts:
-          - path: /mnt/manga
