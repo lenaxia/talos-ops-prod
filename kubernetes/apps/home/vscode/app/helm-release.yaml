@@ -74,12 +74,25 @@ spec:
       config:
         enabled: true
         existingClaim: vscode-nfs
-
-    # -- Configures service settings for the chart.
-    # @default -- See values.yaml
         type: persistentVolumeClaim
+      ssh:
+        enabled: true
+        type: secret
+        name: vscode-ssh
+        globalMounts:
+          - path: /.ssh
+            readOnly: true
     podAnnotations:
       secret.reloader.stakater.com/reload: *appname
+        
+        
+        
+        
+        
+        
+        
+        
+        
         #    lifecycle:
         #      postStart:
         #        exec:
