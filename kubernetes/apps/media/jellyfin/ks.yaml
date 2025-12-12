@@ -11,9 +11,9 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: &app jellyfin
-  components:
+  #components:
     #- ../../../../components/gatus/external
-    - ../../components/volsync
+    #- ../../components/volsync
   path: ./kubernetes/apps/media/jellyfin/app
   postBuild:
     substitute:
