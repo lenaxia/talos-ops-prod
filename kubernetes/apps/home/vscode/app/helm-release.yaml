@@ -80,7 +80,7 @@ spec:
         type: secret
         name: vscode-ssh
         globalMounts:
-          - path: /.ssh
+          - path: /config/.ssh
             readOnly: true
     podAnnotations:
       secret.reloader.stakater.com/reload: *appname
