@@ -58,7 +58,6 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd
         hosts:
-          #- host: &uri read.${SECRET_DEV_DOMAIN}
           - host: &uri fmd.thekao.cloud
             paths:
               - path: /
@@ -81,5 +80,5 @@ spec:
         existingClaim: komga-config-volume
         globalMounts:
           - path: /app/FMD2/media
-            subpath: media
+            subPath: media
           - path: /mnt/komga-config-volume
