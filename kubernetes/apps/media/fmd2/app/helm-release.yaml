@@ -27,6 +27,13 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+
     controllers:
       fmd2:
         containers:
@@ -41,6 +48,7 @@ spec:
               UMASK: "002"
               THRESHOLD_MINUTES: "3"
               TRANSFER_FILE_TYPE: ".cbz"
+
     service:
       app:
         ports:
