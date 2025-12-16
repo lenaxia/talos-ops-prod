@@ -83,7 +83,7 @@ spec:
           - path: /mnt/manga
             subPath: media
           - path: /mnt/komga-config-volume
-      config:
+      media:
         enabled: true
         existingClaim: komga-media-volume
         globalMounts:
