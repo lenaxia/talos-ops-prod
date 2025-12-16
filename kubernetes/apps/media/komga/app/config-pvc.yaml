@@ -13,3 +13,18 @@ spec:
     resources:
         requests:
             storage: 150Gi 
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: komga-media-volume
+    labels:
+      app: komga
+      snapshot.home.arpa/enabled: "true"
+spec:
+    accessModes:
+        - ReadWriteMany
+    storageClassName: longhorn
+    resources:
+        requests:
+            storage: 150Gi 
