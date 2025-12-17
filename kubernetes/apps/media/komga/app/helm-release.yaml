@@ -79,15 +79,11 @@ spec:
         existingClaim: komga-config-volume
         globalMounts:
           - path: /config
-            subPath: config
-          - path: /mnt/manga
-            subPath: media
-          - path: /mnt/komga-config-volume
       media:
         enabled: true
         existingClaim: komga-media-volume
         globalMounts:
-          - path: /mnt/manga-media-vol
+          - path: /mnt/manga
       secret:
         enabled: true
         type: secret
