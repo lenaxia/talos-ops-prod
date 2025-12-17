@@ -77,8 +77,8 @@ spec:
           - path: /app/FMD2/userdata
       media:
         enabled: true
-        existingClaim: fmd2-test-volume
-          #existingClaim: komga-media-volume
+          #existingClaim: fmd2-test-volume
+        existingClaim: komga-media-volume
         globalMounts:
           - path: /downloads
             subPath: media
