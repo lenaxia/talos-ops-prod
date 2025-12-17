@@ -83,8 +83,6 @@ spec:
           - path: /app/FMD2/userdata
       manga:
         enabled: true
-        existingClaim: komga-config-volume
+        existingClaim: komga-media-volume
         globalMounts:
           - path: /app/FMD2/media
-            subPath: media
-          - path: /mnt/komga-config-volume
