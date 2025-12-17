@@ -32,8 +32,8 @@ spec:
         containers:
           app:
             image:
-              repository: sillysuki/fmd2
-              tag: latest
+              repository: lenaxia/fmd2
+              tag: 2.0.34.5
             env:
               PUID: "1000"
               PGID: "1000"
@@ -58,7 +58,6 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd
         hosts:
-          #- host: &uri read.${SECRET_DEV_DOMAIN}
           - host: &uri fmd.thekao.cloud
             paths:
               - path: /
@@ -76,13 +75,10 @@ spec:
         existingClaim: fmd2-config-volume
         globalMounts:
           - path: /app/FMD2/userdata
-      manga:
+      media:
         enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            #server: ${NAS_ADDR}
-            server: 192.168.0.120
-            path: "/volume1/omoikane/[Manga]"
+        existingClaim: komga-media-volume
         globalMounts:
-          - path: /downloads
+          - path: /media
+            subPath: media
+          - path: /mnt/komga-media-volume
