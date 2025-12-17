@@ -32,8 +32,6 @@ spec:
         containers:
           app:
             image:
-              #repository: ghcr.io/lenaxia/fmd2
-              #tag: 2.0.34.5
               repository: sillysuki/fmd2
               tag: latest
             env:
@@ -87,4 +85,4 @@ spec:
             server: 192.168.0.120
             path: "/volume1/omoikane/[Manga]"
         globalMounts:
-          - path: /app/FMD2/downloads
+          - path: /downloads
