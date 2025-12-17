@@ -27,10 +27,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    defaultPodOptions:
-      securityContext:
-        fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
+    #    defaultPodOptions:
+    #      securityContext:
+    #        fsGroup: 1000
+    #        fsGroupChangePolicy: OnRootMismatch
 
     controllers:
       fmd2:
