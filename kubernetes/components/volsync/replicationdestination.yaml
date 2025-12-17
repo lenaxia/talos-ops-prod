@@ -9,8 +9,8 @@ metadata:
 spec:
   trigger:
     manual: restore-once
-  restic:
-    repository: restic-config
+  kopia:
+    repository: volsync-kopia-secret
     accessModes: ["${VOLSYNC_ACCESSMODES:=ReadWriteOnce}"]
     cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
     cacheCapacity: "${VOLSYNC_CAPACITY:=5Gi}"
@@ -21,10 +21,10 @@ spec:
     copyMethod: Snapshot
     enableFileDeletion: true
     moverSecurityContext:
-      runAsUser: ${VOLSYNC_PUID:=1000}
-      runAsGroup: ${VOLSYNC_PGID:=1000}
-      fsGroup: ${VOLSYNC_PGID:=1000}
+      runAsUser: ${VOLSYNC_PUID:=568}
+      runAsGroup: ${VOLSYNC_PGID:=568}
+      fsGroup: ${VOLSYNC_PGID:=568}
     sourceIdentity:
       sourceName: ${APP}
     storageClassName: "${VOLSYNC_STORAGECLASS:=longhorn}"
-    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=longhorn-snapshot-vsc}"
+    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=longhorn-snapclass}"
