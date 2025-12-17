@@ -27,11 +27,6 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    #    defaultPodOptions:
-    #      securityContext:
-    #        fsGroup: 1000
-    #        fsGroupChangePolicy: OnRootMismatch
-
     controllers:
       fmd2:
         containers:
@@ -46,7 +41,6 @@ spec:
               UMASK: "002"
               THRESHOLD_MINUTES: "3"
               TRANSFER_FILE_TYPE: ".cbz"
-
     service:
       app:
         ports:
@@ -64,6 +58,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd
         hosts:
+          #- host: &uri read.${SECRET_DEV_DOMAIN}
           - host: &uri fmd.thekao.cloud
             paths:
               - path: /
@@ -83,6 +78,11 @@ spec:
           - path: /app/FMD2/userdata
       manga:
         enabled: true
-        existingClaim: fmd2-media-volume
+        type: custom
+        volumeSpec:
+          nfs:
+            #server: ${NAS_ADDR}
+            server: 192.168.0.120
+            path: "/volume1/omoikane/[Manga]"
         globalMounts:
           - path: /app/FMD2/downloads
