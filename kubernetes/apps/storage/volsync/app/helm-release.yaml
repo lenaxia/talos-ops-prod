@@ -28,10 +28,20 @@ spec:
   values:
     manageCRDs: true
     replicaCount: 2
+    # Use same Kopia image as your kopia-web deployment
     image: &image
-      repository: ghcr.io/home-operations/volsync
-      tag: 0.12.01@sha256:0483e545f9d9d9bd4bc97e2f7f6eceed1b302bb42d99d506e0bcf3bc6dcc9cc2
-    restic:
-      <<: *image
+      repository: kopia/kopia
+      tag: 20251128.0.62506@sha256:8e08ab65fa6d47b8bde066b1e5aa6fa04fbc3aeee6728a97ad5fa3e4ce7a6557
+    kopia: *image
+    restic: *image
+    rclone: *image
+    rsync: *image
+    rsync-tls: *image
+    syncthing: *image
     metrics:
       disableAuth: true
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 568
+      runAsGroup: 568
+      fsGroup: 568
