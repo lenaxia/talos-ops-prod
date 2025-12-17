@@ -85,6 +85,6 @@ spec:
         enabled: true
         existingClaim: komga-config-volume
         globalMounts:
-          - path: /app/FMD2/downloads
+          - path: /app/FMD2/media
             subPath: media
           - path: /mnt/komga-config-volume
