@@ -2,7 +2,7 @@ cluster:
   allowSchedulingOnControlPlanes: true
   apiServer:
     extraArgs:
-      feature-gates: AuthorizeNodeWithSelectors=false
+      feature-gates: AuthorizeNodeWithSelectors=false,MutatingAdmissionPolicy=true
   controllerManager:
     extraArgs:
       bind-address: 0.0.0.0

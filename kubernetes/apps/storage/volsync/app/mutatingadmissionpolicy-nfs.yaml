@@ -1,6 +1,6 @@
 ---
 # Automatically inject NFS repository mount into all VolSync backup jobs
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1alpha1
 kind: MutatingAdmissionPolicy
 metadata:
   name: volsync-mover-nfs
@@ -45,7 +45,7 @@ spec:
           ]
 ---
 # Add random jitter to prevent thundering herd
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1alpha1
 kind: MutatingAdmissionPolicy
 metadata:
   name: volsync-mover-jitter
