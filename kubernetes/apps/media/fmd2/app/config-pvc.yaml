@@ -14,3 +14,18 @@ spec:
         requests:
             storage: 128Mi
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: fmd2-media-volume
+    labels:
+      app: fmd2
+      snapshot.home.arpa/enabled: "true"
+spec:
+    accessModes:
+        - ReadWriteMany
+    storageClassName: longhorn
+    resources:
+        requests:
+            storage: 150Gi
+---
