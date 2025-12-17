@@ -8,18 +8,19 @@ spec:
   sourcePVC: "${APP}"
   trigger:
     schedule: "${VOLSYNC_SCHEDULE:=0 * * * *}"
-  restic:
-    repository: restic-config
+  kopia:
+    repository: volsync-kopia-secret
     accessModes: ["${VOLSYNC_SNAP_ACCESSMODES:=ReadWriteOnce}"]
     cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
     cacheCapacity: "${VOLSYNC_CAPACITY:=5Gi}"
     cacheStorageClassName: "${VOLSYNC_CACHE_SNAPSHOTCLASS:=openebs-hostpath}"
+    compression: zstd-fastest
     copyMethod: Snapshot
     moverSecurityContext:
-      runAsUser: ${VOLSYNC_PUID:=1000}
-      runAsGroup: ${VOLSYNC_PGID:=1000}
-      fsGroup: ${VOLSYNC_PGID:=1000}
-    pruneIntervalDays: 14
+      runAsUser: ${VOLSYNC_PUID:=568}
+      runAsGroup: ${VOLSYNC_PGID:=568}
+      fsGroup: ${VOLSYNC_PGID:=568}
+    parallelism: 2
     retain:
       hourly: 24
       daily: 7
@@ -27,4 +28,4 @@ spec:
       monthly: 2
       yearly: 1
     storageClassName: "${VOLSYNC_STORAGECLASS:=longhorn}"
-    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=longhorn-snapshot-vsc}"
+    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=longhorn-snapclass}"
