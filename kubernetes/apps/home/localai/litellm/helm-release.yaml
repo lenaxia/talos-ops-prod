@@ -117,7 +117,7 @@ spec:
           config.yaml: |
             litellm_settings:
               set_verbose: True  # Uncomment this if you want to see verbose logs; not recommended in production
-              #drop_params: True
+              drop_params: True
               request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
               set_verbose: False      # Switch off Debug Logging, ensure your logs do not have any debugging on
               json_logs: true         # Get debug logs in json format
