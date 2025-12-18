@@ -4,6 +4,7 @@ commonLabels:
   app.kubernetes.io/name: &app volsync
   app.kubernetes.io/instance: *app
 resources:
+  - ocirepository.yaml
   - helm-release.yaml
   - prometheusrule.yaml
   - volsync-kopia-secret.yaml
