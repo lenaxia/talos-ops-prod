@@ -28,3 +28,16 @@ spec:
       sourceName: ${APP}
     storageClassName: "${VOLSYNC_STORAGECLASS:=longhorn}"
     volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=longhorn-snapclass}"
+    # Custom pod spec for NFS mount
+    moverPodSpec:
+      volumes:
+        # Mount NFS for Kopia repository
+        - name: repository
+          nfs:
+            server: ${VOLSYNC_NFS_SERVER:=192.168.0.120}
+            path: ${VOLSYNC_NFS_PATH:=/volume1/backups/kopia}
+      containers:
+        - name: kopia
+          volumeMounts:
+            - name: repository
+              mountPath: /repository
