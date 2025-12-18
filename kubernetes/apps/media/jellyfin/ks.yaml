@@ -20,10 +20,12 @@ spec:
       APP: *app
       GATUS_PATH: /web/index.html
       VOLSYNC_CAPACITY: 50Gi
+      VOLSYNC_PVC: config-jellyfin-0
   prune: true
   sourceRef:
     kind: GitRepository
     name: home-kubernetes
+  targetNamespace: default
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2beta1
       kind: HelmRelease
