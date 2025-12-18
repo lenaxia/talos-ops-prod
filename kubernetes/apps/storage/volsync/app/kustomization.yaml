@@ -7,5 +7,4 @@ resources:
   - helm-release.yaml
   - prometheusrule.yaml
   - volsync-kopia-secret.yaml
-  - mutatingadmissionpolicy-nfs.yaml
   - kopiamaintenance.yaml
