@@ -89,8 +89,5 @@ spec:
               - *uri
             secretName: *uri
         className: traefik
-    persistence:
-      config:
-        enabled: false
     podAnnotations:
       reloader.stakater.com/auto: 'true'
