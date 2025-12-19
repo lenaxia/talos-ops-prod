@@ -1,0 +1,96 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app phpmyadmin
+  namespace: utilities
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              repository: phpmyadmin/phpmyadmin
+              tag: latest
+              pullPolicy: Always
+            env:
+              TZ: ${TIMEZONE}
+              PMA_HOST: mariadb.databases.svc.cluster.local
+              PMA_PORT: 3306
+              PMA_ARBITRARY: 1
+              PMA_ABSOLUTE_URI: https://phpmyadmin.${SECRET_DEV_DOMAIN}/
+            probes:
+              liveness: &probes
+                enabled: false
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &port 80
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
+    service:
+      main:
+        type: LoadBalancer
+        ports:
+          http:
+            port: *port
+        primary: true
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: database-cog-outline
+          hajimari.io/appName: phpMyAdmin
+          hajimari.io/group: Utilities
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri phpmyadmin.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+        className: traefik
+    persistence:
+      config:
+        enabled: false
+    podAnnotations:
+      reloader.stakater.com/auto: 'true'
