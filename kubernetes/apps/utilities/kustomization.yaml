@@ -12,6 +12,7 @@ resources:
   - ./librespeed/ks.yaml
   - ./guacamole/ks.yaml
   - ./pgadmin/ks.yaml
+  - ./phpmyadmin/ks.yaml
   - ./podinfo/ks.yaml
   - ./echo-server/ks.yaml
   - ./brother-ql-web/ks.yaml
