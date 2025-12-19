@@ -11,8 +11,10 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: &app jellyfin
-  components:
-    - ../../../../components/volsync
+  #components:
+    # Disabled until K8s 1.34+ when MutatingAdmissionPolicy graduates to beta
+    # VolSync with Kopia requires MAP for NFS repository mounting
+    #- ../../../../components/volsync
     #- ../../../../components/gatus/external
   path: ./kubernetes/apps/media/jellyfin/app
   postBuild:
