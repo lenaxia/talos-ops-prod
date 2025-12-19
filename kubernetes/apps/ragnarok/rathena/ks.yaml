@@ -37,7 +37,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
-    - name: cluster-databases-mariadb
+      #    - name: cluster-databases-mariadb
   path: ./kubernetes/apps/ragnarok/rathena/renewal
   prune: true
   sourceRef:
