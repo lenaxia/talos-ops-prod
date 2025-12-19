@@ -10,6 +10,7 @@ spec:
     schedule: "${VOLSYNC_SCHEDULE:=0 * * * *}"
   kopia:
     repository: volsync-kopia-secret
+    repositoryPVC: volsync-kopia-repository
     accessModes: ["${VOLSYNC_SNAP_ACCESSMODES:=ReadWriteOnce}"]
     cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
     cacheCapacity: "${VOLSYNC_CAPACITY:=5Gi}"
@@ -29,24 +30,3 @@ spec:
       yearly: 1
     storageClassName: "${VOLSYNC_STORAGECLASS:=longhorn}"
     volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=longhorn-snapclass}"
-    # Custom pod spec for NFS mount and jitter
-    moverPodSpec:
-      initContainers:
-        # Add 0-30 second random jitter to prevent thundering herd
-        - name: jitter
-          image: cgr.dev/chainguard/busybox:latest
-          command:
-            - sh
-            - -c
-            - sleep $(shuf -i 0-30 -n 1)
-      volumes:
-        # Mount NFS for Kopia repository
-        - name: repository
-          nfs:
-            server: ${VOLSYNC_NFS_SERVER:=192.168.0.120}
-            path: ${VOLSYNC_NFS_PATH:=/volume1/backups/kopia}
-      containers:
-        - name: kopia
-          volumeMounts:
-            - name: repository
-              mountPath: /repository
