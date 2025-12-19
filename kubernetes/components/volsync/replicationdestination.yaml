@@ -11,6 +11,7 @@ spec:
     manual: restore-once
   kopia:
     repository: volsync-kopia-secret
+    repositoryPVC: volsync-kopia-repository
     accessModes: ["${VOLSYNC_ACCESSMODES:=ReadWriteOnce}"]
     cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
     cacheCapacity: "${VOLSYNC_CAPACITY:=5Gi}"
@@ -28,16 +29,3 @@ spec:
       sourceName: ${APP}
     storageClassName: "${VOLSYNC_STORAGECLASS:=longhorn}"
     volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=longhorn-snapclass}"
-  # Custom pod spec for NFS mount (at spec level, not under kopia)
-  moverPodSpec:
-    volumes:
-      # Mount NFS for Kopia repository
-      - name: repository
-        nfs:
-          server: ${VOLSYNC_NFS_SERVER:=192.168.0.120}
-          path: ${VOLSYNC_NFS_PATH:=/volume1/backups/kopia}
-    containers:
-      - name: kopia
-        volumeMounts:
-          - name: repository
-            mountPath: /repository
