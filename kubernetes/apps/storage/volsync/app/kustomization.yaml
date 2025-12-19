@@ -9,3 +9,4 @@ resources:
   - prometheusrule.yaml
   - volsync-kopia-secret.yaml
   - kopiamaintenance.yaml
+  - repository-pvc.yaml
