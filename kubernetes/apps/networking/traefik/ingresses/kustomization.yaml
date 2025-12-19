@@ -10,7 +10,7 @@ resources:
   - synology-photos.yaml
   - synology-drive.yaml
   - portainer.yaml
-  - phpmyadmin.yaml
+    #- phpmyadmin.yaml
     #- plex.yaml
     #- omoikane-ldap.yaml
   - overseerr-oidc.yaml
