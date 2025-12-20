@@ -64,6 +64,8 @@ spec:
                 value: "192.168.5.219"
               - name: MYSQL_ACCOUNTSANDCHARS
                 value: "1"
+              - name: RENEWAL
+                value: "true"
           debug:
             image:
               repository: alpine
