@@ -37,6 +37,9 @@ spec:
               repository: phpmyadmin/phpmyadmin
               tag: latest
               pullPolicy: Always
+            envFrom:
+              - secretRef:
+                  name: phpmyadmin
             env:
               TZ: ${TIMEZONE}
               PMA_HOST: mariadb.databases.svc.cluster.local
@@ -89,5 +92,13 @@ spec:
               - *uri
             secretName: *uri
         className: traefik
+    persistence:
+      config:
+        enabled: true
+        type: configMap
+        name: phpmyadmin-config
+        globalMounts:
+          - path: /etc/phpmyadmin/config.secret.inc.php
+            subPath: config.secret.inc.php
     podAnnotations:
       reloader.stakater.com/auto: 'true'
