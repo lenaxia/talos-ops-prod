@@ -86,3 +86,12 @@ spec:
             port: 5121
             enabled: true
         primary: true
+    persistence:
+      entrypoint-sh:
+        enabled: true
+        type: configMap
+        name: entrypoint-sh
+        defaultMode: 0777
+        globalMounts:
+          - path: /entrypoint.sh
+            subPath: entrypoint.sh
