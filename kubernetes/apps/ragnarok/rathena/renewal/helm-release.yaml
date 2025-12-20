@@ -31,7 +31,7 @@ spec:
             image:
               repository: 
                 ghcr.io/lenaxia/docker-rathena
-              tag: renewal-latest
+              tag: packetver20200401-renewal-20251220@sha256:9cfd0a063bb9a61e094d79eae1f7823f70aef0f6f4948b0178169792e4b307b5
             envFrom:
               - secretRef:
                   name: &appname rathena-renewal
