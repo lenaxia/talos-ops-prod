@@ -6,3 +6,10 @@ commonLabels:
   app.kubernetes.io/instance: *app
 resources:
   - helm-release.yaml
+  - secret.sops.yaml
+configMapGenerator:
+  - name: phpmyadmin-config
+    files:
+      - ./config/config.secret.inc.php
+generatorOptions:
+  disableNameSuffixHash: true
