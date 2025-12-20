@@ -30,8 +30,8 @@ spec:
           server:
             image:
               repository: 
-                ghcr.io/lenaxia/docker-rathena/rathena-packetver20200401
-              tag: renewal-20240805
+                ghcr.io/lenaxia/docker-rathena
+              tag: renewal-latest
             envFrom:
               - secretRef:
                   name: &appname rathena-renewal
