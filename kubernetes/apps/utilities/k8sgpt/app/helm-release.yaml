@@ -80,13 +80,6 @@ spec:
         image:
           repository: ghcr.io/k8sgpt-ai/k8sgpt-operator
           tag: v0.2.24  # x-release-please-version
-        resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
-          requests:
-            cpu: 10m
-            memory: 64Mi
       replicas: 1
       ## Node labels for pod assignment
       ## ref: https://kubernetes.io/docs/user-guide/node-selection/
