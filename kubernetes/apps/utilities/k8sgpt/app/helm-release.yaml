@@ -69,6 +69,13 @@ spec:
         image:
           repository: quay.io/brancz/kube-rbac-proxy
           tag: v0.19.1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 5m
+            memory: 64Mi
       manager:
         sinkWebhookTimeout: 30s
         enableResultLogging: false
@@ -80,6 +87,13 @@ spec:
         image:
           repository: ghcr.io/k8sgpt-ai/k8sgpt-operator
           tag: v0.2.24  # x-release-please-version
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1024Mi
+          requests:
+            cpu: 10m
+            memory: 128Mi
       replicas: 1
       ## Node labels for pod assignment
       ## ref: https://kubernetes.io/docs/user-guide/node-selection/
