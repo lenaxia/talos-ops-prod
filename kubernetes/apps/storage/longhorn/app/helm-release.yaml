@@ -47,12 +47,14 @@ spec:
       replicaAutoBalance: "best-effort"
       defaultDataPath: "/var/mnt/longhorn"
 
-    # Node selector to run Longhorn only on worker nodes
-    nodeSelector:
-      node-role.kubernetes.io/worker: "true"
+    # Global node selector and tolerations for all Longhorn components
+    global:
+      # Node selector to run Longhorn only on worker nodes
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
 
-    # Tolerations for the control-plane taint
-    tolerations:
-      - key: "node-role.kubernetes.io/control-plane"
-        operator: "Exists"
-        effect: "NoSchedule"
+      # Tolerations for the control-plane taint
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
