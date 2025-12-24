@@ -69,13 +69,6 @@ spec:
         image:
           repository: quay.io/brancz/kube-rbac-proxy
           tag: v0.19.1
-        resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
-          requests:
-            cpu: 5m
-            memory: 64Mi
       manager:
         sinkWebhookTimeout: 30s
         enableResultLogging: false
