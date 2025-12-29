@@ -18,7 +18,6 @@ spec:
   install:
     remediation:
       retries: 3
-    createNamespace: true
   upgrade:
     cleanupOnFail: true
     remediation:
@@ -32,9 +31,31 @@ spec:
     logLevel: INFO
     ha:
       enabled: true
+      replicas: 3
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
     webhook:
       enabled: true
+    certController:
+      enabled: true
+    rbac:
+      enabled: true
+    pdb:
+      enabled: true
+      maxUnavailable: 1
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - mariadb-operator
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                    - mariadb-operator
+            topologyKey: kubernetes.io/hostname
