@@ -6,7 +6,7 @@ metadata:
   namespace: databases
 spec:
   mariaDbRef:
-    name: mariadb
+    name: mariadb-operator
   privileges:
     - "ALL PRIVILEGES"
   database: "ragnarok"
