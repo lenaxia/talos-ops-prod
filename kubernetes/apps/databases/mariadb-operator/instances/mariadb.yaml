@@ -56,8 +56,6 @@ spec:
   
   service:
     type: LoadBalancer
-    annotations:
-      coredns.io/hostname: mariadb-operator.${SECRET_DEV_DOMAIN}
     loadBalancerIP: ${SVC_MARIADB_ADDR}
     metadata:
       labels:
@@ -137,8 +135,3 @@ spec:
     exporter:
       image: prom/mysqld-exporter:v0.15.1
       port: 9104
-    serviceMonitor:
-      enabled: true
-      prometheusRelease: kube-prometheus-stack
-      interval: 30s
-      scrapeTimeout: 25s
