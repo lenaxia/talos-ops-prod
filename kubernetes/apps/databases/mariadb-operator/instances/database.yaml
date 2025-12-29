@@ -6,7 +6,7 @@ metadata:
   namespace: databases
 spec:
   mariaDbRef:
-    name: mariadb
+    name: mariadb-operator
   characterSet: utf8mb4
   collate: utf8mb4_unicode_ci
   retryInterval: 5s
