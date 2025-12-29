@@ -4,8 +4,8 @@ kind: Kustomization
 namespace: databases
 resources:
   - mariadb.yaml
-  - database.yaml
-  - user.yaml
-  - grant.yaml
-  #- backup.yaml  # Temporarily disabled due to S3 variable substitution issue
+  #- database.yaml  # Temporarily disabled due to immutable field conflict
+  #- user.yaml      # Temporarily disabled due to immutable field conflict
+  #- grant.yaml     # Temporarily disabled due to immutable field conflict
+  #- backup.yaml    # Temporarily disabled due to S3 variable substitution issue
   - secret.sops.yaml
