@@ -7,5 +7,5 @@ resources:
   - database.yaml
   - user.yaml
   - grant.yaml
-  - backup.yaml
+  #- backup.yaml  # Temporarily disabled due to S3 variable substitution issue
   - secret.sops.yaml
