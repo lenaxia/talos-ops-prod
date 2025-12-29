@@ -27,7 +27,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: home-kubernetes
-  targetNamespace: default
+  targetNamespace: media
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2beta1
       kind: HelmRelease
