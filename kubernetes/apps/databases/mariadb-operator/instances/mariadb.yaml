@@ -44,7 +44,7 @@ spec:
         resources:
           requests:
             storage: 300Mi
-        storageClassName: longhorn
+        storageClassName: openebs-hostpath
         accessModes:
           - ReadWriteOnce
   
