@@ -190,11 +190,14 @@ spec:
                   input_cost_per_token: 0.00001
                   output_cost_per_token: 0.00001
                   max_tokens: 100000
+                  supports_tool_choice: true
 
               # Deepseek
               - model_name: deepseek-v3-chat
                 litellm_params:
                   model: deepseek/deepseek-chat
+                model_info:
+                  supports_tool_choice: true
               - model_name: deepseek-r1-reasoning
                 litellm_params:
                   model: deepseek/deepseek-reasoner
