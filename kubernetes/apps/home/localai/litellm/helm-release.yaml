@@ -204,10 +204,14 @@ spec:
 
               - model_name: glm-4.7
                 litellm_params:
-                  model: zai/glm-4.7
+                  model: openai/glm-4.7
+                  api_base: https://api.z.ai/api/coding/paas/v4
+                  api_key: os.environ/ZAI_API_KEY
               - model_name: glm-4.6
                 litellm_params:
-                  model: zai/glm-4.6
+                  model: openai/glm-4.6
+                  api_base: https://api.z.ai/api/coding/paas/v4
+                  api_key: os.environ/ZAI_API_KEY
             
 
               # OpenAI
