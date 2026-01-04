@@ -190,7 +190,7 @@ spec:
                   input_cost_per_token: 0.00001
                   output_cost_per_token: 0.00001
                   max_tokens: 100000
-                  jupports_tool_choice: true
+                  supports_tool_choice: true
 
               # Deepseek
               - model_name: deepseek-v3-chat
