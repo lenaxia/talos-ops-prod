@@ -1,0 +1,101 @@
+---
+# Configuration for cert rotation CronJob
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cert-rotator-config
+  namespace: cert-rotation
+data:
+  # Git repository configuration
+  git-repo: "lenaxia/talos-ops-prod"
+  
+  # Git commit author configuration
+  git-author-name: "cert-rotator"
+  git-author-email: "cert-rotator@users.noreply.github.com"
+  
+  # Certificate configuration
+  cert-role: "admin"
+  kubectl-context-name: "admin-client"
+  
+  # Cluster endpoints (configure for your cluster)
+  talos-endpoints: "https://192.168.3.10,https://192.168.3.11,https://192.168.3.12"
+  kubernetes-api-server: "https://192.168.3.30:6443"
+  
+  # Certificate validity (1 year = 8760 hours)
+  cert-ttl: "8760h"
+  
+  # Rotation configuration
+  rotation-namespace-cleanup: "false"
+  max-job-retries: "3"
+  
+  # Monitoring configuration
+  prometheus-alertmanager-url: "http://kube-prometheus-stack-alertmanager.monitoring.svc.cluster.local:9093/api/v1/alerts"
+  notification-webhook-url: "https://pushover.net/api/messages.json"
+
+---
+# Talos admin config (for cluster access)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: talosconfig
+  namespace: cert-rotation
+type: Opaque
+stringData:
+  talosconfig: |-
+    context: talos-cluster
+    contexts:
+      talos-cluster:
+        endpoints:
+          - https://192.168.3.10
+        ca: |
+          -----BEGIN CERTIFICATE-----
+          ENCRYPTED_CA_CERTIFICATE_HERE
+          -----END CERTIFICATE-----
+        crt: |
+          -----BEGIN CERTIFICATE-----
+          ENCRYPTED_CLIENT_CERTIFICATE_HERE
+          -----END CERTIFICATE-----
+        key: |
+          -----BEGIN PRIVATE KEY-----
+          ENCRYPTED_CLIENT_PRIVATE_KEY_HERE
+          -----END PRIVATE KEY-----
+    currentContext: talos-cluster
+
+---
+# Kubernetes admin kubeconfig (for cluster access and CSR approval)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: talos-admin-kubeconfig
+  namespace: cert-rotation
+data:
+  kubeconfig: |-
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - cluster:
+          server: https://kubernetes.default.svc
+          certificate-authority-data: PLACEHOLDER_WILL_BE_FROM_SECRET
+    users:
+      - name: admin
+        user:
+          token: PLACEHOLDER_WILL_BE_FROM_SECRET
+    contexts:
+      - context:
+          cluster: k8s-cluster
+          user: admin
+
+---
+# GitHub token secret for Commit author info
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cert-rotator-author-config
+  namespace: cert-rotation
+type: Opaque
+stringData:
+  pushover-user-key: |
+    SECRET_PUSHOVER_USER_KEY
+  pushover-prod-token: |
+    SECRET_PUSHOVER_PROD_TOKEN
+  pushover-app-token: |

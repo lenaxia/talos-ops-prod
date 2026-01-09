@@ -207,11 +207,15 @@ spec:
                   model: openai/glm-4.7
                   api_base: https://api.z.ai/api/coding/paas/v4
                   api_key: os.environ/ZAI_API_KEY
+                  max_tokens: 200000
+                  supports_tool_choice: true
               - model_name: glm-4.6
                 litellm_params:
                   model: openai/glm-4.6
                   api_base: https://api.z.ai/api/coding/paas/v4
                   api_key: os.environ/ZAI_API_KEY
+                  max_tokens: 200000
+                  supports_tool_choice: true
             
 
               # OpenAI

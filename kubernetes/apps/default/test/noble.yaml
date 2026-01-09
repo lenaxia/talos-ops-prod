@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-wine-dotnet
+  namespace: default
+  labels:
+    app: ubuntu-wine-dotnet
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu:24.04
+      command: ["/bin/bash", "-c", "sleep infinity"]
+      tty: true
+      stdin: true
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        allowPrivilegeEscalation: true
+  restartPolicy: Never
+
