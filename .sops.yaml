@@ -10,3 +10,14 @@ creation_rules:
     key_groups:
       - age:
           - "age1rr569v9jm7ck70q4wpnspfhdvt4y5m6s604tx0ygs0a65qkt7g4qdszk6k"
+  # NEW: Rule for cert rotation secrets
+  - path_regex: kubernetes/bootstrap/cert-rotation/.*\.sops\.ya?ml
+    encrypted_regex: "^(data|stringData)$"
+    key_groups:
+      - age:
+          - "age1rr569v9jm7ck70q4wpnspfhdvt4y5m6s604tx0ygs0a65qkt7g4qdszk6k"
+  - path_regex: kubernetes/bootstrap/client-configs/.*\.sops\.ya?ml
+    encrypted_regex: "^(data|stringData)$"
+    key_groups:
+      - age:
+          - "age1rr569v9jm7ck70q4wpnspfhdvt4y5m6s604tx0ygs0a65qkt7g4qdszk6k"

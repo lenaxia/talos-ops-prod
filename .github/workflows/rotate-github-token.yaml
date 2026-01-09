@@ -1,0 +1,79 @@
+name: Rotate GitHub Token
+
+on:
+  schedule:
+    - cron: "0 2 1 * *"  # Monthly: day 1, 2 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rotate-token:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y age jq curl
+          curl -sSL https://github.com/getsops/sops/releases/download/v3.8.1/sops-v3.8.1.linux.amd64 \
+            -o /usr/local/bin/sops
+          chmod +x /usr/local/bin/sops
+
+      - name: Generate GitHub App token
+        id: gh-token
+        env:
+          APP_ID: ${{ secrets.GH_APP_ID }}
+          INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+          PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+        run: |
+          echo "$PRIVATE_KEY" > key.pem
+
+          NOW=$(date +%s)
+          EXP=$((NOW + 540))  # 9 minutes
+
+          HEADER='{"alg":"RS256","typ":"JWT"}'
+          PAYLOAD=$(jq -n \
+            --arg iat "$NOW" \
+            --arg exp "$EXP" \
+            --arg iss "$APP_ID" \
+            '{iat: ($iat|tonumber), exp: ($exp|tonumber), iss: ($iss|tonumber)}')
+
+          b64() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+
+          JWT="$(printf '%s' "$HEADER" | b64).$(printf '%s' "$PAYLOAD" | b64)"
+          SIG=$(printf '%s' "$JWT" | openssl dgst -sha256 -sign key.pem | b64)
+          JWT="$JWT.$SIG"
+
+          TOKEN=$(curl -s -X POST \
+            -H "Authorization: Bearer $JWT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens \
+            | jq -r .token)
+
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Encrypt token with SOPS
+        env:
+          SOPS_AGE_RECIPIENTS: age1rr569v9jm7ck70q4wpnspfhdvt4y5m6s604tx0ygs0a65qkt7g4qdszk6k
+        run: |
+          export GITHUB_TOKEN="${{ steps.gh-token.outputs.token }}"
+          yq -i '.stringData.token = strenv(GITHUB_TOKEN)' kubernetes/bootstrap/secrets/github-token.sops.yaml
+          sops -e -i kubernetes/bootstrap/secrets/github-token.sops.yaml
+
+      - name: Commit changes
+        env:
+          GIT_AUTHOR_NAME: ${{ secrets.GIT_AUTHOR_NAME || 'cert-rotator' }}
+          GIT_AUTHOR_EMAIL: ${{ secrets.GIT_AUTHOR_EMAIL || 'cert-rotator@users.noreply.github.com' }}
+        run: |
+          git config user.name "$GIT_AUTHOR_NAME"
+          git config user.email "$GIT_AUTHOR_EMAIL"
+          git add kubernetes/bootstrap/secrets/github-token.sops.yaml
+          if git diff --staged --quiet; then
+            git commit -m "chore: rotate github deploy token"
+            git push
+          fi

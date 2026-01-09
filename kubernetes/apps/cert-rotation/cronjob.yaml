@@ -1,0 +1,374 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cert-rotator
+  namespace: cert-rotation
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  schedule: "0 2 1 * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 3600
+      template:
+        spec:
+          serviceAccountName: cert-rotator
+          restartPolicy: OnFailure
+          containers:
+            - name: rotate-certs
+              image: ghcr.io/siderolabs/talosctl:v1.10.5
+              env:
+                # Cluster endpoints (from ConfigMap)
+                - name: TALOS_ENDPOINTS
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: talos-endpoints
+                - name: KUBERNETES_API_SERVER
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: kubernetes-api-server
+                # Talos config (from Secret)
+                - name: TALOSCONFIG
+                  value: /talosconfig/talosconfig
+                # Git configuration
+                - name: GIT_REPO
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: git-repo
+                - name: GIT_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: github-deploy-token
+                      key: username
+                - name: GIT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: github-deploy-token
+                      key: token
+                - name: GIT_AUTHOR_NAME
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: git-author-name
+                - name: GIT_AUTHOR_EMAIL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: git-author-email
+                # Certificate configuration
+                - name: CERT_ROLE
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: cert-role
+                - name: CERT_TTL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: cert-ttl
+                - name: KUBECTL_CONTEXT_NAME
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: kubectl-context-name
+                # Rotation configuration
+                - name: ROTATION_NAMESPACE_CLEANUP
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: rotation-namespace-cleanup
+                - name: MAX_JOB_RETRIES
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: max-job-retries
+                # Monitoring
+                - name: NOTIFICATION_WEBHOOK_URL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: notification-webhook-url
+                - name: PROMETHEUS_ALERTMANAGER_URL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cert-rotator-config
+                      key: prometheus-alertmanager-url
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  
+                  echo "=========================================="
+                  echo "Certificate Rotation Job Started"
+                  echo "=========================================="
+                  echo "Job: $(hostname)"
+                  echo "Started at: $(date -Iseconds)"
+                  echo ""
+                  
+                  RETRY_COUNT=0
+                  MAX_RETRIES=${MAX_JOB_RETRIES:-3}
+                  
+                  ROTATION_SUCCESS=false
+                  
+                  rotate_certs() {
+                    RETRY_COUNT=$((RETRY_COUNT + 1))
+                    echo "Rotation attempt $RETRY_COUNT of $MAX_RETRIES"
+                    echo ""
+                    
+                    if [ $RETRY_COUNT -gt $MAX_RETRIES ]; then
+                      echo "ERROR: Maximum retries ($MAX_RETRIES) exceeded"
+                      send_notification "Certificate Rotation FAILED (max retries exceeded)" "error"
+                      exit 1
+                    fi
+                    
+                    cd /workspace
+                    git init
+                    git config user.name "$GIT_AUTHOR_NAME"
+                    git config user.email "$GIT_AUTHOR_EMAIL"
+                    git remote add origin https://$(GIT_USERNAME):$(GIT_TOKEN)@github.com/$(GIT_REPO)
+                    git fetch origin main
+                    git checkout -b main origin/main
+                    
+                    echo "Step 1: Generating new talosconfig (self-rotation)..."
+                    talosctl config new /workspace/talosconfig-new \
+                      --roles os:admin \
+                      --crt-ttl $CERT_TTL
+                    
+                    if [ $? -ne 0 ]; then
+                      echo "ERROR: Failed to generate talosconfig"
+                      echo "Waiting 60 seconds before retry..."
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    echo "✓ Talosconfig generated successfully"
+                    echo ""
+                    
+                    mkdir -p /workspace/client-configs
+                    
+                    echo "Step 2: Encrypting and committing talosconfig..."
+                    sops --encrypt --age age1rr569v9jm7ck70q4wpnspfhdvt4y5m6s604tx0ygs0a65qkt7g4qdszk6k \
+                      /workspace/talosconfig-new \
+                      > /workspace/client-configs/talosconfig.sops.yaml
+                    
+                    if [ $? -ne 0 ]; then
+                      echo "ERROR: Failed to encrypt talosconfig"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    git add /workspace/client-configs/talosconfig.sops.yaml
+                    git commit -m "chore: rotate talosconfig"
+                    echo "✓ Talosconfig committed"
+                    echo ""
+                    
+                    echo "Step 3: Generating kubectl client config via CSR..."
+                    openssl genrsa -out /workspace/k8s-client.key 2048
+                    
+                    if [ $? -ne 0 ]; then
+                      echo "ERROR: Failed to generate private key"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    openssl req -new -key /workspace/k8s-client.key \
+                      -out /workspace/k8s-client.csr \
+                      -subj "/CN=$CERT_ROLE/O=cert-rotation"
+                    
+                    if [ $? -ne 0 ]; then
+                      echo "ERROR: Failed to create CSR"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    cat > /workspace/csr.yaml <<EOF
+                    apiVersion: certificates.k8s.io/v1
+                    kind: CertificateSigningRequest
+                    metadata:
+                      name: k8s-client-${CERT_ROLE}
+                    spec:
+                      request: $(cat /workspace/k8s-client.csr | base64 | tr -d '\n')
+                      signerName: kubernetes.io/kube-apiserver-client
+                      expirationSeconds: 31536000
+                    EOF
+                    
+                    kubectl apply -f /workspace/csr.yaml
+                    
+                    if [ $? -ne 0 ]; then
+                      echo "ERROR: Failed to apply CSR"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    echo "Waiting for CSR to be signed (max 5 minutes)..."
+                    for i in $(seq 1 60); do
+                      SIGNED_CERT=$(kubectl get csr k8s-client-${CERT_ROLE} -o jsonpath='{.status.certificate}')
+                      if [ -n "$SIGNED_CERT" ]; then
+                        echo "✓ Certificate signed after ${i}s"
+                        break
+                      fi
+                      sleep 5
+                    done
+                    
+                    if [ -z "$SIGNED_CERT" ]; then
+                      echo "ERROR: Certificate was not signed within timeout period"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    kubectl get csr k8s-client-${CERT_ROLE} -o jsonpath='{.status.certificate}' > /workspace/k8s-client.crt
+                    
+                    if [ $? -ne 0 ] || [ ! -s /workspace/k8s-client.crt ]; then
+                      echo "ERROR: Failed to extract signed certificate"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    # Get cluster CA certificate
+                    kubectl get configmap -n kube-system kube-root-ca.crt -o jsonpath='{.data.ca\.crt}' > /workspace/cluster-ca.crt
+                    
+                    if [ $? -ne 0 ] || [ ! -s /workspace/cluster-ca.crt ]; then
+                      echo "ERROR: Failed to get cluster CA certificate"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    # Build kubeconfig with correct structure
+                    kubectl config set-cluster k8s-cluster \
+                      --server=$KUBERNETES_API_SERVER \
+                      --certificate-authority-data="$(cat /workspace/cluster-ca.crt)" \
+                      --embed-certs=true
+                    
+                    kubectl config set-credentials $CERT_ROLE \
+                      --client-certificate=/workspace/k8s-client.crt \
+                      --client-key=/workspace/k8s-client.key \
+                      --embed-certs=true
+                    
+                    kubectl config set-context $KUBECTL_CONTEXT_NAME \
+                      --cluster=k8s-cluster \
+                      --user=$CERT_ROLE
+                    
+                    kubectl config use-context $KUBECTL_CONTEXT_NAME
+                    
+                    kubectl config view --raw --flatten > /workspace/kubeconfig-new
+                    
+                    if [ $? -ne 0 ] || [ ! -s /workspace/kubeconfig-new ]; then
+                      echo "ERROR: Failed to generate kubeconfig"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    echo "Step 4: Encrypting and committing kubeconfig..."
+                    sops --encrypt --age age1rr569v9jm7ck70q4wpnspfhdvt4y5m6s604tx0ygs0a65qkt7g4qdszk6k \
+                      /workspace/kubeconfig-new \
+                      > /workspace/client-configs/kubeconfig.sops.yaml
+                    
+                    if [ $? -ne 0 ]; then
+                      echo "ERROR: Failed to encrypt kubeconfig"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    git add /workspace/client-configs/kubeconfig.sops.yaml
+                    git commit -m "chore: rotate kubeconfig ($CERT_ROLE)"
+                    echo "✓ Kubeconfig committed"
+                    echo ""
+                    
+                    echo "Step 5: Pushing changes to git..."
+                    git push origin main
+                    
+                    if [ $? -ne 0 ]; then
+                      echo "ERROR: Failed to push to git"
+                      sleep 60
+                      rotate_certs
+                      return
+                    fi
+                    
+                    echo "✓ Changes pushed successfully"
+                    
+                    ROTATION_SUCCESS=true
+                    send_notification "Certificate Rotation SUCCESSFUL" "success"
+                  }
+                  
+                  send_notification() {
+                    local MESSAGE=$1
+                    local STATUS=$2
+                    
+                    if [ -n "$NOTIFICATION_WEBHOOK_URL" ]; then
+                      echo "Sending notification: $MESSAGE (status: $STATUS)"
+                      
+                      curl -X POST "$NOTIFICATION_WEBHOOK_URL" \
+                        -H "Content-Type: application/json" \
+                        -d "{
+                          \"text\": \"🔄 Certificate Rotation: $MESSAGE\",
+                          \"token\": \"${SECRET_PUSHOVER_PROD_TOKEN}\",
+                          \"user\": \"${SECRET_PUSHOVER_USER_KEY}\"
+                        }" || echo "WARNING: Failed to send notification"
+                    fi
+                    
+                    if [ -n "$PROMETHEUS_ALERTMANAGER_URL" ]; then
+                      echo "Sending Prometheus alert..."
+                      
+                      curl -X POST "$PROMETHEUS_ALERTMANAGER_URL/api/v1/alerts" \
+                        -H "Content-Type: application/json" \
+                        -d "{
+                          \"labels\": {
+                            \"alertname\": \"certificate-rotation\",
+                            \"severity\": \"$STATUS\"
+                          },
+                          \"annotations\": {
+                            \"summary\": \"$MESSAGE\",
+                            \"runbook_url\": \"https://github.com/lenaxia/talos-ops-prod/tree/main/kubernetes/apps/cert-rotation\"
+                          },
+                          \"startsAt\": \"$(date -Iseconds)\",
+                          \"generatorURL\": \"https://github.com/lenaxia/talos-ops-prod/tree/main/kubernetes/apps/cert-rotation/cronjob.yaml\",
+                          \"endsAt\": \"$(date -d '+1 minute' -Iseconds)\"
+                        }" || echo "WARNING: Failed to send Prometheus alert"
+                    fi
+                  }
+                  
+                  rotate_certs
+                  
+                  echo ""
+                  echo "=========================================="
+                  echo "Certificate Rotation Job Completed"
+                  echo "Status: $ROTATION_SUCCESS"
+                  echo "=========================================="
+                  echo ""
+                  
+                  if [ "$ROTATION_SUCCESS" = "true" ] && [ "$ROTATION_NAMESPACE_CLEANUP" = "true" ]; then
+                    echo "Cleaning up cert-rotation namespace..."
+                    kubectl delete namespace cert-rotation --timeout=60s
+                  fi
+              volumeMounts:
+                - name: talosconfig
+                  mountPath: /talosconfig
+                  readOnly: true
+                - name: workspace
+                  mountPath: /workspace
+          volumes:
+            - name: talosconfig
+              secret:
+                secretName: talosconfig
+            - name: workspace
+              emptyDir: {}
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
