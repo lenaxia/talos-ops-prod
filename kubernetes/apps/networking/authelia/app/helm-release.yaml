@@ -796,11 +796,11 @@ spec:
     ##
     ## Authelia Persistence Configuration.
     ##
-    #persistence:
-    #  config:
-    #    enabled: true
-    #    type: configMap
-    #    name: *appname
-    #    subPath: configuration.yml
-    #    mountPath: /config/configuration.yml
-    #    readOnly: false
+    persistence:
+      enabled: true
+      existingClaim: authelia-config
+      storageClass: longhorn
+      accessModes:
+        - ReadWriteOnce
+      size: 1Gi
+    
