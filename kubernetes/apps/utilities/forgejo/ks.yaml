@@ -10,7 +10,6 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
-    - name: cluster-databases-postgres-clusters
   path: ./kubernetes/apps/utilities/forgejo/app
   prune: true
   sourceRef:
