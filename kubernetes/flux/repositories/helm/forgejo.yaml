@@ -9,4 +9,4 @@ spec:
   interval: 12h
   url: oci://code.forgejo.org/forgejo-helm
   ref:
-    tag: 10.4.0
+    tag: 16.0.1
