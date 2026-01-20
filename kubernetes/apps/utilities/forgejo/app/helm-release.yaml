@@ -377,7 +377,7 @@ spec:
   # PostRenderers to inject init container for PostgreSQL setup
   postRenderers:
     - kustomize:
-        patches:
+        patchesJson6902:
           - target:
               kind: Deployment
               name: forgejo
