@@ -189,8 +189,8 @@ spec:
       oauth:
         - name: Authelia
           provider: openidConnect
-          existingSecret: forgejo
-          key: FORGEJO_OIDC_CLIENT_SECRET
+          key: forgejo
+          # secret injected via valuesFrom
           autoDiscoverUrl: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
           scopes: "openid profile email groups"
           iconUrl: https://www.authelia.com/images/branding/logo-cropped.png
@@ -256,3 +256,9 @@ spec:
       kind: Secret
       name: forgejo
       valuesKey: AWS_SECRET_ACCESS_KEY
+    
+    # OAuth secret for Authelia
+    - targetPath: gitea.oauth[0].secret
+      kind: Secret
+      name: forgejo
+      valuesKey: FORGEJO_OIDC_CLIENT_SECRET
