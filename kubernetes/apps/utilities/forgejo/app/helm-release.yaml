@@ -149,6 +149,16 @@ spec:
               FORGEJO__lfs__MINIO_BUCKET: ${S3_FORGEJO}
               FORGEJO__lfs__MINIO_LOCATION: local
               FORGEJO__lfs__MINIO_USE_SSL: "false"
+              FORGEJO__lfs__MINIO_ACCESS_KEY_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: forgejo
+                    key: AWS_ACCESS_KEY_ID
+              FORGEJO__lfs__MINIO_SECRET_ACCESS_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: forgejo
+                    key: AWS_SECRET_ACCESS_KEY
               
               # Packages/Container Registry - inherits from storage settings
               FORGEJO__packages__ENABLED: "true"
@@ -157,6 +167,16 @@ spec:
               FORGEJO__packages__MINIO_BUCKET: ${S3_FORGEJO}
               FORGEJO__packages__MINIO_LOCATION: local
               FORGEJO__packages__MINIO_USE_SSL: "false"
+              FORGEJO__packages__MINIO_ACCESS_KEY_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: forgejo
+                    key: AWS_ACCESS_KEY_ID
+              FORGEJO__packages__MINIO_SECRET_ACCESS_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: forgejo
+                    key: AWS_SECRET_ACCESS_KEY
               
               # Mailer (optional - can be configured later)
               FORGEJO__mailer__ENABLED: "false"
