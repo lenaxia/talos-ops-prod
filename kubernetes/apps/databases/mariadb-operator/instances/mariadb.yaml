@@ -17,7 +17,7 @@ spec:
 
   storage:
     size: 5Gi
-    storageClassName: openebs-hostpath
+    storageClassName: longhorn
     resizeInUseVolumes: true
     waitForVolumeResize: true
 
