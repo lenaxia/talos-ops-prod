@@ -113,7 +113,7 @@ spec:
     gitea:
       admin:
         existingSecret: forgejo-secret
-        username: forgejo-admin
+        username: lenaxia
         email: admin@${SECRET_DEV_DOMAIN}
         passwordMode: keepUpdated
 
