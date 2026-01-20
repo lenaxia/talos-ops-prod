@@ -1,12 +1,15 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/ocirepository-source-v1.json
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: OCIRepository
 metadata:
   name: forgejo
   namespace: flux-system
 spec:
   interval: 12h
-  url: oci://code.forgejo.org/forgejo-helm
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy
+  url: oci://code.forgejo.org/forgejo-helm/forgejo
   ref:
-    tag: 10.4.0
+    tag: 16.0.1
