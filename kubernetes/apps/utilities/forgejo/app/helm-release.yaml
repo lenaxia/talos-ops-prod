@@ -47,31 +47,6 @@ spec:
         add: ["SYS_CHROOT"]
         drop: ["ALL"]
 
-    # Init Containers for PostgreSQL Setup
-    initContainers:
-      - name: 01-init-db
-        image: ghcr.io/onedr0p/postgres-init:17.4
-        env:
-          - name: INIT_POSTGRES_HOST
-            value: ${SVC_POSTGRES}
-          - name: INIT_POSTGRES_DBNAME
-            value: forgejo
-          - name: INIT_POSTGRES_SUPER_PASS
-            valueFrom:
-              secretKeyRef:
-                name: postgres-superuser
-                key: password
-          - name: INIT_POSTGRES_USER
-            valueFrom:
-              secretKeyRef:
-                name: forgejo-secret
-                key: INIT_POSTGRES_USER
-          - name: INIT_POSTGRES_PASS
-            valueFrom:
-              secretKeyRef:
-                name: forgejo-secret
-                key: INIT_POSTGRES_PASS
-
     # Resources
     resources:
       requests:
@@ -390,3 +365,12 @@ spec:
       enabled: false
     valkey-cluster:
       enabled: false
+  
+  # PostRenderers to inject init container for PostgreSQL setup
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: forgejo
+            path: ./patches/init-postgres.yaml
