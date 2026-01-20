@@ -46,6 +46,10 @@ spec:
       rootless: true
     
     # Security context for rootless
+    podSecurityContext:
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+    
     containerSecurityContext:
       capabilities:
         add: ["SYS_CHROOT"]
@@ -63,6 +67,13 @@ spec:
       enabled: true
       create: false
       claimName: forgejo-data-volume
+    
+    # Disable default init containers that try to set permissions
+    # The PVC should already have correct permissions via fsGroup
+    initPreScript: |
+      #!/bin/sh
+      set -eu
+      # Init containers disabled - using fsGroup for permissions
     
     # Service configuration
     service:
