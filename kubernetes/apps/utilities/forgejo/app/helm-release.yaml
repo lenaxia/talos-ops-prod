@@ -307,7 +307,7 @@ spec:
           provider: openidConnect
           existingSecret: forgejo-secret
           key: oauth-secret
-          autoDiscoverUrl: https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/.well-known/openid-configuration
+          autoDiscoverUrl: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
           iconUrl: https://www.authelia.com/images/branding/logo-cropped.png
           scopes: openid email profile groups
           groupClaimName: groups
