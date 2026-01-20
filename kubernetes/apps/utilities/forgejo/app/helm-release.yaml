@@ -130,6 +130,7 @@ spec:
               FORGEJO__storage__SERVE_DIRECT: "false"
               FORGEJO__storage__MINIO_ENDPOINT: minio.storage.svc.cluster.local:9000
               FORGEJO__storage__MINIO_BUCKET: ${S3_FORGEJO}
+              FORGEJO__storage__MINIO_LOCATION: local
               FORGEJO__storage__MINIO_USE_SSL: "false"
               FORGEJO__storage__MINIO_ACCESS_KEY_ID:
                 valueFrom:
