@@ -143,12 +143,20 @@ spec:
                     name: forgejo
                     key: AWS_SECRET_ACCESS_KEY
               
-              # LFS (Large File Storage)
+              # LFS (Large File Storage) - inherits from storage settings
               FORGEJO__lfs__STORAGE_TYPE: minio
+              FORGEJO__lfs__MINIO_ENDPOINT: minio.storage.svc.cluster.local:9000
+              FORGEJO__lfs__MINIO_BUCKET: ${S3_FORGEJO}
+              FORGEJO__lfs__MINIO_LOCATION: local
+              FORGEJO__lfs__MINIO_USE_SSL: "false"
               
-              # Packages/Container Registry
+              # Packages/Container Registry - inherits from storage settings
               FORGEJO__packages__ENABLED: "true"
               FORGEJO__packages__STORAGE_TYPE: minio
+              FORGEJO__packages__MINIO_ENDPOINT: minio.storage.svc.cluster.local:9000
+              FORGEJO__packages__MINIO_BUCKET: ${S3_FORGEJO}
+              FORGEJO__packages__MINIO_LOCATION: local
+              FORGEJO__packages__MINIO_USE_SSL: "false"
               
               # Mailer (optional - can be configured later)
               FORGEJO__mailer__ENABLED: "false"
