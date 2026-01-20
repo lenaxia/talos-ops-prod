@@ -25,6 +25,7 @@ resources:
   - ealenn-charts.yaml
   - external-dns.yaml
   - fission-charts.yaml
+  - forgejo.yaml
   - go-skynet-charts.yaml
   - grafana-charts.yaml
   - hajimari-charts.yaml
