@@ -47,6 +47,14 @@ spec:
         add: ["SYS_CHROOT"]
         drop: ["ALL"]
 
+    # Init Containers Resources (for chart's built-in init containers)
+    initContainers:
+      resources:
+        limits: {}
+        requests:
+          cpu: 100m
+          memory: 128Mi
+
     # Resources
     resources:
       requests:
