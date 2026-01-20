@@ -1,0 +1,31 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: 01-init-db
+          image: ghcr.io/onedr0p/postgres-init:17.4
+          env:
+            - name: INIT_POSTGRES_HOST
+              value: defaultpg-rw.databases.svc.cluster.local
+            - name: INIT_POSTGRES_DBNAME
+              value: forgejo
+            - name: INIT_POSTGRES_SUPER_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-superuser
+                  key: password
+            - name: INIT_POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-secret
+                  key: INIT_POSTGRES_USER
+            - name: INIT_POSTGRES_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-secret
+                  key: INIT_POSTGRES_PASS
