@@ -228,7 +228,7 @@ spec:
         tls:
           - hosts:
               - *host
-            secretName: forgejo-tls
+            secretName: *host
     
     persistence:
       data:
