@@ -130,6 +130,7 @@ spec:
               FORGEJO__storage__SERVE_DIRECT: "false"
               FORGEJO__storage__MINIO_ENDPOINT: minio.storage.svc.cluster.local:9000
               FORGEJO__storage__MINIO_BUCKET: ${S3_FORGEJO}
+              FORGEJO__storage__MINIO_LOCATION: local
               FORGEJO__storage__MINIO_USE_SSL: "false"
               FORGEJO__storage__MINIO_ACCESS_KEY_ID:
                 valueFrom:
@@ -142,12 +143,40 @@ spec:
                     name: forgejo
                     key: AWS_SECRET_ACCESS_KEY
               
-              # LFS (Large File Storage)
+              # LFS (Large File Storage) - inherits from storage settings
               FORGEJO__lfs__STORAGE_TYPE: minio
+              FORGEJO__lfs__MINIO_ENDPOINT: minio.storage.svc.cluster.local:9000
+              FORGEJO__lfs__MINIO_BUCKET: ${S3_FORGEJO}
+              FORGEJO__lfs__MINIO_LOCATION: local
+              FORGEJO__lfs__MINIO_USE_SSL: "false"
+              FORGEJO__lfs__MINIO_ACCESS_KEY_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: forgejo
+                    key: AWS_ACCESS_KEY_ID
+              FORGEJO__lfs__MINIO_SECRET_ACCESS_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: forgejo
+                    key: AWS_SECRET_ACCESS_KEY
               
-              # Packages/Container Registry
+              # Packages/Container Registry - inherits from storage settings
               FORGEJO__packages__ENABLED: "true"
               FORGEJO__packages__STORAGE_TYPE: minio
+              FORGEJO__packages__MINIO_ENDPOINT: minio.storage.svc.cluster.local:9000
+              FORGEJO__packages__MINIO_BUCKET: ${S3_FORGEJO}
+              FORGEJO__packages__MINIO_LOCATION: local
+              FORGEJO__packages__MINIO_USE_SSL: "false"
+              FORGEJO__packages__MINIO_ACCESS_KEY_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: forgejo
+                    key: AWS_ACCESS_KEY_ID
+              FORGEJO__packages__MINIO_SECRET_ACCESS_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: forgejo
+                    key: AWS_SECRET_ACCESS_KEY
               
               # Mailer (optional - can be configured later)
               FORGEJO__mailer__ENABLED: "false"
@@ -187,10 +216,10 @@ spec:
                   httpGet:
                     path: /api/healthz
                     port: 3000
-                  initialDelaySeconds: 15
-                  periodSeconds: 5
-                  timeoutSeconds: 1
-                  failureThreshold: 30
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 2
+                  failureThreshold: 60
             
             resources:
               requests:
