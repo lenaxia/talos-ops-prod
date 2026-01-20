@@ -166,7 +166,7 @@ spec:
           STORAGE_TYPE: minio
           MINIO_ENDPOINT: s3.${SECRET_DEV_DOMAIN}
           MINIO_BUCKET: ${S3_FORGEJO}
-          MINIO_LOCATION: us-east-1
+          MINIO_LOCATION: local
           MINIO_USE_SSL: true
 
         # Repository Settings
