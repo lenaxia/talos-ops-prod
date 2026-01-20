@@ -111,12 +111,11 @@ spec:
 
     # Forgejo Configuration
     gitea:
-      # Admin - temporarily disabled to get deployment running
-      # admin:
-      #   existingSecret: forgejo-secret
-      #   username: lenaxia
-      #   email: admin@${SECRET_DEV_DOMAIN}
-      #   passwordMode: keepUpdated
+      admin:
+        existingSecret: forgejo-secret
+        username: lenaxia
+        email: admin@${SECRET_DEV_DOMAIN}
+        passwordMode: keepUpdated
 
       podAnnotations:
         reloader.stakater.com/search: "true"
@@ -302,17 +301,17 @@ spec:
           PULL_REQUEST_PUSH_MESSAGE: true
           VERBOSE_PUSH: true
 
-      # OAuth Provider (Authelia) - temporarily disabled
-      # oauth:
-      #   - name: Authelia
-      #     provider: openidConnect
-      #     existingSecret: forgejo-secret
-      #     key: oauth-secret
-      #     autoDiscoverUrl: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
-      #     iconUrl: https://www.authelia.com/images/branding/logo-cropped.png
-      #     scopes: openid email profile groups
-      #     groupClaimName: groups
-      #     adminGroup: admins
+      # OAuth Provider (Authelia)
+      oauth:
+        - name: Authelia
+          provider: openidConnect
+          existingSecret: forgejo-secret
+          key: oauth-secret
+          autoDiscoverUrl: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
+          iconUrl: https://www.authelia.com/images/branding/logo-cropped.png
+          scopes: openid email profile groups
+          groupClaimName: groups
+          adminGroup: admins
 
       # Additional Config from Environment
       additionalConfigFromEnvs:
