@@ -114,7 +114,7 @@ spec:
         # Database (PostgreSQL)
         database:
           DB_TYPE: postgres
-          HOST: defaultpg-rw.default.svc.cluster.local:5432
+          HOST: defaultpg-rw.databases.svc.cluster.local:5432
           NAME: forgejo
           USER: forgejo
           SSL_MODE: disable
