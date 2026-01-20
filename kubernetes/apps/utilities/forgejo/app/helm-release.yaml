@@ -28,8 +28,8 @@ spec:
   values:
     defaultPodOptions:
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
+        # Forgejo container needs to run as root initially for s6-overlay
+        # It will drop privileges to UID 1000 (git user) after initialization
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
       nodeSelector:
