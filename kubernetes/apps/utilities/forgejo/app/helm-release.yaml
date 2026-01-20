@@ -141,24 +141,22 @@ spec:
           DB_TYPE: sqlite3
           LOG_SQL: false
 
-        # Redis Configuration
+        # Redis Configuration - DISABLED
         cache:
-          ENABLED: true
-          ADAPTER: redis
-          HOST: redis://${SVC_REDIS}:6379
+          ENABLED: false
+          ADAPTER: memory
         
         session:
-          PROVIDER: redis
-          PROVIDER_CONFIG: redis://${SVC_REDIS}:6379
+          PROVIDER: memory
+          PROVIDER_CONFIG:
           COOKIE_SECURE: true
           DOMAIN: git.${SECRET_DEV_DOMAIN}
           COOKIE_NAME: forgejo_session
           SESSION_LIFE_TIME: 86400
           SAME_SITE: lax
-
+        
         queue:
-          TYPE: redis
-          CONN_STR: redis://${SVC_REDIS}:6379
+          TYPE: channel
 
         # S3 Storage (MinIO)
         storage:
