@@ -1,0 +1,392 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app forgejo
+  namespace: utilities
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: forgejo
+    namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 5
+      strategy: rollback
+  values:
+    # Deployment Strategy
+    replicaCount: 1
+    strategy:
+      type: Recreate
+
+    # Container Image
+    image:
+      registry: code.forgejo.org
+      repository: forgejo/forgejo
+      tag: 9.0.1
+      rootless: true
+
+    # Security Context
+    podSecurityContext:
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+
+    containerSecurityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        add: ["SYS_CHROOT"]
+        drop: ["ALL"]
+
+    # Init Containers for PostgreSQL Setup
+    initContainers:
+      - name: 01-init-db
+        image: ghcr.io/onedr0p/postgres-init:17.4
+        env:
+          - name: INIT_POSTGRES_HOST
+            value: ${SVC_POSTGRES}
+          - name: INIT_POSTGRES_DBNAME
+            value: forgejo
+          - name: INIT_POSTGRES_SUPER_PASS
+            valueFrom:
+              secretKeyRef:
+                name: postgres-superuser
+                key: password
+          - name: INIT_POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-secret
+                key: INIT_POSTGRES_USER
+          - name: INIT_POSTGRES_PASS
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-secret
+                key: INIT_POSTGRES_PASS
+
+    # Resources
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+
+    # Services
+    service:
+      http:
+        type: ClusterIP
+        port: 3000
+      ssh:
+        type: LoadBalancer
+        port: 2222
+        loadBalancerIP: ${SVC_FORGEJO_SSH_ADDR}
+        annotations:
+          metallb.universe.tf/address-pool: dev-infra
+        externalTrafficPolicy: Local
+
+    # Ingress
+    ingress:
+      enabled: true
+      annotations:
+        hajimari.io/enable: "true"
+        hajimari.io/icon: git
+        hajimari.io/group: Development
+        cert-manager.io/cluster-issuer: letsencrypt-production
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+      className: traefik
+      hosts:
+        - host: &host git.${SECRET_DEV_DOMAIN}
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - hosts:
+            - *host
+          secretName: *host
+
+    # Persistence
+    persistence:
+      enabled: true
+      mount: true
+      create: false
+      claimName: forgejo-config
+
+    # Node Selection
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
+
+    # Forgejo Configuration
+    gitea:
+      admin:
+        existingSecret: forgejo-secret
+        username: forgejo-admin
+        email: admin@${SECRET_DEV_DOMAIN}
+        passwordMode: keepUpdated
+
+      podAnnotations:
+        reloader.stakater.com/search: "true"
+
+      config:
+        APP_NAME: "Forgejo Git Service"
+        
+        # Server Configuration
+        server:
+          DOMAIN: git.${SECRET_DEV_DOMAIN}
+          ROOT_URL: https://git.${SECRET_DEV_DOMAIN}
+          DISABLE_SSH: false
+          SSH_DOMAIN: git.${SECRET_DEV_DOMAIN}
+          SSH_PORT: 2222
+          SSH_LISTEN_PORT: 2222
+          ENABLE_GZIP: true
+          LFS_START_SERVER: true
+          OFFLINE_MODE: false
+          LANDING_PAGE: explore
+
+        # Database Configuration (PostgreSQL)
+        database:
+          DB_TYPE: postgres
+          HOST: ${SVC_POSTGRES}:5432
+          SSL_MODE: disable
+          LOG_SQL: false
+
+        # Redis Configuration
+        cache:
+          ENABLED: true
+          ADAPTER: redis
+          HOST: redis://${SVC_REDIS}:6379
+        
+        session:
+          PROVIDER: redis
+          PROVIDER_CONFIG: redis://${SVC_REDIS}:6379
+          COOKIE_SECURE: true
+          DOMAIN: git.${SECRET_DEV_DOMAIN}
+          COOKIE_NAME: forgejo_session
+          SESSION_LIFE_TIME: 86400
+          SAME_SITE: lax
+
+        queue:
+          TYPE: redis
+          CONN_STR: redis://${SVC_REDIS}:6379
+
+        # S3 Storage (MinIO)
+        storage:
+          STORAGE_TYPE: minio
+          MINIO_ENDPOINT: s3.${SECRET_DEV_DOMAIN}
+          MINIO_BUCKET: ${S3_FORGEJO}
+          MINIO_LOCATION: us-east-1
+          MINIO_USE_SSL: true
+
+        # Repository Settings
+        repository:
+          DEFAULT_BRANCH: main
+          DEFAULT_PRIVATE: private
+          ENABLE_PUSH_CREATE_USER: true
+          DISABLE_HTTP_GIT: false
+
+        # Security Settings
+        security:
+          PASSWORD_HASH_ALGO: argon2
+          PASSWORD_COMPLEXITY: lower,upper,digit,spec
+          PASSWORD_CHECK_PWN: true
+          MIN_PASSWORD_LENGTH: 12
+          REVERSE_PROXY_LIMIT: 1
+          REVERSE_PROXY_AUTHENTICATION: false
+          REVERSE_PROXY_TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+
+        # Service Settings
+        service:
+          DISABLE_REGISTRATION: true
+          REQUIRE_SIGNIN_VIEW: false
+          REGISTER_EMAIL_CONFIRM: false
+          ENABLE_NOTIFY_MAIL: true
+          DEFAULT_KEEP_EMAIL_PRIVATE: true
+          DEFAULT_ALLOW_CREATE_ORGANIZATION: true
+          DEFAULT_ENABLE_TIMETRACKING: true
+          ENABLE_USER_HEATMAP: true
+          AUTO_WATCH_NEW_REPOS: true
+          SHOW_REGISTRATION_BUTTON: false
+          VALID_SITE_URL_SCHEMES: https
+
+        # OpenID/OAuth Settings
+        openid:
+          ENABLE_OPENID_SIGNIN: false
+          ENABLE_OPENID_SIGNUP: true
+
+        oauth2_client:
+          ENABLE_AUTO_REGISTRATION: true
+          ACCOUNT_LINKING: auto
+          USERNAME: preferred_username
+          UPDATE_AVATAR: true
+          OPENID_CONNECT_SCOPES: openid email profile groups
+
+        # Mailer Configuration
+        mailer:
+          ENABLED: true
+          PROTOCOL: smtp+starttls
+          SMTP_ADDR: ${SECRET_AWS_SMTP_HOST}
+          SMTP_PORT: ${SECRET_AWS_SMTP_PORT}
+          FROM: "Forgejo <forgejo@${SECRET_DEV_DOMAIN}>"
+          USER: ${SECRET_AWS_SMTP_USER}
+          PASSWD: ${SECRET_AWS_SMTP_PASSWORD}
+
+        # Cron Jobs
+        cron:
+          ENABLED: true
+        
+        cron.git_gc_repos:
+          ENABLED: true
+          SCHEDULE: "@every 168h"
+          TIMEOUT: 60s
+          ARGS: "--aggressive --auto"
+
+        cron.update_mirrors:
+          SCHEDULE: "@every 10m"
+          PULL_LIMIT: 50
+          PUSH_LIMIT: 50
+
+        cron.cleanup_actions:
+          ENABLED: true
+          SCHEDULE: "@midnight"
+
+        # Indexer Settings
+        indexer:
+          REPO_INDEXER_ENABLED: true
+          REPO_INDEXER_REPO_TYPES: sources,forks,mirrors,templates
+          ISSUE_INDEXER_TYPE: db
+
+        # Actions (CI/CD)
+        actions:
+          ENABLED: true
+          DEFAULT_ACTIONS_URL: https://github.com
+          ARTIFACT_RETENTION_DAYS: 90
+          LOG_RETENTION_DAYS: 365
+          LOG_COMPRESSION: zstd
+
+        # Federation
+        federation:
+          ENABLED: true
+
+        # Metrics
+        metrics:
+          ENABLED: true
+
+        # UI Settings
+        ui:
+          DEFAULT_THEME: forgejo-auto
+          SHOW_USER_EMAIL: false
+          AMBIGUOUS_UNICODE_DETECTION: true
+          DEFAULT_SHOW_FULL_NAME: true
+          FEED_MAX_COMMIT_NUM: 10
+          GRAPH_MAX_COMMIT_NUM: 100
+
+        # Time Settings
+        time:
+          DEFAULT_UI_LOCATION: ${TIMEZONE}
+
+        # Markdown
+        markdown:
+          ENABLE_HARD_LINE_BREAK_IN_COMMENTS: true
+          ENABLE_MATH: true
+
+        # Webhook Settings
+        webhook:
+          ALLOWED_HOST_LIST: external
+          SKIP_TLS_VERIFY: false
+          DELIVER_TIMEOUT: 10
+
+        # API Settings
+        api:
+          ENABLE_SWAGGER: true
+          MAX_RESPONSE_ITEMS: 50
+          DEFAULT_PAGING_NUM: 30
+
+        # Git Settings
+        git:
+          DISABLE_DIFF_HIGHLIGHT: false
+          MAX_GIT_DIFF_LINES: 1000
+          MAX_GIT_DIFF_FILES: 100
+          ENABLE_AUTO_GIT_WIRE_PROTOCOL: true
+          PULL_REQUEST_PUSH_MESSAGE: true
+          VERBOSE_PUSH: true
+
+      # OAuth Provider (Authelia)
+      oauth:
+        - name: Authelia
+          provider: openidConnect
+          existingSecret: forgejo-secret
+          key: oauth-secret
+          autoDiscoverUrl: https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/.well-known/openid-configuration
+          iconUrl: https://www.authelia.com/images/branding/logo-cropped.png
+          scopes: openid email profile groups
+          groupClaimName: groups
+          adminGroup: admins
+
+      # Additional Config from Environment
+      additionalConfigFromEnvs:
+        # Database credentials from init container
+        - name: GITEA__DATABASE__NAME
+          value: forgejo
+        - name: GITEA__DATABASE__USER
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-secret
+              key: INIT_POSTGRES_USER
+        - name: GITEA__DATABASE__PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-secret
+              key: INIT_POSTGRES_PASS
+        
+        # Security keys
+        - name: GITEA__SECURITY__SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-secret
+              key: SECRET_KEY
+        - name: GITEA__SECURITY__INTERNAL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-secret
+              key: INTERNAL_TOKEN
+        
+        # S3/MinIO credentials
+        - name: GITEA__STORAGE__MINIO_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-secret
+              key: MINIO_ACCESS_KEY_ID
+        - name: GITEA__STORAGE__MINIO_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-secret
+              key: MINIO_SECRET_ACCESS_KEY
+
+      # Prometheus Metrics
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          namespace: monitoring
+          additionalLabels:
+            release: kube-prometheus-stack
+
+    # Disable built-in databases
+    postgresql:
+      enabled: false
+    postgresql-ha:
+      enabled: false
+    redis-cluster:
+      enabled: false
+    valkey-cluster:
+      enabled: false
