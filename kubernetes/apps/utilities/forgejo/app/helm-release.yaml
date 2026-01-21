@@ -304,12 +304,12 @@ spec:
         - name: Authelia
           provider: openidConnect
           existingSecret: forgejo-secret
-          key: oauth-secret
+          key: key
           autoDiscoverUrl: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
           iconUrl: https://www.authelia.com/images/branding/logo-cropped.png
           scopes: openid email profile groups
           groupClaimName: groups
-          adminGroup: admins
+          adminGroup: adminstrators
 
       # Additional Config from Environment
       additionalConfigFromEnvs:
