@@ -74,7 +74,10 @@ spec:
         port: 2222
         loadBalancerIP: ${SVC_FORGEJO_SSH_ADDR}
         annotations:
-          metallb.universe.tf/address-pool: dev-infra
+          external-dns.home.arpa/enabled: "true"
+          external-dns.alpha.kubernetes.io/hostname: "git.${SECRET_DEV_DOMAIN}"
+        labels:
+          cilium.io/l2-ip-pool: reserved
         externalTrafficPolicy: Local
 
     # Ingress
