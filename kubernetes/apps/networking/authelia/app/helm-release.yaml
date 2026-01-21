@@ -693,7 +693,7 @@ spec:
             userinfo_signing_algorithm: none
           - id: forgejo
             description: Forgejo Git Service
-            secret: ${SECRET_FORGEJO_OAUTH_CLIENT_SECRET}
+            secret: "${SECRET_FORGEJO_OAUTH_CLIENT_SECRET}"
             public: false
             authorization_policy: one_factor
             consent_mode: implicit
