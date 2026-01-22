@@ -71,7 +71,4 @@ spec:
     timeoutSeconds: 5
   
   metrics:
-    enabled: true
-    exporter:
-      image: prom/mysqld-exporter:v0.15.1
-      port: 9104
+    enabled: false
