@@ -578,11 +578,11 @@ spec:
             secret_name: authelia
             path: SMTP_PASSWORD
     
-      identity_providers:
+       identity_providers:
         oidc:
           ## Enables this in the config map. Currently in beta stage.
           ## See https://www.authelia.com/r/openid-connect/
-          enabled: true
+          enabled: false
 
           ## OIDC HMAC Secret
           hmac_secret:
