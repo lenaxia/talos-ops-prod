@@ -5,7 +5,7 @@ resources:
   - ./redis/ks.yaml
   - ./cloudnative-pg/ks.yaml
   - ./mariadb-operator/ks.yaml
-  - ./mariadb/ks.yaml
+    #- ./mariadb/ks.yaml
     #- ./influxdb/ks.yaml
     #- ./telegraf/ks.yaml
     #- ./chronograf/ks.yaml
