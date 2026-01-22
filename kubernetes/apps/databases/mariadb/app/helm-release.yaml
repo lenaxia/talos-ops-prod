@@ -12,7 +12,7 @@ spec:
       chart: mariadb
       version: 23.2.4
       sourceRef:
-        kind: OCIRepository
+        kind: HelmRepository
         name: bitnami
         namespace: flux-system
   maxHistory: 3
