@@ -238,6 +238,7 @@ spec:
                   aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
                   aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
                   aws_region_name: os.environ/AWS_REGION_NAME
+                  additional_drop_params: ["parent_id"]
                 model_info:
                   supported_openai_params: ["max_tokens", "max_completion_tokens", "stream", "stream_options", "stop", "temperature", "top_p", "extra_headers", "response_format", "requestMetadata", "service_tier", "tools", "tool_choice", "thinking", "reasoning_effort"]
               #- model_name: bedrock-claude-v2-haiku
