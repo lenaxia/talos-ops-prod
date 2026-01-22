@@ -18,7 +18,6 @@ resources:
   - authelia-charts.yaml
   - backube.yaml
   - bitnami-charts.yaml
-  - bitnami-oci.yaml
   - cloudnative-pg-charts.yaml
   - mariadb-operator-charts.yaml
   - csi-driver-nfs-charts.yaml
