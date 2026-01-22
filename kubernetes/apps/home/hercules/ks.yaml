@@ -10,7 +10,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
-    - name: cluster-databases-mariadb
+    - name: cluster-databases-mariadb-instances
   path: ./kubernetes/apps/home/hercules/classic
   prune: true
   sourceRef:
@@ -37,7 +37,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
-    - name: cluster-databases-mariadb
+    - name: cluster-databases-mariadb-instances
   path: ./kubernetes/apps/home/hercules/renewal
   prune: true
   sourceRef:
