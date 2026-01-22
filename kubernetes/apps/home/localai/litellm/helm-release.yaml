@@ -235,10 +235,11 @@ spec:
               - model_name: bedrock-claude-sonnet-4.5
                 litellm_params:
                   model: bedrock/global.anthropic.claude-sonnet-4-5-20250929-v1:0
-                  aws_region_name: us-west-2
                   aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
                   aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
                   aws_region_name: os.environ/AWS_REGION_NAME
+                model_info:
+                  supported_openai_params: ["max_tokens", "max_completion_tokens", "stream", "stream_options", "stop", "temperature", "top_p", "extra_headers", "response_format", "requestMetadata", "service_tier", "tools", "tool_choice", "thinking", "reasoning_effort"]
               #- model_name: bedrock-claude-v2-haiku
               #  litellm_params:
               #    model: bedrock/anthropic.claude-3-haiku-20240307-v1:0
