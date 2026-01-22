@@ -44,13 +44,13 @@ spec:
               - name: INIT_MYSQL_HOST
                 valueFrom:
                   secretKeyRef:
-                    name: mariadb-secret
+                    name: mariadb-operator-connection
                     key: host
               - name: INIT_MYSQL_SUPER_PASS
                 valueFrom:
                   secretKeyRef:
-                    name: mariadb-secret
-                    key: mariadb-root-password
+                    name: mariadb-operator-secret
+                    key: root-password
               - name: INIT_MYSQL_USER
                 valueFrom:
                   secretKeyRef:
@@ -84,12 +84,12 @@ spec:
               - name: MYSQL_HOST
                 valueFrom:
                   secretKeyRef:
-                    name: mariadb-secret
-                    key: ip
+                    name: mariadb-operator-connection
+                    key: host
               - name: MYSQL_PORT
                 valueFrom:
                   secretKeyRef:
-                    name: mariadb-secret
+                    name: mariadb-operator-connection
                     key: port
 
     service:

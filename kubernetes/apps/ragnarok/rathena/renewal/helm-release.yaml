@@ -39,13 +39,25 @@ spec:
               - name: MYSQL_HOST
                 valueFrom:
                   secretKeyRef:
-                    name: mariadb-secret
-                    key: ip
+                    name: mariadb-operator-connection
+                    key: host
               - name: MYSQL_PORT
                 valueFrom:
                   secretKeyRef:
-                    name: mariadb-secret
+                    name: mariadb-operator-connection
                     key: port
+              - name: MYSQL_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-operator-connection
+                    key: username
+              - name: MYSQL_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-operator-connection
+                    key: password
+              - name: MYSQL_DATABASE
+                value: ragnarok
               - name: SET_SERVER_NAME
                 value: "rAthena"
               - name: MYSQL_DROP_DB
