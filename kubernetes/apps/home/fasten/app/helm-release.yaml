@@ -21,15 +21,15 @@ spec:
     controllers:
       main:
         containers:
-          main:
-            image:
-              repository: ghcr.io/fastenhealth/fasten-onprem
-              tag: v0.0.8
-            envFrom:
-              - secretRef:
-                  name: fasten
-            env:
-              TZ: ${TIMEZONE}
+           main:
+             image:
+               repository: ghcr.io/fastenhealth/fasten-onprem
+               tag: v1.1.3
+             envFrom:
+               - secretRef:
+                   name: fasten
+             env:
+               TZ: ${TIMEZONE}
     service:
       main:
         ports:
