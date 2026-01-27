@@ -229,8 +229,8 @@ jobs:
           Now, analyze the issue and take the appropriate action.
           PROMPT_EOF
 
-          # Run opencode with the prompt file
-          opencode run -m vllm-local/default -f .tmp/issue-prompt.txt
+          # Run opencode with the prompt
+          opencode run -m vllm-local/default "$(cat .tmp/issue-prompt.txt)"
 
       - name: Upload generated artifacts
         if: always()
