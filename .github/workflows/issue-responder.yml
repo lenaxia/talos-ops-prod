@@ -90,34 +90,56 @@ jobs:
           Read and understand what lenaxia is asking for. This is NOT keyword-based. Use your understanding to determine:
 
           - What does the user want to accomplish?
+          - Is this a question that needs investigation/research?
+          - Is this asking for information about the cluster/configuration?
           - Is this a request to implement something new?
-          - Is this a question or clarification request?
-          - Is this asking for documentation?
-          - Is this a bug report or issue?
+          - Is this asking for documentation or explanation?
+          - Is this a bug report or issue investigation?
           - Is this requesting a change to existing code?
+          - Does this require exploring the codebase to understand current state?
 
           Step 2: Determine the appropriate action
 
           Based on your analysis, choose the best course of action:
 
-          Option A: Implement the request (create a PR)
-          If the request is clear and actionable:
+          Option A: Investigation/Research (answer questions)
+          If the request is asking about the current state, configuration, or how things work:
+          - Thoroughly investigate the repository to understand the topic
+          - Search through relevant files (kubernetes manifests, configs, workflows)
+          - Analyze the current implementation/configuration
+          - Provide a comprehensive answer with:
+            * Current state/configuration details
+            * Relevant file paths and line numbers for reference
+            * Explanation of how things currently work
+            * Any recommendations or insights
+          - Add a detailed comment to the issue with your findings
+          - Don't create a PR unless changes are explicitly requested
+
+          Examples of investigation requests:
+          - "How is authentication currently configured?"
+          - "What services are running in the media namespace?"
+          - "Why is my deployment failing?"
+          - "What's the current storage configuration?"
+          - "How does certificate management work in this cluster?"
+
+          Option B: Implement the request (create a PR)
+          If the request is clear and actionable for changes:
           - Create a new branch: feat/issue-${{ github.event.issue.number }}-<short-description>
           - Implement the requested changes using appropriate patterns from the repository
           - Create a pull request
           - Comment on the issue with the PR link and summary
 
-          Option B: Ask for clarification
+          Option C: Ask for clarification
           If the request is ambiguous or unclear:
           - Add a comment to the issue asking specific questions
           - Don't create a PR yet
 
-          Option C: Provide information/documentation
-          If the user is asking a question or wants information:
+          Option D: Provide information/documentation
+          If the user is asking a general question or wants information:
           - Add a detailed comment to the issue answering their question
           - Don't create a PR
 
-          Option D: Decline with explanation
+          Option E: Decline with explanation
           If the request:
           - Involves creating/managing secrets (explain user must handle)
           - Is outside the scope of this repository
