@@ -5,3 +5,4 @@ resources:
   #- ./traefik-shadow/ks.yaml
     #- ./authelia-shadow/ks.yaml
   - ./echo-server-shadow/ks.yaml
+  - ./test-nginx/ks.yaml
