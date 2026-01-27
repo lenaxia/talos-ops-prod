@@ -165,6 +165,6 @@ jobs:
           Proceed to analyze all open Renovate PRs now.
           PROMPT_EOF
 
-          # Run opencode with the prompt file
-          opencode run -m vllm-local/default -f .tmp/renovate-prompt.txt
+          # Run opencode with the prompt
+          opencode run -m vllm-local/default "$(cat .tmp/renovate-prompt.txt)"
 
