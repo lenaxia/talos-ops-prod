@@ -66,22 +66,63 @@ jobs:
             echo "Mode: Analyzing all open Renovate PRs (scheduled or workflow_dispatch)"
           fi
 
+          # For single PR mode, check if already analyzed
+          if [ "$ANALYZE_MODE" = "single" ] && [ -n "$TARGET_PR" ]; then
+            echo "Checking if PR #$TARGET_PR was already analyzed..."
+            
+            # Get PR details
+            PR_DATA=$(gh pr view "$TARGET_PR" --json title,headRefOid,updatedAt)
+            PR_TITLE=$(echo "$PR_DATA" | jq -r '.title')
+            PR_HEAD_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
+            PR_UPDATED=$(echo "$PR_DATA" | jq -r '.updatedAt')
+            
+            echo "PR Title: $PR_TITLE"
+            echo "PR HEAD SHA: $PR_HEAD_SHA"
+            echo "PR Last Updated: $PR_UPDATED"
+            
+            # Extract version from PR title (looking for patterns like "v1.2.3" or "1.2.3")
+            PR_VERSION=$(echo "$PR_TITLE" | grep -oP '(?:to |→ )v?[\d.]+' | tail -1 | sed 's/to //; s/→ //')
+            echo "Detected version in PR: $PR_VERSION"
+            
+            # Get existing comments
+            EXISTING_COMMENTS=$(gh pr view "$TARGET_PR" --json comments --jq '.comments[] | select(.author.login == "github-actions[bot]" and (.body | startswith("## Renovate PR Analysis")))')
+            
+            if [ -n "$EXISTING_COMMENTS" ]; then
+              echo "Found existing analysis comment(s)"
+              
+              # Extract version from most recent comment
+              COMMENT_VERSION=$(echo "$EXISTING_COMMENTS" | jq -r '.body' | tail -1 | grep -oP 'Version:.*?→\s*v?[\d.]+' | grep -oP 'v?[\d.]+$' | head -1)
+              COMMENT_DATE=$(echo "$EXISTING_COMMENTS" | jq -r '.createdAt' | tail -1)
+              
+              echo "Comment version: $COMMENT_VERSION"
+              echo "Comment date: $COMMENT_DATE"
+              
+              # Compare versions and check if PR was updated after comment
+              if [ "$PR_VERSION" = "$COMMENT_VERSION" ]; then
+                # Check if PR was updated after the last comment
+                PR_UPDATED_TS=$(date -d "$PR_UPDATED" +%s 2>/dev/null || echo "0")
+                COMMENT_DATE_TS=$(date -d "$COMMENT_DATE" +%s 2>/dev/null || echo "0")
+                
+                if [ "$PR_UPDATED_TS" -le "$COMMENT_DATE_TS" ]; then
+                  echo "✓ PR #$TARGET_PR already analyzed with same version ($PR_VERSION) and no updates since. Skipping."
+                  exit 0
+                else
+                  echo "⚠ PR #$TARGET_PR has same version but was updated after analysis. Re-analyzing."
+                fi
+              else
+                echo "⚠ Version changed from $COMMENT_VERSION to $PR_VERSION. Re-analyzing."
+              fi
+            else
+              echo "No existing analysis found. Proceeding with analysis."
+            fi
+          fi
+
           # Create prompt file
           cat > .tmp/renovate-prompt.txt <<PROMPT_EOF
           You are an AI assistant that analyzes Renovatebot pull requests for a Kubernetes cluster repository.
 
           Your Task:
           Analyze Renovate PRs and provide detailed reports. DO NOT merge any PRs. Only provide analysis reports as PR comments.
-
-          IMPORTANT - Duplicate Detection:
-          Before analyzing each PR, you MUST check if it was already analyzed:
-          1. Use github_pull_request_read with method="get_comments" to fetch existing comments on the PR
-          2. Look for comments from "github-actions[bot]" that start with "## Renovate PR Analysis"
-          3. If found, extract the version information from the existing comment
-          4. Compare the version in the existing comment with the current PR title/description
-          5. If versions match exactly (no new commits, no version changes), SKIP this PR - do not post a duplicate comment
-          6. If the PR has been updated (new version, new commits, synchronized), proceed with fresh analysis
-          7. If no prior analysis exists, proceed with analysis
 
           Analysis Mode: ${ANALYZE_MODE}
           $(if [ "$ANALYZE_MODE" = "single" ]; then echo "Target PR Number: $TARGET_PR"; fi)
@@ -96,49 +137,40 @@ jobs:
              else
                echo "- List all open PRs and filter for Renovate PRs"
                echo "- Check if author is \"renovate[bot]\""
-               echo "- List all matching PRs"
+               echo "- For each PR, check for existing analysis comments"
+               echo "- Skip PRs that were already analyzed and haven't changed"
              fi)
 
-          2. For each Renovate PR:
+          2. For each Renovate PR to analyze:
 
-             a. CHECK FOR EXISTING ANALYSIS FIRST (MANDATORY):
-                - Fetch PR comments using github_pull_request_read
-                - Search for existing "## Renovate PR Analysis" comments from github-actions[bot]
-                - Extract version info from any existing analysis
-                - Get the PR's last updated timestamp and HEAD SHA
-                - Compare:
-                  * If existing analysis exists AND versions match AND no new commits → SKIP (print "PR #X already analyzed, no changes detected")
-                  * If PR updated/synchronized since last analysis OR version changed → PROCEED
-                  * If no existing analysis → PROCEED
-
-             b. Parse PR title to identify:
+             a. Parse PR title to identify:
                 - What dependency is being updated
                 - Version range (old version → new version)
                 - Update type (patch/minor/major/digest)
 
-             c. Get PR files changed
+             b. Get PR files changed
                 - Identify what Helm chart or values are being modified
                 - Extract current configuration from files
 
-             d. Identify upstream repository
+             c. Identify upstream repository
                 - For Helm charts: Check the chart repository URL
                 - For Docker images: Extract image name to find source repo
                 - For GitHub Actions: Get the action's repository
                 - Look in PR body for repository links
 
-             e. Fetch release information from upstream
+             d. Fetch release information from upstream
                 - Get the release notes for new version
                 - If minor/major update, get release notes between old and new versions
                 - Extract changelog, breaking changes, migration guides
 
-             f. Analyze changes
+             e. Analyze changes
                 - What's new in this release?
                 - Any breaking changes?
                 - Any deprecated features?
                 - New configuration options added?
                 - Configuration options removed?
 
-             g. Check our Helm release configuration
+             f. Check our Helm release configuration
                 - Look at the files changed in the PR
                 - Identify what values we're currently using
                 - Compare with new release requirements
@@ -188,7 +220,7 @@ jobs:
 
           Important Notes:
 
-          - CRITICAL: Always check for existing analysis first and skip if PR unchanged
+          - NOTE: Duplicate detection is handled before this prompt, so you can proceed with analysis
           - Exclude PRs related to: Authelia, Traefik, MinIO, Bitnami charts
           - Skip PRs with "abandoned" in the title
           - Always check if breaking changes affect our specific usage
@@ -210,10 +242,7 @@ jobs:
 
           For a PR titled "Update helm chart jellyfin from 10.2.0 to 10.3.0":
 
-          1. Check for existing analysis comments on this PR
-          2. If found and version matches 10.3.0, skip
-          3. If not found or version changed, proceed:
-          4. Parse: jellyfin-helm-chart, 10.2.0 → 10.3.0 (minor update)
+          1. Parse: jellyfin-helm-chart, 10.2.0 → 10.3.0 (minor update)
           5. Get files changed: kubernetes/apps/media/jellyfin/app/helmrelease.yaml
           6. Identify upstream: https://github.com/jellyfin/jellyfin-helm-chart
           7. Fetch release notes for v10.3.0
