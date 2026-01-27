@@ -85,7 +85,7 @@ jobs:
             echo "Detected version in PR: $PR_VERSION"
             
             # Get existing comments
-            EXISTING_COMMENTS=$(gh pr view "$TARGET_PR" --json comments --jq '.comments[] | select(.author.login == "github-actions[bot]" and (.body | startswith("## Renovate PR Analysis")))')
+            EXISTING_COMMENTS=$(gh pr view "$TARGET_PR" --json comments --jq '.comments[] | select(.author.login == "github-actions" and (.body | startswith("## Renovate PR Analysis")))')
             
             if [ -n "$EXISTING_COMMENTS" ]; then
               echo "Found existing analysis comment(s)"
