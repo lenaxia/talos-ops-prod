@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hello-world-config
+  namespace: default
+data:
+  message: Hello from AI workflow!
