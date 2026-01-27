@@ -3,15 +3,32 @@
   "provider": {
     "vllm-local": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "vLLM Local",
+      "name": "vLLM Local (via Traefik)",
       "options": {
-        "baseURL": "${{ secrets.OPENAI_API_BASE }}"
+        "baseURL": "{env:OPENAI_API_BASE}",
+        "apiKey": "{env:OPENAI_API_KEY}"
       },
       "models": {
-        "${{ secrets.OPENAI_MODEL }}": {
-          "name": "${{ secrets.OPENAI_MODEL }}"
+        "default": {
+          "name": "{env:OPENAI_MODEL}",
+          "id": "{env:OPENAI_MODEL}"
         }
       }
     }
+  },
+  "permission": {
+    "*": "allow",
+    "bash": {
+      "*": "deny",
+      "git*": "allow",
+      "gh*": "allow", 
+      "mkdir*": "allow",
+      "cat*": "allow",
+      "ls*": "allow",
+      "pwd": "allow",
+      "jq*": "allow"
+    },
+    "external_directory": "deny",
+    "doom_loop": "deny"
   }
 }

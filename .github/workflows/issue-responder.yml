@@ -24,6 +24,11 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
       - name: Create temp directory
         run: mkdir -p .tmp
 
@@ -33,35 +38,18 @@ jobs:
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
-          ISSUE_URL: ${{ github.event.issue.html_url }}
-          IS_COMMENT: ${{ github.event_name == 'issue_comment' }}
-          OPENCODE_PERMISSION: |
-            {
-              "bash": {
-                "*": "deny",
-                "git*": "allow",
-                "mkdir*": "allow",
-                "cat*": "allow"
-              },
-              "github": {
-                "*": "allow"
-              }
-            }
         run: |
-          opencode run -m vllm-local/mistral-7b-instruct "
+          # Create prompt file with issue data
+          cat > .tmp/issue-prompt.txt <<'PROMPT_EOF'
           You are an AI assistant for a Talos Kubernetes cluster template repository. Your job is to analyze GitHub issues from lenaxia and determine the appropriate action to take.
 
           Issue Information:
-          - Title: $ISSUE_TITLE
-          - Body: $ISSUE_BODY
-          - Author: $ISSUE_AUTHOR
-          - Number: $ISSUE_NUMBER
-          - URL: $ISSUE_URL
-          - Is comment: $IS_COMMENT
+          - Title: ${{ github.event.issue.title }}
+          - Body: ${{ github.event.issue.body }}
+          - Author: ${{ github.event.issue.user.login }}
+          - Number: ${{ github.event.issue.number }}
+          - URL: ${{ github.event.issue.html_url }}
+          - Is comment: ${{ github.event_name == 'issue_comment' }}
 
           Repository Context:
           This is a Talos Linux Kubernetes cluster template managed with Flux.
@@ -114,7 +102,7 @@ jobs:
 
           Option A: Implement the request (create a PR)
           If the request is clear and actionable:
-          - Create a new branch: feat/issue-$ISSUE_NUMBER-<short-description>
+          - Create a new branch: feat/issue-${{ github.event.issue.number }}-<short-description>
           - Implement the requested changes using appropriate patterns from the repository
           - Create a pull request
           - Comment on the issue with the PR link and summary
@@ -153,10 +141,10 @@ jobs:
 
           c. Create a pull request:
              - Use github_create_pull_request
-             - Title should be descriptive (e.g., \"feat(app-name): deploy app-name\")
-             - Body should reference the issue: \"Closes #$ISSUE_NUMBER\"
+             - Title should be descriptive (e.g., "feat(app-name): deploy app-name")
+             - Body should reference the issue: "Closes #${{ github.event.issue.number }}"
              - Include description of changes made
-             - Set appropriate base branch (usually \"main\")
+             - Set appropriate base branch (usually "main")
 
           d. Comment on the issue:
              - Use github_add_issue_comment
@@ -205,7 +193,7 @@ jobs:
           Example responses:
 
           If implementing:
-          \"@lenaxia ✅ I've created a PR to deploy Jellyfin to your cluster.
+          "@lenaxia ✅ I've created a PR to deploy Jellyfin to your cluster.
 
           PR: #123 - feat(media): deploy jellyfin
 
@@ -214,19 +202,19 @@ jobs:
           - Configured with default values from the official Helm chart
           - Ready for customization
 
-          Please review the values in the Helm release and adjust for your environment. Let me know if you need any changes!\"
+          Please review the values in the Helm release and adjust for your environment. Let me know if you need any changes!"
 
           If clarifying:
-          \"@lenaxia Thanks for the request! I want to make sure I implement this correctly. Could you clarify:
+          "@lenaxia Thanks for the request! I want to make sure I implement this correctly. Could you clarify:
 
           1. Which namespace should this be deployed to?
           2. Do you have specific values you'd like to use, or should I use defaults?
           3. Any special configuration requirements (ingress, storage, etc.)?
 
-          Once I have these details, I'll create the PR for you.\"
+          Once I have these details, I'll create the PR for you."
 
           If declining:
-          \"@lenaxia Thanks for the suggestion! However, I'm not able to help with this request because:
+          "@lenaxia Thanks for the suggestion! However, I'm not able to help with this request because:
 
           - Creating and managing secrets requires manual intervention for security reasons
           - You'll need to handle the sensitive values separately using SOPS encryption
@@ -236,10 +224,13 @@ jobs:
           2. You can add the encrypted secrets using your AGE key
           3. Reference the secrets in the deployment
 
-          Would you like me to create the basic structure without secrets?\"
+          Would you like me to create the basic structure without secrets?"
 
           Now, analyze the issue and take the appropriate action.
-          "
+          PROMPT_EOF
+
+          # Run opencode with the prompt file
+          opencode run -m vllm-local/default -f .tmp/issue-prompt.txt
 
       - name: Upload generated artifacts
         if: always()

@@ -1,0 +1,26 @@
+name: 'Setup Bun'
+description: 'Setup Bun with cache'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+    
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [ -f "package.json" ]; then
+          bun install --frozen-lockfile || bun install
+        else
+          echo "No package.json found, skipping dependency installation"
+        fi
