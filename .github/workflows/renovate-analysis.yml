@@ -2,9 +2,15 @@ name: Renovate PR Analysis
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
   schedule:
     - cron: "0 */2 * * *"
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to analyze (leave empty for all)'
+        required: false
+        type: string
 
 env:
   OWNER: lenaxia
@@ -39,55 +45,105 @@ jobs:
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIGGERING_PR: ${{ github.event.pull_request.number || inputs.pr_number || '' }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
+          # Determine which PRs to analyze
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            # Only analyze the triggering PR for pull_request events
+            ANALYZE_MODE="single"
+            TARGET_PR="$TRIGGERING_PR"
+            echo "Mode: Analyzing single PR #$TARGET_PR (triggered by pull_request event)"
+          elif [ -n "$TRIGGERING_PR" ]; then
+            # Manual trigger with specific PR number
+            ANALYZE_MODE="single"
+            TARGET_PR="$TRIGGERING_PR"
+            echo "Mode: Analyzing single PR #$TARGET_PR (manual workflow_dispatch)"
+          else
+            # Schedule or manual trigger without PR number - analyze all
+            ANALYZE_MODE="all"
+            TARGET_PR=""
+            echo "Mode: Analyzing all open Renovate PRs (scheduled or workflow_dispatch)"
+          fi
+
           # Create prompt file
-          cat > .tmp/renovate-prompt.txt <<'PROMPT_EOF'
+          cat > .tmp/renovate-prompt.txt <<PROMPT_EOF
           You are an AI assistant that analyzes Renovatebot pull requests for a Kubernetes cluster repository.
 
           Your Task:
-          Analyze all open Renovate PRs and provide detailed reports on each. DO NOT merge any PRs. Only provide analysis reports as PR comments.
+          Analyze Renovate PRs and provide detailed reports. DO NOT merge any PRs. Only provide analysis reports as PR comments.
+
+          IMPORTANT - Duplicate Detection:
+          Before analyzing each PR, you MUST check if it was already analyzed:
+          1. Use github_pull_request_read with method="get_comments" to fetch existing comments on the PR
+          2. Look for comments from "github-actions[bot]" that start with "## Renovate PR Analysis"
+          3. If found, extract the version information from the existing comment
+          4. Compare the version in the existing comment with the current PR title/description
+          5. If versions match exactly (no new commits, no version changes), SKIP this PR - do not post a duplicate comment
+          6. If the PR has been updated (new version, new commits, synchronized), proceed with fresh analysis
+          7. If no prior analysis exists, proceed with analysis
+
+          Analysis Mode: ${ANALYZE_MODE}
+          $(if [ "$ANALYZE_MODE" = "single" ]; then echo "Target PR Number: $TARGET_PR"; fi)
 
           Process:
 
-          1. List all open PRs and filter for Renovate PRs
-             - Check if author is "renovate[bot]"
-             - List all matching PRs
+          1. Get PRs to analyze:
+             $(if [ "$ANALYZE_MODE" = "single" ]; then
+               echo "- Only analyze PR #$TARGET_PR"
+               echo "- Verify it is authored by \"renovate[bot]\""
+               echo "- If not a Renovate PR, exit gracefully with a message"
+             else
+               echo "- List all open PRs and filter for Renovate PRs"
+               echo "- Check if author is \"renovate[bot]\""
+               echo "- List all matching PRs"
+             fi)
 
           2. For each Renovate PR:
 
-             a. Parse PR title to identify:
+             a. CHECK FOR EXISTING ANALYSIS FIRST (MANDATORY):
+                - Fetch PR comments using github_pull_request_read
+                - Search for existing "## Renovate PR Analysis" comments from github-actions[bot]
+                - Extract version info from any existing analysis
+                - Get the PR's last updated timestamp and HEAD SHA
+                - Compare:
+                  * If existing analysis exists AND versions match AND no new commits → SKIP (print "PR #X already analyzed, no changes detected")
+                  * If PR updated/synchronized since last analysis OR version changed → PROCEED
+                  * If no existing analysis → PROCEED
+
+             b. Parse PR title to identify:
                 - What dependency is being updated
                 - Version range (old version → new version)
                 - Update type (patch/minor/major/digest)
 
-             b. Get PR files changed
+             c. Get PR files changed
                 - Identify what Helm chart or values are being modified
                 - Extract current configuration from files
 
-             c. Identify upstream repository
+             d. Identify upstream repository
                 - For Helm charts: Check the chart repository URL
                 - For Docker images: Extract image name to find source repo
                 - For GitHub Actions: Get the action's repository
                 - Look in PR body for repository links
 
-             d. Fetch release information from upstream
+             e. Fetch release information from upstream
                 - Get the release notes for new version
                 - If minor/major update, get release notes between old and new versions
                 - Extract changelog, breaking changes, migration guides
 
-             e. Analyze changes
+             f. Analyze changes
                 - What's new in this release?
                 - Any breaking changes?
                 - Any deprecated features?
                 - New configuration options added?
                 - Configuration options removed?
 
-             f. Check our Helm release configuration
+             g. Check our Helm release configuration
                 - Look at the files changed in the PR
                 - Identify what values we're currently using
                 - Compare with new release requirements
 
-             g. Determine what changes we need
+             h. Determine what changes we need
                 - Do we need to update our Helm values?
                 - Are we using deprecated options?
                 - Do we need to add new required parameters?
@@ -95,7 +151,7 @@ jobs:
 
           3. Create a detailed analysis comment on the PR with this structure:
 
-             ```markdown
+             \`\`\`markdown
              ## Renovate PR Analysis
 
              ### Update Summary
@@ -128,10 +184,11 @@ jobs:
              Based on analysis:
              - [Safe to merge / Needs manual review / Requires code changes]
              - Brief explanation of why
-             ```
+             \`\`\`
 
           Important Notes:
 
+          - CRITICAL: Always check for existing analysis first and skip if PR unchanged
           - Exclude PRs related to: Authelia, Traefik, MinIO, Bitnami charts
           - Skip PRs with "abandoned" in the title
           - Always check if breaking changes affect our specific usage
@@ -153,16 +210,19 @@ jobs:
 
           For a PR titled "Update helm chart jellyfin from 10.2.0 to 10.3.0":
 
-          1. Parse: jellyfin-helm-chart, 10.2.0 → 10.3.0 (minor update)
-          2. Get files changed: kubernetes/apps/media/jellyfin/app/helmrelease.yaml
-          3. Identify upstream: https://github.com/jellyfin/jellyfin-helm-chart
-          4. Fetch release notes for v10.3.0
-          5. Analyze: Check for breaking changes, new config options
-          6. Review our current helmrelease.yaml values
-          7. Identify: Do we need to update any values?
-          8. Create detailed comment on the PR with findings
+          1. Check for existing analysis comments on this PR
+          2. If found and version matches 10.3.0, skip
+          3. If not found or version changed, proceed:
+          4. Parse: jellyfin-helm-chart, 10.2.0 → 10.3.0 (minor update)
+          5. Get files changed: kubernetes/apps/media/jellyfin/app/helmrelease.yaml
+          6. Identify upstream: https://github.com/jellyfin/jellyfin-helm-chart
+          7. Fetch release notes for v10.3.0
+          8. Analyze: Check for breaking changes, new config options
+          9. Review our current helmrelease.yaml values
+          10. Identify: Do we need to update any values?
+          11. Create detailed comment on the PR with findings
 
-          Proceed to analyze all open Renovate PRs now.
+          Now proceed with the analysis based on the mode specified above.
           PROMPT_EOF
 
           # Run opencode with the prompt
