@@ -71,18 +71,10 @@ jobs:
             echo "Checking if PR #$TARGET_PR was already analyzed..."
             
             # Get PR details
-            PR_DATA=$(gh pr view "$TARGET_PR" --json title,headRefOid,updatedAt)
-            PR_TITLE=$(echo "$PR_DATA" | jq -r '.title')
-            PR_HEAD_SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
+            PR_DATA=$(gh pr view "$TARGET_PR" --json updatedAt)
             PR_UPDATED=$(echo "$PR_DATA" | jq -r '.updatedAt')
             
-            echo "PR Title: $PR_TITLE"
-            echo "PR HEAD SHA: $PR_HEAD_SHA"
             echo "PR Last Updated: $PR_UPDATED"
-            
-            # Extract version from PR title (looking for patterns like "v1.2.3" or "1.2.3")
-            PR_VERSION=$(echo "$PR_TITLE" | grep -oP '(?:to |→ )v?[\d.]+' | tail -1 | sed 's/to //; s/→ //')
-            echo "Detected version in PR: $PR_VERSION"
             
             # Get existing comments
             EXISTING_COMMENTS=$(gh pr view "$TARGET_PR" --json comments --jq '.comments[] | select(.author.login == "github-actions" and (.body | startswith("## Renovate PR Analysis")))')
@@ -90,27 +82,23 @@ jobs:
             if [ -n "$EXISTING_COMMENTS" ]; then
               echo "Found existing analysis comment(s)"
               
-              # Extract version from most recent comment
-              COMMENT_VERSION=$(echo "$EXISTING_COMMENTS" | jq -r '.body' | tail -1 | grep -oP 'Version:.*?→\s*v?[\d.]+' | grep -oP 'v?[\d.]+$' | head -1)
+              # Get the most recent comment date
               COMMENT_DATE=$(echo "$EXISTING_COMMENTS" | jq -r '.createdAt' | tail -1)
               
-              echo "Comment version: $COMMENT_VERSION"
-              echo "Comment date: $COMMENT_DATE"
+              echo "Most recent comment date: $COMMENT_DATE"
               
-              # Compare versions and check if PR was updated after comment
-              if [ "$PR_VERSION" = "$COMMENT_VERSION" ]; then
-                # Check if PR was updated after the last comment
-                PR_UPDATED_TS=$(date -d "$PR_UPDATED" +%s 2>/dev/null || echo "0")
-                COMMENT_DATE_TS=$(date -d "$COMMENT_DATE" +%s 2>/dev/null || echo "0")
-                
-                if [ "$PR_UPDATED_TS" -le "$COMMENT_DATE_TS" ]; then
-                  echo "✓ PR #$TARGET_PR already analyzed with same version ($PR_VERSION) and no updates since. Skipping."
-                  exit 0
-                else
-                  echo "⚠ PR #$TARGET_PR has same version but was updated after analysis. Re-analyzing."
-                fi
+              # Compare timestamps - if PR was updated before or at the same time as last comment, skip
+              PR_UPDATED_TS=$(date -d "$PR_UPDATED" +%s 2>/dev/null || echo "0")
+              COMMENT_DATE_TS=$(date -d "$COMMENT_DATE" +%s 2>/dev/null || echo "0")
+              
+              # Add 60 second buffer to account for workflow posting comment
+              COMMENT_BUFFER_TS=$((COMMENT_DATE_TS + 60))
+              
+              if [ "$PR_UPDATED_TS" -le "$COMMENT_BUFFER_TS" ]; then
+                echo "✓ PR #$TARGET_PR already analyzed and no updates since last comment. Skipping."
+                exit 0
               else
-                echo "⚠ Version changed from $COMMENT_VERSION to $PR_VERSION. Re-analyzing."
+                echo "⚠ PR #$TARGET_PR was updated after last analysis. Re-analyzing."
               fi
             else
               echo "No existing analysis found. Proceeding with analysis."
