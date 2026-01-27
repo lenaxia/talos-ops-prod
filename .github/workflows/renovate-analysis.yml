@@ -3,8 +3,6 @@ name: Renovate PR Analysis
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  schedule:
-    - cron: "0 */2 * * *"
   workflow_dispatch:
     inputs:
       pr_number:
@@ -18,7 +16,7 @@ env:
 
 jobs:
   analyze-prs:
-    # Only run for Renovate PRs or scheduled/manual triggers
+    # Only run for Renovate PRs or manual triggers
     if: |
       github.event_name != 'pull_request' || 
       github.event.pull_request.user.login == 'renovate[bot]'
@@ -64,10 +62,10 @@ jobs:
             TARGET_PR="$TRIGGERING_PR"
             echo "Mode: Analyzing single PR #$TARGET_PR (manual workflow_dispatch)"
           else
-            # Schedule or manual trigger without PR number - analyze all
+            # Manual trigger without PR number - analyze all
             ANALYZE_MODE="all"
             TARGET_PR=""
-            echo "Mode: Analyzing all open Renovate PRs (scheduled or workflow_dispatch)"
+            echo "Mode: Analyzing all open Renovate PRs (manual workflow_dispatch)"
           fi
 
           # For single PR mode, check if already analyzed
