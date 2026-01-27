@@ -20,7 +20,7 @@ jobs:
   analyze-prs:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     steps:
       - name: Checkout repository
@@ -206,6 +206,39 @@ jobs:
              - Brief explanation of why
              \`\`\`
 
+          4. Take action based on analysis:
+
+             **If "Safe to merge":**
+             - Use github_merge_pull_request to merge the PR with squash method
+             - No configuration changes needed in our repository
+             - Only merge if:
+               * No breaking changes affecting our usage
+               * No new required configuration parameters
+               * Only bug fixes, minor improvements, or non-breaking features
+             
+             **If "Requires code changes":**
+             - Create a new branch: config/renovate-pr-[PR_NUMBER]-changes
+             - Use github_create_branch to create the branch from main
+             - Apply the necessary configuration changes using github_create_or_update_file or github_push_files
+             - Create a new PR with:
+               * Title: "config: Configuration changes for [dependency] update"
+               * Body: Reference the Renovate PR and explain changes needed
+               * Link to original Renovate PR: "Required for #[PR_NUMBER]"
+             - Add a comment to the original Renovate PR:
+               * "⚠️ Configuration changes required before merging"
+               * "I've created PR #[NEW_PR] with the necessary configuration updates"
+               * "Please review and merge the configuration PR first, then this PR can be merged"
+             
+             **If "Needs manual review":**
+             - Do NOT merge
+             - Do NOT create a PR
+             - Only post the analysis comment
+             - This applies to:
+               * Breaking changes that need careful review
+               * Major version updates with significant changes
+               * Uncertain impact on our specific configuration
+               * Excluded dependencies (Authelia, Traefik, MinIO, Bitnami)
+
           Important Notes:
 
           - NOTE: Duplicate detection is handled before this prompt, so you can proceed with analysis
@@ -231,13 +264,15 @@ jobs:
           For a PR titled "Update helm chart jellyfin from 10.2.0 to 10.3.0":
 
           1. Parse: jellyfin-helm-chart, 10.2.0 → 10.3.0 (minor update)
-          5. Get files changed: kubernetes/apps/media/jellyfin/app/helmrelease.yaml
-          6. Identify upstream: https://github.com/jellyfin/jellyfin-helm-chart
-          7. Fetch release notes for v10.3.0
-          8. Analyze: Check for breaking changes, new config options
-          9. Review our current helmrelease.yaml values
-          10. Identify: Do we need to update any values?
-          11. Create detailed comment on the PR with findings
+          2. Get files changed: kubernetes/apps/media/jellyfin/app/helmrelease.yaml
+          3. Identify upstream: https://github.com/jellyfin/jellyfin-helm-chart
+          4. Fetch release notes for v10.3.0
+          5. Analyze: Check for breaking changes, new config options
+          6. Review our current helmrelease.yaml values
+          7. Identify: Do we need to update any values?
+          8. Create detailed comment on the PR with findings
+          9. If safe to merge: Use github_merge_pull_request to merge
+          10. If changes needed: Create config PR with required updates
 
           Now proceed with the analysis based on the mode specified above.
           PROMPT_EOF
