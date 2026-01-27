@@ -42,10 +42,10 @@ jobs:
         run: |
           # Fetch issue with body and comments for context
           echo "Fetching issue context..."
-          gh issue view "$ISSUE_NUMBER" --json body,comments --jq '["ORIGINAL ISSUE:", .body, "\n\nPREVIOUS COMMENTS:"] + [.comments[] | "[\(.createdAt)] \(.author.login):\n\(.body)\n---"] | join("\n\n")' > .tmp/conversation.txt
+          CONVERSATION=$(gh issue view "$ISSUE_NUMBER" --json body,comments --jq '["=== ORIGINAL ISSUE ===", .body, "\n=== PREVIOUS COMMENTS ==="] + [.comments[] | "[\(.createdAt)] \(.author.login):\n\(.body)\n---"] | join("\n\n")')
           
-          # Create prompt file (conversation will be attached as a file)
-          cat > .tmp/issue-prompt.txt <<'PROMPT_EOF'
+          # Create prompt with embedded conversation
+          cat > .tmp/issue-prompt.txt <<PROMPT_EOF
           You are an AI assistant for a Talos Kubernetes cluster template repository. Your job is to analyze GitHub issues from lenaxia and determine the appropriate action to take.
 
           Issue Information:
@@ -53,12 +53,17 @@ jobs:
           - URL: ${{ github.event.issue.html_url }}
           - Is comment event: ${{ github.event_name == 'issue_comment' }}
 
-          IMPORTANT: I have attached a file "conversation.txt" containing the FULL conversation history. You MUST read this file to understand the context.
+          CONVERSATION HISTORY (includes original issue + all comments):
+          
+          ${CONVERSATION}
+          
+          ===================================
 
-          If there are previous comments, pay attention to:
+          If there are previous comments above, pay attention to:
           - What you already answered
           - Follow-up questions from lenaxia  
           - Don't repeat information - build on your previous responses
+          - Reference your previous investigation/answers when relevant
 
           Repository Context:
           This is a Talos Linux Kubernetes cluster template managed with Flux.
@@ -260,8 +265,8 @@ jobs:
           Now, analyze the issue and take the appropriate action.
           PROMPT_EOF
 
-          # Run opencode with the prompt and attach conversation file
-          opencode run -m vllm-local/default -f .tmp/conversation.txt "$(cat .tmp/issue-prompt.txt)"
+          # Run opencode with the full prompt including conversation history
+          opencode run "$(cat .tmp/issue-prompt.txt)"
 
       - name: Upload generated artifacts
         if: always()
