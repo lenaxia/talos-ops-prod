@@ -1,0 +1,170 @@
+name: Renovate PR Analysis
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+env:
+  OWNER: lenaxia
+  REPO: talos-ops-prod
+
+jobs:
+  analyze-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Create temp directory
+        run: mkdir -p .tmp
+
+      - name: Analyze Renovate PRs
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENCODE_PERMISSION: |
+            {
+              "bash": {
+                "*": "deny",
+                "gh*": "allow"
+              },
+              "github": {
+                "*": "allow"
+              }
+            }
+        run: |
+          opencode run -m vllm-local/mistral-7b-instruct "
+          You are an AI assistant that analyzes Renovatebot pull requests for a Kubernetes cluster repository.
+
+          Your Task:
+          Analyze all open Renovate PRs and provide detailed reports on each. DO NOT merge any PRs. Only provide analysis reports as PR comments.
+
+          Process:
+
+          1. List all open PRs and filter for Renovate PRs
+             - Check if author is \"renovate[bot]\"
+             - List all matching PRs
+
+          2. For each Renovate PR:
+
+             a. Parse PR title to identify:
+                - What dependency is being updated
+                - Version range (old version → new version)
+                - Update type (patch/minor/major/digest)
+
+             b. Get PR files changed
+                - Identify what Helm chart or values are being modified
+                - Extract current configuration from files
+
+             c. Identify upstream repository
+                - For Helm charts: Check the chart repository URL
+                - For Docker images: Extract image name to find source repo
+                - For GitHub Actions: Get the action's repository
+                - Look in PR body for repository links
+
+             d. Fetch release information from upstream
+                - Get the release notes for new version
+                - If minor/major update, get release notes between old and new versions
+                - Extract changelog, breaking changes, migration guides
+
+             e. Analyze changes
+                - What's new in this release?
+                - Any breaking changes?
+                - Any deprecated features?
+                - New configuration options added?
+                - Configuration options removed?
+
+             f. Check our Helm release configuration
+                - Look at the files changed in the PR
+                - Identify what values we're currently using
+                - Compare with new release requirements
+
+             g. Determine what changes we need
+                - Do we need to update our Helm values?
+                - Are we using deprecated options?
+                - Do we need to add new required parameters?
+                - Are there any configuration compatibility issues?
+
+          3. Create a detailed analysis comment on the PR with this structure:
+
+             ```markdown
+             ## Renovate PR Analysis
+
+             ### Update Summary
+             - Dependency: [name]
+             - Version: [old] → [new]
+             - Type: [patch/minor/major/digest]
+
+             ### Release Changes
+             [Summarize what's new in this release, including:]
+             - New features
+             - Bug fixes
+             - Performance improvements
+             - Other notable changes
+
+             ### Breaking Changes
+             [List any breaking changes from the release notes]
+             [If none, state \"No breaking changes detected\" or \"Breaking changes in this version do not affect our usage\"]
+
+             ### Configuration Changes Required
+             [Detailed analysis of what we need to change in our Helm release:]
+             - List new required parameters we need to add
+             - List deprecated options we're using that need removal
+             - List any values that need updating
+             - Provide example configuration if helpful
+
+             ### Migration Notes
+             [Any migration steps or considerations from the upstream release]
+
+             ### Recommendation
+             Based on analysis:
+             - [Safe to merge / Needs manual review / Requires code changes]
+             - Brief explanation of why
+             ```
+
+          Important Notes:
+
+          - Exclude PRs related to: Authelia, Traefik, MinIO, Bitnami charts
+          - Skip PRs with \"abandoned\" in the title
+          - Always check if breaking changes affect our specific usage
+          - Be thorough - fetch actual release notes from upstream repositories
+          - Provide actionable, specific recommendations
+          - Use GitHub MCP tools to fetch release information
+
+          Special Exclusions:
+
+          1. Bitnami charts - Never use or upgrade (revoked open source charts)
+          2. MinIO - Deprecated open source, became open source hostile
+          3. Authelia, Traefik - Require manual review per policy
+
+          Variables:
+          - OWNER: lenaxia
+          - REPO: talos-ops-prod
+
+          Example Flow:
+
+          For a PR titled \"Update helm chart jellyfin from 10.2.0 to 10.3.0\":
+
+          1. Parse: jellyfin-helm-chart, 10.2.0 → 10.3.0 (minor update)
+          2. Get files changed: kubernetes/apps/media/jellyfin/app/helmrelease.yaml
+          3. Identify upstream: https://github.com/jellyfin/jellyfin-helm-chart
+          4. Fetch release notes for v10.3.0
+          5. Analyze: Check for breaking changes, new config options
+          6. Review our current helmrelease.yaml values
+          7. Identify: Do we need to update any values?
+          8. Create detailed comment on the PR with findings
+
+          Proceed to analyze all open Renovate PRs now.
+          "
