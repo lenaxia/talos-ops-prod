@@ -25,6 +25,11 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
       - name: Create temp directory
         run: mkdir -p .tmp
 
@@ -34,18 +39,9 @@ jobs:
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENCODE_PERMISSION: |
-            {
-              "bash": {
-                "*": "deny",
-                "gh*": "allow"
-              },
-              "github": {
-                "*": "allow"
-              }
-            }
         run: |
-          opencode run -m vllm-local/mistral-7b-instruct "
+          # Create prompt file
+          cat > .tmp/renovate-prompt.txt <<'PROMPT_EOF'
           You are an AI assistant that analyzes Renovatebot pull requests for a Kubernetes cluster repository.
 
           Your Task:
@@ -54,7 +50,7 @@ jobs:
           Process:
 
           1. List all open PRs and filter for Renovate PRs
-             - Check if author is \"renovate[bot]\"
+             - Check if author is "renovate[bot]"
              - List all matching PRs
 
           2. For each Renovate PR:
@@ -116,7 +112,7 @@ jobs:
 
              ### Breaking Changes
              [List any breaking changes from the release notes]
-             [If none, state \"No breaking changes detected\" or \"Breaking changes in this version do not affect our usage\"]
+             [If none, state "No breaking changes detected" or "Breaking changes in this version do not affect our usage"]
 
              ### Configuration Changes Required
              [Detailed analysis of what we need to change in our Helm release:]
@@ -137,11 +133,11 @@ jobs:
           Important Notes:
 
           - Exclude PRs related to: Authelia, Traefik, MinIO, Bitnami charts
-          - Skip PRs with \"abandoned\" in the title
+          - Skip PRs with "abandoned" in the title
           - Always check if breaking changes affect our specific usage
           - Be thorough - fetch actual release notes from upstream repositories
           - Provide actionable, specific recommendations
-          - Use GitHub MCP tools to fetch release information
+          - Use GitHub tools to fetch release information
 
           Special Exclusions:
 
@@ -150,12 +146,12 @@ jobs:
           3. Authelia, Traefik - Require manual review per policy
 
           Variables:
-          - OWNER: lenaxia
-          - REPO: talos-ops-prod
+          - OWNER: ${{ env.OWNER }}
+          - REPO: ${{ env.REPO }}
 
           Example Flow:
 
-          For a PR titled \"Update helm chart jellyfin from 10.2.0 to 10.3.0\":
+          For a PR titled "Update helm chart jellyfin from 10.2.0 to 10.3.0":
 
           1. Parse: jellyfin-helm-chart, 10.2.0 → 10.3.0 (minor update)
           2. Get files changed: kubernetes/apps/media/jellyfin/app/helmrelease.yaml
@@ -167,4 +163,8 @@ jobs:
           8. Create detailed comment on the PR with findings
 
           Proceed to analyze all open Renovate PRs now.
-          "
+          PROMPT_EOF
+
+          # Run opencode with the prompt file
+          opencode run -m vllm-local/default -f .tmp/renovate-prompt.txt
+
