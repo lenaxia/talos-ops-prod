@@ -18,6 +18,10 @@ env:
 
 jobs:
   analyze-prs:
+    # Only run for Renovate PRs or scheduled/manual triggers
+    if: |
+      github.event_name != 'pull_request' || 
+      github.event.pull_request.user.login == 'renovate[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
