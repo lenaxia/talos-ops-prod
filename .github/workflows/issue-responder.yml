@@ -38,18 +38,37 @@ jobs:
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          # Create prompt file with issue data
-          cat > .tmp/issue-prompt.txt <<'PROMPT_EOF'
+          # Fetch full issue context including all comments
+          echo "Fetching issue context..."
+          ISSUE_DATA=$(gh issue view "$ISSUE_NUMBER" --json title,body,comments --jq '{title, body, comments: [.comments[] | {author: .author.login, body: .body, createdAt: .createdAt}]}')
+          
+          ISSUE_TITLE=$(echo "$ISSUE_DATA" | jq -r '.title')
+          ISSUE_BODY=$(echo "$ISSUE_DATA" | jq -r '.body')
+          ISSUE_COMMENTS=$(echo "$ISSUE_DATA" | jq -r '.comments')
+          
+          # Create prompt file with full conversation context
+          cat > .tmp/issue-prompt.txt <<PROMPT_EOF
           You are an AI assistant for a Talos Kubernetes cluster template repository. Your job is to analyze GitHub issues from lenaxia and determine the appropriate action to take.
 
           Issue Information:
-          - Title: ${{ github.event.issue.title }}
-          - Body: ${{ github.event.issue.body }}
-          - Author: ${{ github.event.issue.user.login }}
-          - Number: ${{ github.event.issue.number }}
+          - Title: $ISSUE_TITLE
+          - Number: $ISSUE_NUMBER
           - URL: ${{ github.event.issue.html_url }}
-          - Is comment: ${{ github.event_name == 'issue_comment' }}
+          - Is comment event: ${{ github.event_name == 'issue_comment' }}
+
+          Original Issue Body:
+          $ISSUE_BODY
+
+          Previous Conversation (if any):
+          $ISSUE_COMMENTS
+
+          IMPORTANT: If there are previous comments in the conversation, you MUST consider the full context when responding. This includes:
+          - Your previous responses and what information you already provided
+          - Follow-up questions from the user
+          - Any clarifications or additional details discussed
+          - Previous implementation attempts or decisions
 
           Repository Context:
           This is a Talos Linux Kubernetes cluster template managed with Flux.
