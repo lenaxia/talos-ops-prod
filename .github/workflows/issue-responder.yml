@@ -126,7 +126,7 @@ jobs:
             * Relevant file paths and line numbers for reference
             * Explanation of how things currently work
             * Any recommendations or insights
-          - Add a detailed comment to the issue with your findings
+          - IMPORTANT: Use github_add_issue_comment to post your findings to issue #${{ github.event.issue.number }}
           - Don't create a PR unless changes are explicitly requested
 
           Examples of investigation requests:
@@ -138,19 +138,19 @@ jobs:
 
           Option B: Implement the request (create a PR)
           If the request is clear and actionable for changes:
-          - Create a new branch: feat/issue-${{ github.event.issue.number }}-<short-description>
+          - Use github_create_branch to create: feat/issue-${{ github.event.issue.number }}-<short-description>
           - Implement the requested changes using appropriate patterns from the repository
-          - Create a pull request
-          - Comment on the issue with the PR link and summary
+          - Use github_create_pull_request to create the pull request
+          - Use github_add_issue_comment to post PR link and summary on issue #${{ github.event.issue.number }}
 
           Option C: Ask for clarification
           If the request is ambiguous or unclear:
-          - Add a comment to the issue asking specific questions
+          - Use github_add_issue_comment to ask specific questions on issue #${{ github.event.issue.number }}
           - Don't create a PR yet
 
           Option D: Provide information/documentation
           If the user is asking a general question or wants information:
-          - Add a detailed comment to the issue answering their question
+          - Use github_add_issue_comment to post a detailed answer to issue #${{ github.event.issue.number }}
           - Don't create a PR
 
           Option E: Decline with explanation
@@ -159,7 +159,7 @@ jobs:
           - Is outside the scope of this repository
           - Requires actions you cannot perform
           - Is ambiguous despite trying to clarify
-          - Add a comment explaining why and suggesting alternatives
+          - Use github_add_issue_comment to explain why on issue #${{ github.event.issue.number }} and suggest alternatives
 
           Step 3: If implementing (Option A), follow this process:
 
