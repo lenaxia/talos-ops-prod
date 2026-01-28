@@ -10,7 +10,11 @@ spec:
     schedule: "${VOLSYNC_SCHEDULE:=0 * * * *}"
   kopia:
     repository: volsync-kopia-secret
-    repositoryPVC: volsync-kopia-repository
+    moverVolumes:
+      - mountPath: kopia-repo
+        volumeSource:
+          persistentVolumeClaim:
+            claimName: volsync-kopia-repository
     accessModes: ["${VOLSYNC_SNAP_ACCESSMODES:=ReadWriteOnce}"]
     cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
     cacheCapacity: "${VOLSYNC_CAPACITY:=5Gi}"
