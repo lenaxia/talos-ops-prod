@@ -68,7 +68,7 @@ spec:
             - ALL
         image:
           repository: quay.io/brancz/kube-rbac-proxy
-          tag: v0.19.1
+          tag: v0.20.2
         resources:
           limits:
             cpu: 500m
