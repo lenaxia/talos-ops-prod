@@ -23,4 +23,3 @@ resources:
   - ./mosquitto/ks.yaml
   #- ./linkwarden/ks.yaml
   - ./vscode/ks.yaml
-  - ./fasten/ks.yaml

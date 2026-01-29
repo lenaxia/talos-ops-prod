@@ -51,7 +51,7 @@ jobs:
         run: task workstation:generic-linux
 
   configure:
-    if: ${{ github.repository == 'onedr0p/cluster-template' }}
+    if: ${{ github.repository == 'lenaxia/talos-ops-prod' }}
     name: configure
     runs-on: ubuntu-latest
     strategy:

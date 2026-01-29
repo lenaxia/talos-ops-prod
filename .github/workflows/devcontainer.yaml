@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   devcontainer:
-    if: ${{ github.repository == 'onedr0p/cluster-template' }}
+    if: ${{ github.repository == 'lenaxia/talos-ops-prod' }}
     name: publish
     runs-on: ubuntu-24.04 # TODO: Change to ubuntu-latest when available
     permissions:
