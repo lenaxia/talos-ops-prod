@@ -22,9 +22,30 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      - name: Determine checkout ref
+        id: determine-ref
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request != null
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.issue.number }}"
+          echo "Fetching PR #${PR_NUMBER} to determine checkout ref..."
+          PR_DATA=$(gh pr view "${PR_NUMBER}" --json headRefName,headRepository --repo ${{ github.repository }})
+          PR_BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
+          REPO_NAME=$(echo "$PR_DATA" | jq -r '.headRepository.nameWithOwner')
+
+          if [[ "$REPO_NAME" == "${{ github.repository }}" ]]; then
+            echo "checkout-ref=${PR_BRANCH}" >> $GITHUB_OUTPUT
+            echo "Will checkout branch: ${PR_BRANCH}"
+          else
+            echo "checkout-ref=main" >> $GITHUB_OUTPUT
+            echo "PR from external repo, will checkout main"
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ steps.determine-ref.outputs.checkout-ref || 'main' }}
           fetch-depth: 0
 
       - name: Setup Bun
@@ -49,6 +70,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
           EVENT_NAME: ${{ github.event_name }}
           COMMENT_BODY: ${{ github.event.comment.body }}
+          CHECKOUT_REF: ${{ steps.determine-ref.outputs.checkout-ref }}
         run: |
           # Check if comment starts with /ai (for PR comments in conversation tab)
           if [[ "$IS_PR_COMMENT" == "true" && "$EVENT_NAME" == "issue_comment" && ! "$COMMENT_BODY" =~ ^/ai ]]; then
