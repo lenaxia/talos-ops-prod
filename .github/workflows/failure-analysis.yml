@@ -1,0 +1,393 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: "Failure Analysis"
+
+on:
+  workflow_run:
+    workflows: ["e2e", "Kubeconform", "Flux Diff"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Specific workflow run ID to analyze'
+        required: false
+        type: string
+      skip_pr:
+        description: 'Skip PR creation (analysis only)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  analyze-failure:
+    # Only run on workflow failures or manual dispatch
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Create temp directory
+        run: mkdir -p .tmp
+
+      - name: Determine workflow run to analyze
+        id: determine-run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ inputs.run_id }}" ]; then
+              RUN_ID="${{ inputs.run_id }}"
+            else
+              echo "Error: workflow_dispatch requires run_id input"
+              exit 1
+            fi
+          else
+            RUN_ID="${{ github.event.workflow_run.id }}"
+          fi
+          
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "Analyzing workflow run: ${RUN_ID}"
+          
+          # Get workflow run details
+          RUN_DATA=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}")
+          echo "$RUN_DATA" > .tmp/run-data.json
+          
+          WORKFLOW_NAME=$(echo "$RUN_DATA" | jq -r '.name')
+          CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion')
+          HEAD_SHA=$(echo "$RUN_DATA" | jq -r '.head_sha')
+          HEAD_BRANCH=$(echo "$RUN_DATA" | jq -r '.head_branch')
+          RUN_URL=$(echo "$RUN_DATA" | jq -r '.html_url')
+          TRIGGERING_ACTOR=$(echo "$RUN_DATA" | jq -r '.triggering_actor.login')
+          
+          echo "workflow_name=${WORKFLOW_NAME}" >> $GITHUB_OUTPUT
+          echo "conclusion=${CONCLUSION}" >> $GITHUB_OUTPUT
+          echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
+          echo "head_branch=${HEAD_BRANCH}" >> $GITHUB_OUTPUT
+          echo "run_url=${RUN_URL}" >> $GITHUB_OUTPUT
+          echo "triggering_actor=${TRIGGERING_ACTOR}" >> $GITHUB_OUTPUT
+          
+          echo "Workflow: ${WORKFLOW_NAME}"
+          echo "Conclusion: ${CONCLUSION}"
+          echo "Branch: ${HEAD_BRANCH}"
+          echo "SHA: ${HEAD_SHA}"
+
+      - name: Download workflow logs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ steps.determine-run.outputs.run_id }}
+        run: |
+          echo "Downloading logs for run ${RUN_ID}..."
+          
+          # Download logs (they come as a zip file)
+          gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}/logs" > .tmp/logs.zip
+          
+          # Extract logs
+          unzip -q .tmp/logs.zip -d .tmp/logs/ || true
+          
+          # Combine all log files for analysis
+          find .tmp/logs -type f -name "*.txt" -exec cat {} \; > .tmp/combined-logs.txt
+          
+          echo "Log files extracted to .tmp/logs/"
+          echo "Combined logs size: $(wc -l < .tmp/combined-logs.txt) lines"
+
+      - name: Get PR or commit context
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.determine-run.outputs.head_sha }}
+          HEAD_BRANCH: ${{ steps.determine-run.outputs.head_branch }}
+        run: |
+          echo "Getting context for SHA: ${HEAD_SHA}"
+          
+          # Try to find associated PR
+          PR_DATA=$(gh pr list --state all --search "${HEAD_SHA}" --json number,title,url,author --limit 1)
+          
+          if [ "$(echo "$PR_DATA" | jq 'length')" -gt 0 ]; then
+            PR_NUMBER=$(echo "$PR_DATA" | jq -r '.[0].number')
+            PR_TITLE=$(echo "$PR_DATA" | jq -r '.[0].title')
+            PR_URL=$(echo "$PR_DATA" | jq -r '.[0].url')
+            PR_AUTHOR=$(echo "$PR_DATA" | jq -r '.[0].author.login')
+            
+            echo "Found PR #${PR_NUMBER}: ${PR_TITLE}"
+            echo "pr_number=${PR_NUMBER}" >> .tmp/context.txt
+            echo "pr_title=${PR_TITLE}" >> .tmp/context.txt
+            echo "pr_url=${PR_URL}" >> .tmp/context.txt
+            echo "pr_author=${PR_AUTHOR}" >> .tmp/context.txt
+            
+            # Get PR diff
+            gh pr diff "${PR_NUMBER}" > .tmp/pr-diff.txt || true
+          else
+            echo "No PR found, getting commit info"
+            
+            # Get commit details
+            COMMIT_DATA=$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}")
+            COMMIT_MSG=$(echo "$COMMIT_DATA" | jq -r '.commit.message')
+            COMMIT_AUTHOR=$(echo "$COMMIT_DATA" | jq -r '.commit.author.name')
+            
+            echo "Commit: ${COMMIT_MSG}"
+            echo "commit_message=${COMMIT_MSG}" >> .tmp/context.txt
+            echo "commit_author=${COMMIT_AUTHOR}" >> .tmp/context.txt
+            
+            # Get commit diff
+            gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}" --jq '.files[] | "\(.filename)\n\(.patch // "")"' > .tmp/commit-diff.txt || true
+          fi
+
+      - name: Check for recent similar failures
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_NAME: ${{ steps.determine-run.outputs.workflow_name }}
+        run: |
+          echo "Checking for recent failures in ${WORKFLOW_NAME}..."
+          
+          # Get last 10 runs of the same workflow
+          gh api "repos/${{ github.repository }}/actions/workflows" --jq \
+            ".workflows[] | select(.name == \"${WORKFLOW_NAME}\") | .id" > .tmp/workflow-id.txt
+          
+          if [ -s .tmp/workflow-id.txt ]; then
+            WORKFLOW_ID=$(cat .tmp/workflow-id.txt)
+            
+            gh api "repos/${{ github.repository }}/actions/workflows/${WORKFLOW_ID}/runs?per_page=10" \
+              --jq '.workflow_runs[] | {id: .id, conclusion: .conclusion, created_at: .created_at, head_branch: .head_branch}' \
+              > .tmp/recent-runs.json
+            
+            FAILURE_COUNT=$(jq '[.] | map(select(.conclusion == "failure")) | length' .tmp/recent-runs.json)
+            echo "Recent failures in last 10 runs: ${FAILURE_COUNT}"
+            echo "failure_pattern_count=${FAILURE_COUNT}" >> .tmp/context.txt
+          fi
+
+      - name: Analyze failure with OpenCode
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ steps.determine-run.outputs.run_id }}
+          RUN_URL: ${{ steps.determine-run.outputs.run_url }}
+          WORKFLOW_NAME: ${{ steps.determine-run.outputs.workflow_name }}
+          HEAD_SHA: ${{ steps.determine-run.outputs.head_sha }}
+          HEAD_BRANCH: ${{ steps.determine-run.outputs.head_branch }}
+          SKIP_PR: ${{ inputs.skip_pr || 'false' }}
+        run: |
+          # Read context data
+          CONTEXT=$(cat .tmp/context.txt 2>/dev/null || echo "")
+          
+          # Create analysis prompt
+          cat > .tmp/analysis-prompt.txt <<'PROMPT_EOF'
+          You are an expert DevOps engineer analyzing GitHub Actions workflow failures. Your goal is to identify the ROOT CAUSE of failures and propose SYSTEMATIC fixes that prevent similar issues in the future.
+
+          ## Workflow Failure Context
+
+          **Workflow:** ${WORKFLOW_NAME}
+          **Run ID:** ${RUN_ID}
+          **Run URL:** ${RUN_URL}
+          **Branch:** ${HEAD_BRANCH}
+          **SHA:** ${HEAD_SHA}
+
+          ### Additional Context
+          ${CONTEXT}
+
+          ### Workflow Logs
+          The complete workflow logs are available in `.tmp/combined-logs.txt`. Please analyze these logs thoroughly to identify:
+          1. The exact failure point
+          2. Error messages and stack traces
+          3. Failed steps and their timing
+          4. Any warnings or suspicious patterns
+
+          ### Changed Files
+          Check `.tmp/pr-diff.txt` or `.tmp/commit-diff.txt` for changes that may have caused the failure.
+
+          ## Your Task
+
+          ### 1. Deep Dive Analysis
+          
+          Thoroughly investigate the failure by:
+          - Reading and analyzing the complete workflow logs
+          - Identifying the exact failure point and error messages
+          - Examining the changed files that triggered this workflow
+          - Checking the workflow YAML configuration in `.github/workflows/`
+          - Looking for patterns in recent similar failures (if data available in `.tmp/recent-runs.json`)
+
+          ### 2. Root Cause Classification
+
+          Classify the failure into ONE of these categories:
+
+          **A. Workflow Design Issues**
+          - Flawed workflow logic
+          - Incorrect permissions or access rights
+          - Missing dependencies or setup steps
+          - Improper step ordering
+          - Resource constraints
+
+          **B. Workflow Config Issues**
+          - Invalid environment variables
+          - Malformed YAML syntax
+          - Incorrect action versions or parameters
+          - Missing secrets or configuration
+
+          **C. Application Problems**
+          - Code bugs or compilation errors
+          - Failing unit/integration tests
+          - Broken builds or dependencies
+          - Runtime errors
+
+          **D. GitOps Repository Issues**
+          - Invalid Kubernetes manifests
+          - Helm chart configuration errors
+          - Flux/Kustomization problems
+          - YAML validation failures
+          - Missing or incorrect references
+
+          **E. Infrastructure Issues**
+          - Resource limits exceeded
+          - Network connectivity problems
+          - External service failures
+          - Timeout issues
+
+          **F. Flaky Tests**
+          - Intermittent failures
+          - Race conditions
+          - Timing-dependent issues
+          - Non-deterministic behavior
+
+          **G. Other**
+          - Complex issues spanning multiple categories
+          - Require manual investigation
+
+          ### 3. Systematic Fix Strategy
+
+          **CRITICAL:** Always prefer SYSTEMATIC fixes over PATCH fixes.
+
+          **Systematic Fix Examples:**
+          - Add validation checks to prevent entire classes of errors
+          - Improve error messages and debugging capabilities
+          - Add pre-commit hooks or linting rules
+          - Refactor workflow logic to be more robust
+          - Add retry mechanisms with exponential backoff
+          - Improve documentation and error handling
+
+          **Patch Fix Examples (AVOID):**
+          - Just fixing the specific syntax error without validation
+          - Commenting out failing tests
+          - Hardcoding values instead of fixing root cause
+          - Adding quick workarounds without understanding why
+
+          ### 4. Implementation Plan
+
+          Based on your classification and systematic fix strategy:
+
+          1. **Identify files to modify** - List all files that need changes
+          2. **Design the fix** - Explain the systematic approach
+          3. **Create test plan** - How will you verify the fix works?
+          4. **Implement changes** - Make the actual file modifications
+          5. **Test the fix** - Run relevant validation commands
+          6. **Document the changes** - Explain what was fixed and why
+
+          ### 5. Create Pull Request (unless SKIP_PR=true)
+
+          If SKIP_PR is false, create a PR with:
+
+          **Title Format:** `fix(failure-analysis): [category] resolve ${WORKFLOW_NAME} failure`
+
+          **PR Body Must Include:**
+          ```markdown
+          ## Automated Failure Analysis
+
+          ### Failed Workflow
+          - **Workflow:** ${WORKFLOW_NAME}
+          - **Run ID:** ${RUN_ID}
+          - **Run URL:** ${RUN_URL}
+          - **Branch:** ${HEAD_BRANCH}
+          - **SHA:** ${HEAD_SHA}
+
+          ### Root Cause
+          **Category:** [Your classification]
+          
+          [Detailed explanation of what caused the failure]
+
+          ### Systematic Fix
+          [Explain the systematic approach taken]
+
+          ### Changes Made
+          [List files changed and what was modified]
+
+          ### Testing Performed
+          [Describe how you validated the fix]
+
+          ### Risk Assessment
+          **Risk Level:** [Low/Medium/High]
+          [Explain any risks or potential side effects]
+
+          ### Prevention
+          [Explain how this fix prevents similar issues in the future]
+
+          ---
+          Closes #605 (Automated Failure Analysis)
+          Related to: ${RUN_URL}
+          ```
+
+          ### 6. Safety Mechanisms
+
+          **CRITICAL RULES:**
+          - NEVER auto-merge PRs
+          - NEVER push directly to main/master
+          - ALWAYS create a branch with format: `fix/failure-analysis-${RUN_ID}`
+          - ALWAYS assign PR to lenaxia for review
+          - For security-sensitive changes (secrets, permissions), mark PR as draft
+          - Add label: `automated-fix`
+          - If unsure about fix, create issue instead of PR
+
+          ### 7. Rate Limiting
+
+          Check if there are other recent failure-analysis PRs open:
+          - If 3+ failure-analysis PRs are already open, create an issue instead
+          - Comment on the original PR/commit with your analysis even if not creating a fix PR
+
+          ## Output Format
+
+          Please proceed with the analysis systematically:
+          1. Read the logs and identify the failure
+          2. Classify the root cause
+          3. Design a systematic fix
+          4. Implement and test the fix
+          5. Create a PR (or issue/comment based on conditions)
+
+          Be thorough and methodical. The goal is to PREVENT future failures, not just fix this one instance.
+          PROMPT_EOF
+
+          # Substitute environment variables in prompt
+          envsubst < .tmp/analysis-prompt.txt > .tmp/final-prompt.txt
+
+          # Run OpenCode analysis
+          opencode run "$(cat .tmp/final-prompt.txt)"
+
+      - name: Upload analysis artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-analysis-${{ steps.determine-run.outputs.run_id }}
+          path: |
+            .tmp/*.txt
+            .tmp/*.json
+            .tmp/logs/
+          retention-days: 30
