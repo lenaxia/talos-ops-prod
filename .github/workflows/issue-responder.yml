@@ -46,6 +46,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
           IS_PR_COMMENT: ${{ github.event_name == 'pull_request_review_comment' }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           # Determine if this is a PR comment or issue
           if [[ "$IS_PR_COMMENT" == "true" ]]; then
@@ -96,7 +97,7 @@ jobs:
           Context Information:
           - Number: ${ISSUE_NUMBER}
           - Is PR comment: ${IS_PR_COMMENT}
-          - Event type: ${{ github.event_name }}
+          - Event type: ${EVENT_NAME}
 
           CONVERSATION HISTORY:
           
