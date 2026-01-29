@@ -11,7 +11,11 @@
       "models": {
         "default": {
           "name": "{env:OPENAI_MODEL}",
-          "id": "{env:OPENAI_MODEL}"
+          "id": "{env:OPENAI_MODEL}",
+          "autocompact": {
+            "enabled": true,
+            "threshold": 150000
+          }
         }
       }
     }
