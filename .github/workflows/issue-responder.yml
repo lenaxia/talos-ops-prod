@@ -13,7 +13,8 @@ jobs:
     if: |
       github.event.sender.login == 'lenaxia' &&
       (github.event_name == 'issues' ||
-       github.event_name == 'issue_comment' ||
+       (github.event_name == 'issue_comment' && github.event.issue.pull_request == null) ||
+       (github.event_name == 'issue_comment' && github.event.issue.pull_request != null && startsWith(github.event.comment.body, '/ai')) ||
        (github.event_name == 'pull_request_review_comment' && startsWith(github.event.comment.body, '/ai')))
     runs-on: ubuntu-latest
     permissions:
@@ -44,10 +45,17 @@ jobs:
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
-          IS_PR_COMMENT: ${{ github.event_name == 'pull_request_review_comment' }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          IS_PR_COMMENT: ${{ github.event_name == 'pull_request_review_comment' || (github.event_name == 'issue_comment' && github.event.issue.pull_request != null) }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
           EVENT_NAME: ${{ github.event_name }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
+          # Check if comment starts with /ai (for PR comments in conversation tab)
+          if [[ "$IS_PR_COMMENT" == "true" && "$EVENT_NAME" == "issue_comment" && ! "$COMMENT_BODY" =~ ^/ai ]]; then
+            echo "Comment does not start with /ai, skipping..."
+            exit 0
+          fi
+          
           # Determine if this is a PR comment or issue
           if [[ "$IS_PR_COMMENT" == "true" ]]; then
             echo "Fetching PR context..."
@@ -58,7 +66,6 @@ jobs:
             PR_URL=$(echo "$PR_INFO" | jq -r '.url')
             
             # Get the comment body and strip the /ai prefix
-            COMMENT_BODY="${{ github.event.comment.body }}"
             USER_PROMPT="${COMMENT_BODY#/ai }"
             USER_PROMPT="${USER_PROMPT#/ai}"  # Handle case where there's no space after /ai
             
