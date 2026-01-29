@@ -185,6 +185,8 @@ jobs:
           2. NEVER finish your analysis without providing a response of some sort
           3. You may create new issues ONLY when explicitly requested by lenaxia
           4. ALWAYS respond to the issue/PR where the request was made, never create a separate issue
+          5. If the issue body is very long (>10,000 characters), provide a CONCISE summary response to avoid token limits
+          6. PRIORITIZE posting a response over completing a perfect analysis - a short response is better than no response
 
           Your Task:
 
