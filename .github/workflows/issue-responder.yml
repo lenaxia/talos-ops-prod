@@ -65,22 +65,22 @@ jobs:
             echo "Fetching PR diff..."
             PR_DIFF=$(gh pr diff "$PR_NUMBER" || echo "Unable to fetch diff")
             
-            # Build conversation context
-            cat > .tmp/pr-context.txt <<'PR_CONTEXT_EOF'
-=== PULL REQUEST ===
-PR_CONTEXT_EOF
-            echo "Title: $PR_TITLE" >> .tmp/pr-context.txt
-            echo "Number: $PR_NUMBER" >> .tmp/pr-context.txt
-            echo "URL: $PR_URL" >> .tmp/pr-context.txt
-            echo "" >> .tmp/pr-context.txt
-            echo "Description:" >> .tmp/pr-context.txt
-            echo "$PR_BODY" >> .tmp/pr-context.txt
-            echo "" >> .tmp/pr-context.txt
-            echo "=== USER REQUEST (via /ai comment) ===" >> .tmp/pr-context.txt
-            echo "$USER_PROMPT" >> .tmp/pr-context.txt
-            echo "" >> .tmp/pr-context.txt
-            echo "=== PR DIFF (for context) ===" >> .tmp/pr-context.txt
-            echo "$PR_DIFF" >> .tmp/pr-context.txt
+            # Build conversation context - using printf to avoid YAML parsing issues
+            {
+              echo "=== PULL REQUEST ==="
+              echo "Title: $PR_TITLE"
+              echo "Number: $PR_NUMBER"
+              echo "URL: $PR_URL"
+              echo ""
+              echo "Description:"
+              echo "$PR_BODY"
+              echo ""
+              echo "=== USER REQUEST (via /ai comment) ==="
+              echo "$USER_PROMPT"
+              echo ""
+              echo "=== PR DIFF (for context) ==="
+              echo "$PR_DIFF"
+            } > .tmp/pr-context.txt
             
             CONVERSATION=$(cat .tmp/pr-context.txt)
           else
