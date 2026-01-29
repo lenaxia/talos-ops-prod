@@ -368,6 +368,43 @@ jobs:
 
           # Run opencode with the full prompt including conversation history
           opencode run "$(cat .tmp/issue-prompt.txt)"
+          
+          # Verify that a response was posted by checking recent comments
+          echo "Verifying that AI posted a response..."
+          COMMENTS_BEFORE_FILE=".tmp/comments-before.json"
+          COMMENTS_AFTER_FILE=".tmp/comments-after.json"
+          
+          # Get comments after OpenCode ran
+          if [[ "$IS_PR_COMMENT" == "true" ]]; then
+            gh api "repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" --jq '[.[] | {id: .id, created_at: .created_at, user: .user.login}]' > "$COMMENTS_AFTER_FILE"
+          else
+            gh api "repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" --jq '[.[] | {id: .id, created_at: .created_at, user: .user.login}]' > "$COMMENTS_AFTER_FILE"
+          fi
+          
+          # Check if github-actions[bot] posted a comment in the last 2 minutes
+          RECENT_BOT_COMMENTS=$(jq --arg cutoff "$(date -u -d '2 minutes ago' +%Y-%m-%dT%H:%M:%SZ)" '[.[] | select(.user == "github-actions[bot]" and .created_at > $cutoff)] | length' "$COMMENTS_AFTER_FILE")
+          
+          if [[ "$RECENT_BOT_COMMENTS" -eq 0 ]]; then
+            echo "WARNING: No response was posted by the AI. Posting a fallback message..."
+            
+            FALLBACK_MESSAGE="@lenaxia I've analyzed your request but encountered an issue posting my response. Here's what I found:
+
+          **Issue**: #${ISSUE_NUMBER}
+          **Type**: $(if [[ "$IS_PR_COMMENT" == "true" ]]; then echo "PR Comment"; else echo "Issue"; fi)
+          
+          I apologize for the incomplete response. This appears to be an internal error where the AI agent completed its analysis but failed to post the results.
+          
+          **Please try one of these:**
+          1. Re-trigger the workflow by posting a new comment
+          2. Check the workflow artifacts for any generated analysis files
+          3. Review the workflow logs at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          If this continues, please file an issue with the workflow maintainer."
+            
+            gh issue comment "${ISSUE_NUMBER}" --body "$FALLBACK_MESSAGE"
+          else
+            echo "✓ Verified: AI posted a response successfully"
+          fi
 
       - name: Upload generated artifacts
         if: always()
