@@ -180,6 +180,12 @@ jobs:
              - Modify Talos configs
              - Add/change Kubernetes resources
 
+          CRITICAL RULES (READ CAREFULLY):
+          1. ALWAYS post a response to the original issue/PR thread before finishing
+          2. NEVER finish your analysis without providing a response of some sort
+          3. You may create new issues ONLY when explicitly requested by lenaxia
+          4. ALWAYS respond to the issue/PR where the request was made, never create a separate issue
+
           Your Task:
 
           Step 1: Analyze the issue request
@@ -345,6 +351,17 @@ jobs:
           3. Reference the secrets in the deployment
 
           Would you like me to create the basic structure without secrets?"
+
+          CRITICAL REMINDER - MANDATORY:
+          Before finishing your task, you MUST:
+          1. Post a response to the original issue/PR thread using github_add_issue_comment or github_pull_request_review_write
+          2. NEVER complete your work without posting some kind of response
+          3. If your analysis is complete, post a summary with your findings
+          4. If you need clarification, post a question
+          5. If you created a PR, post a comment linking to it
+          6. If you cannot complete the request, post an explanation why
+
+          FAILURE TO POST A RESPONSE IS A CRITICAL ERROR.
 
           Now, analyze the issue and take the appropriate action.
           PROMPT_EOF
