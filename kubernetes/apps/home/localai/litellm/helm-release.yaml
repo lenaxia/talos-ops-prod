@@ -30,6 +30,7 @@ spec:
         type: statefulset
         annotations:
           reloader.stakater.com/auto: 'true'
+          litellm-force-restart: "2026-01-31"
         initContainers:
           init-db:
             env:
