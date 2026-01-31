@@ -5,6 +5,5 @@ commonLabels:
   app.kubernetes.io/instance: *app
 resources:
   - ../base
-patches:
   - helm-release.yaml
 

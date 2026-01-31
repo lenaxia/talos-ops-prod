@@ -5,18 +5,18 @@ commonLabels:
 kind: Kustomization
 namespace: media
 patches:
-- path: patches/env.yaml
-  target:
-    group: helm.toolkit.fluxcd.io
-    kind: HelmRelease
-    name: outline
-    version: v2
-- path: patches/postgres.yaml
-  target:
-    group: helm.toolkit.fluxcd.io
-    kind: HelmRelease
-    name: outline
-    version: v2
+  - path: patches/env.yaml
+    target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: outline
+      version: v2
+  - path: patches/postgres.yaml
+    target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: outline
+      version: v2
 resources:
-- secret.sops.yaml
-- helm-release.yaml
+  - secret.sops.yaml
+  - helm-release.yaml

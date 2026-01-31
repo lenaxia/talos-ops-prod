@@ -5,13 +5,13 @@ commonLabels:
 kind: Kustomization
 namespace: home
 patches:
-- path: patches/patch-postgres.yaml
-  target:
-    group: helm.toolkit.fluxcd.io
-    kind: HelmRelease
-    name: babybuddy-pandaria
-    version: v2
+  - path: patches/patch-postgres.yaml
+    target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: babybuddy-pandaria
+      version: v2
 resources:
-- helm-release.yaml
-- config-pvc.yaml
-- secret.sops.yaml
+  - helm-release.yaml
+  - config-pvc.yaml
+  - secret.sops.yaml
