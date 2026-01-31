@@ -41,8 +41,9 @@ tasks:
 
   configure:
     desc: Render and validate configuration files
-    prompt: Any conflicting files in the kubernetes directory will be overwritten... continue?
+    prompt: Any conflicting files in kubernetes directory will be overwritten... continue?
     cmds:
+      - task: kubernetes:validate-kustomize
       - task: bootstrap:template
       - task: bootstrap:secrets
       - task: kubernetes:kubeconform

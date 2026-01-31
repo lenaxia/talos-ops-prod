@@ -37,6 +37,15 @@ tasks:
     preconditions:
       - test -f {{.KUBECONFORM_SCRIPT}}
       - which kubeconform
+    vars:
+      VALIDATE_SCRIPT: "{{.SCRIPTS_DIR}}/validate-kustomize.sh"
+
+  validate-kustomize:
+    desc: Validate Kustomization files for deprecated syntax
+    cmd: bash {{.VALIDATE_SCRIPT}} {{.KUBERNETES_DIR}}
+    preconditions:
+      - test -f {{.VALIDATE_SCRIPT}}
+      - which yq
 
   resources:
     desc: Gather common resources in your cluster, useful when asking for support
