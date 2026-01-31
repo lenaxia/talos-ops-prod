@@ -6,5 +6,8 @@ commonLabels:
 resources:
   - ../base
 patches:
-  - helm-release.yaml
+  - path: helm-release.yaml
+    target:
+      kind: HelmRelease
+      name: hajimari-external
 
