@@ -6,5 +6,10 @@ commonLabels:
 resources:
   - ../base
 patches:
-  - helm-release.yaml
+  - path: helm-release.yaml
+    target:
+      group: helm.toolkit.fluxcd.io
+      version: v2
+      kind: HelmRelease
+      name: hajimari-external
 
