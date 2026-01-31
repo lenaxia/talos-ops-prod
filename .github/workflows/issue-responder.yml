@@ -181,12 +181,14 @@ jobs:
              - Add/change Kubernetes resources
 
           CRITICAL RULES (READ CAREFULLY):
-          1. ALWAYS post a response to the original issue/PR thread before finishing
-          2. NEVER finish your analysis without providing a response of some sort
-          3. You may create new issues ONLY when explicitly requested by lenaxia
-          4. ALWAYS respond to the issue/PR where the request was made, never create a separate issue
-          5. If the issue body is very long (>10,000 characters), provide a CONCISE summary response to avoid token limits
-          6. PRIORITIZE posting a response over completing a perfect analysis - a short response is better than no response
+          1. ALWAYS use the github_add_issue_comment tool to post a response to the original issue/PR thread before finishing
+          2. NEVER finish your analysis without calling github_add_issue_comment or github_pull_request_review_write
+          3. If ANY code/file changes are needed, you MUST create a PR using github_create_branch and github_create_pull_request - NEVER make direct commits to main
+          4. You may create new issues ONLY when explicitly requested by lenaxia
+          5. ALWAYS respond to the issue/PR where the request was made, never create a separate issue
+          6. If the issue body is very long (>10,000 characters), provide a CONCISE summary response to avoid token limits
+          7. PRIORITIZE calling github_add_issue_comment over completing a perfect analysis - a short response is better than no response
+          8. Outputting text in your response is NOT the same as posting a comment - you MUST call the github_add_issue_comment tool
 
           Your Task:
 
@@ -212,15 +214,15 @@ jobs:
           - Thoroughly investigate the repository to understand the topic
           - Search through relevant files (kubernetes manifests, configs, workflows)
           - Analyze the current implementation/configuration
-          - Provide a comprehensive answer with:
+          - Gather your findings
+          - CRITICAL: Call github_add_issue_comment with your findings including:
             * Current state/configuration details
             * Relevant file paths and line numbers for reference
             * Explanation of how things currently work
             * Any recommendations or insights
-           - IMPORTANT: Use github_add_issue_comment or github_add_comment_to_pending_review to post your findings
-           - For PR comments, use github_pull_request_review_write to create/submit reviews
-           - Don't create a PR unless changes are explicitly requested
-
+          - For PR comments, use github_pull_request_review_write to create/submit reviews
+          - Don't create a PR unless changes are explicitly requested
+          
           Examples of investigation requests:
            - "How is authentication currently configured?"
            - "What services are running in the media namespace?"
@@ -229,57 +231,70 @@ jobs:
            - "How does certificate management work in this cluster?"
 
           Option B: Implement the request (create a PR)
-           If the request is clear and actionable for changes:
-           - Use github_create_branch to create: feat/issue-${ISSUE_NUMBER}-<short-description>
-           - Implement the requested changes using appropriate patterns from the repository
-           - Use github_create_pull_request to create the pull request
-           - Use github_add_issue_comment to post PR link and summary
-
+           If the request requires ANY code or file changes (new files, modifications, deletions):
+           - MANDATORY: Create a pull request - DO NOT commit directly to main branch
+           - Step 1: Call github_create_branch to create a feature branch: feat/issue-${ISSUE_NUMBER}-<short-description>
+           - Step 2: Use github_create_or_update_file or github_push_files to make your changes on the feature branch
+           - Step 3: Call github_create_pull_request to create the pull request with:
+             * Descriptive title (e.g., "feat(app): add new application")
+             * Body that includes "Closes #${ISSUE_NUMBER}"
+             * Description of what was changed and why
+           - Step 4: MANDATORY: Call github_add_issue_comment to notify lenaxia with the PR link and summary
+           
+           CRITICAL: Any implementation work = create PR. No exceptions. No direct commits to main.
+          
           Option C: Ask for clarification
            If the request is ambiguous or unclear:
-           - Use appropriate comment tool (github_add_issue_comment or github_pull_request_review_write)
+           - Call github_add_issue_comment or github_pull_request_review_write with your clarifying questions
            - Don't create a PR yet
-
+          
           Option D: Provide information/documentation
            If the user is asking a general question or wants information:
-           - Use appropriate comment tool to post a detailed answer
+           - Call github_add_issue_comment to post a detailed answer
            - Don't create a PR
-
+          
           Option E: Decline with explanation
            If the request:
            - Involves creating/managing secrets (explain user must handle)
            - Is outside the scope of this repository
            - Requires actions you cannot perform
            - Is ambiguous despite trying to clarify
-           - Use appropriate comment tool to explain why and suggest alternatives
+           - Call github_add_issue_comment to explain why and suggest alternatives
 
-          Step 3: If implementing (Option B), follow this process:
-
+          Step 3: If implementing (Option B), follow this process - ALL CODE CHANGES REQUIRE A PR:
+          
           a. Determine the implementation approach:
              - If new application: Look at similar apps in kubernetes/apps/ as templates
              - If config change: Identify which files need modification
              - If workflow: Look at .github/workflows/ for patterns
              - If cluster change: Check bootstrap/ and kubernetes/ structure
-
-          b. Create the implementation:
-             - Use github_create_branch to create a feature branch
-             - Use github_create_or_update_file or github_push_files to add/modify files
+          
+          b. Create a feature branch (MANDATORY - no direct commits to main):
+             - Call github_create_branch with branch name: feat/issue-${ISSUE_NUMBER}-<short-description>
+             - This creates a new branch from main
+          
+          c. Make your changes on the feature branch:
+             - Use github_create_or_update_file for single file changes
+             - Use github_push_files for multiple file changes
              - Follow existing patterns in the repository
              - Use appropriate directory structure
-
-          c. Create a pull request:
-           - Use github_create_pull_request
-           - Title should be descriptive (e.g., "feat(app-name): deploy app-name")
-           - Body should reference the issue: "Closes #${ISSUE_NUMBER}"
-           - Include description of changes made
-           - Set appropriate base branch (usually "main")
-
-          d. Comment on the issue:
-           - Use github_add_issue_comment
-           - Include acknowledgment of the request
-           - Link to the created PR
-           - Summary of what was implemented
-           - Any notes or considerations for the user
+             - IMPORTANT: All file operations should target your feature branch, not main
+          
+          d. Create a pull request (MANDATORY):
+           - Call github_create_pull_request with:
+             * title: Descriptive title (e.g., "feat(app-name): deploy app-name")
+             * body: Must include "Closes #${ISSUE_NUMBER}" plus description of changes
+             * head: Your feature branch name
+             * base: "main" (or appropriate base branch)
+          
+          e. Notify lenaxia with a comment (MANDATORY):
+           - Call github_add_issue_comment with:
+             * Acknowledgment of the request
+             * Link to the created PR
+             * Summary of what was implemented
+             * Any notes or considerations
+          
+          CRITICAL: Steps b, d, and e are MANDATORY. Missing any of these is an error.
 
           Important Guidelines:
 
@@ -311,60 +326,75 @@ jobs:
              - Some apps use Authelia configuration (in authelia/ directory)
 
           Response Format:
-
-          When adding comments to issues, be:
-          - Clear and concise
-          - Action-oriented
-          - Include links to resources when applicable
-          - Ask for clarification if needed
-
-          Example responses:
-
-          If implementing:
+          
+          When posting your response, you MUST use the github_add_issue_comment tool. Here's how:
+          
+          Example 1 - After implementing changes:
+          Call github_add_issue_comment with body:
           "@lenaxia ✅ I've created a PR to deploy Jellyfin to your cluster.
-
+          
           PR: #123 - feat(media): deploy jellyfin
-
+          
           Changes made:
           - Added Jellyfin deployment to home namespace
           - Configured with default values from the official Helm chart
           - Ready for customization
-
+          
           Please review the values in the Helm release and adjust for your environment. Let me know if you need any changes!"
-
-          If clarifying:
+          
+          Example 2 - When asking for clarification:
+          Call github_add_issue_comment with body:
           "@lenaxia Thanks for the request! I want to make sure I implement this correctly. Could you clarify:
-
+          
           1. Which namespace should this be deployed to?
           2. Do you have specific values you'd like to use, or should I use defaults?
           3. Any special configuration requirements (ingress, storage, etc.)?
-
+          
           Once I have these details, I'll create the PR for you."
-
-          If declining:
+          
+          Example 3 - When declining a request:
+          Call github_add_issue_comment with body:
           "@lenaxia Thanks for the suggestion! However, I'm not able to help with this request because:
-
+          
           - Creating and managing secrets requires manual intervention for security reasons
           - You'll need to handle the sensitive values separately using SOPS encryption
-
+          
           Here's how you can proceed:
           1. I can create the basic deployment structure
           2. You can add the encrypted secrets using your AGE key
           3. Reference the secrets in the deployment
-
+          
           Would you like me to create the basic structure without secrets?"
+          
+          REMEMBER: These are examples of the MESSAGE CONTENT. You need to pass these as the 'body' parameter to the github_add_issue_comment tool.
 
-          CRITICAL REMINDER - MANDATORY:
-          Before finishing your task, you MUST:
-          1. Post a response to the original issue/PR thread using github_add_issue_comment or github_pull_request_review_write
-          2. NEVER complete your work without posting some kind of response
-          3. If your analysis is complete, post a summary with your findings
-          4. If you need clarification, post a question
-          5. If you created a PR, post a comment linking to it
-          6. If you cannot complete the request, post an explanation why
-
-          FAILURE TO POST A RESPONSE IS A CRITICAL ERROR.
-
+          CRITICAL REMINDER - MANDATORY ACTIONS BEFORE FINISHING:
+          
+          1. CODE CHANGES CHECKLIST:
+             ☐ If ANY files need to be created, modified, or deleted:
+               ☐ Call github_create_branch to create a feature branch
+               ☐ Use github_create_or_update_file or github_push_files to make changes
+               ☐ Call github_create_pull_request to create the PR
+               ☐ NEVER commit directly to main branch
+          
+          2. COMMENT CHECKLIST (ALWAYS REQUIRED):
+             ☐ Call github_add_issue_comment to post your response
+             ☐ OR call github_pull_request_review_write for PR review comments
+             
+             Required in your comment:
+             - If you investigated: Post your findings with file references
+             - If you created a PR: Post the PR link and summary
+             - If you need clarification: Post your questions
+             - If you cannot complete: Post explanation and alternatives
+          
+          3. CRITICAL ERRORS TO AVOID:
+             ✗ Outputting text instead of calling github_add_issue_comment
+             ✗ Making direct commits to main branch instead of creating a PR
+             ✗ Creating files without creating a PR first
+             ✗ Finishing without calling github_add_issue_comment
+          
+          THESE ACTIONS ARE MANDATORY. FAILURE TO COMPLETE THEM IS A CRITICAL ERROR.
+          
           Now, analyze the issue and take the appropriate action.
           PROMPT_EOF
 
