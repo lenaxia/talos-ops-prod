@@ -20,6 +20,11 @@ kubeconform_args=(
     "-verbose"
 )
 
+echo "=== Validating Kustomize v5.x compatibility ==="
+if [ -f "./scripts/validate-kustomize-v5.sh" ]; then
+    bash ./scripts/validate-kustomize-v5.sh "${KUBERNETES_DIR}"
+fi
+
 echo "=== Validating standalone manifests in ${KUBERNETES_DIR}/flux ==="
 find "${KUBERNETES_DIR}/flux" -maxdepth 1 -type f -name '*.yaml' -print0 | while IFS= read -r -d $'\0' file;
 do
