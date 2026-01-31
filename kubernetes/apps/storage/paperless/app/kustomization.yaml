@@ -15,7 +15,7 @@ patches:
       version: v2
       kind: HelmRelease
       name: paperless
-  #- patches/patch-postgres.yaml
+  #  - path: patches/patch-postgres.yaml
 configMapGenerator:
   - name: llm-configmap
     files:
