@@ -9,4 +9,9 @@ resources:
   - config-pvc.yaml
   - secret.sops.yaml
 patches:
-  - patches/patch-postgres.yaml
+  - path: patches/patch-postgres.yaml
+    target:
+      group: helm.toolkit.fluxcd.io
+      kind: HelmRelease
+      name: gamevault
+      version: v2
