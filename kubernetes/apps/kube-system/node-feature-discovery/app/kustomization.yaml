@@ -1,6 +1,8 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: kube-system
 resources:
-  - github.com/kubernetes-sigs/node-feature-discovery//deployment/base/nfd-crds?ref=v0.18.3
+  - crds/nfd-api-crds.yaml
   - helm-release.yaml
