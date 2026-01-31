@@ -1,0 +1,9 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--strict, -d, "{extends: default, rules: {line-length: {max: 200}, indentation: {spaces: 2}}}"]
+        files: ^kubernetes/.*\.(ya?ml)$
