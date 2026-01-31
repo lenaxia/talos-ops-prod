@@ -43,7 +43,7 @@ jobs:
           fi
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ steps.determine-ref.outputs.checkout-ref || 'main' }}
           fetch-depth: 0
