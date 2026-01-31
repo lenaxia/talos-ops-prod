@@ -5,8 +5,8 @@ commonLabels:
 kind: Kustomization
 namespace: home
 patches:
-- path: patches/patch-postgres.yaml
-  target:
+  - path: patches/patch-postgres.yaml
+    target:
     group: helm.toolkit.fluxcd.io
     kind: HelmRelease
     name: babybuddy
