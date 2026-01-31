@@ -6,5 +6,5 @@ commonLabels:
 resources:
   - ../base
 patches:
-  - helm-release.yaml
+  - path: helm-release.yaml
 
