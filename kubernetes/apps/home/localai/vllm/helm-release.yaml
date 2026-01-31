@@ -42,7 +42,7 @@ spec:
               tag:
                 v0.15.0@sha256:7764931211e5b408a10d6e289ab9eca8d6ecd105e9239cb2d528c2c4d0ad67b0
             command: ["/bin/sh", "-c"]
-             args:
+            args:
                - |
                  vllm serve \
                      QuantTrio/Qwen3-VL-32B-Instruct-AWQ \
