@@ -6,6 +6,21 @@ KUBERNETES_DIR=$1
 
 [[ -z "${KUBERNETES_DIR}" ]] && echo "Kubernetes location not specified" && exit 1
 
+echo "=== Validating kustomization syntax ==="
+find "${KUBERNETES_DIR}" -type f -name "kustomization.yaml" -print0 | while IFS= read -r -d $'\0' file;
+do
+    # Check for invalid patch syntax (string paths instead of 'path:' field)
+    # Pattern matches: "- ./patches/file.yaml" or "- patches/file.yaml"
+    # Should be: "- path: ./patches/file.yaml"
+    if grep -A5 "^patches:$" "$file" 2>/dev/null | grep -q "^  - [^[:space:]]*$"; then
+        echo "ERROR: Invalid patches syntax in $file"
+        echo "Patches must use 'path:' field instead of string paths"
+        echo "Found invalid entry like: '- file.yaml'"
+        echo "Change to: '- path: file.yaml'"
+        exit 1
+    fi
+done
+
 kustomize_args=("--load-restrictor=LoadRestrictionsNone")
 kustomize_config="kustomization.yaml"
 kubeconform_args=(
