@@ -410,7 +410,7 @@ jobs:
 
       - name: Upload generated artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: issue-response-${{ github.event.issue.number || github.event.pull_request.number }}
           path: .tmp/*.md
