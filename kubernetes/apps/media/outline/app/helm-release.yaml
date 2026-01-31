@@ -47,7 +47,7 @@ spec:
           main:
             image:
               repository: docker.io/outlinewiki/outline
-              tag: 1.1.0
+              tag: 1.4.0
               pullPolicy: Always
             envFrom:
               - secretRef:
@@ -56,9 +56,6 @@ spec:
               requests:
                 cpu: 10m
                 memory: 50Mi
-
-            command: [/bin/sh, -c, yarn db:migrate --env=production-ssl-disabled
-                  && yarn start --env=production-ssl-disabled]
     service:
       main:
         type: ClusterIP
