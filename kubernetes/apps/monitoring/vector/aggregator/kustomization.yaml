@@ -7,10 +7,13 @@ resources:
   - ./helm-release.yaml
   - ./secret.sops.yaml
 patches:
-  - ./patches/geoip.yaml
+  - path: ./patches/geoip.yaml
+    target:
+      kind: HelmRelease
+      name: vector-aggregator
 configMapGenerator:
   - name: vector-aggregator-configmap
     files:
-      - vector.yaml=./config/vector.yaml
+        - vector.yaml=./config/vector.yaml
 generatorOptions:
   disableNameSuffixHash: true
