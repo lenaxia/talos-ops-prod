@@ -8,6 +8,9 @@ resources:
   - ./secret.sops.yaml
 patches:
   - path: ./patches/geoip.yaml
+    target:
+      kind: HelmRelease
+      name: vector-aggregator
 configMapGenerator:
   - name: vector-aggregator-configmap
     files:
