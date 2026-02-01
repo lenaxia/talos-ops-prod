@@ -22,8 +22,6 @@ spec:
     remediation:
       retries: 5
   values:
-    nodeFeatureRule:
-      createCRD: false
     gc:
       resources: {}
     master:
