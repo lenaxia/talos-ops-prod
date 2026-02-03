@@ -41,29 +41,57 @@ tasks:
     dir: '{{.ROOT_DIR}}/.bin'
     platforms: ['linux/amd64', 'linux/arm64']
     cmds:
-      - for:
-          - budimanjojo/talhelper?as=talhelper
-          - cloudflare/cloudflared?as=cloudflared
-          - FiloSottile/age?as=age
-          - fluxcd/flux2?as=flux
-          - helmfile/helmfile?as=helmfile
-          - jqlang/jq?as=jq
-          - kubernetes-sigs/kustomize?as=kustomize
-          - mikefarah/yq?as=yq
-          - siderolabs/talos?as=talosctl
-          - yannh/kubeconform?as=kubeconform
-        cmd: curl -fsSL "https://i.jpillora.com/{{.ITEM}}&type=script" | bash
       - cmd: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl";
-          curl -sSfL -o sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
+          _retry_curl() {
+            local max_attempts=3
+            local attempt=1
+            local delay=5
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Downloading $1 (attempt $attempt/$max_attempts)..."
+              if curl -fsSL --connect-timeout 30 --max-time 300 -o /tmp/download_output "$2"; then
+                return 0
+              else
+                local exit_code=$?
+                echo "Failed to download $1 (attempt $attempt/$max_attempts): exit code $exit_code"
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Retrying in ${delay}s..."
+                  sleep $delay
+                  delay=$((delay * 2))
+                fi
+                attempt=$((attempt + 1))
+              fi
+            done
+            
+            echo "Failed to download $1 after $max_attempts attempts"
+            return 1
+          }
+          
+          for item in \
+            "budimanjojo/talhelper?as=talhelper" \
+            "cloudflare/cloudflared?as=cloudflared" \
+            "FiloSottile/age?as=age" \
+            "fluxcd/flux2?as=flux" \
+            "helmfile/helmfile?as=helmfile" \
+            "jqlang/jq?as=jq" \
+            "kubernetes-sigs/kustomize?as=kustomize" \
+            "mikefarah/yq?as=yq" \
+            "siderolabs/talos?as=talosctl" \
+            "yannh/kubeconform?as=kubeconform"; do
+            _retry_curl "$item" "https://i.jpillora.com/${item}&type=script" || exit 1
+            cat /tmp/download_output | bash
+          done
+      - cmd: |
+          curl -LO --connect-timeout 30 --max-time 300 "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" || exit 1
+          curl -sSfL --connect-timeout 30 --max-time 300 -o sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64 || exit 1
         platforms: ['linux/amd64']
       - cmd: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl";
-          curl -sSfL -o sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.arm64
+          curl -LO --connect-timeout 30 --max-time 300 "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl" || exit 1
+          curl -sSfL --connect-timeout 30 --max-time 300 -o sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.arm64 || exit 1
         platforms: ['linux/arm64']
       - cmd: chmod +x kubectl sops
-      - cmd: curl -sSfL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-      - cmd: curl -sSfL https://github.com/mitsuhiko/minijinja/releases/latest/download/minijinja-cli-installer.sh | bash
+      - cmd: curl -sSfL --connect-timeout 30 --max-time 300 https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - cmd: curl -sSfL --connect-timeout 30 --max-time 300 https://github.com/mitsuhiko/minijinja/releases/latest/download/minijinja-cli-installer.sh | bash
     env:
       MINIJINJA_CLI_INSTALL_DIR: '.'
       MINIJINJA_CLI_UNMANAGED_INSTALL: 'true'
