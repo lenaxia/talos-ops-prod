@@ -166,44 +166,44 @@ spec:
               #    output_cost_per_token: 0.00001
               #    max_tokens: 40960
 
-               # vLLM
-               #- model_name: default
-               #  litellm_params:
-               #    model: hosted_vllm/default
-               #    api_base: http://vllm.home.svc.cluster.local:8000/v1
-               #    api_key: doesnotmatter
-               #  model_info:
-               #    input_cost_per_token: 0.00001
-               #    output_cost_per_token: 0.00001
-               #    max_tokens: 40960
-               #- model_name: qwen3-30a3b-test
-               #  litellm_params:
-               #    model: openai/cognitivecomputations/Qwen3-30B-A3B-AWQ
-               #    api_base: http://vllm.home.svc.cluster.local:8000/v1
-               #    api_key: doesnotmatter
-               #  model_info:
-               #    input_cost_per_token: 0.00001
-               #    output_cost_per_token: 0.00001
-               #    max_tokens: 40960
-               - model_name: default
-                 litellm_params:
-                   model: openai/qwen3-vl
-                   api_base: http://vllm.home.svc.cluster.local:8000/v1
-                   api_key: doesnotmatter
-                 model_info:
-                   input_cost_per_token: 0.00001
-                   output_cost_per_token: 0.00001
-                   max_tokens: 131072
-                   supports_tool_choice: true
-               - model_name: classifier
-                 litellm_params:
-                   model: openai/classifier
-                   api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
-                   api_key: doesnotmatter
-                 model_info:
-                   input_cost_per_token: 0.00001
-                   output_cost_per_token: 0.00001
-                   max_tokens: 1000
+              # vLLM
+              #- model_name: default
+              #  litellm_params:
+              #    model: hosted_vllm/default
+              #    api_base: http://vllm.home.svc.cluster.local:8000/v1
+              #    api_key: doesnotmatter
+              #  model_info:
+              #    input_cost_per_token: 0.00001
+              #    output_cost_per_token: 0.00001
+              #    max_tokens: 40960
+              #- model_name: qwen3-30a3b-test
+              #  litellm_params:
+              #    model: openai/cognitivecomputations/Qwen3-30B-A3B-AWQ
+              #    api_base: http://vllm.home.svc.cluster.local:8000/v1
+              #    api_key: doesnotmatter
+              #  model_info:
+              #    input_cost_per_token: 0.00001
+              #    output_cost_per_token: 0.00001
+              #    max_tokens: 40960
+              - model_name: default
+                litellm_params:
+                  model: openai/qwen3-vl
+                  api_base: http://vllm.home.svc.cluster.local:8000/v1
+                  api_key: doesnotmatter
+                model_info:
+                  input_cost_per_token: 0.00001
+                  output_cost_per_token: 0.00001
+                  max_tokens: 131072
+                  supports_tool_choice: true
+              - model_name: classifier
+                litellm_params:
+                  model: openai/classifier
+                  api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
+                  api_key: doesnotmatter
+                model_info:
+                  input_cost_per_token: 0.00001
+                  output_cost_per_token: 0.00001
+                  max_tokens: 1000
 
               # Deepseek
               - model_name: deepseek-v3-chat
