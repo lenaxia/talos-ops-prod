@@ -195,9 +195,9 @@ spec:
                    output_cost_per_token: 0.00001
                    max_tokens: 131072
                    supports_tool_choice: true
-               - model_name: vllm-classifier
+               - model_name: classifier
                  litellm_params:
-                   model: hosted_vllm/classifier
+                   model: openai/classifier
                    api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
                    api_key: doesnotmatter
                  model_info:
