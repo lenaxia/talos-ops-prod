@@ -43,11 +43,8 @@ spec:
             env:
               TZ: ${TIMEZONE}
               NZBHYDRA_DEBUG: "true"
-
-            env:
-              TZ: ${TIMEZONE}
-
-    service:
+              
+            service:
       main:
         type: ClusterIP
         ports:
