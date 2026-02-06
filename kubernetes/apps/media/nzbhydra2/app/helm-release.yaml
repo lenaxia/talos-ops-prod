@@ -39,6 +39,10 @@ spec:
               repository: lscr.io/linuxserver/nzbhydra2
               tag: 8.0.0
               pullPolicy: Always
+              
+            env:
+              TZ: ${TIMEZONE}
+              NZBHYDRA_DEBUG: "true"
 
             env:
               TZ: ${TIMEZONE}
