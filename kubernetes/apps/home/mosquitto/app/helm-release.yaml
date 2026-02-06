@@ -61,6 +61,8 @@ spec:
           imagePullSecrets:
             - name: dockerhub-auth
     defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
       securityContext:
         runAsNonRoot: true
         runAsUser: 568
