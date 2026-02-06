@@ -1,0 +1,118 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname vllm-classifier
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "special"
+          effect: "NoSchedule"
+    controllers:
+      app:
+        type: deployment
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          app:
+            image:
+              repository: vllm/vllm-openai
+              tag: v0.15.0@sha256:7764931211e5b408a10d6e289ab9eca8d6ecd105e9239cb2d528c2c4d0ad67b0
+            command: ["/bin/sh", "-c"]
+            args:
+               - |
+                 vllm serve \
+                     YOUR_MODEL_NAME_HERE \
+                     --served-model-name classifier \
+                     --max-model-len 1000 \
+                     --max-num-seqs 30 \
+                     --gpu-memory-utilization 0.95 \
+                     --tensor-parallel-size 1 \
+                     --trust-remote-code \
+                     --host 0.0.0.0 \
+                     --port 8000 \
+                     --dtype auto \
+                     --disable-log-requests
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              - name: CUDA_LAUNCH_BLOCKING
+                value: 0
+              - name: TORCH_USE_CUDA_DSA
+                value: 1
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "YOUR_3090_GPU_UUID_HERE"
+              - name: VLLM_USE_MODELSCOPE
+                value: "false"
+              - name: VLLM_TORCH_COMPILE
+                value: "true"
+            envFrom:
+              - secretRef:
+                  name: *appname
+            probes:
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8000
+                  initialDelaySeconds: 60
+                  periodSeconds: 10
+                  successThreshold: 1
+                  failureThreshold: 3
+                  timeoutSeconds: 5
+              readiness: *probe
+            resources:
+              requests:
+                nvidia.com/gpu: "1"
+                memory: "16Gi"
+              limits:
+                nvidia.com/gpu: "1"
+                memory: "22Gi"
+
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: openebs-hostpath
+        accessMode: ReadWriteOnce
+        size: 20Gi
+        globalMounts:
+          - path: /root/.cache/huggingface
+      shm:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 8Gi
+        globalMounts:
+          - path: /dev/shm
+    service:
+      app:
+        ports:
+          http:
+            port: 8000
+        primary: true
+        type: LoadBalancer
+        loadBalancerIP: ${SVC_VLLM_CLASSIFIER_IP}
