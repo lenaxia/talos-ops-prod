@@ -1,0 +1,18 @@
+---
+default_stages: [commit]
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--strict, -c, .yamllint.yaml]
+        files: ^(kubernetes|bootstrap)/.*\.(ya?ml)$
+
+  - repo: local
+    hooks:
+      - id: kubeconform-k8s
+        name: Validate Kubernetes manifests with kubeconform
+        entry: bash ./scripts/kubeconform.sh ./kubernetes
+        language: system
+        files: ^kubernetes/.*\.(ya?ml)$
+        pass_filenames: false

@@ -43,7 +43,13 @@ echo "=== Validating kustomizations in ${KUBERNETES_DIR}/apps ==="
 find "${KUBERNETES_DIR}/apps" -type f -name $kustomize_config -print0 | while IFS= read -r -d $'\0' file;
 do
     echo "=== Validating kustomizations in ${file/%$kustomize_config} ==="
-    kustomize build "${file/%$kustomize_config}" "${kustomize_args[@]}" | kubeconform "${kubeconform_args[@]}"
+    kustomize build "${file/%$kustomize_config}" "${kustomize_args[@]}" 2>&1 | (
+        if ! kubeconform "${kubeconform_args[@]}"; then
+            echo "ERROR: Validation failed for kustomization at: ${file/%$kustomize_config}"
+            echo "This may be due to YAML syntax errors or invalid Kubernetes manifests."
+            exit 1
+        fi
+    )
     if [[ ${PIPESTATUS[0]} != 0 ]]; then
         exit 1
     fi
