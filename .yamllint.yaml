@@ -1,0 +1,23 @@
+extends: default
+
+rules:
+  line-length:
+    max: 120
+    level: warning
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: {}
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+  document-start: disable
+  empty-lines:
+    max: 2
+  trailing-spaces: enable
+  empty-values:
+    forbid-in-block-mappings: true
+    forbid-in-flow-mappings: true
+  key-duplicates: enable
+  octal-values: forbid-implicit-octal
