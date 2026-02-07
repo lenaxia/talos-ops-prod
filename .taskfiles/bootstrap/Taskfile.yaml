@@ -1,5 +1,4 @@
 ---
-# yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: '3'
 
 vars:
@@ -14,7 +13,7 @@ env:
 tasks:
 
   talos:
-    desc: Bootstrap the Talos cluster
+    desc: Bootstrap Talos cluster
     dir: '{{.KUBERNETES_DIR}}/bootstrap/talos'
     cmds:
       - '{{if eq .TALHELPER_SECRET_EXISTS "false"}}talhelper gensecret > {{.TALHELPER_SECRET_FILE}}{{end}}'
@@ -35,7 +34,7 @@ tasks:
       - which talhelper sops
 
   flux:
-    desc: Bootstrap Flux into the Talos cluster
+    desc: Bootstrap Flux into Talos cluster
     cmds:
       - '{{if eq .GITHUB_DEPLOY_KEY_EXISTS "true"}}kubectl create namespace flux-system --dry-run=client -o yaml | kubectl apply --filename -{{end}}'
       - '{{if eq .GITHUB_DEPLOY_KEY_EXISTS "true"}}sops exec-file {{.GITHUB_DEPLOY_KEY_FILE}} "kubectl apply --server-side --filename {}"{{end}}'
@@ -54,11 +53,30 @@ tasks:
       - test -f {{.SOPS_AGE_KEY_FILE}}
       - which flux kubectl sops
 
+  helmfile-validate:
+    internal: true
+    dir: '{{.KUBERNETES_DIR}}/bootstrap/talos'
+    desc: Validate Helmfile can be successfully templated
+    cmd: |
+      set -e
+      echo "=== Validating Helmfile templates ==="
+      if ! helmfile --file {{.KUBERNETES_DIR}}/bootstrap/helmfile.yaml template 2>&1 | tee /tmp/helmfile-template.log; then
+        echo "❌ Helmfile template generation failed!"
+        echo "Checking for YAML syntax errors..."
+        helmfile --file {{.KUBERNETES_DIR}}/bootstrap/helmfile.yaml template 2>&1 | grep -E "Error:|error:" || true
+        exit 1
+      fi
+      echo "✅ Helmfile templates are valid"
+    preconditions:
+      - test -f {{.KUBERNETES_DIR}}/bootstrap/helmfile.yaml
+      - which helmfile
+
   apps:
     internal: true
     dir: '{{.KUBERNETES_DIR}}/bootstrap/talos'
     cmds:
       - until kubectl wait --for=condition=Ready=False nodes --all --timeout=600s; do sleep 10; done
+      - task: bootstrap:helmfile-validate
       - helmfile --file {{.KUBERNETES_DIR}}/bootstrap/helmfile.yaml apply --skip-diff-on-install --suppress-diff
       - until kubectl wait --for=condition=Ready nodes --all --timeout=600s; do sleep 10; done
     preconditions:
@@ -67,7 +85,7 @@ tasks:
       - which helmfile kubectl
 
   age-keygen:
-    desc: Bootstrap the Sops Age key
+    desc: Bootstrap Sops Age key
     cmd: age-keygen --output {{.SOPS_AGE_KEY_FILE}}
     status:
       - test -f {{.SOPS_AGE_KEY_FILE}}
@@ -102,18 +120,13 @@ tasks:
   clean:
     desc: Clean files and directories no longer needed after cluster bootstrap
     cmds:
-      # Create backup directory
       - mkdir -p {{.ROOT_DIR}}/.private
-      # Clean up CI
       - rm -rf {{.ROOT_DIR}}/.github/tests
       - rm -rf {{.ROOT_DIR}}/.github/workflows/e2e.yaml
-      # Clean up devcontainer
       - rm -rf {{.ROOT_DIR}}/.devcontainer/ci
       - rm -rf {{.ROOT_DIR}}/.github/workflows/devcontainer.yaml
-      # Move bootstrap directory to gitignored directory
       - mv {{.BOOTSTRAP_DIR}} {{.ROOT_DIR}}/.private/bootstrap-{{.TS}}
       - mv {{.MAKEJINJA_CONFIG_FILE}} {{.ROOT_DIR}}/.private/makejinja-{{.TS}}.toml
-      # Update renovate.json5
       - sed -i {{if eq OS "darwin"}}''{{end}} 's/(..\.j2)\?//g' {{.ROOT_DIR}}/.github/renovate.json5
     vars:
       TS: '{{now | unixEpoch}}'
