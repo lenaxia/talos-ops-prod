@@ -39,18 +39,16 @@ spec:
               repository: lscr.io/linuxserver/nzbhydra2
               tag: 8.0.0
               pullPolicy: Always
-              
             env:
               TZ: ${TIMEZONE}
               NZBHYDRA_DEBUG: "true"
-              
-            service:
-      main:
-        type: ClusterIP
-        ports:
-          http:
-            port: 5076
-        primary: true
+        service:
+          main:
+            type: ClusterIP
+            ports:
+              http:
+                port: 5076
+            primary: true
     ingress:
       main:
         enabled: true
