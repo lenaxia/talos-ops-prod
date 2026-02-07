@@ -39,7 +39,7 @@ spec:
           app:
             image:
               repository: vllm/vllm-openai
-              tag: v0.15.0@sha256:7764931211e5b408a10d6e289ab9eca8d6ecd105e9239cb2d528c2c4d0ad67b0
+              tag: v0.15.1@sha256:8c9aaddfa6011b9651d06834d2fb90bdb9ab6ced4b420ec76925024eb12b22d0
             command: ["/bin/sh", "-c"]
             args:
                - |
