@@ -43,38 +43,37 @@ spec:
             env:
               TZ: ${TIMEZONE}
               NZBHYDRA_DEBUG: "true"
-              
-            service:
-      main:
-        type: ClusterIP
-        ports:
-          http:
-            port: 5076
-        primary: true
-    ingress:
-      main:
-        enabled: true
-        annotations:
-          hajimari.io/enable: 'true'
-          hajimari.io/icon: cloud-search
-          hajimari.io/appName: NZBHydra
-          hajimari.io/group: Media
-          cert-manager.io/cluster-issuer: letsencrypt-production
-          traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: 
-            networking-chain-authelia@kubernetescrd
-        hosts:
-          - host: &uri nzbhydra.${SECRET_DEV_DOMAIN}
-            paths:
-              - path: /
-                pathType: Prefix
-                service:
-                  port: http
-        tls:
-          - hosts:
-              - *uri
-            secretName: *uri
-        className: traefik
+        service:
+          main:
+            type: ClusterIP
+            ports:
+              http:
+                port: 5076
+            primary: true
+        ingress:
+          main:
+            enabled: true
+            annotations:
+              hajimari.io/enable: 'true'
+              hajimari.io/icon: cloud-search
+              hajimari.io/appName: NZBHydra
+              hajimari.io/group: Media
+              cert-manager.io/cluster-issuer: letsencrypt-production
+              traefik.ingress.kubernetes.io/router.entrypoints: websecure
+              traefik.ingress.kubernetes.io/router.middlewares: 
+                networking-chain-authelia@kubernetescrd
+            hosts:
+              - host: &uri nzbhydra.${SECRET_DEV_DOMAIN}
+                paths:
+                  - path: /
+                    pathType: Prefix
+                    service:
+                      port: http
+            tls:
+              - hosts:
+                  - *uri
+                secretName: *uri
+            className: traefik
     persistence:
       config:
         enabled: true
