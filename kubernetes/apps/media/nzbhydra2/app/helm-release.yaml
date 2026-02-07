@@ -44,7 +44,7 @@ spec:
               TZ: ${TIMEZONE}
               NZBHYDRA_DEBUG: "true"
               
-            service:
+    service:
       main:
         type: ClusterIP
         ports:
