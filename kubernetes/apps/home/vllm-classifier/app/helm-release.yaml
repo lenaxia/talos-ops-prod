@@ -41,21 +41,21 @@ spec:
               repository: vllm/vllm-openai
               tag: v0.11.0@sha256:014a95f21c9edf6abe0aea6b07353f96baa4ec291c427bb1176dc7c93a85845c
             command: ["/bin/sh", "-c"]
-             args:
-                 - |
-                   vllm serve \
-                       Qwen/Qwen2.5-3B-Instruct-AWQ \
-                       --served-model-name classifier \
-                       --max-model-len 1000 \
-                       --max-num-seqs 30 \
-                       --gpu-memory-utilization 0.95 \
-                       --tensor-parallel-size 1 \
-                       --trust-remote-code \
-                       --quantization awq \
-                       --host 0.0.0.0 \
-                       --port 8000 \
-                       --dtype auto \
-                       --disable-log-requests
+            args:
+                  - |
+                    vllm serve \
+                        Qwen/Qwen2.5-3B-Instruct-AWQ \
+                        --served-model-name classifier \
+                        --max-model-len 1000 \
+                        --max-num-seqs 30 \
+                        --gpu-memory-utilization 0.95 \
+                        --tensor-parallel-size 1 \
+                        --trust-remote-code \
+                        --quantization awq \
+                        --host 0.0.0.0 \
+                        --port 8000 \
+                        --dtype auto \
+                        --disable-log-requests
             env:
               - name: TZ
                 value: ${TIMEZONE}
