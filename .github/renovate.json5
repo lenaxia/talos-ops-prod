@@ -20,6 +20,7 @@
   ],
   ignorePaths: [
     '**/*.sops.*',
+    '**/crds/**',
   ],
   flux: {
     managerFilePatterns: [
@@ -44,6 +45,9 @@
   kustomize: {
     managerFilePatterns: [
       '/(^|/)kustomization\\.ya?ml(?:\\.j2)?$/',
+    ],
+    ignorePaths: [
+      '**/node-feature-discovery/app/kustomization.yaml',
     ],
   },
   pip_requirements: {
