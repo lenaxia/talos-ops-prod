@@ -36,4 +36,4 @@ spec:
             secretName: *uri
         className: traefik
     podLabels:
-      app: &appname sonarr-4k
+      app: sonarr-4k
