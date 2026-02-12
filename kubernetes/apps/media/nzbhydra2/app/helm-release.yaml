@@ -39,18 +39,18 @@ spec:
               repository: lscr.io/linuxserver/nzbhydra2
               tag: 8.0.0
               pullPolicy: Always
-              
+
             env:
               TZ: ${TIMEZONE}
               NZBHYDRA_DEBUG: "true"
-              
-            service:
-      main:
-        type: ClusterIP
-        ports:
-          http:
-            port: 5076
-        primary: true
+
+        service:
+          main:
+            type: ClusterIP
+            ports:
+              http:
+                port: 5076
+            primary: true
     ingress:
       main:
         enabled: true
@@ -61,7 +61,7 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: 
+          traefik.ingress.kubernetes.io/router.middlewares:
             networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri nzbhydra.${SECRET_DEV_DOMAIN}
@@ -108,4 +108,4 @@ spec:
         globalMounts:
           - path: /config/backup
     podLabels:
-      app: &appname nzbhydra2
+      app: *appname
