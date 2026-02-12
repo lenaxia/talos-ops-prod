@@ -41,4 +41,4 @@ spec:
         existingClaim: sonarr-config-volume
         type: persistentVolumeClaim
     podLabels:
-      app: &appname sonarr
+      app: sonarr
