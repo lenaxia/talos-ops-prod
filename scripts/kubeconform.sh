@@ -2,9 +2,19 @@
 set -o errexit
 set -o pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 KUBERNETES_DIR=$1
 
 [[ -z "${KUBERNETES_DIR}" ]] && echo "Kubernetes location not specified" && exit 1
+
+# Validate YAML files for duplicate keys before running kubeconform
+echo "=== Checking for duplicate keys in YAML files ==="
+"${SCRIPT_DIR}/validate-yaml.py" "${KUBERNETES_DIR}"
+if [[ $? != 0 ]]; then
+    echo "YAML validation failed - duplicate keys found"
+    exit 1
+fi
 
 kustomize_args=("--load-restrictor=LoadRestrictionsNone")
 kustomize_config="kustomization.yaml"
