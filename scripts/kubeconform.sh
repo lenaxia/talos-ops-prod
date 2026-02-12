@@ -6,6 +6,13 @@ KUBERNETES_DIR=$1
 
 [[ -z "${KUBERNETES_DIR}" ]] && echo "Kubernetes location not specified" && exit 1
 
+# Pre-validate YAML syntax to catch syntax errors before kustomize build
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+if [[ -f "${SCRIPT_DIR}/validate-yaml.sh" ]]; then
+    echo "=== Pre-validating YAML syntax ==="
+    bash "${SCRIPT_DIR}/validate-yaml.sh" "${KUBERNETES_DIR}"
+fi
+
 kustomize_args=("--load-restrictor=LoadRestrictionsNone")
 kustomize_config="kustomization.yaml"
 kubeconform_args=(
