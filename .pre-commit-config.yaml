@@ -1,0 +1,16 @@
+default_stages: [commit, push]
+repos:
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.31.0
+    hooks:
+      - id: check-jsonschema
+        name: Validate Kubernetes manifests
+        files: ^kubernetes/.*\.(yaml|yml)$
+        args: ["--builtin-schema", "kubernetes"]
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        name: Lint YAML for duplicate keys
+        args: ["-d", "{extends: default, rules: {key-duplicates: enable, indentation: {spaces: 2, indent-sequences: consistent}}}"]
+        files: ^kubernetes/.*\.(yaml|yml)$
