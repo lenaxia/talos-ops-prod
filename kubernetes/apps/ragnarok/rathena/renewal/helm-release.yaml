@@ -34,7 +34,7 @@ spec:
               tag: packetver20200401-renewal-20251220@sha256:a939f99894337b4de631f20c252d101fa88c792b514a00946159088ccd58c8ce
             envFrom:
               - secretRef:
-                  name: &appname rathena-renewal
+                  name: rathena-renewal
             env:
               - name: MYSQL_HOST
                 valueFrom:
