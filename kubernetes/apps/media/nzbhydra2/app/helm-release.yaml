@@ -43,14 +43,6 @@ spec:
             env:
               TZ: ${TIMEZONE}
               NZBHYDRA_DEBUG: "true"
-              
-            service:
-      main:
-        type: ClusterIP
-        ports:
-          http:
-            port: 5076
-        primary: true
     ingress:
       main:
         enabled: true
