@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+vars:
+  YAML_VALIDATE_SCRIPT: "{{.SCRIPTS_DIR}}/validate-yaml.sh"
+
+tasks:
+
+  yaml:
+    desc: Validate YAML syntax across the repository
+    cmd: bash {{.YAML_VALIDATE_SCRIPT}}
+    preconditions:
+      - test -f {{.YAML_VALIDATE_SCRIPT}}

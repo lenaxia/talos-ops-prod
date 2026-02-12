@@ -25,6 +25,7 @@ includes:
   kubernetes: .taskfiles/kubernetes
   talos: .taskfiles/talos
   workstation: .taskfiles/workstation
+  validate: .taskfiles/validate
   user:
     taskfile: .taskfiles/User
     optional: true
@@ -45,6 +46,7 @@ tasks:
     cmds:
       - task: bootstrap:template
       - task: bootstrap:secrets
+      - task: validate:yaml
       - task: kubernetes:kubeconform
       - >
         {{if eq .HOME_SOPS_AGE_KEY_FILE_EXISTS "true"}}
