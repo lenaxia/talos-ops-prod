@@ -25,7 +25,6 @@ spec:
     defaultPodOptions:
       securityContext:
         fsGroup: 568
-
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
     controllers:
@@ -39,12 +38,10 @@ spec:
               repository: lscr.io/linuxserver/nzbhydra2
               tag: 8.0.0
               pullPolicy: Always
-              
             env:
               TZ: ${TIMEZONE}
               NZBHYDRA_DEBUG: "true"
-              
-            service:
+    service:
       main:
         type: ClusterIP
         ports:
@@ -61,7 +58,7 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: 
+          traefik.ingress.kubernetes.io/router.middlewares:
             networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri nzbhydra.${SECRET_DEV_DOMAIN}
