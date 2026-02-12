@@ -98,4 +98,4 @@ spec:
         globalMounts:
           - path: /downloads
     podLabels:
-      app: &appname nzbget
+      app: nzbget

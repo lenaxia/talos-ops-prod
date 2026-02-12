@@ -48,7 +48,7 @@ spec:
               PLEXSERVER: "http://plex.media.svc.cluster.local:32400"
             envFrom:
               - secretRef:
-                  name: &appname subgen
+                  name: subgen
             probes:
               liveness: &probes
                 enabled: false
