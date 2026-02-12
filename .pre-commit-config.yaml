@@ -1,0 +1,10 @@
+# Pre-commit configuration for YAML validation
+repos:
+  - repo: local
+    hooks:
+      - id: yaml-indentation-check
+        name: YAML Indentation Check
+        entry: python scripts/validate-yaml-indentation.py
+        language: system
+        files: \.(yaml|yml)$
+        pass_filenames: true

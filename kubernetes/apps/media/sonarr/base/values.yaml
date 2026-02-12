@@ -28,49 +28,49 @@ controllers:
           storageClass: longhorn
           globalMounts:
             - path: /config
-service:
-  main:
-    ports:
-      http:
-        port: 8989
-    type: ClusterIP
-    controller: main
-ingress:
-  main:
-    enabled: true
-    annotations:
-      hajimari.io/enable: 'true'
-      hajimari.io/icon: television-box
-      hajimari.io/group: Media
-      cert-manager.io/cluster-issuer: letsencrypt-production
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
-    className: traefik
-persistence:
-  omoikane:
-    enabled: true
-    type: custom
-    volumeSpec:
-      nfs:
-        server: ${NAS_ADDR}
-        path: /volume1/omoikane
-    globalMounts:
-      - path: /omoikane
-  backups:
-    enabled: true
-    type: custom
-    volumeSpec:
-      nfs:
-        server: ${NAS_ADDR}
-        path: ${NFS_ARR}
-    globalMounts:
-      - path: /config/Backups
-  downloads:
-    enabled: true
-    type: custom
-    volumeSpec:
-      nfs:
-        server: ${NAS_ADDR}
-        path: /volume2/downloads
-    globalMounts:
-      - path: /downloads
+    service:
+      main:
+        ports:
+          http:
+            port: 8989
+      type: ClusterIP
+      controller: main
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: television-box
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        className: traefik
+  persistence:
+    omoikane:
+      enabled: true
+      type: custom
+      volumeSpec:
+        nfs:
+          server: ${NAS_ADDR}
+          path: /volume1/omoikane
+      globalMounts:
+        - path: /omoikane
+    backups:
+      enabled: true
+      type: custom
+      volumeSpec:
+        nfs:
+          server: ${NAS_ADDR}
+          path: ${NFS_ARR}
+      globalMounts:
+        - path: /config/Backups
+    downloads:
+      enabled: true
+      type: custom
+      volumeSpec:
+        nfs:
+          server: ${NAS_ADDR}
+          path: /volume2/downloads
+      globalMounts:
+        - path: /downloads
