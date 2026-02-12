@@ -45,12 +45,12 @@ spec:
               NZBHYDRA_DEBUG: "true"
               
             service:
-      main:
-        type: ClusterIP
-        ports:
-          http:
-            port: 5076
-        primary: true
+              main:
+                type: ClusterIP
+                ports:
+                  http:
+                    port: 5076
+                primary: true
     ingress:
       main:
         enabled: true
