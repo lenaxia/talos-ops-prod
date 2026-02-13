@@ -41,8 +41,8 @@ spec:
               repository: vllm/vllm-openai
               tag: v0.11.0@sha256:014a95f21c9edf6abe0aea6b07353f96baa4ec291c427bb1176dc7c93a85845c
             command: ["/bin/sh", "-c"]
-             args:
-                 - |
+            args:
+                  - |
                    vllm serve \
                        Qwen/Qwen2.5-3B-Instruct-AWQ \
                        --served-model-name classifier \
