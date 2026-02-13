@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: grafana
-      version: 10.5.14
+      version: 11.1.1
       sourceRef:
         kind: HelmRepository
         name: grafana-charts
