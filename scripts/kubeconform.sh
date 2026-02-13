@@ -40,11 +40,39 @@ do
 done
 
 echo "=== Validating kustomizations in ${KUBERNETES_DIR}/apps ==="
-find "${KUBERNETES_DIR}/apps" -type f -name $kustomize_config -print0 | while IFS= read -r -d $'\0' file;
-do
-    echo "=== Validating kustomizations in ${file/%$kustomize_config} ==="
-    kustomize build "${file/%$kustomize_config}" "${kustomize_args[@]}" | kubeconform "${kubeconform_args[@]}"
-    if [[ ${PIPESTATUS[0]} != 0 ]]; then
-        exit 1
+
+# Build array of app directories that are actually referenced by Flux Kustomization manifests
+flux_ks_files=$(find "${KUBERNETES_DIR}/flux" -type f -name '*.yaml' -print0 | xargs -0 grep -l "kind: Kustomization" 2>/dev/null || true)
+app_paths_to_validate=()
+
+for ks_file in $flux_ks_files; do
+    # Extract path from Flux Kustomization manifests that point to apps/
+    app_path=$(yq eval '.spec.path // ""' "$ks_file" 2>/dev/null | grep "^${KUBERNETES_DIR}/apps" || true)
+    if [[ -n "$app_path" ]]; then
+        # Normalize the path (remove trailing slash if present)
+        app_path="${app_path%/}"
+        app_paths_to_validate+=("$app_path")
     fi
+done
+
+# Remove duplicates
+app_paths_to_validate=($(echo "${app_paths_to_validate[@]}" | tr ' ' '\n' | sort -u))
+
+echo "=== Found ${#app_paths_to_validate[@]} app directories referenced by Flux Kustomizations ==="
+
+# Only validate kustomizations in directories that are actually used by Flux
+for app_path in "${app_paths_to_validate[@]}"; do
+    if [[ ! -d "$app_path" ]]; then
+        echo "Warning: Referenced directory does not exist: $app_path"
+        continue
+    fi
+
+    find "$app_path" -type f -name "$kustomize_config" -print0 | while IFS= read -r -d $'\0' file;
+    do
+        echo "=== Validating kustomizations in ${file/%$kustomize_config} ==="
+        kustomize build "${file/%$kustomize_config}" "${kustomize_args[@]}" | kubeconform "${kubeconform_args[@]}"
+        if [[ ${PIPESTATUS[0]} != 0 ]]; then
+            exit 1
+        fi
+    done
 done
