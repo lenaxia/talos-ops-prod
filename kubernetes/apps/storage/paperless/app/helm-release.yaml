@@ -43,7 +43,7 @@ spec:
 
             envFrom:
               - secretRef:
-                  name: &appname paperless
+                  name: paperless
             env:
               PAPERLESS_POST_CONSUME_SCRIPT: /llm.py
               PAPERLESS_CONSUMER_RECURSIVE: 'true'
