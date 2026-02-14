@@ -1,0 +1,13 @@
+apiVersion: nfd.k8s-sigs.io/v1alpha1
+kind: NodeFeatureRule
+metadata:
+  name: example-feature-rule
+spec:
+  rules:
+    - name: "example rule"
+      matchFeatures:
+        - feature: kernel.version
+          matchExpressions:
+            op: In
+            values:
+              - "5.4.*"
