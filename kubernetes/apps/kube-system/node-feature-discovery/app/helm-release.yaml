@@ -23,7 +23,7 @@ spec:
       retries: 5
   values:
     nodeFeatureRule:
-      createCRD: false
+      createCRD: true
     gc:
       resources: {}
     master:
