@@ -4,7 +4,5 @@ commonLabels:
   app.kubernetes.io/name: &app hajimari-external
   app.kubernetes.io/instance: *app
 resources:
-  - ../base
-patches:
-  - path: helm-release.yaml
+  - helm-release.yaml
 
