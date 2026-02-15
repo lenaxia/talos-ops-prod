@@ -13,5 +13,4 @@ patches:
     version: v2
 resources:
 - helm-release.yaml
-- config-pvc.yaml
 - secret.sops.yaml
