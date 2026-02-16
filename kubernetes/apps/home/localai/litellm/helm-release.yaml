@@ -27,7 +27,7 @@ spec:
         node-role.kubernetes.io/worker: 'true'
     controllers:
       app:
-        type: statefulset
+        type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
           litellm-force-restart: "2026-01-31"
