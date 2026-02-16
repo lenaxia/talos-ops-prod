@@ -29,7 +29,7 @@ spec:
     image:
       registry: code.forgejo.org
       repository: forgejo/forgejo
-      tag: 9.0.3
+      tag: 11.0.10
       rootless: true
 
     # Security Context
