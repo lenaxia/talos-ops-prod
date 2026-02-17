@@ -32,14 +32,12 @@ spec:
     ha:
       enabled: true
       replicas: 3
-    metrics:
-      enabled: true
-      serviceMonitor:
-        enabled: true
-    webhook:
-      enabled: true
-    certController:
-      enabled: true
+     metrics:
+       enabled: false
+     webhook:
+       enabled: false
+     certController:
+       enabled: false
     rbac:
       enabled: true
     pdb:

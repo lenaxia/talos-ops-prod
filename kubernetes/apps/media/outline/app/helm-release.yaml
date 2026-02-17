@@ -37,9 +37,9 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
     controllers:
-      main:
-        replicas: 3
-        strategy: RollingUpdate
+       main:
+         replicas: 2
+         strategy: RollingUpdate
         type: statefulset
         annotations:
           reloader.stakater.com/auto: 'true'
