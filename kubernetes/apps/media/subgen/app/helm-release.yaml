@@ -148,15 +148,13 @@ spec:
       models:
         enabled: true
         type: persistentVolumeClaim
-        accessMode: ReadWriteMany
-        size: 10Gi
+        existingClaim: subgen-models
         globalMounts:
           - path: /models
       config:
         enabled: true
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 5Gi
+        existingClaim: subgen-config
         globalMounts:
           - path: /config
     podLabels:
