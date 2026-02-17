@@ -20,6 +20,7 @@ spec:
   upgrade:
     remediation:
       retries: 5
+    timeout: 10m
     #  dependsOn:
     #    - name: postgres-operator 
     #      namespace: databases
@@ -34,8 +35,8 @@ spec:
           labelSelector:
             matchLabels:
               app.kubernetes.io/name: &app outline
-      nodeSelector:
-        node-role.kubernetes.io/worker: 'true'
+      # nodeSelector:
+      #   node-role.kubernetes.io/worker: 'true'
     controllers:
       main:
         replicas: 2
