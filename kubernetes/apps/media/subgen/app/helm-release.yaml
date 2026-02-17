@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 4.6.2
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -21,59 +21,85 @@ spec:
         runAsGroup: 0
         fsGroup: 0
         fsGroupChangePolicy: OnRootMismatch
-
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
     controllers:
       main:
-        type: statefulset
+        type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
-          main:
+          orchestrator:
             image:
-              repository: mccloud/subgen
+              repository: ghcr.io/lenaxia/subgen-orchestrator
               tag: latest
               pullPolicy: Always
             env:
-              DEBUG: true
-              TRANSCRIBE_DEVICE: "cpu"
-              WHISPER_MODEL: "medium"
-              CONCURRENT_TRANSCRIPTIONS: "2"
-              WHISPER_THREADS: "4"
-              PROCADDEDMEDIA: true # will gen subtitles for all media added regardless of existing external/embedded subtitles (based off of SKIPIFINTERNALSUBLANG)
-              PROCMEDIAONPLAY: true # will gen subtitles for all played media regardless of existing external/embedded subtitles (based off of SKIPIFINTERNALSUBLANG)
-              NAMESUBLANG: "AA" # allows you to pick what it will name the subtitle. Instead of using EN, I'm using AA, so it doesn't mix with exiting external EN subs, and AA will populate higher on the list in Plex.
-              SKIPIFINTERNALSUBLANG: 'eng' #Will not generate a subtitle if the file has an internal sub matching the 3 letter code of this variable
-              PLEXSERVER: "http://plex.media.svc.cluster.local:32400"
+              WORKER_ADDRESS: localhost:50051
+              PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
+              PROCESS_ADDED_MEDIA: "true"
+              PROCESS_MEDIA_ON_PLAY: "true"
+              SUBTITLE_LANGUAGE_NAME: "AA"
+              SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: "eng"
+              DEBUG: "true"
             envFrom:
               - secretRef:
                   name: subgen
             probes:
               liveness: &probes
-                enabled: false
+                enabled: true
                 custom: true
                 spec:
                   httpGet:
-                    path: /
+                    path: /health
                     port: 9000
-
-                  initialDelaySeconds: 0
+                  initialDelaySeconds: 30
                   periodSeconds: 10
-                  timeoutSeconds: 1
+                  timeoutSeconds: 5
                   failureThreshold: 3
               readiness: *probes
               startup:
-                enabled: false
-
-
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 9000
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+          worker:
+            image:
+              repository: ghcr.io/lenaxia/subgen-worker
+              tag: cpu
+              pullPolicy: Always
+            env:
+              TRANSCRIBE_DEVICE: "cpu"
+              WHISPER_MODEL: "medium"
+              CONCURRENT_TRANSCRIPTIONS: "2"
+              WHISPER_THREADS: "4"
+              MODEL_CLEANUP_DELAY: "300"
+              MODEL_PATH: "/models"
+            resources:
+              requests:
+                cpu: "2"
+                memory: "4Gi"
+              limits:
+                cpu: "4"
+                memory: "8Gi"
+            ports:
+              - name: grpc
+                containerPort: 50051
+                protocol: TCP
     service:
       main:
         type: ClusterIP
-
         ports:
           http:
             port: 9000
+          metrics:
+            port: 9090
         primary: true
     ingress:
       main:
@@ -84,8 +110,7 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: 
-            networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri subgen.${SECRET_DEV_DOMAIN}
             paths:
@@ -101,36 +126,40 @@ spec:
     persistence:
       omoikane:
         enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: /volume1/omoikane
+        type: nfs
+        server: ${NAS_ADDR}
+        path: /volume1/omoikane
         globalMounts:
           - path: /omoikane
       backups:
         enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: ${NFS_ARR}
+        type: nfs
+        server: ${NAS_ADDR}
+        path: ${NFS_ARR}
         globalMounts:
           - path: /config/Backups
       downloads:
         enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: /volume2/downloads
+        type: nfs
+        server: ${NAS_ADDR}
+        path: /volume2/downloads
         globalMounts:
           - path: /downloads
-    volumeClaimTemplates:
-      - name: config
-        mountPath: /config
+      models:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteMany
+        size: 10Gi
+        storageClass: longhorn
+        globalMounts:
+          - path: /models
+      config:
+        enabled: true
+        type: persistentVolumeClaim
         accessMode: ReadWriteOnce
         size: 5Gi
         storageClass: longhorn
+        globalMounts:
+          - path: /config
     podLabels:
       app: *appname
