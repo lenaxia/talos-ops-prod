@@ -95,8 +95,10 @@ spec:
     persistence:
       data:
         enabled: true
-        type: emptyDir
-        medium: Memory
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn
         globalMounts:
           - path: /data
       healthcheck:
