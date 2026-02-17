@@ -148,7 +148,7 @@ spec:
       models:
         enabled: true
         type: persistentVolumeClaim
-        accessMode: ReadWriteMany
+        accessMode: ReadWriteOnce
         size: 10Gi
         storageClass: longhorn
         globalMounts:
