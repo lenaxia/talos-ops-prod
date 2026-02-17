@@ -127,21 +127,21 @@ spec:
         omoikane:
           enabled: true
           type: nfs
-          server: 192.168.1.100
+          server: 192.168.0.120
           path: /volume1/omoikane
           globalMounts:
             - path: /omoikane
         backups:
           enabled: true
           type: nfs
-          server: 192.168.1.100
-          path: /backups
+          server: 192.168.0.120
+          path: /volume1/backups/arr
           globalMounts:
             - path: /config/Backups
         downloads:
           enabled: true
           type: nfs
-          server: 192.168.1.100
+          server: 192.168.0.120
           path: /volume2/downloads
           globalMounts:
             - path: /downloads
@@ -149,7 +149,7 @@ spec:
           enabled: true
           type: persistentVolumeClaim
           existingClaim: ""
-          accessMode: ReadWriteOnce
+          accessMode: ReadWriteMany
           size: 10Gi
           globalMounts:
             - path: /models
