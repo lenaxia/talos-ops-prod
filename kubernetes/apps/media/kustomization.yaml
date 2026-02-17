@@ -19,7 +19,7 @@ resources:
   - ./radarr/ks.yaml
     #- ./recyclarr/ks.yaml
   - ./sonarr/ks.yaml
-    #- ./subgen/ks.yaml
+  - ./subgen/ks.yaml
   - ./tautulli/ks.yaml
   - ./transmission/ks.yaml
   - ./komga/ks.yaml

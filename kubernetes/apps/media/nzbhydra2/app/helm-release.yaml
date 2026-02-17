@@ -37,12 +37,12 @@ spec:
           main:
             image:
               repository: lscr.io/linuxserver/nzbhydra2
-              tag: 8.3.0
+              tag: 8.5.1
               pullPolicy: Always
 
             env:
               TZ: ${TIMEZONE}
-
+              NZBHYDRA_DEBUG: "true"
     service:
       main:
         type: ClusterIP
@@ -60,7 +60,7 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: 
+          traefik.ingress.kubernetes.io/router.middlewares:
             networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri nzbhydra.${SECRET_DEV_DOMAIN}
@@ -75,36 +75,29 @@ spec:
             secretName: *uri
         className: traefik
     persistence:
-      config:
-        enabled: true
-        existingClaim: nzbhydra2-config-volume
-        type: persistentVolumeClaim
-      omoikane:
-        enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: /volume1/omoikane
-        globalMounts:
-          - path: /omoikane
-      downloads:
-        enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: /volume2/downloads
-        globalMounts:
-          - path: /downloads
-      backup:
-        enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: ${NFS_NZBHYDRA}
-        globalMounts:
-          - path: /config/backup
+       config:
+         enabled: true
+         existingClaim: nzbhydra2-config-volume
+       omoikane:
+         enabled: true
+         type: nfs
+         server: ${NAS_ADDR}
+         path: /volume1/omoikane
+         globalMounts:
+           - path: /omoikane
+       downloads:
+         enabled: true
+         type: nfs
+         server: ${NAS_ADDR}
+         path: /volume2/downloads
+         globalMounts:
+           - path: /downloads
+       backup:
+         enabled: true
+         type: nfs
+         server: ${NAS_ADDR}
+         path: ${NFS_NZBHYDRA}
+         globalMounts:
+           - path: /config/backup
     podLabels:
-      app: &appname nzbhydra2
+      app: nzbhydra2
