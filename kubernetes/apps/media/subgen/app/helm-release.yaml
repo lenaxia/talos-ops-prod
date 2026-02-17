@@ -145,12 +145,13 @@ spec:
         path: /volume2/downloads
         globalMounts:
           - path: /downloads
-      models:
+       models:
         enabled: true
         type: persistentVolumeClaim
         accessMode: ReadWriteOnce
         size: 10Gi
         storageClass: longhorn
+        retain: false
         globalMounts:
           - path: /models
       config:
