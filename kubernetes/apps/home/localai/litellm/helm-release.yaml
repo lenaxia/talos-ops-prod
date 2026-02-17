@@ -49,6 +49,52 @@ spec:
             image:
               repository: ghcr.io/onedr0p/postgres-init
               tag: '17.4'
+          
+          # Database migration initContainer
+          migrate:
+            image:
+              repository: ghcr.io/berriai/litellm
+              tag: v1.81.0-stable
+            command:
+              - sh
+              - -c
+              - |
+                set -e
+                echo "Starting database migration..."
+                echo "Database URL: postgresql://${INIT_POSTGRES_USER}:****@${INIT_POSTGRES_HOST}:5432/${INIT_POSTGRES_DBNAME}"
+                
+                # Check if schema directory exists
+                if [ ! -d "/app/litellm_proxy_extras" ]; then
+                  echo "ERROR: litellm_proxy_extras directory not found"
+                  exit 1
+                fi
+                
+                # Run Prisma migration
+                cd /app
+                echo "Running: npx prisma migrate deploy"
+                npx prisma migrate deploy --schema=/app/litellm_proxy_extras/prisma/schema.prisma
+                
+                echo "✓ Migration completed successfully!"
+            env:
+              - name: DATABASE_URL
+                value: "postgresql://$(INIT_POSTGRES_USER):$(INIT_POSTGRES_PASS)@$(INIT_POSTGRES_HOST):5432/$(INIT_POSTGRES_DBNAME)"
+              - name: INIT_POSTGRES_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-superuser
+                    key: host
+              - name: USE_PRISMA_MIGRATE
+                value: "True"
+            envFrom:
+              - secretRef:
+                  name: *appname
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
         containers:
           app:
             image:
@@ -62,10 +108,17 @@ spec:
                 value: 
                   MmNoSEtTRXBEYmVEZXNLYjdWcGVKaHVrQUxwang4SG16TU0yMnJYeXlZWGswMk9HSVNLS0N4WDUzOVBWM3FZUwo=
               - name: TZ
-                #value: ${TIMEZONE}
                 value: 'America/Los_Angeles'
+              # Production Environment Settings
+              - name: LITELLM_MODE
+                value: "PRODUCTION"
+              - name: LITELLM_LOG
+                value: "ERROR"
+              # Database Migration Settings - CRITICAL: Prevent pods from running migrations
               - name: DISABLE_SCHEMA_UPDATE
                 value: "true"
+              - name: USE_PRISMA_MIGRATE
+                value: "True"
               - name: INIT_POSTGRES_HOST
                 valueFrom:
                   secretKeyRef:
@@ -73,10 +126,22 @@ spec:
                     key: host
               - name: DATABASE_URL
                 value: "postgresql://$(INIT_POSTGRES_USER):$(INIT_POSTGRES_PASS)@$(INIT_POSTGRES_HOST):5432/$(INIT_POSTGRES_DBNAME)"
+              # UI Settings
               - name: UI_LOGO_PATH
                 value: "https://s3.thekao.cloud/public/customlogo.png"
               - name: STORE_MODEL_IN_DB
-                value: true
+                value: "true"
+              # Production Best Practices
+              - name: LITELLM_MASTER_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm
+                    key: LITELLM_MASTER_KEY
+              #- name: LITELLM_SALT_KEY
+              #  valueFrom:
+              #    secretKeyRef:
+              #      name: litellm
+              #      key: LITELLM_SALT_KEY
             envFrom:
               - secretRef:
                   name: *appname
@@ -116,24 +181,23 @@ spec:
         data:
           config.yaml: |
             litellm_settings:
-              set_verbose: True  # Uncomment this if you want to see verbose logs; not recommended in production
               drop_params: True
-              request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
-              set_verbose: False      # Switch off Debug Logging, ensure your logs do not have any debugging on
-              json_logs: true         # Get debug logs in json format
+              request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds
+              set_verbose: False      # Switch off Debug Logging for production
+              json_logs: true         # Get logs in json format for better parsing
 
             general_settings:
-              master_key: sk-1234      # enter your own master key, ensure it starts with 'sk-'
-              #alerting: ["slack"]      # Setup slack alerting - get alerts on LLM exceptions, Budget Alerts, Slow LLM Responses
+              master_key: os.environ/LITELLM_MASTER_KEY  # Use environment variable for security
+              alerting: ["slack"]      # Setup slack alerting - get alerts on LLM exceptions, Budget Alerts, Slow LLM Responses
               proxy_batch_write_at: 60 # Batch write spend updates every 60s
-              database_connection_pool_limit: 10 # limit the number of database connections to = MAX Number of DB Connections/Number of instances of litellm proxy (Around 10-20 is good number)
-              allow_requests_on_db_unavailable: True
+              database_connection_pool_limit: 10 # limit the number of database connections (10-20 is recommended)
+              allow_requests_on_db_unavailable: True  # Allow requests even if DB is temporarily unavailable (VPC deployments)
 
               enable_auto_tool_choice: true
               tool_call_parser: openai
 
-              # OPTIONAL Best Practices
-              disable_spend_logs: True # turn off writing each transaction to the db. We recommend doing this is you don't need to see Usage on the LiteLLM UI and are tracking metrics via Prometheus
+              # Production Best Practices
+              disable_spend_logs: True # turn off writing each transaction to the db for better performance
               disable_error_logs: True # turn off writing LLM Exceptions to DB
 
 
@@ -213,6 +277,11 @@ spec:
               - model_name: glm-4.6
                 litellm_params:
                   model: openai/glm-4.6
+                  api_base: https://api.z.ai/api/coding/paas/v4
+                  api_key: os.environ/ZAI_API_KEY
+              - model_name: glm-5
+                litellm_params:
+                  model: openai/glm-5
                   api_base: https://api.z.ai/api/coding/paas/v4
                   api_key: os.environ/ZAI_API_KEY
             
