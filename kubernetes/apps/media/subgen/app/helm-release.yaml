@@ -147,18 +147,16 @@ spec:
           - path: /downloads
       models:
         enabled: true
-        type: custom
-        volumeSpec:
-          persistentVolumeClaim:
-            claimName: subgen-models
+        type: persistentVolumeClaim
+        accessMode: ReadWriteMany
+        size: 10Gi
         globalMounts:
           - path: /models
       config:
         enabled: true
-        type: custom
-        volumeSpec:
-          persistentVolumeClaim:
-            claimName: subgen-config
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 5Gi
         globalMounts:
           - path: /config
     podLabels:
