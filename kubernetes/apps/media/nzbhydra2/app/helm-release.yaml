@@ -78,9 +78,6 @@ spec:
        config:
          enabled: true
          existingClaim: nzbhydra2-config-volume
-         type: persistentVolumeClaim
-         accessMode: ReadWriteOnce
-         size: 1Gi
        omoikane:
          enabled: true
          type: nfs
