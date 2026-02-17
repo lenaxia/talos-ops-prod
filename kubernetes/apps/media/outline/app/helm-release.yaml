@@ -45,10 +45,10 @@ spec:
           reloader.stakater.com/auto: 'true'
         containers:
           main:
-            image:
-              repository: docker.io/outlinewiki/outline
-              tag: 1.5.0
-              pullPolicy: Always
+             image:
+               repository: docker.io/outlinewiki/outline
+               tag: 1.4.0
+               pullPolicy: Always
             envFrom:
               - secretRef:
                   name: *app
