@@ -25,11 +25,11 @@ spec:
           main:
             image:
               repository: phalcode/gamevault-backend
-              tag: 16.1.1
+              tag: 16.3.0
 
             envFrom:
               - secretRef:
-                  name: &appname gamevault
+                  name: gamevault
 
     service:
       main:

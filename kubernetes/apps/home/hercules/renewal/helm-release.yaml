@@ -81,7 +81,7 @@ spec:
               tag: v2024.06
             envFrom:
               - secretRef:
-                  name: &appname hercules-renewal
+                  name: hercules-renewal
             env:
                #- name: MYSQL_HOST
               - name: HERCULES_DB_HOST
