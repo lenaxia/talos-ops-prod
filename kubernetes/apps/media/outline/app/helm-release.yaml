@@ -20,11 +20,11 @@ spec:
   upgrade:
     remediation:
       retries: 5
-        #  dependsOn:
-        #    - name: postgres-operator 
-        #      namespace: databases
-        #    - name: redis
-        #      namespace: databases
+    #  dependsOn:
+    #    - name: postgres-operator 
+    #      namespace: databases
+    #    - name: redis
+    #      namespace: databases
   values:
     defaultPodOptions:
       topologySpreadConstraints:
@@ -37,21 +37,21 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
     controllers:
-       main:
-         replicas: 2
-         strategy: RollingUpdate
+      main:
+        replicas: 2
+        strategy: RollingUpdate
         type: statefulset
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
           main:
-             image:
-               repository: docker.io/outlinewiki/outline
-               tag: 1.4.0
-               pullPolicy: Always
+            image:
+              repository: docker.io/outlinewiki/outline
+              tag: 1.4.0
+              pullPolicy: Always
             envFrom:
               - secretRef:
-                  name: *app
+                name: *app
             resources:
               requests:
                 cpu: 10m
