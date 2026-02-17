@@ -112,7 +112,7 @@ spec:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
         hosts:
-          - host: subgen.${SECRET_DEV_DOMAIN}
+          - host: subgen.example.com
             paths:
               - path: /
                 pathType: Prefix
@@ -120,38 +120,37 @@ spec:
                   port: http
         tls:
           - hosts:
-              - subgen.${SECRET_DEV_DOMAIN}
-            secretName: subgen.${SECRET_DEV_DOMAIN}
+              - subgen.example.com
+            secretName: subgen.example.com
         className: traefik
     persistence:
       omoikane:
         enabled: true
         type: nfs
-        server: ${NAS_ADDR}
+        server: 192.168.1.100
         path: /volume1/omoikane
         globalMounts:
           - path: /omoikane
       backups:
         enabled: true
         type: nfs
-        server: ${NAS_ADDR}
-        path: ${NFS_ARR}
+        server: 192.168.1.100
+        path: /backups
         globalMounts:
           - path: /config/Backups
       downloads:
         enabled: true
         type: nfs
-        server: ${NAS_ADDR}
+        server: 192.168.1.100
         path: /volume2/downloads
         globalMounts:
           - path: /downloads
-       models:
+      models:
         enabled: true
         type: persistentVolumeClaim
         accessMode: ReadWriteOnce
         size: 10Gi
         storageClass: longhorn
-        retain: false
         globalMounts:
           - path: /models
       config:
