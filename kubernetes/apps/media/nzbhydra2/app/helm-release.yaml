@@ -43,14 +43,13 @@ spec:
             env:
               TZ: ${TIMEZONE}
               NZBHYDRA_DEBUG: "true"
-
-        service:
-          main:
-            type: ClusterIP
-            ports:
-              http:
-                port: 5076
-            primary: true
+    service:
+      main:
+        type: ClusterIP
+        ports:
+          http:
+            port: 5076
+        primary: true
     ingress:
       main:
         enabled: true
@@ -76,25 +75,27 @@ spec:
             secretName: *uri
         className: traefik
     persistence:
-      config:
-        enabled: true
-        existingClaim: nzbhydra2-config-volume
-        type: persistentVolumeClaim
-        omoikane:
+       config:
+         enabled: true
+         existingClaim: nzbhydra2-config-volume
+         type: persistentVolumeClaim
+         accessMode: ReadWriteOnce
+         size: 1Gi
+       omoikane:
          enabled: true
          type: nfs
          server: ${NAS_ADDR}
          path: /volume1/omoikane
          globalMounts:
            - path: /omoikane
-        downloads:
+       downloads:
          enabled: true
          type: nfs
          server: ${NAS_ADDR}
          path: /volume2/downloads
          globalMounts:
            - path: /downloads
-        backup:
+       backup:
          enabled: true
          type: nfs
          server: ${NAS_ADDR}
