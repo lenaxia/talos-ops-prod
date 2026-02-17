@@ -80,32 +80,26 @@ spec:
         enabled: true
         existingClaim: nzbhydra2-config-volume
         type: persistentVolumeClaim
-      omoikane:
-        enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: /volume1/omoikane
-        globalMounts:
-          - path: /omoikane
-      downloads:
-        enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: /volume2/downloads
-        globalMounts:
-          - path: /downloads
-      backup:
-        enabled: true
-        type: custom
-        volumeSpec:
-          nfs:
-            server: ${NAS_ADDR}
-            path: ${NFS_NZBHYDRA}
-        globalMounts:
-          - path: /config/backup
+        omoikane:
+         enabled: true
+         type: nfs
+         server: ${NAS_ADDR}
+         path: /volume1/omoikane
+         globalMounts:
+           - path: /omoikane
+        downloads:
+         enabled: true
+         type: nfs
+         server: ${NAS_ADDR}
+         path: /volume2/downloads
+         globalMounts:
+           - path: /downloads
+        backup:
+         enabled: true
+         type: nfs
+         server: ${NAS_ADDR}
+         path: ${NFS_NZBHYDRA}
+         globalMounts:
+           - path: /config/backup
     podLabels:
       app: nzbhydra2
