@@ -4,6 +4,7 @@ version: '3'
 
 vars:
   KUBECONFORM_SCRIPT: "{{.SCRIPTS_DIR}}/kubeconform.sh"
+  YAML_VALIDATE_SCRIPT: "{{.SCRIPTS_DIR}}/validate-yaml-anchors.sh"
 
 tasks:
 
@@ -31,12 +32,20 @@ tasks:
       - test -f {{.KUBECONFIG}}
       - which flux
 
+  validate-yaml:
+    desc: Validate YAML files for duplicate anchors and syntax issues
+    cmd: python3 {{.YAML_VALIDATE_SCRIPT}} kubernetes/
+    preconditions:
+      - test -f {{.YAML_VALIDATE_SCRIPT}}
+      - which python3
+
   kubeconform:
     desc: Validate Kubernetes manifests with kubeconform
     cmd: bash {{.KUBECONFORM_SCRIPT}} {{.KUBERNETES_DIR}}
     preconditions:
       - test -f {{.KUBECONFORM_SCRIPT}}
-      - which kubeconform
+      - which python3
+      - test -f {{.YAML_VALIDATE_SCRIPT}}
 
   resources:
     desc: Gather common resources in your cluster, useful when asking for support

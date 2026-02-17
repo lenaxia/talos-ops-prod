@@ -27,9 +27,10 @@ spec:
         node-role.kubernetes.io/worker: 'true'
     controllers:
       app:
-        type: statefulset
+        type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
+          litellm-force-restart: "2026-01-31"
         initContainers:
           init-db:
             env:
@@ -99,7 +100,7 @@ spec:
           app:
             image:
               repository: ghcr.io/berriai/litellm
-              tag: v1.81.0-stable
+              tag: v1.81.9-stable
             args:
               - "--config"
               - "/app/proxy_server_config.yaml"
@@ -258,6 +259,15 @@ spec:
                   output_cost_per_token: 0.00001
                   max_tokens: 131072
                   supports_tool_choice: true
+              - model_name: classifier
+                litellm_params:
+                  model: openai/classifier
+                  api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
+                  api_key: doesnotmatter
+                model_info:
+                  input_cost_per_token: 0.00001
+                  output_cost_per_token: 0.00001
+                  max_tokens: 1000
 
               # Deepseek
               - model_name: deepseek-v3-chat

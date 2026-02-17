@@ -33,7 +33,7 @@ spec:
           main:
             image:
               repository: valkey/valkey
-              tag: 9.0.0
+              tag: 9.0.2
             command:
               - sh
             args:
@@ -95,8 +95,10 @@ spec:
     persistence:
       data:
         enabled: true
-        type: emptyDir
-        medium: Memory
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn
         globalMounts:
           - path: /data
       healthcheck:
