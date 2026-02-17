@@ -112,7 +112,7 @@ spec:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
         hosts:
-          - host: &uri subgen.${SECRET_DEV_DOMAIN}
+          - host: subgen.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
@@ -120,8 +120,8 @@ spec:
                   port: http
         tls:
           - hosts:
-              - *uri
-            secretName: *uri
+              - subgen.${SECRET_DEV_DOMAIN}
+            secretName: subgen.${SECRET_DEV_DOMAIN}
         className: traefik
     persistence:
       omoikane:
