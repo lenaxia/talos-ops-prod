@@ -227,6 +227,7 @@ jobs:
           - Examining the changed files that triggered this workflow
           - Checking the workflow YAML configuration in `.github/workflows/`
           - Looking for patterns in recent similar failures (if data available in `.tmp/recent-runs.json`)
+          - Inspect already open PRs. If a PR already exists fixing this error, then exit and DO NOT create a new PR.
 
           ### 2. Root Cause Classification
 
@@ -356,6 +357,7 @@ jobs:
           - For security-sensitive changes (secrets, permissions), mark PR as draft
           - Add label: `automated-fix`
           - If unsure about fix, create issue instead of PR
+          - ALWAYS validate whether a PR fixing this same issue already exists, and if so, do not create a new PR. 
 
           ### 7. Rate Limiting
 

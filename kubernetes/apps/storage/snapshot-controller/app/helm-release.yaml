@@ -26,7 +26,6 @@ spec:
       strategy: rollback
       retries: 3
   values:
-    controller:
       volumeSnapshotClasses:
         # https://github.com/joryirving/home-ops/blob/b768ca29ef34c6643bc83ca8cea0f06596dbc045/kubernetes/pi/apps/storage/snapshot-controller/app/helmrelease.yaml#L29
         - name: longhorn-snapclass
@@ -40,5 +39,5 @@ spec:
             type: snap
       serviceMonitor:
         create: true
-    webhook:
-      enabled: false
+      webhook:
+        enabled: false

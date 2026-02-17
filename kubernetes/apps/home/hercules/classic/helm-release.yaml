@@ -79,7 +79,7 @@ spec:
               tag: classic-20190605
             envFrom:
               - secretRef:
-                  name: &appname hercules-classic
+                  name: hercules-classic
             env:
               - name: MYSQL_HOST
                 valueFrom:
