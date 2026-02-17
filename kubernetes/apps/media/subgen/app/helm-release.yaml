@@ -14,6 +14,8 @@ spec:
         name: bjw-s
         namespace: flux-system
   interval: 6m
+  upgrade:
+    timeout: 10m
   values:
     defaultPodOptions:
       securityContext:
@@ -21,8 +23,8 @@ spec:
         runAsGroup: 0
         fsGroup: 0
         fsGroupChangePolicy: OnRootMismatch
-      nodeSelector:
-        node-role.kubernetes.io/worker: 'true'
+       # nodeSelector:
+       #   node-role.kubernetes.io/worker: 'true'
     controllers:
       main:
         type: deployment
