@@ -32,77 +32,77 @@ spec:
          annotations:
            reloader.stakater.com/auto: 'true'
          containers:
-          worker:
-            image:
-              repository: ghcr.io/lenaxia/subgen-worker
-              tag: v0.2.18-cpu
-              pullPolicy: Always
-            env:
-              GRPC_PORT: "50051"
-              LOG_LEVEL: "INFO"
-              LOG_FORMAT: "json"
-              WHISPER_MODEL: "small"
-              WHISPER_THREADS: "4"
-              TRANSCRIBE_DEVICE: "cpu"
-              COMPUTE_TYPE: "auto"
-              CONCURRENT_TRANSCRIPTIONS: "2"
-              MAX_WORKERS: "10"
-              MEMORY_THRESHOLD_MB: "3000"
-              MODEL_CLEANUP_DELAY: "300"
-              MODEL_PATH: "/models"
-              HF_HOME: "/cache/huggingface"
-              XDG_CACHE_HOME: "/cache"
-              MPLCONFIGDIR: "/cache/matplotlib"
-              SUBTITLE_LANGUAGE_NAME: "aa"
-              LRC_FOR_AUDIO_FILES: "true"
-              WORD_LEVEL_HIGHLIGHT: "false"
-              CLEAR_VRAM_ON_COMPLETE: "false"
-              APPEND: "false"
-              CUSTOM_REGROUP: "cm_sl=84_sl=42++++++1"
-            envFrom:
-              - secretRef:
-                  name: subgen
-            probes:
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /healthz
-                    port: 8080
-                  initialDelaySeconds: 60
-                  periodSeconds: 60
-                  timeoutSeconds: 10
-                  failureThreshold: 3
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /readyz
-                    port: 8080
-                  initialDelaySeconds: 30
-                  periodSeconds: 30
-                  timeoutSeconds: 5
-                  failureThreshold: 3
-              startup:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /healthz
-                    port: 8080
-                  initialDelaySeconds: 10
-                  periodSeconds: 10
-                  timeoutSeconds: 5
-                  failureThreshold: 30
-            resources:
-              limits:
-                cpu: "4"
-                memory: 8Gi
-              requests:
-                cpu: "2"
-                memory: 4Gi
+           worker:
+             image:
+               repository: ghcr.io/lenaxia/subgen-worker
+               tag: v0.2.18-cpu
+               pullPolicy: Always
+             env:
+               GRPC_PORT: "50051"
+               LOG_LEVEL: "INFO"
+               LOG_FORMAT: "json"
+               WHISPER_MODEL: "small"
+               WHISPER_THREADS: "4"
+               TRANSCRIBE_DEVICE: "cpu"
+               COMPUTE_TYPE: "auto"
+               CONCURRENT_TRANSCRIPTIONS: "2"
+               MAX_WORKERS: "10"
+               MEMORY_THRESHOLD_MB: "3000"
+               MODEL_CLEANUP_DELAY: "300"
+               MODEL_PATH: "/models"
+               HF_HOME: "/cache/huggingface"
+               XDG_CACHE_HOME: "/cache"
+               MPLCONFIGDIR: "/cache/matplotlib"
+               SUBTITLE_LANGUAGE_NAME: "aa"
+               LRC_FOR_AUDIO_FILES: "true"
+               WORD_LEVEL_HIGHLIGHT: "false"
+               CLEAR_VRAM_ON_COMPLETE: "false"
+               APPEND: "false"
+               CUSTOM_REGROUP: "cm_sl=84_sl=42++++++1"
+             envFrom:
+               - secretRef:
+                   name: subgen
+             probes:
+               liveness:
+                 enabled: true
+                 custom: true
+                 spec:
+                   httpGet:
+                     path: /healthz
+                     port: 8080
+                   initialDelaySeconds: 60
+                   periodSeconds: 60
+                   timeoutSeconds: 10
+                   failureThreshold: 3
+               readiness:
+                 enabled: true
+                 custom: true
+                 spec:
+                   httpGet:
+                     path: /readyz
+                     port: 8080
+                   initialDelaySeconds: 30
+                   periodSeconds: 30
+                   timeoutSeconds: 5
+                   failureThreshold: 3
+               startup:
+                 enabled: true
+                 custom: true
+                 spec:
+                   httpGet:
+                     path: /healthz
+                     port: 8080
+                   initialDelaySeconds: 10
+                   periodSeconds: 10
+                   timeoutSeconds: 5
+                   failureThreshold: 30
+             resources:
+               limits:
+                 cpu: "4"
+                 memory: 8Gi
+               requests:
+                 cpu: "2"
+                 memory: 4Gi
     service:
       main:
         type: ClusterIP
@@ -113,7 +113,7 @@ spec:
             port: 8080
         primary: true
     persistence:
-       models:
+      models:
         enabled: true
         type: persistentVolumeClaim
         accessMode: ReadWriteMany
