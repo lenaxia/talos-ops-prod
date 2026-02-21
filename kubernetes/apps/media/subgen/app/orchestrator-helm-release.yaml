@@ -19,20 +19,13 @@ spec:
     timeout: 10m
   values:
     controllers:
-      main:
-        type: deployment
-        replicas: 1
-        strategy: Recreate
-        serviceAccountName: subgen-orchestrator
-        automountServiceAccountToken: true
-        annotations:
-          reloader.stakater.com/auto: 'true'
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-          fsGroup: 0
-          fsGroupChangePolicy: OnRootMismatch
-        containers:
+       main:
+         type: deployment
+         replicas: 1
+         strategy: Recreate
+         annotations:
+           reloader.stakater.com/auto: 'true'
+         containers:
           orchestrator:
             image:
               repository: ghcr.io/lenaxia/subgen-orchestrator
