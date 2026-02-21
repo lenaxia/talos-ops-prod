@@ -18,4 +18,4 @@ resources:
   - ./brother-ql-web/ks.yaml
   - ./forgejo/ks.yaml
   - ./it-tools/ks.yaml
-     #- ./k8sgpt/ks.yaml
+  - ./k8sgpt/ks.yaml
