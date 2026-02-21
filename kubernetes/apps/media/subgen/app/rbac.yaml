@@ -1,0 +1,76 @@
+# ============================================================================
+# Subgen RBAC Configuration (Phase 2 Only)
+# ============================================================================
+# Required for Kubernetes worker discovery
+# Grants orchestrator read access to Endpoints API
+# ============================================================================
+#
+# Usage:
+#   kubectl apply -f deploy/rbac.yaml
+#
+# Verification:
+#   kubectl auth can-i get endpoints \
+#     --as=system:serviceaccount:media:subgen-orchestrator \
+#     -n media
+#
+# Security Notes:
+#   - Read-only permissions (get, list, watch)
+#   - Endpoints resource only (no pods, secrets, services)
+#   - Namespace-scoped (media namespace only)
+#   - Follows principle of least privilege
+# ============================================================================
+
+---
+# ServiceAccount for orchestrator pod
+# The pod will authenticate to K8s API using this identity
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: subgen-orchestrator
+  namespace: media
+  labels:
+    app.kubernetes.io/name: subgen
+    app.kubernetes.io/component: orchestrator
+    app.kubernetes.io/part-of: subgen
+automountServiceAccountToken: true  # Required for K8s API access
+
+---
+# Role defines what the ServiceAccount can do
+# Grants read-only access to Endpoints in the namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: subgen-orchestrator
+  namespace: media
+  labels:
+    app.kubernetes.io/name: subgen
+    app.kubernetes.io/component: orchestrator
+    app.kubernetes.io/part-of: subgen
+rules:
+- apiGroups: [""]  # Core API group
+  resources: ["endpoints"]
+  verbs:
+  - get    # Read single endpoint
+  - list   # List all endpoints
+  - watch  # Stream endpoint changes (for STORY_03)
+
+---
+# RoleBinding links the ServiceAccount to the Role
+# This grants the orchestrator pod the permissions defined in the Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: subgen-orchestrator
+  namespace: media
+  labels:
+    app.kubernetes.io/name: subgen
+    app.kubernetes.io/component: orchestrator
+    app.kubernetes.io/part-of: subgen
+subjects:
+- kind: ServiceAccount
+  name: subgen-orchestrator
+  namespace: media
+roleRef:
+  kind: Role
+  name: subgen-orchestrator
+  apiGroup: rbac.authorization.k8s.io
