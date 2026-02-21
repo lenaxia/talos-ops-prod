@@ -23,3 +23,12 @@ spec:
   interval: 30m
   retryInterval: 1m
   timeout: 3m
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+  postBuild:
+    substitute: {}
+    substituteFrom:
+      - kind: Secret
+        name: openldap
