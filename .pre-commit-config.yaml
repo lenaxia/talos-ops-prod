@@ -1,0 +1,12 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+repos:
+  - repo: local
+    hooks:
+      - id: validate-helmrelease-upgrade
+        name: Validate HelmRelease upgrade.strategy
+        entry: bash scripts/validate-helmrelease-upgrade.sh
+        language: system
+        files: kubernetes/.*helm-release\.ya?ml$
+        pass_filenames: false
