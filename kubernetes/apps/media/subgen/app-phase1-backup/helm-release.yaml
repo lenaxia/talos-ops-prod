@@ -1,0 +1,257 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: subgen
+  namespace: media
+spec:
+  releaseName: subgen
+  chart:
+    spec:
+      chart: app-template
+      version: 4.6.2
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  interval: 6m
+  upgrade:
+    timeout: 10m
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+        fsGroupChangePolicy: OnRootMismatch
+        # nodeSelector:
+        #   node-role.kubernetes.io/worker: 'true'
+    controllers:
+       main:
+         type: deployment
+         annotations:
+           reloader.stakater.com/auto: 'true'
+         containers:
+           orchestrator:
+            image:
+              repository: ghcr.io/lenaxia/subgen-orchestrator
+              tag: v0.2.18
+              pullPolicy: Always
+            env:
+              # Orchestrator config
+              WEBHOOK_PORT: "9000"
+              METRICS_PORT: "9090"
+              LOG_LEVEL: "debug"
+              LOG_FORMAT: "json"
+              
+              # Queue configuration
+              QUEUE_MAX_SIZE: "1000"
+              QUEUE_WORKER_TIMEOUT: "18000"  # 5 hours
+              
+              # Worker connection (CRITICAL for Phase 1)
+              WORKER_DISCOVERY: "localhost"
+              WORKER_ADDRESS: "localhost:50051"
+              
+              # Processing flags
+              PROCESS_ADDED_MEDIA: "true"
+              PROCESS_MEDIA_ON_PLAY: "true"
+              TRANSCRIBE_OR_TRANSLATE: "transcribe"
+              
+              # Skip conditions
+              SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: "eng"
+              SKIP_IF_TARGET_SUBTITLES_EXIST: "true"
+              
+              # Media server configuration
+              PLEX_ENABLED: "true"
+              PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
+              PLEX_QUEUE_NEXT_EPISODE: "false"
+              
+              # Path mapping for media files
+              USE_PATH_MAPPING: "false"
+              
+              # File monitoring configuration
+              MONITOR: "false"
+              
+              # Subtitle config
+              SUBTITLE_LANGUAGE_NAME: "AA"
+              
+              # Debug
+              DEBUG: "true"
+            envFrom:
+              - secretRef:
+                  name: subgen
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 9000
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 9000
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+           worker:
+            image:
+              repository: ghcr.io/lenaxia/subgen-worker
+              tag: v0.2.18-cpu
+              pullPolicy: Always
+            env:
+              # Worker config
+              GRPC_PORT: "50051"
+              LOG_LEVEL: "INFO"
+              LOG_FORMAT: "json"
+              
+              # Whisper config
+              WHISPER_MODEL: "small"
+              WHISPER_THREADS: "4"
+              TRANSCRIBE_DEVICE: "cpu"
+              COMPUTE_TYPE: "auto"
+              MODEL_PATH: "/models"
+              
+              # Memory management
+              MEMORY_THRESHOLD_MB: "3000"
+              MODEL_CLEANUP_DELAY: "300"
+              CLEAR_VRAM_ON_COMPLETE: "false"
+              
+              # Concurrency settings
+              MAX_WORKERS: "10"
+              CONCURRENT_TRANSCRIPTIONS: "2"
+              
+              # Subtitle config
+              WORD_LEVEL_HIGHLIGHT: "false"
+              CUSTOM_REGROUP: "cm_sl=84_sl=42++++++1"
+              LRC_FOR_AUDIO_FILES: "true"
+              APPEND: "false"
+              SUBTITLE_LANGUAGE_NAME: "aa"
+              
+              # Cache directories
+              XDG_CACHE_HOME: "/cache"
+              HF_HOME: "/cache/huggingface"
+              MPLCONFIGDIR: "/cache/matplotlib"
+            resources:
+              requests:
+                cpu: "2"
+                memory: "4Gi"
+              limits:
+                cpu: "4"
+                memory: "8Gi"
+            ports:
+              - name: grpc
+                containerPort: 50051
+                protocol: TCP
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  initialDelaySeconds: 60
+                  periodSeconds: 60
+                  timeoutSeconds: 10
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /readyz
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+    service:
+      main:
+        type: ClusterIP
+        ports:
+          http:
+            port: 9000
+          metrics:
+            port: 9090
+        primary: true
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: television-box
+          hajimari.io/group: Media
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: subgen.example.com
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  port: http
+        tls:
+          - hosts:
+              - subgen.example.com
+            secretName: subgen.example.com
+        className: traefik
+    persistence:
+      omoikane:
+        enabled: true
+        type: nfs
+        server: 192.168.0.120
+        path: /volume1/omoikane
+        globalMounts:
+          - path: /omoikane
+      backups:
+        enabled: true
+        type: nfs
+        server: 192.168.0.120
+        path: /volume1/backups/arr
+        globalMounts:
+          - path: /config/Backups
+      downloads:
+        enabled: true
+        type: nfs
+        server: 192.168.0.120
+        path: /volume2/downloads
+        globalMounts:
+          - path: /downloads
+      models:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 10Gi
+        globalMounts:
+          - path: /models
+      config:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        globalMounts:
+          - path: /config
+    podLabels:
+      app: subgen
