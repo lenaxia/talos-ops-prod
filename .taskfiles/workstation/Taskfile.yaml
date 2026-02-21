@@ -37,7 +37,7 @@ tasks:
       - which direnv
 
   generic-linux:
-    desc: Set up CLI tools into the projects .bin directory
+    desc: Set up CLI tools into a projects .bin directory
     dir: '{{.ROOT_DIR}}/.bin'
     platforms: ['linux/amd64', 'linux/arm64']
     cmds:
@@ -52,7 +52,7 @@ tasks:
           - mikefarah/yq?as=yq
           - siderolabs/talos?as=talosctl
           - yannh/kubeconform?as=kubeconform
-        cmd: curl -fsSL "https://i.jpillora.com/{{.ITEM}}&type=script" | bash
+        cmd: bash {{.SCRIPTS_DIR}}/download-with-retry.sh "https://i.jpillora.com/{{.ITEM}}&type=script" | bash
       - cmd: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl";
           curl -sSfL -o sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
