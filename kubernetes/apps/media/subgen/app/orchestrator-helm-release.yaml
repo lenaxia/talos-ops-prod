@@ -19,13 +19,13 @@ spec:
     timeout: 10m
   values:
     controllers:
-       main:
-         type: deployment
-         replicas: 1
-         strategy: Recreate
-         annotations:
-           reloader.stakater.com/auto: 'true'
-         containers:
+      main:
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
           orchestrator:
             image:
               repository: ghcr.io/lenaxia/subgen-orchestrator
@@ -46,7 +46,7 @@ spec:
               TRANSCRIBE_OR_TRANSLATE: "transcribe"
               SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: "eng"
               SKIP_IF_TARGET_SUBTITLES_EXIST: "true"
-               PLEX_ENABLED: "false"
+              PLEX_ENABLED: "false"
               PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
               PLEX_QUEUE_NEXT_EPISODE: "false"
               USE_PATH_MAPPING: "false"
