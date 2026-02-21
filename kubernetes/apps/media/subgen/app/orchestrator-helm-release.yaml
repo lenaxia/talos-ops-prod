@@ -18,21 +18,20 @@ spec:
   upgrade:
     timeout: 10m
   values:
-    defaultPodOptions:
-      serviceAccountName: subgen-orchestrator
-      automountServiceAccountToken: true  # Required for K8s API access
-      securityContext:
-        runAsUser: 0
-        runAsGroup: 0
-        fsGroup: 0
-        fsGroupChangePolicy: OnRootMismatch
     controllers:
       main:
         type: deployment
         replicas: 1
         strategy: Recreate
+        serviceAccountName: subgen-orchestrator
+        automountServiceAccountToken: true
         annotations:
           reloader.stakater.com/auto: 'true'
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          fsGroup: 0
+          fsGroupChangePolicy: OnRootMismatch
         containers:
           orchestrator:
             image:
@@ -40,45 +39,26 @@ spec:
               tag: v0.2.18
               pullPolicy: Always
             env:
-              # Orchestrator config
               WEBHOOK_PORT: "9000"
               METRICS_PORT: "9090"
               LOG_LEVEL: "debug"
               LOG_FORMAT: "json"
-              
-              # Worker discovery (Phase 2: Kubernetes)
               WORKER_DISCOVERY: "kubernetes"
-              WORKER_SERVICE_NAME: "subgen-worker"  # K8s Service name for workers
-              WORKER_NAMESPACE: "media"  # Namespace where workers are deployed
-              
-              # Queue configuration
+              WORKER_SERVICE_NAME: "subgen-worker"
+              WORKER_NAMESPACE: "media"
               QUEUE_MAX_SIZE: "1000"
-              QUEUE_WORKER_TIMEOUT: "18000"  # 5 hours
-              
-              # Processing flags
+              QUEUE_WORKER_TIMEOUT: "18000"
               PROCESS_ADDED_MEDIA: "true"
               PROCESS_MEDIA_ON_PLAY: "true"
               TRANSCRIBE_OR_TRANSLATE: "transcribe"
-              
-              # Skip conditions
               SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: "eng"
               SKIP_IF_TARGET_SUBTITLES_EXIST: "true"
-              
-              # Media server configuration
               PLEX_ENABLED: "true"
               PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
               PLEX_QUEUE_NEXT_EPISODE: "false"
-              
-              # Path mapping for media files
               USE_PATH_MAPPING: "false"
-              
-              # File monitoring configuration
               MONITOR: "false"
-              
-              # Subtitle config
               SUBTITLE_LANGUAGE_NAME: "AA"
-              
-              # Debug
               DEBUG: "true"
             envFrom:
               - secretRef:
