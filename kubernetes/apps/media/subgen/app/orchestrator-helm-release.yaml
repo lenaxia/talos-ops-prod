@@ -31,32 +31,10 @@ spec:
               repository: ghcr.io/lenaxia/subgen-orchestrator
               tag: v0.2.18
               pullPolicy: Always
-            env:
-              WEBHOOK_PORT: "9000"
-              METRICS_PORT: "9090"
-              LOG_LEVEL: "debug"
-              LOG_FORMAT: "json"
-              WORKER_DISCOVERY: "kubernetes"
-              WORKER_SERVICE_NAME: "subgen-worker"
-              WORKER_NAMESPACE: "media"
-              QUEUE_MAX_SIZE: "1000"
-              QUEUE_WORKER_TIMEOUT: "18000"
-              PROCESS_ADDED_MEDIA: "true"
-              PROCESS_MEDIA_ON_PLAY: "true"
-              TRANSCRIBE_OR_TRANSLATE: "transcribe"
-              SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: "eng"
-              SKIP_IF_TARGET_SUBTITLES_EXIST: "true"
-              PLEX_ENABLED: "true"
-              PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
-              PLEX_QUEUE_NEXT_EPISODE: "false"
-              USE_PATH_MAPPING: "false"
-              MONITOR: "false"
-              SUBTITLE_LANGUAGE_NAME: "AA"
-              DEBUG: "true"
+            env: []
             envFrom:
               - secretRef:
                   name: subgen
-
             probes:
               liveness: &probes
                 enabled: true
@@ -112,6 +90,5 @@ spec:
               - subgen.example.com
             secretName: subgen.example.com
         className: traefik
-
     podLabels:
       app: subgen-orchestrator
