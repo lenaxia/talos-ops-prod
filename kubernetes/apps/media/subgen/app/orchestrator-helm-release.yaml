@@ -111,14 +111,6 @@ spec:
               - subgen.example.com
             secretName: subgen.example.com
         className: traefik
-    persistence:
-      omoikane:
-        enabled: false
-      backups:
-        enabled: false
-      downloads:
-        enabled: false
-      config:
-        enabled: false
+
     podLabels:
       app: subgen-orchestrator
