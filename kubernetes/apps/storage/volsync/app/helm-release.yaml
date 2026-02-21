@@ -26,7 +26,7 @@ spec:
     # Use perfectra1n fork which includes Kopia support
     image: &image
       repository: ghcr.io/perfectra1n/volsync
-      tag: 0.17.7
+      tag: v0.17.8
     kopia: *image
     restic: *image
     rclone: *image
