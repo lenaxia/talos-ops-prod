@@ -113,7 +113,7 @@ spec:
             port: 8080
         primary: true
     persistence:
-      models:
+       models:
         enabled: true
         type: persistentVolumeClaim
         accessMode: ReadWriteMany

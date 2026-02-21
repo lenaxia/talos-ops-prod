@@ -46,13 +46,16 @@ spec:
               TRANSCRIBE_OR_TRANSLATE: "transcribe"
               SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: "eng"
               SKIP_IF_TARGET_SUBTITLES_EXIST: "true"
-              PLEX_ENABLED: "false"
+              PLEX_ENABLED: "true"
               PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
               PLEX_QUEUE_NEXT_EPISODE: "false"
               USE_PATH_MAPPING: "false"
-              MONITOR: "false"
-              SUBTITLE_LANGUAGE_NAME: "AA"
-              DEBUG: "true"
+               MONITOR: "false"
+               SUBTITLE_LANGUAGE_NAME: "AA"
+               DEBUG: "true"
+            envFrom:
+              - secretRef:
+                  name: subgen
 
             probes:
               liveness: &probes
