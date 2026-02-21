@@ -26,11 +26,13 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
     controllers:
       main:
-        type: deployment  # Deployment for stateless workers
-        replicas: 2  # Start with 2 workers, scale as needed
+        type: deployment
+        replicas: 2
         strategy: RollingUpdate
         annotations:
           reloader.stakater.com/auto: 'true'
+        nodeSelector:
+          node-role.kubernetes.io/worker: ""
         containers:
           worker:
             image:
@@ -38,52 +40,30 @@ spec:
               tag: v0.2.18-cpu
               pullPolicy: Always
             env:
-              # Worker config
               GRPC_PORT: "50051"
               LOG_LEVEL: "INFO"
               LOG_FORMAT: "json"
-              
-              # Whisper config
               WHISPER_MODEL: "small"
               WHISPER_THREADS: "4"
               TRANSCRIBE_DEVICE: "cpu"
               COMPUTE_TYPE: "auto"
-              MODEL_PATH: "/models"
-              
-              # Memory management
+              CONCURRENT_TRANSCRIPTIONS: "2"
+              MAX_WORKERS: "10"
               MEMORY_THRESHOLD_MB: "3000"
               MODEL_CLEANUP_DELAY: "300"
-              CLEAR_VRAM_ON_COMPLETE: "false"
-              
-              # Concurrency settings
-              MAX_WORKERS: "10"
-              CONCURRENT_TRANSCRIPTIONS: "2"
-              
-              # Subtitle config
-              WORD_LEVEL_HIGHLIGHT: "false"
-              CUSTOM_REGROUP: "cm_sl=84_sl=42++++++1"
-              LRC_FOR_AUDIO_FILES: "true"
-              APPEND: "false"
-              SUBTITLE_LANGUAGE_NAME: "aa"
-              
-              # Cache directories
-              XDG_CACHE_HOME: "/cache"
+              MODEL_PATH: "/models"
               HF_HOME: "/cache/huggingface"
+              XDG_CACHE_HOME: "/cache"
               MPLCONFIGDIR: "/cache/matplotlib"
-            resources:
-              requests:
-                cpu: "2"
-                memory: "4Gi"
-              limits:
-                cpu: "4"
-                memory: "8Gi"
-            ports:
-              - name: grpc
-                containerPort: 50051
-                protocol: TCP
-              - name: http
-                containerPort: 8080
-                protocol: TCP
+              SUBTITLE_LANGUAGE_NAME: "aa"
+              LRC_FOR_AUDIO_FILES: "true"
+              WORD_LEVEL_HIGHLIGHT: "false"
+              CLEAR_VRAM_ON_COMPLETE: "false"
+              APPEND: "false"
+              CUSTOM_REGROUP: "cm_sl=84_sl=42++++++1"
+            envFrom:
+              - secretRef:
+                  name: subgen
             probes:
               liveness:
                 enabled: true
@@ -118,31 +98,37 @@ spec:
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 30
+            resources:
+              limits:
+                cpu: "4"
+                memory: 8Gi
+              requests:
+                cpu: "2"
+                memory: 4Gi
     service:
       main:
         type: ClusterIP
         ports:
           grpc:
             port: 50051
-            targetPort: grpc
           http:
             port: 8080
-            targetPort: http
         primary: true
     persistence:
-       models:
-         enabled: true
-         type: persistentVolumeClaim
-         accessMode: ReadWriteMany
-         size: 10Gi
-         globalMounts:
-           - path: /models
-       cache:
-         enabled: true
-         type: persistentVolumeClaim
-         accessMode: ReadWriteMany
-         size: 5Gi
-         globalMounts:
-           - path: /cache
+      models:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteMany
+        size: 10Gi
+        globalMounts:
+          - path: /models
+      cache:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteMany
+        size: 5Gi
+        globalMounts:
+          - path: /cache
     podLabels:
       app: subgen-worker
+
