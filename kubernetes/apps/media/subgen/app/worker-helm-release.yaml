@@ -25,15 +25,13 @@ spec:
         fsGroup: 0
         fsGroupChangePolicy: OnRootMismatch
     controllers:
-      main:
-        type: deployment
-        replicas: 2
-        strategy: RollingUpdate
-        annotations:
-          reloader.stakater.com/auto: 'true'
-        nodeSelector:
-          node-role.kubernetes.io/worker: ""
-        containers:
+       main:
+         type: deployment
+         replicas: 2
+         strategy: RollingUpdate
+         annotations:
+           reloader.stakater.com/auto: 'true'
+         containers:
           worker:
             image:
               repository: ghcr.io/lenaxia/subgen-worker
