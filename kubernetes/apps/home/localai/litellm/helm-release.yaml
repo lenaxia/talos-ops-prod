@@ -55,7 +55,7 @@ spec:
           migrate:
             image:
               repository: ghcr.io/berriai/litellm
-              tag: v1.81.0-stable
+              tag: v1.81.9-stable
             command:
               - sh
               - -c
