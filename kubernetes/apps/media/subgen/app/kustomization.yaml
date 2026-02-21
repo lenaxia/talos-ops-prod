@@ -4,3 +4,4 @@ resources:
   - rbac.yaml
   - orchestrator-helm-release.yaml
   - worker-helm-release.yaml
+  - secret.sops.yaml
