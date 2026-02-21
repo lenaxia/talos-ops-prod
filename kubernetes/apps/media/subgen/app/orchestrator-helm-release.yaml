@@ -53,9 +53,7 @@ spec:
               MONITOR: "false"
               SUBTITLE_LANGUAGE_NAME: "AA"
               DEBUG: "true"
-            envFrom:
-              - secretRef:
-                  name: subgen
+
             probes:
               liveness: &probes
                 enabled: true
