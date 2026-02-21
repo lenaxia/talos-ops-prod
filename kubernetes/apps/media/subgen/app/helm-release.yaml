@@ -23,26 +23,54 @@ spec:
         runAsGroup: 0
         fsGroup: 0
         fsGroupChangePolicy: OnRootMismatch
-       # nodeSelector:
-       #   node-role.kubernetes.io/worker: 'true'
+        # nodeSelector:
+        #   node-role.kubernetes.io/worker: 'true'
     controllers:
-      main:
-        type: deployment
-        annotations:
-          reloader.stakater.com/auto: 'true'
-        containers:
-          orchestrator:
+       main:
+         type: deployment
+         annotations:
+           reloader.stakater.com/auto: 'true'
+         containers:
+           orchestrator:
             image:
               repository: ghcr.io/lenaxia/subgen-orchestrator
-              tag: latest
+              tag: v0.2.18
               pullPolicy: Always
             env:
-              WORKER_ADDRESS: localhost:50051
-              PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
+              # Orchestrator config
+              WEBHOOK_PORT: "9000"
+              METRICS_PORT: "9090"
+              LOG_LEVEL: "debug"
+              LOG_FORMAT: "json"
+              
+              # Queue configuration
+              QUEUE_MAX_SIZE: "1000"
+              QUEUE_WORKER_TIMEOUT: "18000"  # 5 hours
+              
+              # Processing flags
               PROCESS_ADDED_MEDIA: "true"
               PROCESS_MEDIA_ON_PLAY: "true"
-              SUBTITLE_LANGUAGE_NAME: "AA"
+              TRANSCRIBE_OR_TRANSLATE: "transcribe"
+              
+              # Skip conditions
               SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: "eng"
+              SKIP_IF_TARGET_SUBTITLES_EXIST: "true"
+              
+              # Media server configuration
+              PLEX_ENABLED: "true"
+              PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
+              PLEX_QUEUE_NEXT_EPISODE: "false"
+              
+              # Path mapping for media files
+              USE_PATH_MAPPING: "false"
+              
+              # File monitoring configuration
+              MONITOR: "false"
+              
+              # Subtitle config
+              SUBTITLE_LANGUAGE_NAME: "AA"
+              
+              # Debug
               DEBUG: "true"
             envFrom:
               - secretRef:
@@ -71,18 +99,44 @@ spec:
                   periodSeconds: 5
                   timeoutSeconds: 5
                   failureThreshold: 30
-          worker:
+           worker:
             image:
               repository: ghcr.io/lenaxia/subgen-worker
-              tag: cpu
+              tag: v0.2.18-cpu
               pullPolicy: Always
             env:
-              TRANSCRIBE_DEVICE: "cpu"
-              WHISPER_MODEL: "medium"
-              CONCURRENT_TRANSCRIPTIONS: "2"
+              # Worker config
+              GRPC_PORT: "50051"
+              LOG_LEVEL: "INFO"
+              LOG_FORMAT: "json"
+              
+              # Whisper config
+              WHISPER_MODEL: "small"
               WHISPER_THREADS: "4"
-              MODEL_CLEANUP_DELAY: "300"
+              TRANSCRIBE_DEVICE: "cpu"
+              COMPUTE_TYPE: "auto"
               MODEL_PATH: "/models"
+              
+              # Memory management
+              MEMORY_THRESHOLD_MB: "3000"
+              MODEL_CLEANUP_DELAY: "300"
+              CLEAR_VRAM_ON_COMPLETE: "false"
+              
+              # Concurrency settings
+              MAX_WORKERS: "10"
+              CONCURRENT_TRANSCRIPTIONS: "2"
+              
+              # Subtitle config
+              WORD_LEVEL_HIGHLIGHT: "false"
+              CUSTOM_REGROUP: "cm_sl=84_sl=42++++++1"
+              LRC_FOR_AUDIO_FILES: "true"
+              APPEND: "false"
+              SUBTITLE_LANGUAGE_NAME: "aa"
+              
+              # Cache directories
+              XDG_CACHE_HOME: "/cache"
+              HF_HOME: "/cache/huggingface"
+              MPLCONFIGDIR: "/cache/matplotlib"
             resources:
               requests:
                 cpu: "2"
@@ -94,6 +148,40 @@ spec:
               - name: grpc
                 containerPort: 50051
                 protocol: TCP
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  initialDelaySeconds: 60
+                  periodSeconds: 60
+                  timeoutSeconds: 10
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /readyz
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
     service:
       main:
         type: ClusterIP
