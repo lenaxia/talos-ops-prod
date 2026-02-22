@@ -73,8 +73,8 @@ spec:
                 
                 # Run Prisma migration
                 cd /app
-                echo "Running: npx prisma migrate deploy"
-                npx prisma migrate deploy --schema=/app/litellm-proxy-extras/litellm_proxy_extras/schema.prisma
+                echo "Running: prisma migrate deploy"
+                prisma migrate deploy --schema=/app/litellm-proxy-extras/litellm_proxy_extras/schema.prisma
                 
                 echo "✓ Migration completed successfully!"
             env:
