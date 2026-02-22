@@ -5,3 +5,4 @@ spegel:
 service:
   registry:
     hostPort: 29999
+    topologyAwareHintsEnabled: false
