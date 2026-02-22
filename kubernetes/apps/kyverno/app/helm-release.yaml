@@ -40,9 +40,12 @@ spec:
         enabled: true
         interval: 1m
     cleanupController:
+      replicaCount: 1
       serviceMonitor:
         enabled: true
         interval: 1m
+      replicaCount: 1
+      revisionHistoryLimit: 2
     reportsController:
       serviceMonitor:
         enabled: true
