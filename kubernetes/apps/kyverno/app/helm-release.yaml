@@ -27,9 +27,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    admissionController:
+      replicas: 3
     crds:
       install: true
-    replicaCount: 3
     grafana:
       enabled: true
     serviceMonitor:
