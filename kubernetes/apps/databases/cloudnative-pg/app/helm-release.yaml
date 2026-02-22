@@ -4,6 +4,8 @@ kind: HelmRelease
 metadata:
   name: postgres-operator
   namespace: databases
+  annotations:
+    force-reconciliation: "2026-02-22T08:50:00Z"
 spec:
   interval: 15m
   chart:
@@ -28,3 +30,22 @@ spec:
       node-role.kubernetes.io/worker: 'true'
     crds:
       create: true
+    webhook:
+      mutating:
+        create: true
+        failurePolicy: Fail
+        namespaceSelector:
+          matchExpressions:
+            - key: kubernetes.io/metadata.name
+              operator: In
+              values:
+                - databases
+      validating:
+        create: true
+        failurePolicy: Fail
+        namespaceSelector:
+          matchExpressions:
+            - key: kubernetes.io/metadata.name
+              operator: In
+              values:
+                - databases
