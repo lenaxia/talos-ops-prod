@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2beta1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -29,14 +29,15 @@ spec:
     keepHistory: false
   postRenderers:
     - kustomize:
-        patchesStrategicMerge:
-          - apiVersion: apps/v1
-            kind: Deployment
-            metadata:
+        patches:
+          - target:
+              kind: Deployment
               name: inteldeviceplugins-controller-manager
               namespace: kube-system
-            spec:
-              revisionHistoryLimit: 2
+            patch: |
+              - op: replace
+                path: /spec/revisionHistoryLimit
+                value: 2
   values:
     manager:
       devices:
