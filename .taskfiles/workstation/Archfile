@@ -13,6 +13,6 @@ kustomize
 minijinja-cli-bin
 moreutils
 sops
-stern-bin
+stern
 talhelper-bin
 talosctl
