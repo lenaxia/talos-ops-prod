@@ -17,7 +17,6 @@ spec:
     cleanupOnFail: true
     remediation:
       retries: 4
-      strategy: rollback
   values:
     controllers:
       comfyui:
