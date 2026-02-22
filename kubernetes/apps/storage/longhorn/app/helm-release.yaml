@@ -46,6 +46,8 @@ spec:
       dataLocality: "best-effort"
       replicaAutoBalance: "best-effort"
       defaultDataPath: "/var/mnt/longhorn"
+      concurrentAutomaticEngineUpgradePerNodeLimit: 1
+      defaultEngineImage: docker.io/longhornio/longhorn-engine:v1.11.0
 
     # Global node selector and tolerations for all Longhorn components
     global:
