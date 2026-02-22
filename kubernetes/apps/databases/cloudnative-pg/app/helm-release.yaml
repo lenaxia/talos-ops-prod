@@ -28,3 +28,19 @@ spec:
       node-role.kubernetes.io/worker: 'true'
     crds:
       create: true
+  postRenderers:
+    - kustomize:
+        patches:
+          - patch: |-
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: postgres-operator-cloudnative-pg
+                namespace: databases
+                annotations:
+                  rollout.kubernetes.io/triggeredAt: "2026-02-22T09:50:00Z"
+              spec:
+                revisionHistoryLimit: 3
+            target:
+              kind: Deployment
+              name: postgres-operator-cloudnative-pg
