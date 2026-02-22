@@ -5,6 +5,7 @@ version: '3'
 vars:
   KUBECONFORM_SCRIPT: "{{.SCRIPTS_DIR}}/kubeconform.sh"
   YAML_VALIDATE_SCRIPT: "{{.SCRIPTS_DIR}}/validate-yaml-anchors.sh"
+  HELMRELEASE_VALIDATE_SCRIPT: "{{.SCRIPTS_DIR}}/validate-helmreleases.sh"
 
 tasks:
 
@@ -39,6 +40,13 @@ tasks:
       - test -f {{.YAML_VALIDATE_SCRIPT}}
       - which python3
 
+  validate-helmreleases:
+    desc: Validate HelmRelease configurations for common issues
+    cmd: bash {{.HELMRELEASE_VALIDATE_SCRIPT}} {{.KUBERNETES_DIR}}
+    preconditions:
+      - test -f {{.HELMRELEASE_VALIDATE_SCRIPT}}
+      - which bash
+
   kubeconform:
     desc: Validate Kubernetes manifests with kubeconform
     cmd: bash {{.KUBECONFORM_SCRIPT}} {{.KUBERNETES_DIR}}
@@ -46,6 +54,8 @@ tasks:
       - test -f {{.KUBECONFORM_SCRIPT}}
       - which python3
       - test -f {{.YAML_VALIDATE_SCRIPT}}
+    requires:
+      - validate-helmreleases
 
   resources:
     desc: Gather common resources in your cluster, useful when asking for support
