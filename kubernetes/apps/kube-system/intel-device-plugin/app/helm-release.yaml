@@ -29,5 +29,6 @@ spec:
     keepHistory: false
   values:
     manager:
+      replicas: 1
       devices:
         gpu: true
