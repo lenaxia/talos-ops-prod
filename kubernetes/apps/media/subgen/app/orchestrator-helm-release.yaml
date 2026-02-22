@@ -79,7 +79,7 @@ spec:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
         hosts:
-          - host: subgen.example.com
+          - host: subgen.thekao.cloud
             paths:
               - path: /
                 pathType: Prefix
@@ -87,8 +87,8 @@ spec:
                   port: http
         tls:
           - hosts:
-              - subgen.example.com
-            secretName: subgen.example.com
+              - subgen.thekao.cloud
+            secretName: subgen.thekao.cloud
         className: traefik
     podLabels:
       app: subgen-orchestrator
