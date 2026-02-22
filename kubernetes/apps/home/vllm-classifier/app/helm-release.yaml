@@ -33,6 +33,7 @@ spec:
     controllers:
       app:
         type: deployment
+        replicas: 0
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
