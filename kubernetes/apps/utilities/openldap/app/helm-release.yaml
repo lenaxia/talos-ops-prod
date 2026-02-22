@@ -65,6 +65,7 @@ spec:
           - hosts:
               - *uri
             secretName: *uri
+        className: traefik
               #    persistence:
               #      schema-config:
               #        enabled: true
