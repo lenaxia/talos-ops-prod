@@ -6,9 +6,11 @@ tasks:
 
   arch:
     desc: Set up Arch Linux tools
-    cmd: >
-      {{.PKGMGR}} -Syu --needed --noconfirm --noprogressbar
-      $(cat {{.ROOT_DIR}}/.taskfiles/workstation/Archfile | xargs)
+    cmds:
+      - cmd: >
+          {{.PKGMGR}} -Syu --needed --noconfirm --noprogressbar
+          $(cat {{.ROOT_DIR}}/.taskfiles/workstation/Archfile | xargs)
+      - cmd: curl -sSfL "https://raw.githubusercontent.com/helmfile/helmfile/main/scripts/get-helmfile.sh" | bash
     vars:
       PKGMGR:
         sh: which paru || which yay

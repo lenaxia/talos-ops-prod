@@ -5,7 +5,6 @@ flux-bin
 go-task
 go-yq
 helm
-helmfile
 jq
 kubeconform
 kubectl-bin
