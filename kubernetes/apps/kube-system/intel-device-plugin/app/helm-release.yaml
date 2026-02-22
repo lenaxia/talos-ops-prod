@@ -31,3 +31,5 @@ spec:
     manager:
       devices:
         gpu: true
+      deployment:
+        revisionHistoryLimit: 3
