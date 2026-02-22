@@ -1,0 +1,17 @@
+---
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args:
+          - --strict
+          - -c
+          - .yamllint.yaml
+        files: \.(yaml|yml)$
+
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.23
+    hooks:
+      - id: shellcheck
+        types: [shell]
