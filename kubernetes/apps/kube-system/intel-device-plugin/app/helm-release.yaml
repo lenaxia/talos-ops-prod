@@ -27,6 +27,16 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
+  postRenderers:
+  - kustomize:
+      patches:
+        - target:
+            kind: Deployment
+            name: inteldeviceplugins-controller-manager
+          patch: |
+            - op: replace
+              path: /spec/revisionHistoryLimit
+              value: 2
   values:
     manager:
       devices:
