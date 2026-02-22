@@ -28,3 +28,13 @@ spec:
       node-role.kubernetes.io/worker: 'true'
     crds:
       create: true
+    webhook:
+      validating:
+        create: true
+        failurePolicy: Fail
+        namespaceSelector:
+          matchExpressions:
+            - key: kubernetes.io/metadata.name
+              operator: In
+              values:
+                - databases
