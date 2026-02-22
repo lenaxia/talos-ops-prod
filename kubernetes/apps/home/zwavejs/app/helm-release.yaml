@@ -83,6 +83,7 @@ spec:
             port: 3000
             enabled: true
         primary: true
+        controller: main
     ingress:
       main:
         enabled: true
