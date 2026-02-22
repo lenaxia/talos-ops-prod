@@ -13,6 +13,8 @@ kustomize
 minijinja-cli-bin
 moreutils
 sops
-stern-bin
+# stern - Optional debugging tool for multi-pod log tailing
+# If installation fails, stern can be installed later via: kubectl krew install stern
+stern
 talhelper-bin
 talosctl
