@@ -29,14 +29,19 @@ spec:
     keepHistory: false
   postRenderers:
     - kustomize:
-        patchesStrategicMerge:
-          - apiVersion: apps/v1
-            kind: Deployment
-            metadata:
+        patches:
+          - patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: inteldeviceplugins-controller-manager
+                namespace: kube-system
+              spec:
+                revisionHistoryLimit: 2
+            target:
+              kind: Deployment
               name: inteldeviceplugins-controller-manager
               namespace: kube-system
-            spec:
-              revisionHistoryLimit: 2
   values:
     manager:
       devices:
