@@ -1,0 +1,70 @@
+---
+# Job to clean up completed pods from Intel Device Plugins Operator
+# This removes old completed pods that accumulate from previous deployments
+# and can confuse monitoring tools like k8sgpt
+#
+# This is a one-time cleanup job that can be run manually or scheduled as needed.
+# After running this job, the completed pods will be deleted.
+#
+# To run manually:
+# kubectl apply -f <this-file>
+# kubectl wait --for=condition=complete --timeout=300s job/intel-device-plugins-cleanup-completed-pods -n kube-system
+# kubectl delete job intel-device-plugins-cleanup-completed-pods -n kube-system
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: intel-device-plugins-cleanup-completed-pods
+  namespace: kube-system
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      serviceAccountName: intel-device-plugins-cleanup
+      restartPolicy: OnFailure
+      containers:
+        - name: kubectl
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Delete completed pods from old ReplicaSets of the Intel Device Plugins Operator deployment
+              kubectl get pods -n kube-system \
+                -l control-plane=controller-manager \
+                --field-selector status.phase=Succeeded \
+                -o json | \
+                jq -r '.items[] | "\(.metadata.name)"' | \
+                xargs -r kubectl delete pod -n kube-system --ignore-not-found=true
+---
+# ServiceAccount for the cleanup job
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: intel-device-plugins-cleanup
+  namespace: kube-system
+---
+# Role for the cleanup job to delete pods in kube-system
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: intel-device-plugins-cleanup
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "delete"]
+---
+# RoleBinding for the cleanup job
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: intel-device-plugins-cleanup
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: intel-device-plugins-cleanup
+subjects:
+  - kind: ServiceAccount
+    name: intel-device-plugins-cleanup
+    namespace: kube-system
