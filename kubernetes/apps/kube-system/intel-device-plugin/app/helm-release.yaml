@@ -28,7 +28,7 @@ spec:
   uninstall:
     keepHistory: false
   postRenderers:
-    - kustomize:
+    - kustomization:
         patchesStrategicMerge:
           - apiVersion: apps/v1
             kind: Deployment
