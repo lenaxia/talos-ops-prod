@@ -23,7 +23,7 @@ spec:
 
   service:
     type: LoadBalancer
-    loadBalancerIP: ${SVC_MARIADB_ADDR}
+    loadBalancerIP: ${SVC_MARIADB_PRIMARY_ADDR}
     metadata:
       labels:
         cilium.io/l2-ip-pool: reserved
