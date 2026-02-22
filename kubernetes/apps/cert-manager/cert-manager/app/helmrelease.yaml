@@ -3,7 +3,9 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: cert-manager
-spec:
+  annotations:
+    force-reconciliation: "2026-02-22T08:43:00Z"
+  spec:
   interval: 30m
   chart:
     spec:
