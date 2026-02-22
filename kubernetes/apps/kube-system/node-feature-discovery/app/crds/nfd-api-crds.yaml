@@ -18,7 +18,7 @@ spec:
     schema:
       openAPIV3Schema:
         description: |-
-          NodeFeature resource holds features discovered for one node in
+          NodeFeature resource holds the features discovered for one node in the
           cluster.
         properties:
           apiVersion:
@@ -59,7 +59,7 @@ spec:
                       required:
                       - elements
                       type: object
-                    description: Attributes contains all attribute-type features
+                    description: Attributes contains all the attribute-type features
                       of the node.
                     type: object
                   flags:
@@ -78,7 +78,7 @@ spec:
                       required:
                       - elements
                       type: object
-                    description: Flags contains all flag-type features of the
+                    description: Flags contains all the flag-type features of the
                       node.
                     type: object
                   instances:
@@ -90,7 +90,7 @@ spec:
                           description: Individual features of the feature set.
                           items:
                             description: InstanceFeature represents one instance of
-                              a complex feature, e.g. a device.
+                              a complex features, e.g. a device.
                             properties:
                               attributes:
                                 additionalProperties:
@@ -104,14 +104,14 @@ spec:
                       required:
                       - elements
                       type: object
-                    description: Instances contains all instance-type features
+                    description: Instances contains all the instance-type features
                       of the node.
                     type: object
                 type: object
               labels:
                 additionalProperties:
                   type: string
-                description: Labels is a set of node labels that are requested to
+                description: Labels is the set of node labels that are requested to
                   be created.
                 type: object
             type: object
@@ -212,6 +212,11 @@ spec:
                                         - IsTrue
                                         - IsFalse
                                         type: string
+                                      type:
+                                        description: |-
+                                          Type defines the value type for specific operators.
+                                          The currently supported type is 'version' for Gt,Ge,Lt,Le,GtLt,GeLe operators.
+                                        type: string
                                       value:
                                         description: |-
                                           Value is the list of values that the operand evaluates the input
@@ -226,7 +231,7 @@ spec:
                                     - op
                                     type: object
                                   description: |-
-                                    MatchExpressions is a set of per-element expressions evaluated. These
+                                    MatchExpressions is the set of per-element expressions evaluated. These
                                     match against the value of the specified elements.
                                   type: object
                                 matchName:
@@ -251,23 +256,28 @@ spec:
                                       - IsTrue
                                       - IsFalse
                                       type: string
-                                      value:
-                                        description: |-
-                                          Value is the list of values that the operand evaluates the input
-                                          against. Value should be empty if the operator is Exists, DoesNotExist,
-                                          IsTrue or IsFalse. Value should contain exactly one element if the
-                                          operator is Gt or Lt and exactly two elements if the operator is GtLt.
-                                          In other cases Value should contain at least one element.
-                                        items:
-                                          type: string
-                                        type: array
+                                    type:
+                                      description: |-
+                                        Type defines the value type for specific operators.
+                                        The currently supported type is 'version' for Gt,Ge,Lt,Le,GtLt,GeLe operators.
+                                      type: string
+                                    value:
+                                      description: |-
+                                        Value is the list of values that the operand evaluates the input
+                                        against. Value should be empty if the operator is Exists, DoesNotExist,
+                                        IsTrue or IsFalse. Value should contain exactly one element if the
+                                        operator is Gt or Lt and exactly two elements if the operator is GtLt.
+                                        In other cases Value should contain at least one element.
+                                      items:
+                                        type: string
+                                      type: array
                                   required:
                                   - op
                                   type: object
-                            required:
-                            - feature
-                            type: object
-                          type: array
+                              required:
+                              - feature
+                              type: object
+                            type: array
                         required:
                         - matchFeatures
                         type: object
@@ -309,21 +319,26 @@ spec:
                                   - IsTrue
                                   - IsFalse
                                   type: string
-                                  value:
-                                    description: |-
-                                      Value is the list of values that the operand evaluates the input
-                                      against. Value should be empty if the operator is Exists, DoesNotExist,
-                                      IsTrue or IsFalse. Value should contain exactly one element if the
-                                      operator is Gt or Lt and exactly two elements if the operator is GtLt.
-                                      In other cases Value should contain at least one element.
-                                    items:
-                                      type: string
-                                    type: array
+                                type:
+                                  description: |-
+                                    Type defines the value type for specific operators.
+                                    The currently supported type is 'version' for Gt,Ge,Lt,Le,GtLt,GeLe operators.
+                                  type: string
+                                value:
+                                  description: |-
+                                    Value is the list of values that the operand evaluates the input
+                                    against. Value should be empty if the operator is Exists, DoesNotExist,
+                                    IsTrue or IsFalse. Value should contain exactly one element if the
+                                    operator is Gt or Lt and exactly two elements if the operator is GtLt.
+                                    In other cases Value should contain at least one element.
+                                  items:
+                                    type: string
+                                  type: array
                               required:
                               - op
                               type: object
                             description: |-
-                              MatchExpressions is a set of per-element expressions evaluated. These
+                              MatchExpressions is the set of per-element expressions evaluated. These
                               match against the value of the specified elements.
                             type: object
                           matchName:
@@ -348,16 +363,21 @@ spec:
                                 - IsTrue
                                 - IsFalse
                                 type: string
-                                value:
-                                  description: |-
-                                    Value is the list of values that the operand evaluates the input
-                                    against. Value should be empty if the operator is Exists, DoesNotExist,
-                                    IsTrue or IsFalse. Value should contain exactly one element if the
-                                    operator is Gt or Lt and exactly two elements if the operator is GtLt.
-                                    In other cases Value should contain at least one element.
-                                  items:
-                                    type: string
-                                  type: array
+                              type:
+                                description: |-
+                                  Type defines the value type for specific operators.
+                                  The currently supported type is 'version' for Gt,Ge,Lt,Le,GtLt,GeLe operators.
+                                type: string
+                              value:
+                                description: |-
+                                  Value is the list of values that the operand evaluates the input
+                                  against. Value should be empty if the operator is Exists, DoesNotExist,
+                                  IsTrue or IsFalse. Value should contain exactly one element if the
+                                  operator is Gt or Lt and exactly two elements if the operator is GtLt.
+                                  In other cases Value should contain at least one element.
+                                items:
+                                  type: string
+                                type: array
                             required:
                             - op
                             type: object
@@ -531,6 +551,11 @@ spec:
                                         - IsTrue
                                         - IsFalse
                                         type: string
+                                      type:
+                                        description: |-
+                                          Type defines the value type for specific operators.
+                                          The currently supported type is 'version' for Gt,Ge,Lt,Le,GtLt,GeLe operators.
+                                        type: string
                                       value:
                                         description: |-
                                           Value is the list of values that the operand evaluates the input
@@ -545,7 +570,7 @@ spec:
                                     - op
                                     type: object
                                   description: |-
-                                    MatchExpressions is a set of per-element expressions evaluated. These
+                                    MatchExpressions is the set of per-element expressions evaluated. These
                                     match against the value of the specified elements.
                                   type: object
                                 matchName:
@@ -570,23 +595,28 @@ spec:
                                       - IsTrue
                                       - IsFalse
                                       type: string
-                                      value:
-                                        description: |-
-                                          Value is the list of values that the operand evaluates the input
-                                          against. Value should be empty if the operator is Exists, DoesNotExist,
-                                          IsTrue or IsFalse. Value should contain exactly one element if the
-                                          operator is Gt or Lt and exactly two elements if the operator is GtLt.
-                                          In other cases Value should contain at least one element.
-                                        items:
-                                          type: string
-                                        type: array
+                                    type:
+                                      description: |-
+                                        Type defines the value type for specific operators.
+                                        The currently supported type is 'version' for Gt,Ge,Lt,Le,GtLt,GeLe operators.
+                                      type: string
+                                    value:
+                                      description: |-
+                                        Value is the list of values that the operand evaluates the input
+                                        against. Value should be empty if the operator is Exists, DoesNotExist,
+                                        IsTrue or IsFalse. Value should contain exactly one element if the
+                                        operator is Gt or Lt and exactly two elements if the operator is GtLt.
+                                        In other cases Value should contain at least one element.
+                                      items:
+                                        type: string
+                                      type: array
                                   required:
                                   - op
                                   type: object
-                            required:
-                            - feature
-                            type: object
-                          type: array
+                              required:
+                              - feature
+                              type: object
+                            type: array
                         required:
                         - matchFeatures
                         type: object
@@ -628,21 +658,26 @@ spec:
                                   - IsTrue
                                   - IsFalse
                                   type: string
-                                  value:
-                                    description: |-
-                                      Value is the list of values that the operand evaluates the input
-                                      against. Value should be empty if the operator is Exists, DoesNotExist,
-                                      IsTrue or IsFalse. Value should contain exactly one element if the
-                                      operator is Gt or Lt and exactly two elements if the operator is GtLt.
-                                      In other cases Value should contain at least one element.
-                                    items:
-                                      type: string
-                                    type: array
+                                type:
+                                  description: |-
+                                    Type defines the value type for specific operators.
+                                    The currently supported type is 'version' for Gt,Ge,Lt,Le,GtLt,GeLe operators.
+                                  type: string
+                                value:
+                                  description: |-
+                                    Value is the list of values that the operand evaluates the input
+                                    against. Value should be empty if the operator is Exists, DoesNotExist,
+                                    IsTrue or IsFalse. Value should contain exactly one element if the
+                                    operator is Gt or Lt and exactly two elements if the operator is GtLt.
+                                    In other cases Value should contain at least one element.
+                                  items:
+                                    type: string
+                                  type: array
                               required:
                               - op
                               type: object
                             description: |-
-                              MatchExpressions is a set of per-element expressions evaluated. These
+                              MatchExpressions is the set of per-element expressions evaluated. These
                               match against the value of the specified elements.
                             type: object
                           matchName:
@@ -667,16 +702,21 @@ spec:
                                 - IsTrue
                                 - IsFalse
                                 type: string
-                                value:
-                                  description: |-
-                                    Value is the list of values that the operand evaluates the input
-                                    against. Value should be empty if the operator is Exists, DoesNotExist,
-                                    IsTrue or IsFalse. Value should contain exactly one element if the
-                                    operator is Gt or Lt and exactly two elements if the operator is GtLt.
-                                    In other cases Value should contain at least one element.
-                                  items:
-                                    type: string
-                                  type: array
+                              type:
+                                description: |-
+                                  Type defines the value type for specific operators.
+                                  The currently supported type is 'version' for Gt,Ge,Lt,Le,GtLt,GeLe operators.
+                                type: string
+                              value:
+                                description: |-
+                                  Value is the list of values that the operand evaluates the input
+                                  against. Value should be empty if the operator is Exists, DoesNotExist,
+                                  IsTrue or IsFalse. Value should contain exactly one element if the
+                                  operator is Gt or Lt and exactly two elements if the operator is GtLt.
+                                  In other cases Value should contain at least one element.
+                                items:
+                                  type: string
+                                type: array
                             required:
                             - op
                             type: object
@@ -692,7 +732,7 @@ spec:
                       items:
                         description: |-
                           The node this Taint is attached to has the "effect" on
-                          any pod that does not tolerate this Taint.
+                          any pod that does not tolerate the Taint.
                         properties:
                           effect:
                             description: |-
