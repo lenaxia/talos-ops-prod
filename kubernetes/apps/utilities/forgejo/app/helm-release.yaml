@@ -18,7 +18,8 @@ spec:
     cleanupOnFail: true
     remediation:
       retries: 5
-    strategy: rollback
+    strategy:
+      type: Rollback
   values:
     # Deployment Strategy
     replicaCount: 1
