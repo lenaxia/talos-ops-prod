@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: validate-helmrelease-schema
+        name: Validate HelmRelease schema compliance
+        entry: ./scripts/validate-helmrelease-schema.sh
+        language: script
+        files: kubernetes/apps/.*helm-release\.yaml$
+        pass_filenames: false
