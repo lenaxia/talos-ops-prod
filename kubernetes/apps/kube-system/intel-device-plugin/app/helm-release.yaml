@@ -31,3 +31,12 @@ spec:
     manager:
       devices:
         gpu: true
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: MutatingWebhookConfiguration
+              name: inteldeviceplugins-mutating-webhook-configuration
+            patch: |
+              - op: remove
+                path: /webhooks/?name=fpga.mutator.webhooks.intel.com
