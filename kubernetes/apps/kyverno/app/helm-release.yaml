@@ -44,6 +44,8 @@ spec:
       serviceMonitor:
         enabled: true
         interval: 1m
+      replicaCount: 1
+      revisionHistoryLimit: 2
     reportsController:
       serviceMonitor:
         enabled: true
