@@ -14,11 +14,12 @@ spec:
     createNamespace: true
     remediation:
       retries: 5
-  upgrade:
-    cleanupOnFail: true
-    remediation:
-      retries: 5
-    strategy: rollback
+   upgrade:
+     cleanupOnFail: true
+     remediation:
+       retries: 5
+       strategy:
+         type: rollback
   values:
     # Deployment Strategy
     replicaCount: 1
