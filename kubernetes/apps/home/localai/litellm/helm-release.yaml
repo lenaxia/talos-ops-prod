@@ -66,15 +66,15 @@ spec:
                 echo "Database URL: postgresql://${INIT_POSTGRES_USER}:****@${INIT_POSTGRES_HOST}:5432/${INIT_POSTGRES_DBNAME}"
                 
                 # Check if schema directory exists
-                if [ ! -d "/app/litellm_proxy_extras" ]; then
-                  echo "ERROR: litellm_proxy_extras directory not found"
+                if [ ! -d "/app/litellm-proxy-extras" ]; then
+                  echo "ERROR: litellm-proxy-extras directory not found"
                   exit 1
                 fi
                 
                 # Run Prisma migration
                 cd /app
                 echo "Running: npx prisma migrate deploy"
-                npx prisma migrate deploy --schema=/app/litellm_proxy_extras/prisma/schema.prisma
+                npx prisma migrate deploy --schema=/app/litellm-proxy-extras/litellm_proxy_extras/schema.prisma
                 
                 echo "✓ Migration completed successfully!"
             env:
