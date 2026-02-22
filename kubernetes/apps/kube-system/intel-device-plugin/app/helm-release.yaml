@@ -31,3 +31,5 @@ spec:
     manager:
       devices:
         gpu: true
+      podLabels:
+        control-plane: controller-manager
