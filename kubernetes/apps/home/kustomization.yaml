@@ -18,7 +18,7 @@ resources:
   - ./home-assistant/ks.yaml
   - ./esphome/ks.yaml
   #- ./magicmirror/ks.yaml
-  #- ./frigate/ks.yaml
+  - ./frigate/ks.yaml
   - ./zwavejs/ks.yaml
   - ./mosquitto/ks.yaml
   #- ./linkwarden/ks.yaml
