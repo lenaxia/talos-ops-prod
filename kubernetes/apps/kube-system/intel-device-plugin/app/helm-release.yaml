@@ -29,7 +29,7 @@ spec:
     keepHistory: false
   postRenderers:
     - kustomize:
-        patchesStrategicMerge:
+        patches:
           - apiVersion: apps/v1
             kind: Deployment
             metadata:
