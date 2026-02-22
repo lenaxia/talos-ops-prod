@@ -35,7 +35,7 @@ spec:
           worker:
             image:
               repository: ghcr.io/lenaxia/subgen-worker
-              tag: v0.2.20-cpu
+              tag: v0.2.21-cpu
               pullPolicy: Always
             env:
               - name: SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE
