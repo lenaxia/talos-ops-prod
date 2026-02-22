@@ -179,12 +179,18 @@ spec:
       dashboards:
         enabled: true
         searchNamespace: ALL
+        env:
+          - name: HEALTH_PORT
+            value: "8080"
         # folderAnnotation: grafana_folder
         # provider:
         #   foldersFromFilesStructure: true
       datasources:
         enabled: true
         searchNamespace: ALL
+        env:
+          - name: HEALTH_PORT
+            value: "8081"
     plugins:
       - natel-discrete-panel
       - pr0ps-trackmap-panel
