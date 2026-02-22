@@ -36,7 +36,7 @@ spec:
         node-role.kubernetes.io/worker: 'true'
 #        aeotec.feature.node.kubernetes.io/zwave: "true"
 #        zooz.feature.node.kubernetes.io/zwave: 'true'
-        zwa2.feature.node.kubernetes.io/zwave: "true"
+#        zwa2.feature.node.kubernetes.io/zwave: "true"
     controllers:
       main:
         containers:
@@ -83,6 +83,7 @@ spec:
             port: 3000
             enabled: true
         primary: true
+        controller: main
     ingress:
       main:
         enabled: true
