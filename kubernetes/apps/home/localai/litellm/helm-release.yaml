@@ -78,13 +78,13 @@ spec:
                 
                 echo "✓ Migration completed successfully!"
             env:
-              - name: DATABASE_URL
-                value: "postgresql://$(INIT_POSTGRES_USER):$(INIT_POSTGRES_PASS)@$(INIT_POSTGRES_HOST):5432/$(INIT_POSTGRES_DBNAME)"
               - name: INIT_POSTGRES_HOST
                 valueFrom:
                   secretKeyRef:
                     name: postgres-superuser
                     key: host
+              - name: DATABASE_URL
+                value: "postgresql://$(INIT_POSTGRES_USER):$(INIT_POSTGRES_PASS)@$(INIT_POSTGRES_HOST):5432/$(INIT_POSTGRES_DBNAME)"
               - name: USE_PRISMA_MIGRATE
                 value: "True"
             envFrom:
@@ -93,10 +93,10 @@ spec:
             resources:
               requests:
                 cpu: 50m
-                memory: 256Mi
+                memory: 512Mi
               limits:
                 cpu: 200m
-                memory: 512Mi
+                memory: 1Gi
         containers:
           app:
             image:
