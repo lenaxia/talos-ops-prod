@@ -4,6 +4,17 @@ version: '3'
 
 tasks:
 
+  arch-validate:
+    desc: Validate Arch Linux package availability
+    cmd: >
+      {{.PKGMGR}} -Si --needed $(cat {{.ROOT_DIR}}/.taskfiles/workstation/Archfile | xargs) > /dev/null 2>&1
+    vars:
+      PKGMGR:
+        sh: which paru || which yay
+    preconditions:
+      - test -f {{.ROOT_DIR}}/.taskfiles/workstation/Archfile
+      - which paru || which yay
+
   arch:
     desc: Set up Arch Linux tools
     cmd: >
@@ -15,6 +26,8 @@ tasks:
     preconditions:
       - test -f {{.ROOT_DIR}}/.taskfiles/workstation/Archfile
       - which paru || which yay
+    deps:
+      - arch-validate
 
   brew:
     desc: Set up Homebrew tools
