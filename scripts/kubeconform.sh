@@ -24,9 +24,27 @@ kubeconform_args=(
     "-verbose"
 )
 
+# Function to check if a file is SOPS-encrypted
+is_sops_encrypted() {
+    local file=$1
+    # Check if filename ends with .sops.yaml
+    if [[ "$file" == *.sops.yaml ]]; then
+        return 0
+    fi
+    # Check if file contains SOPS encryption metadata
+    if grep -q "^sops:" "$file" 2>/dev/null; then
+        return 0
+    fi
+    return 1
+}
+
 echo "=== Validating standalone manifests in ${KUBERNETES_DIR}/flux ==="
-find "${KUBERNETES_DIR}/flux" -maxdepth 1 -type f -name '*.yaml' ! -name '*.sops.yaml' -print0 | while IFS= read -r -d $'\0' file;
+find "${KUBERNETES_DIR}/flux" -maxdepth 1 -type f -name '*.yaml' -print0 | while IFS= read -r -d $'\0' file;
 do
+    if is_sops_encrypted "$file"; then
+        echo "Skipping SOPS-encrypted file: $file"
+        continue
+    fi
     kubeconform "${kubeconform_args[@]}" "${file}"
     if [[ ${PIPESTATUS[0]} != 0 ]]; then
         exit 1
@@ -37,18 +55,32 @@ echo "=== Validating kustomizations in ${KUBERNETES_DIR}/flux ==="
 find "${KUBERNETES_DIR}/flux" -type f -name $kustomize_config -print0 | while IFS= read -r -d $'\0' file;
 do
     echo "=== Validating kustomizations in ${file/%$kustomize_config} ==="
-    kustomize build "${file/%$kustomize_config}" "${kustomize_args[@]}" 2>/dev/null | kubeconform "${kubeconform_args[@]}"
-    if [[ ${PIPESTATUS[0]} != 0 ]]; then
-        exit 1
-    fi
+    kustomize build "${file/%$kustomize_config}" "${kustomize_args[@]}" 2>/dev/null | while IFS= read -r -d $'\0' manifest;
+    do
+        if is_sops_encrypted "$manifest"; then
+            echo "Skipping SOPS-encrypted manifest"
+            continue
+        fi
+        kubeconform "${kubeconform_args[@]}" <(echo "$manifest")
+        if [[ ${PIPESTATUS[0]} != 0 ]]; then
+            exit 1
+        fi
+    done
 done
 
 echo "=== Validating kustomizations in ${KUBERNETES_DIR}/apps ==="
 find "${KUBERNETES_DIR}/apps" -type f -name $kustomize_config -print0 | while IFS= read -r -d $'\0' file;
 do
     echo "=== Validating kustomizations in ${file/%$kustomize_config} ==="
-    kustomize build "${file/%$kustomize_config}" "${kustomize_args[@]}" 2>/dev/null | kubeconform "${kubeconform_args[@]}"
-    if [[ ${PIPESTATUS[0]} != 0 ]]; then
-        exit 1
-    fi
+    kustomize build "${file/%$kustomize_config}" "${kustomize_args[@]}" 2>/dev/null | while IFS= read -r -d $'\0' manifest;
+    do
+        if is_sops_encrypted "$manifest"; then
+            echo "Skipping SOPS-encrypted manifest"
+            continue
+        fi
+        kubeconform "${kubeconform_args[@]}" <(echo "$manifest")
+        if [[ ${PIPESTATUS[0]} != 0 ]]; then
+            exit 1
+        fi
+    done
 done
