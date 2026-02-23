@@ -98,6 +98,13 @@ spec:
             port: 8080
         primary: true
     persistence:
+      omoikane:
+        enabled: true
+        type: nfs
+        server: 192.168.0.120
+        path: /volume1/omoikane
+        globalMounts:
+          - path: /omoikane
       models:
         enabled: true
         type: persistentVolumeClaim
