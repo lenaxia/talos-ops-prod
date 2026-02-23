@@ -136,5 +136,7 @@ spec:
                       podAffinity:
                         requiredDuringSchedulingIgnoredDuringExecution:
                           - topologyKey: kubernetes.io/hostname
+                            namespaces:
+                              - "{{ namespace }}"
                             labelSelector:
                               matchExpressions: "{{ nodeAffinity.labels }}"
