@@ -19,6 +19,8 @@ spec:
     timeout: 10m
   values:
     defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
       securityContext:
         runAsUser: 0
         runAsGroup: 0
