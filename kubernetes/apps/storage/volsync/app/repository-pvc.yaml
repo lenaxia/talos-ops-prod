@@ -22,6 +22,7 @@ metadata:
   name: volsync-kopia-repository
   namespace: storage
 spec:
+  storageClassName: ""
   accessModes:
     - ReadWriteMany
   resources:
