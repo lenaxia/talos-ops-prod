@@ -35,6 +35,7 @@ spec:
     controllers:
       app:
         type: deployment
+        progressDeadlineSeconds: 900
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
