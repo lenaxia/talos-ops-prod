@@ -34,9 +34,6 @@ spec:
         k8s.v1.cni.cncf.io/networks: kube-system/multus-net
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
-#        aeotec.feature.node.kubernetes.io/zwave: "true"
-#        zooz.feature.node.kubernetes.io/zwave: 'true'
-        zwa2.feature.node.kubernetes.io/zwave: "true"
     controllers:
       main:
         containers:
