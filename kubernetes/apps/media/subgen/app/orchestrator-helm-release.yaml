@@ -34,6 +34,10 @@ spec:
             env:
               - name: WORKER_ADDRESS
                 value: "subgen-worker.media.svc.cluster.local:50051"
+              - name: PLEX_SERVER
+                value: "http://plex.media.svc.cluster.local:32400"
+              - name: LOG_LEVEL
+                value: "debug"
             envFrom:
               - secretRef:
                   name: subgen
