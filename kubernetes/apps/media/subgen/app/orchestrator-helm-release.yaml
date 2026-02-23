@@ -31,7 +31,9 @@ spec:
               repository: ghcr.io/lenaxia/subgen-orchestrator
               tag: v0.2.21
               pullPolicy: Always
-            env: []
+            env:
+              - name: WORKER_ADDRESS
+                value: "subgen-worker.media.svc.cluster.local:50051"
             envFrom:
               - secretRef:
                   name: subgen
