@@ -69,6 +69,8 @@ spec:
                 value: "false"
               - name: VLLM_TORCH_COMPILE
                 value: "true"
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-6726851a-d64e-09c8-a938-1537593e3106" # RTX 3090
             envFrom:
               - secretRef:
                   name: *appname
