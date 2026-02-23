@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -16,9 +16,11 @@ spec:
         namespace: flux-system
   install:
     createNamespace: true
+    timeout: 15m
     remediation:
       retries: 5
   upgrade:
+    timeout: 15m
     remediation:
       retries: 5
   values:
@@ -39,7 +41,7 @@ spec:
           app:
             image:
               repository: vllm/vllm-openai
-              tag: v0.15.1@sha256:8c9aaddfa6011b9651d06834d2fb90bdb9ab6ced4b420ec76925024eb12b22d0
+              tag: v0.11.0@sha256:014a95f21c9edf6abe0aea6b07353f96baa4ec291c427bb1176dc7c93a85845c
             command: ["/bin/sh", "-c"]
             args:
                   - |
