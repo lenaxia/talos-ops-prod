@@ -1,0 +1,26 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-broken-image
+  namespace: default
+  labels:
+    app: test-broken-image
+    mendabot-test: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-broken-image
+  template:
+    metadata:
+      labels:
+        app: test-broken-image
+    spec:
+      containers:
+      - name: app
+        image: nginx:alpine
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
