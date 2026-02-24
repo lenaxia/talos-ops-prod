@@ -1,0 +1,29 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-broken-image
+    mendabot-test: "true"
+  name: test-broken-image
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-broken-image
+  template:
+    metadata:
+      labels:
+        app: test-broken-image
+    spec:
+      containers:
+      - image: busybox:latest
+        name: app
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+        command:
+        - sleep
+        - "3600"
