@@ -1,0 +1,10 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: default
+resources:
+  - deployment.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/name: test-crashloop
+      app.kubernetes.io/instance: test-crashloop
