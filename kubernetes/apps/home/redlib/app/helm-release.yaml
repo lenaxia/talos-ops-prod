@@ -34,7 +34,7 @@ spec:
             image:
               repository: ghcr.io/auricom/redlib
               tag: 
-                0.35.1@sha256:859df997f98d078d5fd3119922a9c8e9486233932c37e1426e786d526b7759c5
+                0.35.2@sha256:859df997f98d078d5fd3119922a9c8e9486233932c37e1426e786d526b7759c5
               pullPolicy: Always
             envFrom:
               - secretRef:
