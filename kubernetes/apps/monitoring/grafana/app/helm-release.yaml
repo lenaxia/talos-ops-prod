@@ -185,6 +185,8 @@ spec:
       datasources:
         enabled: true
         searchNamespace: ALL
+    serviceAccount:
+      automountToken: true
     plugins:
       - natel-discrete-panel
       - pr0ps-trackmap-panel
