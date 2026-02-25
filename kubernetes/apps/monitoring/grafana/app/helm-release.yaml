@@ -35,6 +35,8 @@ spec:
     envFromSecret: *app
     admin:
       existingSecret: grafana-admin-creds
+    serviceAccount:
+      automountServiceAccountToken: true
     extraInitContainers:
       - name: init-db
         image: ghcr.io/onedr0p/postgres-init:17.4
