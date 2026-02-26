@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-crashloop
+  namespace: default
+  labels:
+    app: test-crashloop
+    mendabot-test: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-crashloop
+  template:
+    metadata:
+      labels:
+        app: test-crashloop
+    spec:
+      containers:
+      - name: app
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - echo 'running successfully'; sleep 3600
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
