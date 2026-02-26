@@ -185,8 +185,7 @@ spec:
         # provider:
         #   foldersFromFilesStructure: true
       datasources:
-        enabled: true
-        searchNamespace: ALL
+        enabled: false
     plugins:
       - natel-discrete-panel
       - pr0ps-trackmap-panel
