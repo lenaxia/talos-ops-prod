@@ -181,6 +181,7 @@ spec:
       dashboards:
         enabled: true
         searchNamespace: ALL
+        resource: configmap
         # folderAnnotation: grafana_folder
         # provider:
         #   foldersFromFilesStructure: true
