@@ -1,0 +1,29 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-crashloop
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-crashloop
+  template:
+    metadata:
+      labels:
+        app: test-crashloop
+    spec:
+      containers:
+        - name: crasher
+          image: alpine:latest
+          command:
+            - sh
+            - -c
+            - sleep infinity
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
