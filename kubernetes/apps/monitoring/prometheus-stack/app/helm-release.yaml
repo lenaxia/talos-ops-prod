@@ -218,6 +218,10 @@ spec:
         walCompression: true
         enableFeatures:
           - memory-snapshot-on-shutdown
+        tolerations:
+          - key: node.kubernetes.io/disk-pressure
+            operator: Exists
+            effect: NoSchedule
         storageSpec:
           volumeClaimTemplate:
             spec:
