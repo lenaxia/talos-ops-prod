@@ -41,7 +41,7 @@ spec:
           app:
             image:
               repository: vllm/vllm-openai
-              tag: v0.16.0@sha256:4801151759655c57606c844662e5213403c032a62d149c7ce61d615759a821ef
+              tag: v0.11.0@sha256:014a95f21c9edf6abe0aea6b07353f96baa4ec291c427bb1176dc7c93a85845c
             command: ["/bin/sh", "-c"]
             args:
                   - |
@@ -62,7 +62,7 @@ spec:
               - name: TZ
                 value: ${TIMEZONE}
               - name: CUDA_LAUNCH_BLOCKING
-                value: 0
+                value: 1
               - name: TORCH_USE_CUDA_DSA
                 value: 1
               - name: VLLM_USE_MODELSCOPE
