@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-broken-image-values
+  namespace: default
+data:
+  values.yaml: |
+    replicas: 1
+    image:
+      repository: alpine
+      tag: latest
+      pullPolicy: Always
+    command:
+      - sh
+      - -c
+      - sleep infinity
+    resources: {}

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-broken-image
+  namespace: default
+  labels:
+    app: test-broken-image
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-broken-image
+  template:
+    metadata:
+      labels:
+        app: test-broken-image
+    spec:
+      containers:
+      - name: broken
+        image: alpine:latest
+        imagePullPolicy: Always
+        command:
+        - sh
+        - -c
+        - sleep infinity
+        resources: {}
+      restartPolicy: Always
