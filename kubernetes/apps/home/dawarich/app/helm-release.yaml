@@ -138,30 +138,19 @@ spec:
                   failureThreshold: 10
                   timeoutSeconds: 10
     persistence:
-      public:
+      data:
         enabled: true
         type: persistentVolumeClaim
         storageClass: longhorn
         accessMode: ReadWriteOnce
-        size: 5Gi
+        size: 20Gi
         globalMounts:
           - path: /var/app/public
-      storage:
-        enabled: true
-        type: persistentVolumeClaim
-        storageClass: longhorn
-        accessMode: ReadWriteOnce
-        size: 10Gi
-        globalMounts:
+            subPath: public
           - path: /var/app/storage
-      watched:
-        enabled: true
-        type: persistentVolumeClaim
-        storageClass: longhorn
-        accessMode: ReadWriteOnce
-        size: 5Gi
-        globalMounts:
+            subPath: storage
           - path: /var/app/tmp/imports/watched
+            subPath: watched
     service:
       app:
         ports:
