@@ -141,7 +141,6 @@ spec:
       data:
         enabled: true
         type: persistentVolumeClaim
-        existingClaim: dawarich-volume
     service:
       app:
         ports:
