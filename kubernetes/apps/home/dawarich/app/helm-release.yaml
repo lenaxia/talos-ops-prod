@@ -144,7 +144,9 @@ spec:
         storageClass: longhorn
         accessMode: ReadWriteOnce
         size: 20Gi
-        globalMounts:
+    advancedMounts:
+      app:
+        app:
           - path: /var/app/public
             subPath: public
           - path: /var/app/storage
