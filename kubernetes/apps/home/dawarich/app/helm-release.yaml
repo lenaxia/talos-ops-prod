@@ -152,15 +152,16 @@ spec:
         enabled: true
         type: persistentVolumeClaim
         storageClass: longhorn
-        accessMode: ReadWriteOnce
         size: 20Gi
-        globalMounts:
-          - path: /data
-            subPath: public
-          - path: /data
-            subPath: storage
-          - path: /data
-            subPath: watched
+        advancedMounts:
+          app:
+            app:
+              - path: /data
+                subPath: public
+              - path: /data
+                subPath: storage
+              - path: /data
+                subPath: watched
     service:
       app:
         ports:
