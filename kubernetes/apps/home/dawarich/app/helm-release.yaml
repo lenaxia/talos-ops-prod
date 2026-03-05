@@ -147,21 +147,7 @@ spec:
                   successThreshold: 1
                   failureThreshold: 10
                   timeoutSeconds: 10
-    persistence:
-      data:
-        enabled: true
-        type: persistentVolumeClaim
-        storageClass: longhorn
-        size: 20Gi
-        advancedMounts:
-          app:
-            app:
-              - path: /data
-                subPath: public
-              - path: /data
-                subPath: storage
-              - path: /data
-                subPath: watched
+
     service:
       app:
         ports:
