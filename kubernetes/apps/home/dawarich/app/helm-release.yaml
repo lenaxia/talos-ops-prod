@@ -32,6 +32,9 @@ spec:
         type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
+        pod:
+          stdin: true
+          tty: true
         initContainers:
           init-db:
             image:
