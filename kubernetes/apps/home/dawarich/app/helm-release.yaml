@@ -141,18 +141,16 @@ spec:
       data:
         enabled: true
         type: persistentVolumeClaim
-        storageClass: longhorn
-        accessMode: ReadWriteOnce
-        size: 20Gi
-    advancedMounts:
-      app:
-        app:
-          - path: /var/app/public
-            subPath: public
-          - path: /var/app/storage
-            subPath: storage
-          - path: /var/app/tmp/imports/watched
-            subPath: watched
+        existingClaim: dawarich-volume
+        advancedMounts:
+          app:
+            app:
+              - path: /var/app/public
+                subPath: public
+              - path: /var/app/storage
+                subPath: storage
+              - path: /var/app/tmp/imports/watched
+                subPath: watched
     service:
       app:
         ports:
