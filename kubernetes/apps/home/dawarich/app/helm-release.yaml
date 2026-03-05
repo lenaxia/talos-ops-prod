@@ -106,16 +106,6 @@ spec:
                     key: DB_NAME
               - name: REDIS_URL
                 value: redis://redis.databases.svc.cluster.local:6379
-            volumeMounts:
-              - name: data
-                mountPath: /var/app/public
-                subPath: public
-              - name: data
-                mountPath: /var/app/storage
-                subPath: storage
-              - name: data
-                mountPath: /var/app/tmp/imports/watched
-                subPath: watched
             resources:
               requests:
                 cpu: 100m
