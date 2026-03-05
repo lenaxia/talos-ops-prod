@@ -6,5 +6,4 @@ kind: Kustomization
 namespace: home
 resources:
 - helm-release.yaml
-- config-pvc.yaml
 - secret.yaml
