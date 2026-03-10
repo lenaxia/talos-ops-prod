@@ -81,13 +81,6 @@ spec:
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 30
-            resources:
-              limits:
-                cpu: "4"
-                memory: 12Gi
-              requests:
-                cpu: "2"
-                memory: 4Gi
     service:
       main:
         type: ClusterIP
