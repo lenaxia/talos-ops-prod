@@ -106,7 +106,7 @@ spec:
            worker:
             image:
               repository: ghcr.io/lenaxia/subgen-worker
-              tag: v0.2.23-cpu
+              tag: v0.2.24-cpu
               pullPolicy: Always
             env:
               # Worker config
