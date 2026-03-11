@@ -104,8 +104,6 @@ spec:
                   secretKeyRef:
                     name: *appname
                     key: DB_NAME
-              - name: REDIS_URL
-                value: redis://redis.databases.svc.cluster.local:6379
             resources:
               requests:
                 cpu: 100m
@@ -184,8 +182,6 @@ spec:
                   secretKeyRef:
                     name: *appname
                     key: DB_NAME
-              - name: REDIS_URL
-                value: redis://redis.databases.svc.cluster.local:6379
               - name: BACKGROUND_PROCESSING_CONCURRENCY
                 value: '10'
               - name: PROMETHEUS_EXPORTER_ENABLED
