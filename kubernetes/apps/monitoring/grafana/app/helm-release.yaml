@@ -184,6 +184,27 @@ spec:
         # folderAnnotation: grafana_folder
         # provider:
         #   foldersFromFilesStructure: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
       datasources:
         enabled: false
     plugins:
