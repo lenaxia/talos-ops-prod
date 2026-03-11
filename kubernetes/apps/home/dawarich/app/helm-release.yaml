@@ -140,6 +140,75 @@ spec:
                   successThreshold: 1
                   failureThreshold: 10
                   timeoutSeconds: 10
+            command: ['bin/rails', 'server', '-p', '3000', '-b', '::']
+          sidekiq:
+            image:
+              repository: freikin/dawarich
+              tag: 1.3.1
+            envFrom:
+              - secretRef:
+                  name: *appname
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              - name: RAILS_ENV
+                value: production
+              - name: RAILS_LOG_TO_STDOUT
+                value: 'true'
+              - name: SELF_HOSTED
+                value: 'true'
+              - name: STORE_GEODATA
+                value: 'true'
+              - name: DATABASE_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DB_HOST
+              - name: DATABASE_PORT
+                value: '5432'
+              - name: DATABASE_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DB_NAME
+              - name: DATABASE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DB_PASSWORD
+              - name: DATABASE_NAME
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DB_NAME
+              - name: REDIS_URL
+                value: redis://redis.databases.svc.cluster.local:6379
+              - name: BACKGROUND_PROCESSING_CONCURRENCY
+                value: '10'
+              - name: PROMETHEUS_EXPORTER_ENABLED
+                value: 'false'
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+            command: ['sidekiq']
+
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 20Gi
+        globalMounts:
+          - path: /var/app/public
+            subPath: public
+          - path: /var/app/storage
+            subPath: storage
+          - path: /var/app/tmp/imports/watched
+            subPath: watched
 
     service:
       app:
