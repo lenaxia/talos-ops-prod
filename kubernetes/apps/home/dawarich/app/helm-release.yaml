@@ -137,7 +137,13 @@ spec:
                   successThreshold: 1
                   failureThreshold: 10
                   timeoutSeconds: 10
-            command: ['bin/rails', 'server', '-p', '3000', '-b', '::']
+            args:
+              - bin/rails
+              - server
+              - -p
+              - "3000"
+              - -b
+              - "::"
           sidekiq:
             image:
               repository: freikin/dawarich
@@ -190,7 +196,8 @@ spec:
                 memory: 256Mi
               limits:
                 memory: 512Mi
-            command: ['sidekiq']
+            args:
+              - sidekiq
 
     persistence:
       data:
