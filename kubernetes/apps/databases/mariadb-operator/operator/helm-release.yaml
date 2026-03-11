@@ -43,6 +43,8 @@ spec:
     pdb:
       enabled: true
       maxUnavailable: 1
+    podAnnotations:
+      kubectl.kubernetes.io/restartedAt: "2026-03-11T00:49:03Z"
     affinity:
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
