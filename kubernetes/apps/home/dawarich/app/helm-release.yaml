@@ -115,10 +115,8 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /api/v1/health
+                  tcpSocket:
                     port: 3000
-                    scheme: HTTP
                   initialDelaySeconds: 60
                   periodSeconds: 30
                   successThreshold: 1
@@ -128,10 +126,8 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /api/v1/health
+                  tcpSocket:
                     port: 3000
-                    scheme: HTTP
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   successThreshold: 1
