@@ -116,7 +116,7 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /health
+                    path: /api/v1/health
                     port: 3000
                     scheme: HTTP
                   initialDelaySeconds: 60
@@ -129,7 +129,7 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /health
+                    path: /api/v1/health
                     port: 3000
                     scheme: HTTP
                   initialDelaySeconds: 30
