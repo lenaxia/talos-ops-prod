@@ -66,8 +66,9 @@ spec:
                 value: 1
               - name: TORCH_USE_CUDA_DSA
                 value: 1
-              - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090
+              # DISABLED: Cluster has no NVIDIA GPUs (only Intel GPUs)
+              # - name: NVIDIA_VISIBLE_DEVICES
+              #   value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090
               #  value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
             envFrom:
               - secretRef:
@@ -86,11 +87,16 @@ spec:
                   failureThreshold: 3
                   timeoutSeconds: 10
               readiness: *probe
+            # NOTE: NVIDIA GPU resources are disabled because the cluster only has Intel GPUs (gpu.intel.com/i915).
+            # vLLM requires NVIDIA GPUs/CUDA and cannot run on Intel GPUs. Without GPU acceleration,
+            # vLLM will run on CPU with significantly degraded performance. This configuration change
+            # allows the deployment to proceed on available hardware, but full functionality requires
+            # NVIDIA GPU hardware to be added to the cluster.
             resources:
               requests:
-                nvidia.com/gpu: "1"
+                # nvidia.com/gpu: "1" # DISABLED: Cluster has no NVIDIA GPUs (only Intel GPUs)
               limits:
-                nvidia.com/gpu: "1"
+                # nvidia.com/gpu: "1" # DISABLED: Cluster has no NVIDIA GPUs (only Intel GPUs)
 
     persistence:
       data:
