@@ -29,7 +29,7 @@ spec:
           orchestrator:
             image:
               repository: ghcr.io/lenaxia/subgen-orchestrator
-              tag: v0.2.23
+              tag: v0.2.25
               pullPolicy: Always
             env:
               - name: WORKER_ADDRESS
