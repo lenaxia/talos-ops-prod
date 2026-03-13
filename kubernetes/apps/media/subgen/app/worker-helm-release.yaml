@@ -45,7 +45,7 @@ spec:
               - name: SKIP_IF_TARGET_SUBTITLES_EXIST
                 value: "true"
               # Multi-language subtitle generation (EPIC_10)
-              # TARGET_LANGUAGES: "eng,zho-tw"  # Uncomment and set desired target languages
+              # TARGET_LANGUAGES: "eng,zh-tw"  # Uncomment and set desired target languages
               # TRANSCRIBE_PREFERRED: "true"   # Transcribe when audio matches preferred language
             envFrom:
               - secretRef:
