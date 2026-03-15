@@ -34,7 +34,7 @@ spec:
            orchestrator:
             image:
               repository: ghcr.io/lenaxia/subgen-orchestrator
-              tag: v0.2.23
+              tag: v0.3.0
               pullPolicy: Always
             env:
               # Orchestrator config
