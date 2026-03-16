@@ -24,11 +24,11 @@ spec:
             reloader.stakater.com/auto: 'true'
           containers:
             orchestrator:
-            image:
-              repository: ghcr.io/lenaxia/subgen-orchestrator
-              tag: v0.3.1
-              pullPolicy: Always
-            env:
+              image:
+                repository: ghcr.io/lenaxia/subgen-orchestrator
+                tag: v0.3.1
+                pullPolicy: Always
+              env:
               - name: WORKER_ADDRESS
                 value: "subgen-worker.media.svc.cluster.local:50051"
               - name: PLEX_SERVER
@@ -39,10 +39,10 @@ spec:
                 value: "/omoikane/:/"
               - name: USE_PATH_MAPPING
                 value: "true"
-            envFrom:
-              - secretRef:
-                  name: subgen
-            probes:
+              envFrom:
+                - secretRef:
+                    name: subgen
+              probes:
               liveness: &probes
                 enabled: true
                 custom: true
