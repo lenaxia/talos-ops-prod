@@ -33,24 +33,26 @@ spec:
         strategy: RollingUpdate
         annotations:
           reloader.stakater.com/auto: 'true'
-        containers:
-          worker:
-            image:
-              repository: ghcr.io/lenaxia/subgen-worker
-              tag: v0.3.0-cpu
-              pullPolicy: Always
-            env:
-              - name: SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE
-                value: "false"
-              - name: SKIP_IF_TARGET_SUBTITLES_EXIST
-                value: "true"
-              # Multi-language subtitle generation (EPIC_10)
-              # TARGET_LANGUAGES: "eng,zh-tw"  # Uncomment and set desired target languages
-              # TRANSCRIBE_PREFERRED: "true"   # Transcribe when audio matches preferred language
-            envFrom:
-              - secretRef:
-                  name: subgen
-            probes:
+          containers:
+            worker:
+              image:
+                repository: ghcr.io/lenaxia/subgen-worker
+                tag: v0.3.1-cpu
+                pullPolicy: Always
+              env:
+                - name: SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE
+                  value: "false"
+                - name: SKIP_IF_TARGET_SUBTITLES_EXIST
+                  value: "true"
+                # Multi-language subtitle generation (EPIC_10)
+                - name: TARGET_LANGUAGES
+                  value: "eng,zh-tw"
+                - name: TRANSCRIBE_PREFERRED
+                  value: "true"
+              envFrom:
+                - secretRef:
+                    name: subgen
+              probes:
               liveness:
                 enabled: true
                 custom: true
