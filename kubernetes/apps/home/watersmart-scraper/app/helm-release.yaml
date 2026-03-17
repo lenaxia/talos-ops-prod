@@ -51,7 +51,7 @@ spec:
               MQTT_TLS: "false"
               HA_DEVICE_NAME: "Water Meter"
               HA_DEVICE_ID: "watersmart_meter"
-              HA_DISCOVERY_PREFIX: "temp"
+              HA_DISCOVERY_PREFIX: "homeassistant"
               SCRAPE_INTERVAL_MINUTES: "60"
               HEALTH_PORT: "8080"
               HEALTH_BIND: "0.0.0.0"
