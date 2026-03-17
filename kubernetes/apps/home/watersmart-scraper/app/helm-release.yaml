@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app watersmart-scraper
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      watersmart-scraper:
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          app:
+            image:
+              repository: ghcr.io/lenaxia/watersmart-scraper
+              tag: "1.0.0"
+              pullPolicy: IfNotPresent
+            envFrom:
+              - secretRef:
+                  name: *app
+            env:
+              WATERSMART_URL: "https://mercerislandwa.watersmart.com"
+              ACCOUNT_NUMBER: "00202650003"
+              SESSION_COOKIE_NAME: "a64b84d4419675c8425cb15c2f5fda28"
+              MQTT_BROKER: "192.168.5.6"
+              MQTT_PORT: "1883"
+              MQTT_TOPIC_PREFIX: "watersmart"
+              MQTT_CLIENT_ID: "watersmart-scraper"
+              MQTT_TLS: "false"
+              HA_DEVICE_NAME: "Water Meter"
+              HA_DEVICE_ID: "watersmart_meter"
+              HA_DISCOVERY_PREFIX: "temp"
+              SCRAPE_INTERVAL_MINUTES: "60"
+              HEALTH_PORT: "8080"
+              HEALTH_BIND: "0.0.0.0"
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /livez
+                    port: &port 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /readyz
+                    port: *port
+                  initialDelaySeconds: 15
+                  periodSeconds: 60
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: false
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+    service:
+      app:
+        ports:
+          http:
+            port: *port
