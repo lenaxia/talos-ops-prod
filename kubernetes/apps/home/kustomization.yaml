@@ -26,4 +26,4 @@ resources:
   #- ./linkwarden/ks.yaml
   - ./vscode/ks.yaml
   - ./vllm-classifier/ks.yaml
-  #- ./watersmart-scraper/ks.yaml
+  - ./watersmart-scraper/ks.yaml
