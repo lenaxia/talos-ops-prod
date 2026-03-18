@@ -18,10 +18,8 @@ spec:
   dependsOn:
     - name: cert-manager
       namespace: cert-manager
-    - name: cluster-databases-redis-lb
-      namespace: flux-system
-    - name: cluster-databases-postgres-clusters
-      namespace: flux-system
+    - name: redis-lb
+      namespace: databases
   install:
     createNamespace: true
     remediation:
