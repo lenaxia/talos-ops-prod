@@ -48,7 +48,7 @@ spec:
     service:
       type: LoadBalancer
       port: 80
-      externalTrafficPolicy: Local
+      externalTrafficPolicy: Cluster
       labels:
         cilium.io/l2-ip-pool: reserved
       annotations:
