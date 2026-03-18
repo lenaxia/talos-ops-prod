@@ -3,6 +3,12 @@ kind: HelmRelease
 metadata:
   name: kube-prometheus-stack
   namespace: monitoring
+  annotations:
+    mechanic.talos.dev/local-storage-remediation: |
+      IMPORTANT: This StatefulSet uses openebs-hostpath (local storage) which has node affinity.
+      If a node with a PVC becomes unavailable, the affected pod cannot be rescheduled.
+      Remediation: kubectl delete pvc <pvc-name> -n monitoring to recreate the PVC/PV on an available node.
+      Warning: This will result in data loss for that replica.
 spec:
   interval: 5m
   chart:
