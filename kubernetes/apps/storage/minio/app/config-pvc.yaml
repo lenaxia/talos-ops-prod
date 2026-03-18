@@ -6,7 +6,7 @@ metadata:
   namespace: storage
 spec:
   capacity:
-    storage: 1Mi
+    storage: 100Gi
   accessModes:
     - ReadWriteMany
   storageClassName: minio-nfs
@@ -15,7 +15,7 @@ spec:
     #server: ${NAS_ADDR}
     #path: ${NFS_MINIO}
     server: 192.168.0.120
-    path: /volume3/minio 
+    path: /volume3/minio
   mountOptions:
     - nfsvers=3
     - nconnect=8
@@ -33,4 +33,4 @@ spec:
   storageClassName: minio-nfs
   resources:
     requests:
-      storage: 1Mi
+      storage: 100Gi
