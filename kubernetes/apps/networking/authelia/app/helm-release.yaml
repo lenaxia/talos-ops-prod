@@ -25,6 +25,19 @@ spec:
   upgrade:
     remediation:
       retries: 6
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Service
+              name: authelia
+            patch: |
+              - op: add
+                path: /spec/loadBalancerIP
+                value: "${SVC_AUTHELIA_ADDR}"
+              - op: add
+                path: /metadata/labels/cilium.io~1l2-ip-pool
+                value: reserved
   values:
     image:
       registry: ghcr.io
