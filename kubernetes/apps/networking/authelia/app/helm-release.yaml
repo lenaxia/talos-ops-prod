@@ -519,6 +519,9 @@ spec:
 
           tls:
             enabled: false
+
+          password:
+            path: "REDIS_PASSWORD"
     
       ##
       ## Regulation Configuration
@@ -554,6 +557,8 @@ spec:
           database: authelia
           schema: public
           username: authelia
+          password:
+            path: "STORAGE_PASSWORD"
           tls:
             enabled: false
             
