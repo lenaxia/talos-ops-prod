@@ -46,7 +46,7 @@ spec:
             env:
               TZ: ${TIMEZONE}
               # slapd debug level — 256 = stats, 0 = silent
-              SLAPD_LOGLEVEL: "256"
+              SLAPD_LOGLEVEL: "0"
 
             envFrom:
               - secretRef:
@@ -72,7 +72,7 @@ spec:
                 dn: cn=config
                 objectClass: olcGlobal
                 cn: config
-                olcLogLevel: ${SLAPD_LOGLEVEL}
+                olcLogLevel: 0
 
                 dn: cn=schema,cn=config
                 objectClass: olcSchemaConfig
