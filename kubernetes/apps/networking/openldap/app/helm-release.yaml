@@ -1,0 +1,186 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app openldap
+  namespace: networking
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+      interval: 15m
+  install:
+    createNamespace: false
+    remediation:
+      retries: 4
+  upgrade:
+    remediation:
+      retries: 4
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+
+    controllers:
+      openldap:
+        type: statefulset
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+
+        containers:
+          main:
+            image:
+              repository: bitnami/openldap
+              tag: 2.6.10
+
+            env:
+              TZ: ${TIMEZONE}
+              LDAP_ROOT: "dc=kao,dc=family"
+              LDAP_LOGLEVEL: "256"
+
+              # Read-only replica mode — no writes accepted locally
+              LDAP_ENABLE_TLS: "no"
+
+              # syncrepl consumer configuration via env
+              # Bitnami openldap supports custom LDIF drop-ins via /docker-entrypoint-initdb.d
+              # We use a configMap-mounted LDIF to configure syncrepl
+
+            envFrom:
+              - secretRef:
+                  name: *app
+
+            ports:
+              - name: ldap
+                containerPort: 1389
+                protocol: TCP
+
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - ldapsearch
+                      - -x
+                      - -H
+                      - ldap://localhost:1389
+                      - -b
+                      - dc=kao,dc=family
+                      - -s
+                      - base
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - ldapsearch
+                      - -x
+                      - -H
+                      - ldap://localhost:1389
+                      - -b
+                      - dc=kao,dc=family
+                      - -s
+                      - base
+                  initialDelaySeconds: 15
+                  periodSeconds: 15
+                  timeoutSeconds: 10
+                  failureThreshold: 3
+
+            resources:
+              requests:
+                cpu: 20m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities:
+                drop:
+                  - ALL
+
+    service:
+      openldap:
+        controller: openldap
+        primary: true
+        type: ClusterIP
+        ports:
+          ldap:
+            port: 389
+            targetPort: 1389
+            protocol: TCP
+
+    persistence:
+      data:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn
+        retain: true
+        advancedMounts:
+          openldap:
+            main:
+              - path: /bitnami/openldap
+
+      # syncrepl consumer config — injected as an LDIF on first startup
+      syncrepl-config:
+        type: configMap
+        name: openldap-syncrepl
+        defaultMode: 0644
+        advancedMounts:
+          openldap:
+            main:
+              - path: /docker-entrypoint-initdb.d/syncrepl.ldif
+                subPath: syncrepl.ldif
+                readOnly: true
+
+    configMaps:
+      syncrepl:
+        enabled: true
+        data:
+          # This LDIF configures slapd as a syncrepl consumer of the Synology LDAP.
+          # It is applied once at container startup via docker-entrypoint-initdb.d.
+          #
+          # The replicator account (uid=replicator,cn=users,dc=kao,dc=family) must
+          # exist on the Synology with sufficient read permissions — it already does
+          # (cn=Directory Consumers group).
+          #
+          # updateref tells clients attempting a write to redirect to the master.
+          syncrepl.ldif: |
+            dn: olcDatabase={2}mdb,cn=config
+            changetype: modify
+            add: olcSyncRepl
+            olcSyncRepl: rid=001
+              provider=ldap://${NAS_ADDR}:389
+              bindmethod=simple
+              binddn="uid=replicator,cn=users,dc=kao,dc=family"
+              credentials=${LDAP_REPLICATOR_PASSWORD}
+              searchbase="dc=kao,dc=family"
+              scope=sub
+              schemachecking=off
+              type=refreshAndPersist
+              retry="5 5 300 +"
+              interval=00:00:05:00
+              attrs="*,+"
+            -
+            add: olcUpdateRef
+            olcUpdateRef: ldap://${NAS_ADDR}:389
