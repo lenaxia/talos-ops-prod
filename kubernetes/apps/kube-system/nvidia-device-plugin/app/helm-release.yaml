@@ -43,3 +43,6 @@ spec:
         # vgpu info on a host.
         # TODO: This should be optional and detected automatically.
         privileged: true
+
+    nfd:
+      enabled: false
