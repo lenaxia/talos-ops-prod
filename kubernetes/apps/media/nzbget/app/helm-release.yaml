@@ -30,7 +30,7 @@ spec:
             image:
               repository: lscr.io/linuxserver/nzbget
               tag: v21.1-ls136
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
 
             env:
               TZ: ${TIMEZONE}
