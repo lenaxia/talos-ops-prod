@@ -27,10 +27,9 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "true"
       securityContext:
-        runAsUser: 1001
-        runAsGroup: 1001
-        fsGroup: 1001
-        fsGroupChangePolicy: OnRootMismatch
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
 
     controllers:
       openldap:
@@ -41,28 +40,91 @@ spec:
         containers:
           main:
             image:
-              repository: bitnami/openldap
-              tag: 2.6.10
+              repository: symas/openldap
+              tag: 2.6.8
 
             env:
               TZ: ${TIMEZONE}
-              LDAP_ROOT: "dc=kao,dc=family"
-              LDAP_LOGLEVEL: "256"
-
-              # Read-only replica mode — no writes accepted locally
-              LDAP_ENABLE_TLS: "no"
-
-              # syncrepl consumer configuration via env
-              # Bitnami openldap supports custom LDIF drop-ins via /docker-entrypoint-initdb.d
-              # We use a configMap-mounted LDIF to configure syncrepl
+              # slapd debug level — 256 = stats, 0 = silent
+              SLAPD_LOGLEVEL: "256"
 
             envFrom:
               - secretRef:
                   name: *app
 
+            command:
+              - /bin/sh
+              - -c
+              - |
+                set -e
+                DATA_DIR=/var/lib/ldap
+                CONF_DIR=/etc/ldap/slapd.d
+
+                # Bootstrap only on first start (no DB files yet)
+                if [ ! -f "$DATA_DIR/.bootstrapped" ]; then
+                  echo "==> Bootstrapping slapd as syncrepl consumer of ${NAS_ADDR}"
+
+                  # Create minimal slapd config
+                  mkdir -p "$CONF_DIR" "$DATA_DIR"
+
+                  # Write slapd bootstrap LDIF
+                  cat > /tmp/slapd-bootstrap.ldif <<EOF
+                dn: cn=config
+                objectClass: olcGlobal
+                cn: config
+                olcLogLevel: ${SLAPD_LOGLEVEL}
+
+                dn: cn=schema,cn=config
+                objectClass: olcSchemaConfig
+                cn: schema
+
+                include: file:///etc/ldap/schema/core.ldif
+                include: file:///etc/ldap/schema/cosine.ldif
+                include: file:///etc/ldap/schema/inetorgperson.ldif
+                include: file:///etc/ldap/schema/nis.ldif
+
+                dn: olcDatabase=config,cn=config
+                objectClass: olcDatabaseConfig
+                olcDatabase: config
+                olcAccess: to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+
+                dn: olcDatabase=mdb,cn=config
+                objectClass: olcDatabaseConfig
+                objectClass: olcMdbConfig
+                olcDatabase: mdb
+                olcSuffix: dc=kao,dc=family
+                olcDbDirectory: /var/lib/ldap
+                olcDbIndex: objectClass eq
+                olcDbIndex: uid eq,pres,sub
+                olcDbIndex: cn eq,pres,sub
+                olcDbIndex: memberOf eq
+                olcAccess: to * by * read
+                olcSyncRepl: rid=001
+                  provider=ldap://${NAS_ADDR}:389
+                  bindmethod=simple
+                  binddn="uid=replicator,cn=users,dc=kao,dc=family"
+                  credentials=$LDAP_REPLICATOR_PASSWORD
+                  searchbase="dc=kao,dc=family"
+                  scope=sub
+                  schemachecking=off
+                  type=refreshAndPersist
+                  retry="5 5 300 +"
+                  interval=00:00:05:00
+                  attrs="*,+"
+                olcUpdateRef: ldap://${NAS_ADDR}:389
+                EOF
+
+                  slapadd -n 0 -F "$CONF_DIR" -l /tmp/slapd-bootstrap.ldif
+                  touch "$DATA_DIR/.bootstrapped"
+                  echo "==> Bootstrap complete"
+                fi
+
+                echo "==> Starting slapd"
+                exec slapd -F "$CONF_DIR" -h "ldap://0.0.0.0:389/" -d ${SLAPD_LOGLEVEL}
+
             ports:
               - name: ldap
-                containerPort: 1389
+                containerPort: 389
                 protocol: TCP
 
             probes:
@@ -75,7 +137,7 @@ spec:
                       - ldapsearch
                       - -x
                       - -H
-                      - ldap://localhost:1389
+                      - ldap://localhost:389
                       - -b
                       - dc=kao,dc=family
                       - -s
@@ -93,12 +155,12 @@ spec:
                       - ldapsearch
                       - -x
                       - -H
-                      - ldap://localhost:1389
+                      - ldap://localhost:389
                       - -b
                       - dc=kao,dc=family
                       - -s
                       - base
-                  initialDelaySeconds: 15
+                  initialDelaySeconds: 20
                   periodSeconds: 15
                   timeoutSeconds: 10
                   failureThreshold: 3
@@ -113,9 +175,6 @@ spec:
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: false
-              capabilities:
-                drop:
-                  - ALL
 
     service:
       openldap:
@@ -125,7 +184,7 @@ spec:
         ports:
           ldap:
             port: 389
-            targetPort: 1389
+            targetPort: 389
             protocol: TCP
 
     persistence:
@@ -138,48 +197,15 @@ spec:
         advancedMounts:
           openldap:
             main:
-              - path: /bitnami/openldap
+              - path: /var/lib/ldap
 
-      # syncrepl consumer config — injected as an LDIF on first startup
-      syncrepl-config:
-        type: configMap
-        name: openldap
-        defaultMode: 0644
+      config:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 128Mi
+        storageClass: longhorn
+        retain: true
         advancedMounts:
           openldap:
             main:
-              - path: /docker-entrypoint-initdb.d/syncrepl.ldif
-                subPath: syncrepl.ldif
-                readOnly: true
-
-    configMaps:
-      syncrepl:
-        enabled: true
-        data:
-          # This LDIF configures slapd as a syncrepl consumer of the Synology LDAP.
-          # It is applied once at container startup via docker-entrypoint-initdb.d.
-          #
-          # The replicator account (uid=replicator,cn=users,dc=kao,dc=family) must
-          # exist on the Synology with sufficient read permissions — it already does
-          # (cn=Directory Consumers group).
-          #
-          # updateref tells clients attempting a write to redirect to the master.
-          syncrepl.ldif: |
-            dn: olcDatabase={2}mdb,cn=config
-            changetype: modify
-            add: olcSyncRepl
-            olcSyncRepl: rid=001
-              provider=ldap://${NAS_ADDR}:389
-              bindmethod=simple
-              binddn="uid=replicator,cn=users,dc=kao,dc=family"
-              credentials=${LDAP_REPLICATOR_PASSWORD}
-              searchbase="dc=kao,dc=family"
-              scope=sub
-              schemachecking=off
-              type=refreshAndPersist
-              retry="5 5 300 +"
-              interval=00:00:05:00
-              attrs="*,+"
-            -
-            add: olcUpdateRef
-            olcUpdateRef: ldap://${NAS_ADDR}:389
+              - path: /etc/ldap/slapd.d
