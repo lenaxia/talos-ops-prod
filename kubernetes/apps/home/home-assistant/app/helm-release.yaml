@@ -28,8 +28,6 @@ spec:
   values:
     defaultPodOptions:
       dnsPolicy: "ClusterFirstWithHostNet"
-      annotations:
-        k8s.v1.cni.cncf.io/networks: kube-system/multus-net
       securityContext:
         runAsUser: 568
         runAsGroup: 568
