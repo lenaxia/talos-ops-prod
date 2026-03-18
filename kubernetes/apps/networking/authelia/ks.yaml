@@ -8,9 +8,9 @@ metadata:
   labels:
     substitution.flux.home.arpa/enabled: "true"
 spec:
-  #dependsOn:
-  #  - name: cluster-databases-postgres-clusters
-      #- name: cluster-databases-redis
+  dependsOn:
+    - name: cluster-databases-postgres-clusters
+    - name: cluster-databases-redis-lb
   path: ./kubernetes/apps/networking/authelia/app
   prune: true
   sourceRef:
