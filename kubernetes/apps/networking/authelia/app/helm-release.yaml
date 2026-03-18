@@ -587,9 +587,9 @@ spec:
               algorithm: 'RS256'
               use: 'sig'
               key:
-                path: '/secrets/internal/oidc.jwk.RS256.pem'
+                path: '/secrets/jwks/oidc.jwk.RS256.pem'
               certificate_chain:
-                path: '/secrets/internal/oidc.jwk.RS256.crt'
+                path: '/secrets/jwks/oidc.jwk.RS256.crt'
     
           ## Cross-Origin Resource Sharing (CORS) settings.
           cors:
@@ -773,7 +773,7 @@ spec:
       mountPath: /secrets
       additionalSecrets:
         authelia:
-          path: internal
+          path: jwks
           items:
             - key: oidc.jwk.RS256.pem
               path: oidc.jwk.RS256.pem
