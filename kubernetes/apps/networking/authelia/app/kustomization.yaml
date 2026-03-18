@@ -13,7 +13,3 @@ patches:
     target:
       kind: Deployment
       name: ".*"
-  - path: config/patch-service-lb-ip.yaml
-    target:
-      kind: Service
-      name: authelia
