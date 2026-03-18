@@ -36,6 +36,9 @@ spec:
     controllers:
       main:
         type: deployment
+        serviceAccount:
+          create: false
+          name: plex-sidecar
         containers:
           main:
             image:
