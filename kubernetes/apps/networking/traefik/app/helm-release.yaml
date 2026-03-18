@@ -31,7 +31,7 @@ spec:
       tag: v2.11.13
     deployment:
       kind: Deployment
-      replicas: 4
+      replicas: 3
 
     nodeSelector:
       node-role.kubernetes.io/worker: "true"
