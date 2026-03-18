@@ -100,10 +100,5 @@ spec:
               - *uri
             secretName: *uri
         className: traefik
-    persistence:
-      config:
-        enabled: true
-        existingClaim: overseerr-config-volume
-        type: persistentVolumeClaim
     podLabels:
       app: &app overseerr
