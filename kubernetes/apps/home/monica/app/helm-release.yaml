@@ -118,9 +118,27 @@ spec:
                 memory: 750Mi
             probes:
               liveness:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 80
+                  initialDelaySeconds: 60
+                  periodSeconds: 30
+                  successThreshold: 1
+                  failureThreshold: 5
+                  timeoutSeconds: 10
               readiness:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 80
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  successThreshold: 1
+                  failureThreshold: 3
+                  timeoutSeconds: 5
               startup:
                 enabled: false
           #meilisearch:
