@@ -771,6 +771,14 @@ spec:
     secret:
       existingSecret: *appname
       mountPath: /secrets
+      additionalSecrets:
+        authelia:
+          path: internal
+          items:
+            - key: oidc.jwk.RS256.pem
+              path: oidc.jwk.RS256.pem
+            - key: oidc.jwk.RS256.crt
+              path: oidc.jwk.RS256.crt
     
     ##
     ## Authelia Persistence Configuration.
