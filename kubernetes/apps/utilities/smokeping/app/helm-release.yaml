@@ -27,7 +27,7 @@ spec:
 
     image:
       repository: ghcr.io/linuxserver/smokeping
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
       tag: "version-2.7.3-r5"
     
     strategy:
