@@ -95,8 +95,9 @@ spec:
             entryPoint:
               to: websecure
               scheme: https
-        expose:  # If expose is needed for 'web', define it similarly as a dictionary
-          default: false  # This line might not be necessary depending on your logic
+        expose:
+          default: true
+        exposedPort: 80
       websecure:
         http:
           tls:
