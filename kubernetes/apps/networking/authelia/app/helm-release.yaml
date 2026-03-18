@@ -137,7 +137,7 @@ spec:
         enable_self_enrollment: true
 
         secret:
-          path: "DUO_SECRET_KEY"
+          path: "duo.key"
     
       ##
       ## Definitions Configuration
@@ -196,7 +196,7 @@ spec:
           user: uid=autheliauser,cn=users,dc=kao,dc=family
     
           password:
-            path: "LDAP_PASSWORD"
+            path: "authentication.ldap.password.txt"
     
       ##
       ## Password Policy Configuration.
@@ -521,7 +521,7 @@ spec:
             enabled: false
 
           password:
-            path: "REDIS_PASSWORD"
+            path: "session.redis.password.txt"
     
       ##
       ## Regulation Configuration
@@ -542,7 +542,7 @@ spec:
           path: /config/db.sqlite3
 
         encryption_key:
-          path: "STORAGE_ENCRYPTION_KEY"
+          path: "storage.encryption.key"
 
         mysql:
           enabled: false
@@ -558,7 +558,7 @@ spec:
           schema: public
           username: authelia
           password:
-            path: "STORAGE_PASSWORD"
+            path: "storage.postgres.password.txt"
           tls:
             enabled: false
             
@@ -583,7 +583,7 @@ spec:
           subject: "[TheKaoCloud] {title}"
 
           password:
-            path: "SMTP_PASSWORD"
+            path: "notifier.smtp.password.txt"
     
       identity_providers:
         oidc:
@@ -600,7 +600,7 @@ spec:
           enable_client_debug_messages: false
 
           hmac_secret:
-            path: "OIDC_HMAC_SECRET"
+            path: "identity_providers.oidc.hmac.key"
 
           jwks:
             - key_id: 'RS256'
