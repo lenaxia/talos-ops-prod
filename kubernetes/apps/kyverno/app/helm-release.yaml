@@ -36,6 +36,7 @@ spec:
         interval: 1m
     cleanupController:
       replicas: 3
+      revisionHistoryLimit: 3
       serviceMonitor:
         enabled: true
         interval: 1m
