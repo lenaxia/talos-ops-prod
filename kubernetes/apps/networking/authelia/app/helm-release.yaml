@@ -36,6 +36,8 @@ spec:
       type: LoadBalancer
       port: 80
       externalTrafficPolicy: Local
+      labels:
+        cilium.io/l2-ip-pool: reserved
       annotations:
         metallb.universe.tf/address-pool: dev-infra
         metallb.universe.tf/loadBalancerIPs: "${SVC_AUTHELIA_ADDR}"
