@@ -4,7 +4,6 @@ metadata:
     name: nzbhydra2-config-volume
     labels:
       app: nzbhydra
-      snapshot.home.arpa/enabled: "true"
 spec:
     accessModes:
         - ReadWriteOnce
