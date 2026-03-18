@@ -35,7 +35,6 @@ spec:
     controllers:
       openldap:
         type: statefulset
-        strategy: Recreate
         annotations:
           reloader.stakater.com/auto: "true"
 
