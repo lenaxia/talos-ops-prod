@@ -20,6 +20,8 @@ spec:
       namespace: cert-manager
     - name: redis-lb
       namespace: databases
+    - name: postgres-operator
+      namespace: databases
   install:
     createNamespace: true
     remediation:
