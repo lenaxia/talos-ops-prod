@@ -18,6 +18,10 @@ spec:
   dependsOn:
     - name: cert-manager
       namespace: cert-manager
+    - name: cluster-databases-redis-lb
+      namespace: flux-system
+    - name: cluster-databases-postgres-clusters
+      namespace: flux-system
   install:
     createNamespace: true
     remediation:
@@ -509,14 +513,14 @@ spec:
         ## Redis Provider
         ##
         redis:
-          enabled: false 
+          enabled: true
           host: redis-lb.databases.svc.cluster.local
           port: 6379
           username: ""
           database_index: 0
           maximum_active_connections: 8
           minimum_idle_connections: 0
-    
+
           tls:
             enabled: false
     
@@ -535,7 +539,7 @@ spec:
       ##
       storage:
         local:
-          enabled: true
+          enabled: false
           path: /config/db.sqlite3
 
         encryption_key:
@@ -549,7 +553,7 @@ spec:
           timeout: 10s
 
         postgres:
-          enabled: false
+          enabled: true
           address: 'tcp://defaultpg-rw.databases.svc.cluster.local:5432'
           database: authelia
           schema: public

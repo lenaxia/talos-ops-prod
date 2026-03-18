@@ -134,8 +134,6 @@ jobs:
                - Needs manual review: post comment only, do NOT merge
 
             Special exclusions (always "Needs manual review", never auto-merge):
-            - Authelia — requires manual review per policy
-            - Traefik — requires manual review per policy
             - MinIO — deprecated open source, became open source hostile
             - Bitnami — revoked open-source license
 
