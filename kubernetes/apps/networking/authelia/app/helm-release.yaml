@@ -498,7 +498,7 @@ spec:
         remember_me: 1M
 
         encryption_key:
-          path: "SESSION_SECRET"
+          path: "session.encryption.key"
 
         cookies:
           - domain: '${SECRET_DEV_DOMAIN}'
