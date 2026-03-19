@@ -103,6 +103,11 @@ spec:
               IMMICH_OAUTH_BUTTON_TEXT: Sign in with Authelia
               IMMICH_OAUTH_MOBILE_REDIRECT_URI: https://immich.${SECRET_DEV_DOMAIN}/api/oauth/mobile-redirect
               IMMICH_OAUTH_MOBILE_OVERRIDE_REDIRECT_URI: "true"
+              REDIS_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: redis-secret
+                    key: password
             envFrom:
               - secretRef:
                   name: *appname
