@@ -41,6 +41,12 @@ spec:
               TZ: ${TIMEZONE}
               FRONTEND_URL: https://f1.${SECRET_DEV_DOMAIN}
               DATA_DIR: /data
+              AUTH_ENABLED: "true"
+              AUTH_PASSPHRASE:
+                valueFrom:
+                  secretKeyRef:
+                    name: f1replaytiming
+                    key: AUTH_PASSPHRASE
             resources:
               requests:
                 cpu: 100m
@@ -112,7 +118,7 @@ spec:
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-no-auth@kubernetescrd
         hosts:
           - host: &backend-uri f1-api.${SECRET_DEV_DOMAIN}
             paths:
