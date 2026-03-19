@@ -853,8 +853,18 @@ controllers:
 
 | StorageClass | Use case |
 |---|---|
-| *(omit / default)* | `openebs-hostpath` — local node storage, fast, no replication. Fine for single-node workloads. |
-| `longhorn` | Replicated block storage. Use for stateful apps that need HA or remote backup. |
+| *(omit / default)* | `longhorn` — replicated block storage, HA, supports snapshots and backups. **This is the cluster default.** |
+| `openebs-hostpath` | Local node storage, faster I/O, no replication. Use only for non-critical scratch data or caches. Must be specified explicitly. |
+
+**Longhorn replica count:** By default Longhorn creates 3 replicas, which causes 3x write amplification. For non-critical volumes (media, caches, single-app data), set `longhorn.io/numberOfReplicas: "1"` in the PVC annotations to avoid this:
+
+```yaml
+metadata:
+  annotations:
+    longhorn.io/numberOfReplicas: "1"
+spec:
+  storageClassName: longhorn   # or omit — it's the default
+```
 
 #### Type: `nfs`
 
