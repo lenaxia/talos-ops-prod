@@ -106,6 +106,7 @@ spec:
         groups_attribute_path: groups
         name_attribute_path: name
         use_pkce: true
+        auth_style: InHeader
 #      auth.proxy:
 #        enabled: true
 #        header_name: Remote-User
