@@ -34,7 +34,6 @@ data:
   SVC_REDIS: "redis-lb.databases.svc.cluster.local"
   SVC_POSTGRES: "defaultpg-rw.databases.svc.cluster.local"
   SVC_POSTGRES_VER: "14.5"
-  SVC_VECTORPG: "vectorpg-rw.databases.svc.cluster.local"
 
   METALLB_POOL_DEFUALT: "192.168.5.68-192.168.5.255"
   METALLB_POOL_DEVINFRA: "192.168.5.1-192.168.5.67"
