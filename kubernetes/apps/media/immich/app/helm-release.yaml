@@ -93,6 +93,7 @@ spec:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
               IMMICH_MEDIA_LOCATION: /usr/src/app/upload
+              DB_VECTOR_EXTENSION: pgvector
               # OIDC via Authelia
               IMMICH_OAUTH_ENABLED: "true"
               IMMICH_OAUTH_ISSUER_URL: https://authelia.${SECRET_DEV_DOMAIN}
