@@ -802,10 +802,10 @@ spec:
             pre_configured_consent_duration: 1y
             scopes: ["openid", "profile", "email"]
             redirect_uris:
-              - "https://photos.${SECRET_DEV_DOMAIN}/auth/login"
-              - "https://photos.${SECRET_DEV_DOMAIN}/user-settings"
+              - "https://immich.${SECRET_DEV_DOMAIN}/auth/login"
+              - "https://immich.${SECRET_DEV_DOMAIN}/user-settings"
               - "app.immich:///oauth-callback"
-              - "https://photos.${SECRET_DEV_DOMAIN}/api/oauth/mobile-redirect"
+              - "https://immich.${SECRET_DEV_DOMAIN}/api/oauth/mobile-redirect"
             response_types:
               - 'code'
             grant_types:
