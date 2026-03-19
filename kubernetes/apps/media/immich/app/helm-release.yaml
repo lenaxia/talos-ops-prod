@@ -106,8 +106,15 @@ spec:
               requests:
                 cpu: 100m
                 memory: 512Mi
+                gpu.intel.com/i915: "1"
               limits:
                 memory: 4Gi
+                gpu.intel.com/i915: "1"
+            securityContext:
+              privileged: false
+              supplementalGroups:
+                - 44   # video
+                - 109  # render
             probes:
               liveness:
                 enabled: true
@@ -211,3 +218,11 @@ spec:
           machine-learning:
             machine-learning:
               - path: /cache
+      dri:
+        type: hostPath
+        hostPath: /dev/dri
+        hostPathType: Directory
+        advancedMounts:
+          server:
+            server:
+              - path: /dev/dri
