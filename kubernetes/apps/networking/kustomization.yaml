@@ -8,4 +8,3 @@ resources:
   - ./cloudflare-ddns/ks.yaml
   - ./webfinger/ks.yaml
   - ./external-dns/ks.yaml
-  - ./openldap/ks.yaml
