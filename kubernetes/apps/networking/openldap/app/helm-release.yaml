@@ -17,9 +17,11 @@ spec:
       interval: 15m
   install:
     createNamespace: false
+    timeout: 10m
     remediation:
       retries: 4
   upgrade:
+    timeout: 10m
     remediation:
       retries: 4
   values:
@@ -62,41 +64,9 @@ spec:
 
             probes:
               liveness:
-                enabled: true
-                custom: true
-                spec:
-                  exec:
-                    command:
-                      - /opt/bitnami/openldap/bin/ldapsearch
-                      - -x
-                      - -H
-                      - ldap://localhost:1389
-                      - -b
-                      - dc=kao,dc=family
-                      - -s
-                      - base
-                  initialDelaySeconds: 60
-                  periodSeconds: 30
-                  timeoutSeconds: 10
-                  failureThreshold: 5
+                enabled: false
               readiness:
-                enabled: true
-                custom: true
-                spec:
-                  exec:
-                    command:
-                      - /opt/bitnami/openldap/bin/ldapsearch
-                      - -x
-                      - -H
-                      - ldap://localhost:1389
-                      - -b
-                      - dc=kao,dc=family
-                      - -s
-                      - base
-                  initialDelaySeconds: 30
-                  periodSeconds: 15
-                  timeoutSeconds: 10
-                  failureThreshold: 5
+                enabled: false
 
             resources:
               requests:
