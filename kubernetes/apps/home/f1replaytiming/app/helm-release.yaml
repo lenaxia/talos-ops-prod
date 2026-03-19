@@ -41,12 +41,7 @@ spec:
               TZ: ${TIMEZONE}
               FRONTEND_URL: https://f1.${SECRET_DEV_DOMAIN}
               DATA_DIR: /data
-              AUTH_ENABLED: "true"
-              AUTH_PASSPHRASE:
-                valueFrom:
-                  secretKeyRef:
-                    name: f1replaytiming
-                    key: AUTH_PASSPHRASE
+              AUTH_ENABLED: "false"
             resources:
               requests:
                 cpu: 100m
