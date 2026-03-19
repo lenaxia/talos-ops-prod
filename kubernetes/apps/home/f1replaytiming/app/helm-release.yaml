@@ -36,7 +36,7 @@ spec:
           main:
             image:
               repository: ghcr.io/adn8naiagent/f1replaytiming-backend
-              tag: 1.2.2
+              tag: 1.2.1
             env:
               TZ: ${TIMEZONE}
               FRONTEND_URL: https://f1.${SECRET_DEV_DOMAIN}
@@ -57,7 +57,7 @@ spec:
           main:
             image:
               repository: ghcr.io/adn8naiagent/f1replaytiming-frontend
-              tag: 1.2.2
+              tag: 1.2.1
             env:
               TZ: ${TIMEZONE}
               NEXT_PUBLIC_API_URL: https://f1-api.${SECRET_DEV_DOMAIN}
