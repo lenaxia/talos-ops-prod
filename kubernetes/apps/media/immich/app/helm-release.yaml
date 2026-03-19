@@ -74,6 +74,8 @@ spec:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
               IMMICH_MEDIA_LOCATION: /usr/src/app/upload
+              # Prevent NVIDIA runtime from injecting GPU into this container
+              NVIDIA_VISIBLE_DEVICES: void
               # OIDC via Authelia
               IMMICH_OAUTH_ENABLED: "true"
               IMMICH_OAUTH_ISSUER_URL: https://authelia.${SECRET_DEV_DOMAIN}
