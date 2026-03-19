@@ -74,6 +74,16 @@ spec:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
               IMMICH_MEDIA_LOCATION: /usr/src/app/upload
+              # OIDC via Authelia
+              IMMICH_OAUTH_ENABLED: "true"
+              IMMICH_OAUTH_ISSUER_URL: https://authelia.${SECRET_DEV_DOMAIN}
+              IMMICH_OAUTH_CLIENT_ID: immich
+              IMMICH_OAUTH_SCOPE: "openid email profile"
+              IMMICH_OAUTH_AUTO_REGISTER: "true"
+              IMMICH_OAUTH_AUTO_LAUNCH: "false"
+              IMMICH_OAUTH_BUTTON_TEXT: Sign in with Authelia
+              IMMICH_OAUTH_MOBILE_REDIRECT_URI: https://photos.${SECRET_DEV_DOMAIN}/api/oauth/mobile-redirect
+              IMMICH_OAUTH_MOBILE_OVERRIDE_REDIRECT_URI: "true"
             envFrom:
               - secretRef:
                   name: *appname
