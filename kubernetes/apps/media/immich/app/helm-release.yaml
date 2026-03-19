@@ -199,7 +199,7 @@ spec:
             secretName: *uri
 
     persistence:
-      upload:
+      data:
         type: nfs
         server: ${NAS_ADDR}
         path: ${NFS_IMMICH}
