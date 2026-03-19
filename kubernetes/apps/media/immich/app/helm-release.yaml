@@ -88,22 +88,12 @@ spec:
           server:
             image:
               repository: ghcr.io/immich-app/immich-server
-              tag: v1.131.3
+              tag: v1.137.0
             env:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
-              IMMICH_MEDIA_LOCATION: /usr/src/app/upload
               DB_VECTOR_EXTENSION: pgvector
-              # OIDC via Authelia
-              IMMICH_OAUTH_ENABLED: "true"
-              IMMICH_OAUTH_ISSUER_URL: https://authelia.${SECRET_DEV_DOMAIN}
-              IMMICH_OAUTH_CLIENT_ID: immich
-              IMMICH_OAUTH_SCOPE: "openid email profile"
-              IMMICH_OAUTH_AUTO_REGISTER: "true"
-              IMMICH_OAUTH_AUTO_LAUNCH: "false"
-              IMMICH_OAUTH_BUTTON_TEXT: Sign in with Authelia
-              IMMICH_OAUTH_MOBILE_REDIRECT_URI: https://immich.${SECRET_DEV_DOMAIN}/api/oauth/mobile-redirect
-              IMMICH_OAUTH_MOBILE_OVERRIDE_REDIRECT_URI: "true"
+              DB_STORAGE_TYPE: HDD
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:
@@ -149,13 +139,11 @@ spec:
           machine-learning:
             image:
               repository: ghcr.io/immich-app/immich-machine-learning
-              tag: v1.131.3
+              tag: v1.137.0
             env:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
               MPLCONFIGDIR: /tmp/matplotlib
-              # Use Intel iGPU for ML acceleration
-              DEVICE: openvino
             envFrom:
               - secretRef:
                   name: *appname
@@ -193,7 +181,6 @@ spec:
           # Large file uploads (photos/videos)
           traefik.ingress.kubernetes.io/router.priority: "1"
           traefik.ingress.kubernetes.io/proxy-body-size: "0"
-          nginx.ingress.kubernetes.io/proxy-body-size: "0"
           hajimari.io/enable: "true"
           hajimari.io/icon: image-multiple
           hajimari.io/group: Media
@@ -217,7 +204,7 @@ spec:
         server: ${NAS_ADDR}
         path: ${NFS_IMMICH}
         globalMounts:
-          - path: /usr/src/app/upload
+          - path: /data
       ml-cache:
         type: persistentVolumeClaim
         accessMode: ReadWriteOnce
