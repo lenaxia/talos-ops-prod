@@ -112,7 +112,6 @@ spec:
             main:
               - path: /docker-entrypoint-initdb.d/syncrepl.ldif
                 subPath: syncrepl.ldif
-                readOnly: true
 
     configMaps:
       syncrepl:
