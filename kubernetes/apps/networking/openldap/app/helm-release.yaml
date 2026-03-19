@@ -52,9 +52,9 @@ spec:
               LDAP_ROOT: "dc=kao,dc=family"
               LDAP_ENABLE_TLS: "no"
               LDAP_CONFIG_ADMIN_ENABLED: "yes"
-              LDAP_VOLUME_DIR: "/openldap"
-              LDAP_DATA_DIR: "/openldap/data"
-              LDAP_ONLINE_CONF_DIR: "/openldap/slapd.d"
+              LDAP_VOLUME_DIR: "/bitnami/openldap"
+              LDAP_DATA_DIR: "/bitnami/openldap/data"
+              LDAP_ONLINE_CONF_DIR: "/bitnami/openldap/slapd.d"
 
             envFrom:
               - secretRef:
@@ -175,4 +175,4 @@ spec:
         advancedMounts:
           openldap:
             main:
-              - path: /openldap
+              - path: /bitnami/openldap
