@@ -83,7 +83,7 @@ spec:
                         -H ldap://localhost:1389 \
                         -D "cn=admin,cn=config" \
                         -w "$LDAP_CONFIG_ADMIN_PASSWORD" \
-                        <<EOF
+                        <<EOF || true
                       dn: olcDatabase={2}mdb,cn=config
                       changetype: modify
                       add: olcSyncRepl
