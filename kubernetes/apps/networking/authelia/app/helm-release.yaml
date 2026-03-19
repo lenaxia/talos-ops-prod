@@ -674,8 +674,8 @@ spec:
             authorization_policy: one_factor
             consent_mode: implicit
             pre_configured_consent_duration: 1y
-            require_pkce: true
-            pkce_challenge_method: 'S256'
+            require_pkce: false
+            pkce_challenge_method: ''
             scopes: ["openid", "profile", "email"]
             redirect_uris: ["https://pgadmin.${SECRET_DEV_DOMAIN}/oauth2/authorize"]
             response_types:

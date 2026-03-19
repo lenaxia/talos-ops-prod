@@ -12,14 +12,14 @@ CONSOLE_LOG_LEVEL = logging.DEBUG
 FILE_LOG_LEVEL = logging.DEBUG
 
 # Log format.
-CONSOLE_LOG_FORMAT = '%(asctime)s: %(levelname)s\t%(name)s:\t%(message)s'
-FILE_LOG_FORMAT = '%(asctime)s: %(levelname)s\t%(name)s:\t%(message)s'
+CONSOLE_LOG_FORMAT = "%(asctime)s: %(levelname)s\t%(name)s:\t%(message)s"
+FILE_LOG_FORMAT = "%(asctime)s: %(levelname)s\t%(name)s:\t%(message)s"
 
 
 ##########################################################################
 # Authentication Configuration
 ##########################################################################
-AUTHENTICATION_SOURCES = ['oauth2']
+AUTHENTICATION_SOURCES = ["oauth2"]
 
 ##########################################################################
 # OAuth2 Configuration
@@ -31,37 +31,36 @@ AUTHENTICATION_SOURCES = ['oauth2']
 OAUTH2_CONFIG = [
     {
         # The name of the of the oauth provider, ex: github, google
-        'OAUTH2_NAME': '${SECRET_CLOUD_NAME_SHORT}',
+        "OAUTH2_NAME": "${SECRET_CLOUD_NAME_SHORT}",
         # The display name, ex: Google
-        'OAUTH2_DISPLAY_NAME': '${SECRET_CLOUD_NAME}',
+        "OAUTH2_DISPLAY_NAME": "${SECRET_CLOUD_NAME}",
         # Oauth client id
-        'OAUTH2_CLIENT_ID': 'pgadmin',
+        "OAUTH2_CLIENT_ID": "pgadmin",
         # Oauth secret
-        'OAUTH2_CLIENT_SECRET': '${SECRET_PGADMIN_OAUTH_CLIENT_SECRET}',
-        'OAUTH2_CHALLENGE_METHOD': 'S256',
+        "OAUTH2_CLIENT_SECRET": "${SECRET_PGADMIN_OAUTH_CLIENT_SECRET}",
         # URL to generate a token,
         # Ex: https://github.com/login/oauth/access_token
-        'OAUTH2_TOKEN_URL': "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/token",
+        "OAUTH2_TOKEN_URL": "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/token",
         # URL is used for authentication,
         # Ex: https://github.com/login/oauth/authorize
-        'OAUTH2_AUTHORIZATION_URL': "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/authorization",
+        "OAUTH2_AUTHORIZATION_URL": "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/authorization",
         # server metadata url might optional for your provider
-        'OAUTH2_SERVER_METADATA_URL': 'https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration',
+        "OAUTH2_SERVER_METADATA_URL": "https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration",
         # Oauth base url, ex: https://api.github.com/
-        'OAUTH2_API_BASE_URL': "https://authelia.${SECRET_DEV_DOMAIN}/",
+        "OAUTH2_API_BASE_URL": "https://authelia.${SECRET_DEV_DOMAIN}/",
         # Name of the Endpoint, ex: user
-        'OAUTH2_USERINFO_ENDPOINT': "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/userinfo",
+        "OAUTH2_USERINFO_ENDPOINT": "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/userinfo",
         # Oauth scope, ex: 'openid email profile'
         # Note that an 'email' claim is required in the resulting profile
-        'OAUTH2_SCOPE': 'openid email profile',
+        "OAUTH2_SCOPE": "openid email profile",
         # The claim which is used for the username. If the value is empty the
         # email is used as username, but if a value is provided,
         # the claim has to exist.
-        'OAUTH2_USERNAME_CLAIM': 'email',
+        "OAUTH2_USERNAME_CLAIM": "email",
         # Font-awesome icon, ex: fa-github
-        'OAUTH2_ICON': 'keycdn',
+        "OAUTH2_ICON": "keycdn",
         # UI button colour, ex: #0000ff
-        'OAUTH2_BUTTON_COLOR': None,
+        "OAUTH2_BUTTON_COLOR": None,
         # The additional claims to check on user ID Token or Userinfo response.
         # This is useful to provide additional authorization checks
         # before allowing access.
@@ -82,7 +81,7 @@ OAUTH2_CONFIG = [
         #     'groups': ["0760b6cf-170e-4a14-91b3-4b78e0739963"],
         #     'wids': ["cf1c38e5-3621-4004-a7cb-879624dced7c"],
         # }
-        'OAUTH2_ADDITIONAL_CLAIMS': None,
+        "OAUTH2_ADDITIONAL_CLAIMS": None,
     }
 ]
 
