@@ -31,7 +31,7 @@ spec:
       securityContext:
         runAsUser: 0
         runAsGroup: 0
-        fsGroup: 0
+        fsGroup: 1001
 
     controllers:
       openldap:
@@ -112,7 +112,7 @@ spec:
         advancedMounts:
           openldap:
             main:
-              - path: /bitnami/openldap
+              - path: /openldap
 
       # syncrepl drop-in LDIF source — mounted read-only, copied to initdb dir by init container
       syncrepl-config:
