@@ -139,7 +139,7 @@ spec:
           machine-learning:
             image:
               repository: ghcr.io/immich-app/immich-machine-learning
-              tag: v2.6.0
+              tag: v2.6.0-openvino
             env:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
