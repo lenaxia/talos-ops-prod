@@ -6,4 +6,4 @@ kind: Kustomization
 namespace: home
 resources:
 - helm-release.yaml
-- secret.yaml
+- secret.sops.yaml
