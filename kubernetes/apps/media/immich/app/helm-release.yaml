@@ -206,11 +206,7 @@ spec:
         globalMounts:
           - path: /data
       ml-cache:
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 10Gi
-        storageClass: longhorn
-        retain: true
+        type: emptyDir
         advancedMounts:
           machine-learning:
             machine-learning:
