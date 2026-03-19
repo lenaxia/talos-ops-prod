@@ -63,6 +63,9 @@ spec:
       memory: 512Mi
     limits:
       memory: 2Gi
+
+  nodeSelector:
+    node-role.kubernetes.io/worker: 'true'
   
   livenessProbe:
     initialDelaySeconds: 20
