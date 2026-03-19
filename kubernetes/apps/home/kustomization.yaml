@@ -28,3 +28,4 @@ resources:
   - ./vllm-classifier/ks.yaml
   - ./watersmart-scraper/ks.yaml
   - ./f1replaytiming/ks.yaml
+  - ./immich/ks.yaml
