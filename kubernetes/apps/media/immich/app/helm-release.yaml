@@ -213,11 +213,9 @@ spec:
 
     persistence:
       upload:
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 100Gi
-        storageClass: longhorn
-        retain: true
+        type: nfs
+        server: ${NAS_ADDR}
+        path: ${NFS_IMMICH}
         globalMounts:
           - path: /usr/src/app/upload
       ml-cache:
