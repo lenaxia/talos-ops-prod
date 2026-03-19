@@ -77,44 +77,6 @@ spec:
                     - -c
                     - exit 0
 
-            probes:
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  exec:
-                    command:
-                      - /opt/bitnami/openldap/bin/ldapsearch
-                      - -x
-                      - -H
-                      - ldap://localhost:1389
-                      - -b
-                      - dc=kao,dc=family
-                      - -s
-                      - base
-                  initialDelaySeconds: 60
-                  periodSeconds: 30
-                  timeoutSeconds: 10
-                  failureThreshold: 5
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  exec:
-                    command:
-                      - /opt/bitnami/openldap/bin/ldapsearch
-                      - -x
-                      - -H
-                      - ldap://localhost:1389
-                      - -b
-                      - dc=kao,dc=family
-                      - -s
-                      - base
-                  initialDelaySeconds: 30
-                  periodSeconds: 15
-                  timeoutSeconds: 10
-                  failureThreshold: 5
-
             resources:
               requests:
                 cpu: 20m
