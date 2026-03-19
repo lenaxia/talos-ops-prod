@@ -69,6 +69,7 @@ spec:
               OAUTH_CLIENT_ID: open-webui
               OAUTH_CLIENT_SECRET: ${SECRET_OPEN_WEBUI_OAUTH_CLIENT_SECRET}
               OAUTH_SCOPES: "openid email profile"
+              OAUTH_CODE_CHALLENGE_METHOD: "S256"
               OPENID_PROVIDER_URL: 
                 https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
               WEBUI_SESSION_COOKIE_SAME_SITE: none
