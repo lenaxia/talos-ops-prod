@@ -53,6 +53,11 @@ spec:
         strategy: Recreate
         annotations:
           reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            supplementalGroups:
+              - 44   # video
+              - 109  # render
         initContainers:
           init-db:
             image:
@@ -110,11 +115,6 @@ spec:
               limits:
                 memory: 4Gi
                 gpu.intel.com/i915: "1"
-            securityContext:
-              privileged: false
-              supplementalGroups:
-                - 44   # video
-                - 109  # render
             probes:
               liveness:
                 enabled: true
@@ -218,11 +218,3 @@ spec:
           machine-learning:
             machine-learning:
               - path: /cache
-      dri:
-        type: hostPath
-        hostPath: /dev/dri
-        hostPathType: Directory
-        advancedMounts:
-          server:
-            server:
-              - path: /dev/dri
