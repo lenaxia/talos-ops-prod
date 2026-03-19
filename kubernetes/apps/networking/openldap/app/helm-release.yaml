@@ -47,7 +47,7 @@ spec:
             command:
               - sh
               - -c
-              - cp /ldif-src/syncrepl.ldif /docker-entrypoint-initdb.d/syncrepl.ldif
+              - cp /ldif-src/syncrepl.ldif /docker-entrypoint-initdb.d/syncrepl-modify.ldif
             securityContext:
               runAsUser: 0
 
