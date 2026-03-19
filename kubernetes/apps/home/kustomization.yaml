@@ -27,3 +27,4 @@ resources:
   - ./vscode/ks.yaml
   - ./vllm-classifier/ks.yaml
   - ./watersmart-scraper/ks.yaml
+  - ./f1replaytiming/ks.yaml
