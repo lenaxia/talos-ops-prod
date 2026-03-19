@@ -128,6 +128,27 @@ spec:
                     key: host
               - name: DATABASE_URL
                 value: "postgresql://$(INIT_POSTGRES_USER):$(INIT_POSTGRES_PASS)@$(INIT_POSTGRES_HOST):5432/$(INIT_POSTGRES_DBNAME)"
+              # SSO / OIDC
+              - name: PROXY_BASE_URL
+                value: "https://ai.thekao.cloud"
+              - name: GENERIC_CLIENT_ID
+                value: "litellm"
+              - name: GENERIC_CLIENT_SECRET
+                value: "${SECRET_LITELLM_OAUTH_CLIENT_SECRET}"
+              - name: GENERIC_AUTHORIZATION_ENDPOINT
+                value: "https://authelia.thekao.cloud/api/oidc/authorization"
+              - name: GENERIC_TOKEN_ENDPOINT
+                value: "https://authelia.thekao.cloud/api/oidc/token"
+              - name: GENERIC_USERINFO_ENDPOINT
+                value: "https://authelia.thekao.cloud/api/oidc/userinfo"
+              - name: GENERIC_SCOPE
+                value: "openid profile email groups"
+              - name: GENERIC_USER_ID_ATTRIBUTE
+                value: "preferred_username"
+              - name: GENERIC_USER_EMAIL_ATTRIBUTE
+                value: "email"
+              - name: GENERIC_USER_DISPLAY_NAME_ATTRIBUTE
+                value: "name"
               # UI Settings
               - name: UI_LOGO_PATH
                 value: "https://s3.thekao.cloud/public/customlogo.png"
