@@ -39,18 +39,6 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
 
-        initContainers:
-          copy-ldif:
-            image:
-              repository: busybox
-              tag: "1.36"
-            command:
-              - sh
-              - -c
-              - cp /ldif-src/syncrepl.ldif /docker-entrypoint-initdb.d/syncrepl-modify.ldif
-            securityContext:
-              runAsUser: 0
-
         containers:
           main:
             image:
@@ -64,7 +52,6 @@ spec:
               LDAP_ROOT: "dc=kao,dc=family"
               LDAP_ENABLE_TLS: "no"
               LDAP_CONFIG_ADMIN_ENABLED: "yes"
-              SYMAS_DEBUG: "true"
 
             envFrom:
               - secretRef:
@@ -75,11 +62,83 @@ spec:
                 containerPort: 1389
                 protocol: TCP
 
+            lifecycle:
+              postStart:
+                exec:
+                  # Wait for slapd to be ready, then apply syncrepl config via ldapmodify.
+                  # This runs as the config admin against cn=config (port 1389).
+                  # Idempotent: if olcSyncRepl already exists the modify will fail silently.
+                  command:
+                    - /bin/bash
+                    - -c
+                    - |
+                      for i in $(seq 1 30); do
+                        /opt/bitnami/openldap/bin/ldapsearch -x -H ldap://localhost:1389 -b dc=kao,dc=family -s base > /dev/null 2>&1 && break
+                        sleep 2
+                      done
+                      /opt/bitnami/openldap/bin/ldapmodify \
+                        -H ldap://localhost:1389 \
+                        -D "cn=admin,cn=config" \
+                        -w "$LDAP_CONFIG_ADMIN_PASSWORD" \
+                        <<EOF
+                      dn: olcDatabase={2}mdb,cn=config
+                      changetype: modify
+                      add: olcSyncRepl
+                      olcSyncRepl: rid=001
+                        provider=ldap://${NAS_ADDR}:389
+                        bindmethod=simple
+                        binddn="uid=replicator,cn=users,dc=kao,dc=family"
+                        credentials=$LDAP_REPLICATOR_PASSWORD
+                        searchbase="dc=kao,dc=family"
+                        scope=sub
+                        schemachecking=off
+                        type=refreshAndPersist
+                        retry="5 5 300 +"
+                        interval=00:00:05:00
+                        attrs="*,+"
+                      -
+                      add: olcUpdateRef
+                      olcUpdateRef: ldap://${NAS_ADDR}:389
+                      EOF
+                      exit 0
+
             probes:
               liveness:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /opt/bitnami/openldap/bin/ldapsearch
+                      - -x
+                      - -H
+                      - ldap://localhost:1389
+                      - -b
+                      - dc=kao,dc=family
+                      - -s
+                      - base
+                  initialDelaySeconds: 60
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 5
               readiness:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - /opt/bitnami/openldap/bin/ldapsearch
+                      - -x
+                      - -H
+                      - ldap://localhost:1389
+                      - -b
+                      - dc=kao,dc=family
+                      - -s
+                      - base
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+                  timeoutSeconds: 10
+                  failureThreshold: 5
 
             resources:
               requests:
@@ -114,48 +173,3 @@ spec:
           openldap:
             main:
               - path: /openldap
-
-      # syncrepl drop-in LDIF source — mounted read-only, copied to initdb dir by init container
-      syncrepl-config:
-        type: configMap
-        name: openldap
-        defaultMode: 0644
-        advancedMounts:
-          openldap:
-            copy-ldif:
-              - path: /ldif-src
-                readOnly: true
-
-      # writable initdb dir — init container copies LDIF here, bitnami entrypoint reads it
-      initdb:
-        type: emptyDir
-        advancedMounts:
-          openldap:
-            copy-ldif:
-              - path: /docker-entrypoint-initdb.d
-            main:
-              - path: /docker-entrypoint-initdb.d
-
-    configMaps:
-      syncrepl:
-        enabled: true
-        data:
-          syncrepl.ldif: |
-            dn: olcDatabase={2}mdb,cn=config
-            changetype: modify
-            add: olcSyncRepl
-            olcSyncRepl: rid=001
-              provider=ldap://${NAS_ADDR}:389
-              bindmethod=simple
-              binddn="uid=replicator,cn=users,dc=kao,dc=family"
-              credentials=${LDAP_REPLICATOR_PASSWORD}
-              searchbase="dc=kao,dc=family"
-              scope=sub
-              schemachecking=off
-              type=refreshAndPersist
-              retry="5 5 300 +"
-              interval=00:00:05:00
-              attrs="*,+"
-            -
-            add: olcUpdateRef
-            olcUpdateRef: ldap://${NAS_ADDR}:389
