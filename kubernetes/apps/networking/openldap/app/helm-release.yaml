@@ -64,6 +64,7 @@ spec:
               LDAP_ROOT: "dc=kao,dc=family"
               LDAP_ENABLE_TLS: "no"
               LDAP_CONFIG_ADMIN_ENABLED: "yes"
+              SYMAS_DEBUG: "true"
 
             envFrom:
               - secretRef:
