@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
   - defaultpg.yaml
   - vectorpg.yaml
+  - synofotopg.yaml
   #- backup.yaml
