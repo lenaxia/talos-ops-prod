@@ -25,9 +25,6 @@ spec:
       retries: 5
   values:
     defaultPodOptions:
-      nodeSelector:
-        # Pin to Intel iGPU workers — avoids the NVIDIA node (worker-00)
-        intel.feature.node.kubernetes.io/gpu: "true"
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -134,6 +131,10 @@ spec:
         strategy: Recreate
         annotations:
           reloader.stakater.com/auto: "true"
+        pod:
+          nodeSelector:
+            # Pin to Intel iGPU workers
+            intel.feature.node.kubernetes.io/gpu: "true"
         containers:
           machine-learning:
             image:
