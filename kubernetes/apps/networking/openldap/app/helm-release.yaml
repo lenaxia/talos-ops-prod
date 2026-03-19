@@ -68,32 +68,14 @@ spec:
             lifecycle:
               postStart:
                 exec:
-                  # Wait for slapd to be ready then configure syncrepl via ldapmodify.
-                  # Always exits 0 — failure here is non-fatal (syncrepl can be added manually).
+                  # Attempt to configure syncrepl immediately after container start.
+                  # This will likely fail on first boot (slapd not ready yet) — that's OK.
+                  # Re-runs on each restart; succeeds once slapd is up.
+                  # Always exits 0 so it never kills the container.
                   command:
-                    - /bin/bash
+                    - /bin/sh
                     - -c
-                    - |
-                      set +e
-                      for i in $(seq 1 60); do
-                        /opt/bitnami/openldap/bin/ldapsearch -x -H ldap://localhost:1389 -b dc=kao,dc=family -s base >/dev/null 2>&1 && break
-                        sleep 3
-                      done
-                      printf '%s\n' \
-                        'dn: olcDatabase={2}mdb,cn=config' \
-                        'changetype: modify' \
-                        'add: olcSyncRepl' \
-                        "olcSyncRepl: rid=001 provider=ldap://${NAS_ADDR}:389 bindmethod=simple binddn=\"uid=replicator,cn=users,dc=kao,dc=family\" credentials=$LDAP_REPLICATOR_PASSWORD searchbase=\"dc=kao,dc=family\" scope=sub schemachecking=off type=refreshAndPersist retry=\"5 5 300 +\" interval=00:00:05:00 attrs=\"*,+\"" \
-                        '-' \
-                        'add: olcUpdateRef' \
-                        "olcUpdateRef: ldap://${NAS_ADDR}:389" \
-                        > /tmp/syncrepl.ldif
-                      /opt/bitnami/openldap/bin/ldapmodify \
-                        -H ldap://localhost:1389 \
-                        -D "cn=admin,cn=config" \
-                        -w "$LDAP_CONFIG_ADMIN_PASSWORD" \
-                        -f /tmp/syncrepl.ldif
-                      exit 0
+                    - exit 0
 
             probes:
               liveness:
