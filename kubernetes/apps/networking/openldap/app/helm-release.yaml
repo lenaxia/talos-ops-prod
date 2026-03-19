@@ -39,6 +39,18 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
 
+        initContainers:
+          copy-ldif:
+            image:
+              repository: busybox
+              tag: "1.36"
+            command:
+              - sh
+              - -c
+              - cp /ldif-src/syncrepl.ldif /docker-entrypoint-initdb.d/syncrepl.ldif
+            securityContext:
+              runAsUser: 0
+
         containers:
           main:
             image:
@@ -102,16 +114,26 @@ spec:
             main:
               - path: /bitnami/openldap
 
-      # syncrepl drop-in LDIF — applied once on first startup by the bitnami entrypoint
+      # syncrepl drop-in LDIF source — mounted read-only, copied to initdb dir by init container
       syncrepl-config:
         type: configMap
         name: openldap
         defaultMode: 0644
         advancedMounts:
           openldap:
+            copy-ldif:
+              - path: /ldif-src
+                readOnly: true
+
+      # writable initdb dir — init container copies LDIF here, bitnami entrypoint reads it
+      initdb:
+        type: emptyDir
+        advancedMounts:
+          openldap:
+            copy-ldif:
+              - path: /docker-entrypoint-initdb.d
             main:
-              - path: /docker-entrypoint-initdb.d/syncrepl.ldif
-                subPath: syncrepl.ldif
+              - path: /docker-entrypoint-initdb.d
 
     configMaps:
       syncrepl:
