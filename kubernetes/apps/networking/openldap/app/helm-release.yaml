@@ -105,7 +105,7 @@ spec:
       # syncrepl drop-in LDIF — applied once on first startup by the bitnami entrypoint
       syncrepl-config:
         type: configMap
-        name: openldap-syncrepl
+        name: openldap
         defaultMode: 0644
         advancedMounts:
           openldap:
