@@ -26,9 +26,14 @@ spec:
   values:
     defaultPodOptions:
       nodeSelector:
-        # Pin to Intel iGPU workers — avoids the NVIDIA node (worker-00)
         intel.feature.node.kubernetes.io/gpu: "true"
       affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.present
+                    operator: DoesNotExist
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
