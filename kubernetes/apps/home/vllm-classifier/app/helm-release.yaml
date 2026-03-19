@@ -50,7 +50,7 @@ spec:
                        --served-model-name classifier \
                        --max-model-len 1000 \
                        --max-num-seqs 30 \
-                        --gpu-memory-utilization 0.85 \
+                         --gpu-memory-utilization 0.95 \
                        --tensor-parallel-size 1 \
                        --trust-remote-code \
                        --quantization awq \
