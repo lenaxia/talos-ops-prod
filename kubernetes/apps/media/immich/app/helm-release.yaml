@@ -28,6 +28,19 @@ spec:
       nodeSelector:
         # Pin to Intel iGPU workers — avoids the NVIDIA node (worker-00)
         intel.feature.node.kubernetes.io/gpu: "true"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - plex
+                        - jellyfin
+                topologyKey: kubernetes.io/hostname
 
     controllers:
       server:
