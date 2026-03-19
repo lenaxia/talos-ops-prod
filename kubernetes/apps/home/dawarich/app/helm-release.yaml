@@ -104,6 +104,16 @@ spec:
                   secretKeyRef:
                     name: *appname
                     key: DB_NAME
+              - name: OIDC_ISSUER
+                value: "https://authelia.${SECRET_DEV_DOMAIN}"
+              - name: OIDC_REDIRECT_URI
+                value: "https://dawarich.${SECRET_DEV_DOMAIN}/users/auth/openid_connect/callback"
+              - name: OIDC_PROVIDER_NAME
+                value: "Authelia"
+              - name: OIDC_AUTO_REGISTER
+                value: 'true'
+              - name: ALLOW_EMAIL_PASSWORD_REGISTRATION
+                value: 'false'
             resources:
               requests:
                 cpu: 100m
@@ -184,6 +194,16 @@ spec:
                 value: '10'
               - name: PROMETHEUS_EXPORTER_ENABLED
                 value: 'false'
+              - name: OIDC_ISSUER
+                value: "https://authelia.${SECRET_DEV_DOMAIN}"
+              - name: OIDC_REDIRECT_URI
+                value: "https://dawarich.${SECRET_DEV_DOMAIN}/users/auth/openid_connect/callback"
+              - name: OIDC_PROVIDER_NAME
+                value: "Authelia"
+              - name: OIDC_AUTO_REGISTER
+                value: 'true'
+              - name: ALLOW_EMAIL_PASSWORD_REGISTRATION
+                value: 'false'
             resources:
               requests:
                 cpu: 100m
@@ -226,7 +246,7 @@ spec:
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: 
-            networking-chain-authelia@kubernetescrd
+            networking-chain-no-auth@kubernetescrd
         hosts:
           - host: &uri dawarich.${SECRET_DEV_DOMAIN}
             paths:
