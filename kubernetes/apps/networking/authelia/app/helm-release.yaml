@@ -618,7 +618,7 @@ spec:
           clients:
           - client_id: tailscale
             client_name: Tailscale
-            client_secret: "$plaintext${SECRET_TAILSCALE_OAUTH_CLIENT_SECRET}"
+            client_secret: "${SECRET_TAILSCALE_OAUTH_CLIENT_SECRET_HASHED}"
             public: false
             authorization_policy: one_factor
             consent_mode: implicit
