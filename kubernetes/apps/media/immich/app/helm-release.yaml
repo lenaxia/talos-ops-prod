@@ -26,7 +26,8 @@ spec:
   values:
     defaultPodOptions:
       nodeSelector:
-        node-role.kubernetes.io/worker: "true"
+        # Pin to Intel iGPU workers — avoids the NVIDIA node (worker-00)
+        intel.feature.node.kubernetes.io/gpu: "true"
 
     controllers:
       server:
@@ -74,8 +75,6 @@ spec:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
               IMMICH_MEDIA_LOCATION: /usr/src/app/upload
-              # Prevent NVIDIA runtime from injecting GPU into this container
-              NVIDIA_VISIBLE_DEVICES: void
               # OIDC via Authelia
               IMMICH_OAUTH_ENABLED: "true"
               IMMICH_OAUTH_ISSUER_URL: https://authelia.${SECRET_DEV_DOMAIN}
@@ -131,6 +130,8 @@ spec:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
               MPLCONFIGDIR: /tmp/matplotlib
+              # Use Intel iGPU for ML acceleration
+              DEVICE: openvino
             envFrom:
               - secretRef:
                   name: *appname
@@ -138,8 +139,10 @@ spec:
               requests:
                 cpu: 100m
                 memory: 512Mi
+                gpu.intel.com/i915: "1"
               limits:
                 memory: 4Gi
+                gpu.intel.com/i915: "1"
 
     service:
       server:
@@ -169,7 +172,7 @@ spec:
           nginx.ingress.kubernetes.io/proxy-body-size: "0"
           hajimari.io/enable: "true"
           hajimari.io/icon: image-multiple
-          hajimari.io/group: Home
+          hajimari.io/group: Media
           hajimari.io/info: Immich - Photo & Video Backup
         hosts:
           - host: &uri immich.${SECRET_DEV_DOMAIN}
