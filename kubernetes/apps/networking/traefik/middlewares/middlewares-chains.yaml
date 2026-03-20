@@ -32,6 +32,17 @@ spec:
       - name: middlewares-secure-headers
       - name: middlewares-basic-auth
 ---
+# Immich-specific chain: no rate limit (large uploads) + secure headers only
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-no-auth-immich
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-secure-headers
+---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
