@@ -204,7 +204,9 @@ def download_document(
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         data = response.json()
-        return data.get("content_type", ""), data
+        # Paperless returns mime_type; fall back to content_type for compat
+        mime = data.get("mime_type") or data.get("content_type", "")
+        return mime, data
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to download document {document_id}: {e}")
         return None, None
