@@ -1,0 +1,13 @@
+---
+# ServersTransport for Immich — disables all response timeouts so large
+# photo/video uploads are never killed by Traefik mid-transfer.
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: immich-no-timeout
+  namespace: media
+spec:
+  # 0 = no timeout (wait as long as the upload takes)
+  responseHeaderTimeout: 0s
+  dialTimeout: 30s
+  readIdleTimeout: 0s
