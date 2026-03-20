@@ -187,9 +187,6 @@ spec:
           # Large file uploads (photos/videos) — no body size limit
           traefik.ingress.kubernetes.io/router.priority: "1"
           traefik.ingress.kubernetes.io/proxy-body-size: "0"
-          # ServersTransport: disable all response timeouts so uploads never get killed
-          traefik.ingress.kubernetes.io/service.serversscheme: http
-          traefik.ingress.kubernetes.io/service.serverstransport: media-immich-no-timeout@kubernetescrd
           hajimari.io/enable: "true"
           hajimari.io/icon: image-multiple
           hajimari.io/group: Media
