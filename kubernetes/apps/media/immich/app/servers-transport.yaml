@@ -7,7 +7,8 @@ metadata:
   name: immich-no-timeout
   namespace: media
 spec:
-  # 0 = no timeout (wait as long as the upload takes)
-  responseHeaderTimeout: 0s
-  dialTimeout: 30s
-  readIdleTimeout: 0s
+  forwardingTimeouts:
+    # 0 = no timeout — wait as long as the upload takes
+    responseHeaderTimeout: 0s
+    dialTimeout: 30s
+    readIdleTimeout: 0s
