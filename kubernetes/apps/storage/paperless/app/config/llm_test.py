@@ -220,14 +220,25 @@ class TestFetchMetadataList(unittest.TestCase):
 
 class TestDownloadDocument(unittest.TestCase):
     @patch("requests.get")
-    def test_success(self, mock_get):
+    def test_success_mime_type(self, mock_get):
+        """Paperless returns mime_type — should use that."""
+        mock_get.return_value = _make_response(
+            200,
+            {"mime_type": "application/pdf", "content": "PDF content", "tags": []},
+        )
+        content_type, metadata = download_document(123)
+        self.assertEqual(content_type, "application/pdf")
+        self.assertEqual(metadata["content"], "PDF content")
+
+    @patch("requests.get")
+    def test_falls_back_to_content_type(self, mock_get):
+        """If mime_type absent, fall back to content_type field."""
         mock_get.return_value = _make_response(
             200,
             {"content_type": "application/pdf", "content": "PDF content", "tags": []},
         )
         content_type, metadata = download_document(123)
         self.assertEqual(content_type, "application/pdf")
-        self.assertEqual(metadata["content"], "PDF content")
 
     @patch("requests.get")
     def test_http_error(self, mock_get):
