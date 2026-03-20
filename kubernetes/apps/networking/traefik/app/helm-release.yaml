@@ -85,6 +85,10 @@ spec:
       - "--providers.kubernetesingress.ingressendpoint.ip=${SVC_TRAEFIK_ADDR}"
       - "--providers.kubernetesingress.allowexternalnameservices=true"
       - "--providers.kubernetescrd.allowexternalnameservices=true"
+      # Disable read/write timeouts on all entrypoints so large Immich uploads
+      # are never killed mid-transfer (mobile app uploads 400-600MB videos)
+      - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=0"
+      - "--entrypoints.websecure.transport.respondingTimeouts.writeTimeout=0"
     ports:
       traefik:
         expose:
@@ -103,12 +107,6 @@ spec:
           tls:
             enabled: true
             options: "default"
-        # No read/write timeout — allows large file uploads (e.g. Immich) to
-        # complete regardless of size without Traefik killing the connection.
-        respondingTimeouts:
-          readTimeout: 0
-          writeTimeout: 0
-          idleTimeout: 180s
         forwardedHeaders:
           trustedIPs:
             - 10.0.0.0/8
