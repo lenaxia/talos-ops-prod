@@ -103,6 +103,12 @@ spec:
           tls:
             enabled: true
             options: "default"
+        # No read/write timeout — allows large file uploads (e.g. Immich) to
+        # complete regardless of size without Traefik killing the connection.
+        respondingTimeouts:
+          readTimeout: 0
+          writeTimeout: 0
+          idleTimeout: 180s
         forwardedHeaders:
           trustedIPs:
             - 10.0.0.0/8
