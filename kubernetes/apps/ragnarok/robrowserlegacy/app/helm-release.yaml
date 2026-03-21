@@ -34,7 +34,7 @@ spec:
             env:
               TZ: ${TIMEZONE}
               # Must be the public URL so the embedded asset/WS server generates correct URLs
-              CLIENT_PUBLIC_URL: "https://robrowser.${SECRET_DEV_DOMAIN}"
+              CLIENT_PUBLIC_URL: "https://ro.${SECRET_DEV_DOMAIN}"
             resources:
               requests:
                 cpu: 50m
@@ -63,7 +63,7 @@ spec:
           hajimari.io/info: *appname
           hajimari.io/group: Ragnarok
         hosts:
-          - host: &uri robrowser.${SECRET_DEV_DOMAIN}
+          - host: &uri ro.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
@@ -91,9 +91,9 @@ spec:
               packetver:        20200401,
               renewal:          true,
               /* WebSocket proxy — served by this container */
-              socketProxy:      'wss://robrowser.${SECRET_DEV_DOMAIN}/ws/',
+              socketProxy:      'wss://ro.${SECRET_DEV_DOMAIN}/ws/',
               /* GRF asset server — served by this container */
-              remoteClient:     'https://robrowser.${SECRET_DEV_DOMAIN}/',
+              remoteClient:     'https://ro.${SECRET_DEV_DOMAIN}/',
               /* Critical for any non-localhost / NAT / containerised deployment */
               forceUseAddress:  true,
               skipIntro:        false,
@@ -103,7 +103,7 @@ spec:
     persistence:
       config:
         type: configMap
-        name: robrowserlegacy-config
+        identifier: config
         advancedMounts:
           main:
             main:
