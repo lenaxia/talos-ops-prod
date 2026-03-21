@@ -6,3 +6,4 @@ resources:
     #- ./rathena/ks.yaml
   - ./roskills/ks.yaml
     #- ./openkore/ks.yaml
+  - ./robrowserlegacy/ks.yaml
