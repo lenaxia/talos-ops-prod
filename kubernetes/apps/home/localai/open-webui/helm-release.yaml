@@ -77,6 +77,13 @@ spec:
               WEBUI_AUTH_COOKIE_SAME_SITE: none
               WEBUI_AUTH_COOKIE_SECURE: true
               OAUTH_MERGE_ACCOUNTS_BY_EMAIL: true
+              # Trusted header auth — Authelia forwardAuth injects Remote-Email/Remote-Name
+              # on every authenticated request. open-webui uses these to auto-signin the
+              # user, setting the token cookie before the page finishes loading.
+              # This allows Conduit (and other native apps) to capture the JWT on the
+              # first WebView page load rather than requiring a separate OIDC round-trip.
+              WEBUI_AUTH_TRUSTED_EMAIL_HEADER: Remote-Email
+              WEBUI_AUTH_TRUSTED_NAME_HEADER: Remote-Name
               # OpenAI
               OPENAI_API_BASE_URL: https://ai.${SECRET_DEV_DOMAIN}/v1
 
