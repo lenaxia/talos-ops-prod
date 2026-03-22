@@ -2,14 +2,30 @@
 apiVersion: k8s.mariadb.com/v1alpha1
 kind: Grant
 metadata:
-  name: ragnarok-grant
+  name: ragnarok-grant-renewal
   namespace: databases
 spec:
   mariaDbRef:
     name: mariadb-operator
   privileges:
     - "ALL PRIVILEGES"
-  database: "ragnarok"
+  database: "rathena_renewal"
+  table: "*"
+  username: ragnarok
+  retryInterval: 5s
+  grantOption: true
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: ragnarok-grant-classic
+  namespace: databases
+spec:
+  mariaDbRef:
+    name: mariadb-operator
+  privileges:
+    - "ALL PRIVILEGES"
+  database: "rathena_classic"
   table: "*"
   username: ragnarok
   retryInterval: 5s
