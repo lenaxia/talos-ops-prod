@@ -90,12 +90,39 @@ spec:
           app: rathena
         ports:
           login:
-            port: 6900
+            port: 6901
             enabled: true
           char:
-            port: 6121
+            port: 6122
             enabled: true
           map:
-            port: 5121
+            port: 5122
             enabled: true
         primary: true
+    configMaps:
+      import-conf:
+        enabled: true
+        data:
+          char_conf.txt: |
+            login_port: 6901
+            char_port: 6122
+            userid: abc123
+            passwd: abc123
+          map_conf.txt: |
+            char_port: 6122
+            map_port: 5122
+            userid: abc123
+            passwd: abc123
+          login_conf.txt: |
+            login_port: 6901
+    persistence:
+      import-conf:
+        type: configMap
+        name: rathena-classic-import-conf
+        globalMounts:
+          - path: /opt/rAthena/conf/import/char_conf.txt
+            subPath: char_conf.txt
+          - path: /opt/rAthena/conf/import/map_conf.txt
+            subPath: map_conf.txt
+          - path: /opt/rAthena/conf/import/login_conf.txt
+            subPath: login_conf.txt
