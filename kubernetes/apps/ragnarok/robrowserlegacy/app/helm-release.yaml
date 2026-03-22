@@ -29,12 +29,14 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/robrowserlegacy
-              tag: "1.1.0"
+              tag: "1.1.1"
               pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
               # Must be the public URL so the embedded asset/WS server generates correct URLs
               CLIENT_PUBLIC_URL: "https://ro.${SECRET_DEV_DOMAIN}"
+              # Allow the WS proxy to forward to the rAthena server (non-host-network deployment)
+              WS_ALLOWED_TARGETS: "192.168.5.103:6900,192.168.5.103:6121,192.168.5.103:5121"
             resources:
               requests:
                 cpu: 50m
