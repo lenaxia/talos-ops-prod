@@ -16,26 +16,12 @@ spec:
         namespace: flux-system
   values:
     defaultPodOptions:
-      imagePullSecrets:
-        - name: ghcr-roskills
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
     podAnnotations:
       secret.reloader.stakater.com/reload: *appname
     controllers:
       main:
-        #initContainers:
-        #  download-content:
-        #    image: 
-        #      repository: alpine
-        #      tag: latest
-        #    command: ["/bin/sh", "-c"]
-        #    args:
-        #      - |
-        #        apk --no-cache add ca-certificates wget
-        #        wget https://s3.thekao.cloud/public/ragnarok-calcs.tar -P /usr/local/apache2/htdocs/
-        #        tar -xf /usr/local/apache2/htdocs/ragnarok-calcs.tar -C /usr/local/apache2/htdocs/ --overwrite
-        #        rm -rf /usr/local/apache2/htdocs/ragnarok-calcs.tar
         containers:
           main:
             image:
@@ -63,7 +49,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd
         hosts:
-          - host: &uri roskills.${SECRET_DEV_DOMAIN}
+          - host: &uri routils.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
