@@ -83,21 +83,21 @@ spec:
         data:
           Config.local.js: |
             /* roBrowserLegacy runtime configuration — loaded by the browser */
-            var Config = {
-              /* Login server — rAthena renewal */
-              address:          '192.168.5.103',
-              port:             6900,
-              /* Must match rAthena PACKETVER exactly */
-              packetver:        20200401,
-              renewal:          true,
-              /* WebSocket proxy — served by this container */
-              socketProxy:      'wss://ro.${SECRET_DEV_DOMAIN}/ws/',
+            window.ROConfigLocal = {
+              servers: [{
+                display:    'Kao RO Renewal',
+                address:    '192.168.5.103',
+                port:       6900,
+                packetver:  20200401,
+                renewal:    true,
+                socketProxy: 'wss://ro.${SECRET_DEV_DOMAIN}/ws/',
+              }],
               /* GRF asset server — served by this container */
-              remoteClient:     'https://ro.${SECRET_DEV_DOMAIN}/',
+              remoteClient:    'https://ro.${SECRET_DEV_DOMAIN}/',
               /* Critical for any non-localhost / NAT / containerised deployment */
-              forceUseAddress:  true,
-              skipIntro:        false,
-              skipServerList:   false,
+              forceUseAddress: true,
+              skipIntro:       false,
+              skipServerList:  false,
             };
 
     persistence:
