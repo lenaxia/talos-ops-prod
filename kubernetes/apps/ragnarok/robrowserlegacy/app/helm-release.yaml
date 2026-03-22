@@ -36,7 +36,7 @@ spec:
               # Must be the public URL so the embedded asset/WS server generates correct URLs
               CLIENT_PUBLIC_URL: "https://ro.${SECRET_DEV_DOMAIN}"
               # Allow the WS proxy to forward to the rAthena server (non-host-network deployment)
-              WS_ALLOWED_TARGETS: "192.168.5.103:6900,192.168.5.103:6121,192.168.5.103:5121"
+              WS_ALLOWED_TARGETS: "rathena-renewal.ragnarok.svc.cluster.local:6900,rathena-renewal.ragnarok.svc.cluster.local:6121,rathena-renewal.ragnarok.svc.cluster.local:5121"
             resources:
               requests:
                 cpu: 50m
@@ -88,7 +88,7 @@ spec:
             window.ROConfigLocal = {
               servers: [{
                 display:    'Kao RO Renewal',
-                address:    '192.168.5.103',
+                address:    'rathena-renewal.ragnarok.svc.cluster.local',
                 port:       6900,
                 packetver:  20200401,
                 renewal:    true,
