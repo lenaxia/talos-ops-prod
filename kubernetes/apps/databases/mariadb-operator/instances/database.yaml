@@ -2,9 +2,23 @@
 apiVersion: k8s.mariadb.com/v1alpha1
 kind: Database
 metadata:
-  name: ragnarok
+  name: rathena-renewal
   namespace: databases
 spec:
+  name: rathena_renewal
+  mariaDbRef:
+    name: mariadb-operator
+  characterSet: utf8mb4
+  collate: utf8mb4_unicode_ci
+  retryInterval: 5s
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Database
+metadata:
+  name: rathena-classic
+  namespace: databases
+spec:
+  name: rathena_classic
   mariaDbRef:
     name: mariadb-operator
   characterSet: utf8mb4
