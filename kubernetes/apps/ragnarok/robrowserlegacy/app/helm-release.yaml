@@ -29,7 +29,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/robrowserlegacy
-              tag: "1.1.4"
+              tag: "1.1.5"
               pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
