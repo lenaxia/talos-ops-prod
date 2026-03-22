@@ -118,7 +118,7 @@ spec:
     persistence:
       import-conf:
         type: configMap
-        name: rathena-classic-import-conf
+        name: import-conf
         globalMounts:
           - path: /opt/rAthena/conf/import/char_conf.txt
             subPath: char_conf.txt
