@@ -29,6 +29,27 @@ spec:
         node-role.kubernetes.io/worker: 'true'
     controllers:
       main:
+        initContainers:
+          unfreeze-filesystem:
+            image: alpine:3.21
+            command:
+              - /bin/sh
+              - -c
+              - |
+                if [ -f /config/.frozen ]; then
+                  echo "Filesystem appears to be frozen, attempting to unfreeze..."
+                  fsfreeze -u /config 2>/dev/null || true
+                  rm -f /config/.frozen
+                  echo "Filesystem unfrozen"
+                fi
+                echo "Checking filesystem write access..."
+                touch /config/.test-write && rm -f /config/.test-write
+                echo "Filesystem is writable"
+            volumeMounts:
+              - name: config
+                mountPath: /config
+            securityContext:
+              privileged: true
         containers:
           main:
             image:
