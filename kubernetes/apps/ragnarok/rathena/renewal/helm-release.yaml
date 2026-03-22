@@ -57,7 +57,7 @@ spec:
                     name: mariadb-operator-connection
                     key: password
               - name: MYSQL_DATABASE
-                value: ragnarok
+                value: rathena_renewal
               - name: SET_SERVER_NAME
                 value: "rAthena"
               - name: MYSQL_DROP_DB
