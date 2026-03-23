@@ -24,15 +24,15 @@ detect:
 auth:
   enabled: False
 
-  #detectors:
+detectors:
   #  ov:
   #    type: openvino
   #    device: GPU
   #    model:
   #      path: /openvino-model/ssdlite_mobilenet_v2.xml
-  #  coral:
-  #    type: edgetpu
-  #    device: pci
+  coral:
+    type: edgetpu
+    device: pci
 
 ffmpeg:
   global_args: ["-hide_banner", "-loglevel", "warning"]
