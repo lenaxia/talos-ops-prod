@@ -18,6 +18,8 @@ spec:
   upgrade:
     timeout: 10m
   values:
+    defaultPodOptions:
+      serviceAccountName: subgen-orchestrator
     controllers:
       main:
         type: deployment
@@ -32,8 +34,14 @@ spec:
               tag: v0.3.0
               pullPolicy: Always
             env:
-              - name: WORKER_ADDRESS
-                value: "subgen-worker.media.svc.cluster.local:50051"
+              - name: WORKER_DISCOVERY
+                value: "kubernetes"
+              - name: WORKER_NAMESPACE
+                value: "media"
+              - name: WORKER_SERVICE_NAME
+                value: "subgen-worker"
+              - name: WORKER_PORT
+                value: "50051"
               - name: PLEX_SERVER
                 value: "http://plex.media.svc.cluster.local:32400"
               - name: LOG_LEVEL
