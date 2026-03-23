@@ -93,6 +93,29 @@ cameras:
   #        person:
   #          mask:
   #            - 39,445,199,427,198,263,36,228
+  frontdoor:
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:%40a8zCFHe!kR9@192.168.0.92:554/h264Preview_01_sub
+          roles:
+            - detect
+        - path: rtsp://admin:%40a8zCFHe!kR9@192.168.0.92:554/h264Preview_01_main
+          roles:
+            - record
+    detect:
+      width: 1920
+      height: 2560
+      fps: 10
+    objects:
+      track:
+        - person
+        - car
+      filters:
+        person:
+          min_area: 5000
+          max_area: 100000
+          threshold: 0.7
+
   reolink_e1_pro:
     ffmpeg:
       inputs:
