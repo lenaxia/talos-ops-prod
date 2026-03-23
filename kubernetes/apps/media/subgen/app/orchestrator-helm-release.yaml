@@ -19,7 +19,7 @@ spec:
     timeout: 10m
   values:
     defaultPodOptions:
-      serviceAccountName: subgen-orchestrator
+      automountServiceAccountToken: true
     controllers:
       main:
         type: deployment
@@ -27,6 +27,8 @@ spec:
         strategy: Recreate
         annotations:
           reloader.stakater.com/auto: 'true'
+        serviceAccount:
+          name: subgen-orchestrator
         containers:
           orchestrator:
             image:
