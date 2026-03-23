@@ -14,12 +14,22 @@ mqtt:
 database:
   path: /data/frigate.db
 
-    #detectors:
-    #  ov:
-    #    type: openvino
-    #    device: GPU
-    #    model:
-    #      path: /openvino-model/ssdlite_mobilenet_v2.xml
+# 0.16.0: object detection is disabled by default; must be explicitly enabled
+detect:
+  enabled: true
+
+# 0.16.0: Frigate now has its own auth system. Since Authelia handles
+# authentication upstream, disable Frigate's auth so the UI is accessible
+# through the reverse proxy without a second login prompt.
+auth:
+  enabled: False
+
+  #detectors:
+  #  ov:
+  #    type: openvino
+  #    device: GPU
+  #    model:
+  #      path: /openvino-model/ssdlite_mobilenet_v2.xml
   #  coral:
   #    type: edgetpu
   #    device: pci
@@ -52,7 +62,7 @@ record:
       mode: active_objects
 
 objects:
-  track: 
+  track:
     - person
     - car
   filters:
