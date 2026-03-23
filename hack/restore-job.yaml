@@ -10,6 +10,8 @@ spec:
     spec:
       automountServiceAccountToken: false
       restartPolicy: OnFailure
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
       containers:
         - name: restore
           image: kopia/kopia:20251215.0.232403@sha256:57a5f6dde2b8bb21362547e6a2e418be5585ea4ebf3e0bafc1d0a0a2f30a3fc1
