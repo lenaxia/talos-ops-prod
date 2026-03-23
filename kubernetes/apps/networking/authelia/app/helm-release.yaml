@@ -286,6 +286,13 @@ spec:
           resources:
             - '^/site\.webmanifest$'
 
+        # Komga - bypass manifest.json to prevent CORS errors on PWA manifest fetch
+        - domain_regex:
+            - 'read.*\.${SECRET_DEV_DOMAIN}$'
+          policy: bypass
+          resources:
+            - '^/manifest\.json$'
+
         # Baby API
         - domain_regex:
             - 'baby.*\.${SECRET_DEV_DOMAIN}$'
