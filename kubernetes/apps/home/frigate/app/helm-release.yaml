@@ -58,6 +58,7 @@ spec:
             env:
               TZ: ${TIMEZONE}
               LIBVA_DRIVER_NAME: i965
+              CONFIG_FILE: /tmp/frigate-config/config.yml
             resources:
               requests:
                 cpu: 10m
@@ -73,7 +74,7 @@ spec:
                   httpGet:
                     path: /api/version
                     port: &port 5000
-                  initialDelaySeconds: 0
+                  initialDelaySeconds: 30
                   periodSeconds: 10
                   timeoutSeconds: 1
                   failureThreshold: 3
@@ -130,7 +131,7 @@ spec:
         advancedMounts:
           main:
             main:
-              - path: /config/config.yml
+              - path: /tmp/frigate-config/config.yml
                 subPath: config.yml
                 readOnly: true
       media:
