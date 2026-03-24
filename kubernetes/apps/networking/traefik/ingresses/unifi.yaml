@@ -9,6 +9,8 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-production
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
     traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serverstransport: networking-unifi@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
@@ -48,3 +50,11 @@ subsets:
       - ip: "192.168.0.1"
     ports:
       - port: 8443
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: unifi
+  namespace: networking
+spec:
+  insecureSkipVerify: true
