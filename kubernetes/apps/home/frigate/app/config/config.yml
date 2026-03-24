@@ -96,10 +96,10 @@ cameras:
   frontdoor:
     ffmpeg:
       inputs:
-        - path: rtsp://admin:{FRIGATE_FRONTDOOR_PASSWORD}@192.168.0.92:554/h264Preview_01_sub
+        - path: rtsp://admin:{FRIGATE_FRONTDOOR_PASSWORRD}@192.168.0.92:554/h264Preview_01_sub
           roles:
             - detect
-        - path: rtsp://admin:{FRIGATE_FRONTDOOR_PASSWORD}@192.168.0.92:554/h264Preview_01_main
+        - path: rtsp://admin:{FRIGATE_FRONTDOOR_PASSWORRD}@192.168.0.92:554/h264Preview_01_main
           roles:
             - record
     detect:
@@ -119,7 +119,7 @@ cameras:
   reolink_e1_pro:
     ffmpeg:
       inputs:
-        - path: rtsp://admin:{FRIGATE_REOLINK_E1_PRO_PASSWORD}@192.168.0.72:554/h264Preview_01_sub
+        - path: rtsp://admin:{FRIGATE_REOLINK_E1_PRO_PASSWORRD}@192.168.0.72:554/h264Preview_01_sub
           roles:
             #- detect
             - rtmp
