@@ -103,8 +103,8 @@ cameras:
           roles:
             - record
     detect:
-      width: 1920
-      height: 2560
+      width: 640
+      height: 480
       fps: 10
     objects:
       track:
