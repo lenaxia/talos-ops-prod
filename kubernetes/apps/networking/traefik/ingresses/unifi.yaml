@@ -11,6 +11,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
     traefik.ingress.kubernetes.io/service.serversscheme: https
     traefik.ingress.kubernetes.io/service.serverstransport: networking-unifi@kubernetescrd
+    traefik.ingress.kubernetes.io/service.passhostheader: "true"
 spec:
   ingressClassName: traefik
   rules:
@@ -38,7 +39,7 @@ spec:
   ports:
     - port: 443
       protocol: TCP
-      targetPort: 8443
+      targetPort: 443
 ---
 apiVersion: v1
 kind: Endpoints
@@ -49,7 +50,7 @@ subsets:
   - addresses:
       - ip: "192.168.0.1"
     ports:
-      - port: 8443
+      - port: 443
 ---
 apiVersion: traefik.io/v1alpha1
 kind: ServersTransport
