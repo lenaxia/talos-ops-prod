@@ -30,9 +30,36 @@ spec:
         etcd: false
         configReloaders: true
         general: true
+        k8sContainerCpuUsageSecondsTotal: true
+        k8sContainerMemoryCache: true
+        k8sContainerMemoryRss: true
+        k8sContainerMemorySwap: true
+        k8sContainerResource: true
+        k8sContainerMemoryWorkingSetBytes: true
+        k8sPodOwner: true
+        kubeApiserverAvailability: true
+        kubeApiserverBurnrate: true
+        kubeApiserverHistogram: true
+        kubeApiserverSlos: true
+        kubeControllerManager: true
         kubelet: false
         kubeProxy: false
+        kubePrometheusGeneral: true
+        kubePrometheusNodeRecording: true
+        kubernetesApps: true
+        kubernetesResources: true
+        kubernetesStorage: true
+        kubernetesSystem: false  # Disable default apiserver cert expiration alerts
         kubeSchedulerAlerting: false
+        kubeSchedulerRecording: true
+        kubeStateMetrics: true
+        network: true
+        node: true
+        nodeExporterAlerting: true
+        nodeExporterRecording: true
+        prometheus: true
+        prometheusOperator: true
+        windows: true
 
     # how to enable scrape endpoints for these https://github.com/k3s-io/k3s/issues/3619
     # Example in ansible: https://github.com/onedr0p/home-ops/blob/61ee0bb1a98cc427426cb98e91d1ea77c578a904/ansible/kubernetes/inventory/group_vars/master/k3s.yml
@@ -273,6 +300,38 @@ spec:
               targetLabel: kubernetes_node
 
     additionalPrometheusRulesMap:
+      cert-expiration-override:
+        groups:
+          - name: kubernetes-system-apiserver
+            rules:
+              # Override the default KubeClientCertificateExpiration alert to use 50th percentile
+              # instead of 1st percentile. This prevents false positives from short-lived
+              # ServiceAccount tokens (1h TTL in K8s 1.21+) while still alerting on actual
+              # client certificate issues.
+              - alert: KubeClientCertificateExpiration
+                annotations:
+                  description: A client certificate used to authenticate to kubernetes apiserver is expiring in less than 7.0 days on cluster {{ $labels.cluster }}.
+                  runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeclientcertificateexpiration
+                  summary: Client certificate is about to expire.
+                expr: |-
+                  histogram_quantile(0.50, sum without (namespace, service, endpoint) (rate(apiserver_client_certificate_expiration_seconds_bucket{job="apiserver"}[5m]))) < 604800
+                  and
+                  on (job, cluster, instance) apiserver_client_certificate_expiration_seconds_count{job="apiserver"} > 0
+                for: 5m
+                labels:
+                  severity: warning
+              - alert: KubeClientCertificateExpiration
+                annotations:
+                  description: A client certificate used to authenticate to kubernetes apiserver is expiring in less than 24.0 hours on cluster {{ $labels.cluster }}.
+                  runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeclientcertificateexpiration
+                  summary: Client certificate is about to expire.
+                expr: |-
+                  histogram_quantile(0.50, sum without (namespace, service, endpoint) (rate(apiserver_client_certificate_expiration_seconds_bucket{job="apiserver"}[5m]))) < 86400
+                  and
+                  on (job, cluster, instance) apiserver_client_certificate_expiration_seconds_count{job="apiserver"} > 0
+                for: 5m
+                labels:
+                  severity: critical
       dockerhub-rules:
         groups:
           - name: dockerhub
