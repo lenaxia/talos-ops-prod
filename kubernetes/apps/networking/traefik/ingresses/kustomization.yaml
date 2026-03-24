@@ -16,3 +16,4 @@ resources:
   - overseerr-oidc.yaml
   - overseerr-oidc2.yaml
   - pikvm.yaml
+  - unifi.yaml
