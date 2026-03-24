@@ -43,6 +43,8 @@ spec:
     pdb:
       enabled: true
       maxUnavailable: 1
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
     affinity:
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
