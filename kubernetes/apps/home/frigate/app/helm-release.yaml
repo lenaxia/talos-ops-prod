@@ -59,6 +59,9 @@ spec:
               TZ: ${TIMEZONE}
               LIBVA_DRIVER_NAME: i965
               CONFIG_FILE: /tmp/frigate-config/config.yml
+            envFrom:
+              - secretRef:
+                  name: frigate-secret
             resources:
               requests:
                 cpu: 10m
@@ -146,3 +149,9 @@ spec:
         sizeLimit: 4Gi
         globalMounts:
           - path: /dev/shm
+      coral:
+        type: hostPath
+        hostPath: /dev/apex_0
+        hostPathType: CharDevice
+        globalMounts:
+          - path: /dev/apex_0
