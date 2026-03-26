@@ -48,11 +48,23 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                cat > /tmp/s2pro_tts.yaml << 'EOF'
+                set -e
+                # Install sglang-omni from git if not already cached on PVC
+                OMNI_DIR=/root/.cache/sglang-omni
+                if [ ! -f "$OMNI_DIR/.installed" ]; then
+                  echo "Installing sglang-omni..."
+                  apt-get update -qq && apt-get install -y -qq git
+                  rm -rf "$OMNI_DIR"
+                  git clone --depth=1 https://github.com/sgl-project/sglang-omni.git "$OMNI_DIR"
+                  pip install -e "$OMNI_DIR[s2pro]" --no-build-isolation
+                  touch "$OMNI_DIR/.installed"
+                fi
+                export PATH="$OMNI_DIR/.venv/bin:$PATH"
+                cat > /tmp/s2pro_tts.yaml << 'CFGEOF'
                 config_cls: S2ProPipelineConfig
                 model_path: fishaudio/s2-pro
                 relay_backend: shm
-                EOF
+                CFGEOF
                 sgl-omni serve \
                   --model-path fishaudio/s2-pro \
                   --config /tmp/s2pro_tts.yaml \
@@ -85,9 +97,12 @@ spec:
         type: persistentVolumeClaim
         storageClass: openebs-hostpath
         accessMode: ReadWriteOnce
-        size: 30Gi
+        size: 50Gi
         globalMounts:
           - path: /root/.cache/huggingface
+            subPath: huggingface
+          - path: /root/.cache/sglang-omni
+            subPath: sglang-omni
       shm:
         type: emptyDir
         medium: Memory
