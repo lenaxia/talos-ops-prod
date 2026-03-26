@@ -50,16 +50,18 @@ spec:
               - |
                 set -e
                 # Install sglang-omni from git if not already cached on PVC
-                OMNI_DIR=/root/.cache/sglang-omni
-                if [ ! -f "$OMNI_DIR/.installed" ]; then
+                # Note: OMNI_CACHE is the PVC mountpoint, clone into a subdir
+                OMNI_CACHE=/root/.cache/sglang-omni
+                OMNI_SRC="$OMNI_CACHE/src"
+                INSTALLED_FLAG="$OMNI_CACHE/.installed"
+                if [ ! -f "$INSTALLED_FLAG" ]; then
                   echo "Installing sglang-omni..."
                   apt-get update -qq && apt-get install -y -qq git
-                  rm -rf "$OMNI_DIR"
-                  git clone --depth=1 https://github.com/sgl-project/sglang-omni.git "$OMNI_DIR"
-                  pip install -e "$OMNI_DIR[s2pro]" --no-build-isolation
-                  touch "$OMNI_DIR/.installed"
+                  rm -rf "$OMNI_SRC"
+                  git clone --depth=1 https://github.com/sgl-project/sglang-omni.git "$OMNI_SRC"
+                  pip install -e "$OMNI_SRC[s2pro]" --no-build-isolation
+                  touch "$INSTALLED_FLAG"
                 fi
-                export PATH="$OMNI_DIR/.venv/bin:$PATH"
                 cat > /tmp/s2pro_tts.yaml << 'CFGEOF'
                 config_cls: S2ProPipelineConfig
                 model_path: fishaudio/s2-pro
