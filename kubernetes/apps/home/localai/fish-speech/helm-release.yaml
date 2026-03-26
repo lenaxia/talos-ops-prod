@@ -48,10 +48,14 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                cd /opt/sglang-omni && \
+                cat > /tmp/s2pro_tts.yaml << 'EOF'
+                config_cls: S2ProPipelineConfig
+                model_path: fishaudio/s2-pro
+                relay_backend: shm
+                EOF
                 sgl-omni serve \
                   --model-path fishaudio/s2-pro \
-                  --config examples/configs/s2pro_tts.yaml \
+                  --config /tmp/s2pro_tts.yaml \
                   --port 8000
             env:
               - name: TZ
