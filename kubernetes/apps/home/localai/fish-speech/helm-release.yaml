@@ -52,11 +52,29 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                if [ -f /app/checkpoints/s2-pro/.done ]; then
-                  echo "Checkpoints already present, skipping download."
+                set -e
+                DEST=/app/checkpoints/s2-pro
+                DONE_FLAG="$DEST/.done"
+                # Verify all shards from the index are present before trusting .done
+                verify_shards() {
+                  if [ ! -f "$DEST/model.safetensors.index.json" ]; then return 1; fi
+                  python3 -c "
+                import json, sys, os
+                idx = json.load(open('$DEST/model.safetensors.index.json'))
+                shards = set(idx['weight_map'].values())
+                missing = [s for s in shards if not os.path.exists('$DEST/' + s)]
+                if missing:
+                    print('Missing shards:', missing)
+                    sys.exit(1)
+                print('All shards present:', shards)
+                  "
+                }
+                if [ -f "$DONE_FLAG" ] && verify_shards; then
+                  echo "Checkpoints already complete, skipping download."
                   exit 0
                 fi
                 echo "Downloading fishaudio/s2-pro checkpoints..."
+                rm -f "$DONE_FLAG"
                 huggingface-cli download fishaudio/s2-pro \
                   --local-dir /app/checkpoints/s2-pro \
                   --local-dir-use-symlinks False
