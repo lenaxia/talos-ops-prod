@@ -281,7 +281,7 @@ spec:
               - path: /dev/shm
       shim-code:
         type: configMap
-        name: fish-speech-shim
+        name: fish-speech
         advancedMounts:
           app:
             shim:
