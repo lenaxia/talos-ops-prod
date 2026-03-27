@@ -114,8 +114,8 @@ nodes:
               - siderolabs/i915
               - siderolabs/intel-ucode
               - siderolabs/iscsi-tools
-              - siderolabs/nvidia-container-toolkit-production
-              - siderolabs/nvidia-open-gpu-kernel-modules-production
+              - siderolabs/nvidia-container-toolkit
+              - siderolabs/nvidia-open-gpu-kernel-modules
               - siderolabs/thunderbolt
               - siderolabs/util-linux-tools
   - hostname: "worker-01"
