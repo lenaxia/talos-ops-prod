@@ -16,13 +16,13 @@ spec:
         namespace: flux-system
   install:
     createNamespace: true
-    timeout: 30m
+    timeout: 15m
     remediation:
-      retries: 5
+      retries: 3
   upgrade:
-    timeout: 30m
+    timeout: 15m
     remediation:
-      retries: 5
+      retries: 3
   values:
     defaultPodOptions:
       nodeSelector:
@@ -32,6 +32,11 @@ spec:
           operator: "Equal"
           value: "special"
           effect: "NoSchedule"
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
 
     controllers:
       app:
@@ -39,76 +44,101 @@ spec:
         strategy: Recreate
         annotations:
           reloader.stakater.com/auto: 'true'
-        containers:
-          app:
+        initContainers:
+          download-checkpoints:
             image:
-              repository: frankleeeee/sglang-omni
-              # renovate: depName=frankleeeee/sglang-omni
-              tag: dev
+              repository: huggingface/downloader
+              tag: 0.17.3
             command: ["/bin/sh", "-c"]
             args:
               - |
-                set -e
-                # Install sglang-omni from git if not already cached on PVC
-                # Note: OMNI_CACHE is the PVC mountpoint, clone into a subdir
-                OMNI_CACHE=/root/.cache/sglang-omni
-                OMNI_SRC="$OMNI_CACHE/src"
-                INSTALLED_FLAG="$OMNI_CACHE/.installed"
-                if [ ! -f "$INSTALLED_FLAG" ]; then
-                  echo "Installing sglang-omni..."
-                  apt-get update -qq && apt-get install -y -qq git
-                  rm -rf "$OMNI_SRC"
-                  git clone --depth=1 https://github.com/sgl-project/sglang-omni.git "$OMNI_SRC"
-                  pip install -e "$OMNI_SRC[s2pro]" --no-build-isolation
-                  touch "$INSTALLED_FLAG"
+                if [ -f /app/checkpoints/s2-pro/.done ]; then
+                  echo "Checkpoints already present, skipping download."
+                  exit 0
                 fi
-                cat > /tmp/s2pro_tts.yaml << 'CFGEOF'
-                config_cls: S2ProPipelineConfig
-                model_path: fishaudio/s2-pro
-                relay_backend: shm
-                CFGEOF
-                sgl-omni serve \
-                  --model-path fishaudio/s2-pro \
-                  --config /tmp/s2pro_tts.yaml \
-                  --port 8000
+                echo "Downloading fishaudio/s2-pro checkpoints..."
+                huggingface-cli download fishaudio/s2-pro \
+                  --local-dir /app/checkpoints/s2-pro \
+                  --local-dir-use-symlinks False
+                touch /app/checkpoints/s2-pro/.done
+                echo "Download complete."
             env:
-              - name: TZ
-                value: ${TIMEZONE}
+              - name: HF_HOME
+                value: /app/checkpoints/.hf-cache
+        containers:
+          app:
+            image:
+              repository: fishaudio/fish-speech
+              # renovate: depName=fishaudio/fish-speech
+              tag: server-cuda
+            env:
+              - name: COMPILE
+                value: "0"
               - name: NVIDIA_VISIBLE_DEVICES
                 value: "GPU-6726851a-d64e-09c8-a938-1537593e3106" # RTX 3090 (freed from vllm-classifier)
-              - name: HF_HOME
-                value: /root/.cache/huggingface
             probes:
               liveness:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 8080
+                  initialDelaySeconds: 60
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 10
               readiness:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 8080
+                  initialDelaySeconds: 60
+                  periodSeconds: 15
+                  failureThreshold: 3
+                  timeoutSeconds: 10
               startup:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 8080
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 10
             resources:
               requests:
                 nvidia.com/gpu: "1"
-                memory: "16Gi"
+                memory: "8Gi"
               limits:
                 nvidia.com/gpu: "1"
                 memory: "22Gi"
 
     persistence:
-      data:
+      checkpoints:
         enabled: true
         type: persistentVolumeClaim
-        storageClass: openebs-hostpath
+        storageClass: longhorn
         accessMode: ReadWriteOnce
         size: 50Gi
         globalMounts:
-          - path: /root/.cache/huggingface
-            subPath: huggingface
-          - path: /root/.cache/sglang-omni
-            subPath: sglang-omni
+          - path: /app/checkpoints
+      references:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        globalMounts:
+          - path: /app/references
       shm:
         type: emptyDir
         medium: Memory
-        sizeLimit: 8Gi
+        sizeLimit: 4Gi
         globalMounts:
           - path: /dev/shm
 
@@ -116,7 +146,7 @@ spec:
       app:
         ports:
           http:
-            port: 8000
+            port: 8080
         primary: true
         type: LoadBalancer
         loadBalancerIP: ${SVC_FISH_SPEECH_ADDR}
