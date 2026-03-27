@@ -86,6 +86,12 @@ spec:
               WEBUI_AUTH_TRUSTED_NAME_HEADER: Remote-Name
               # OpenAI
               OPENAI_API_BASE_URL: https://ai.${SECRET_DEV_DOMAIN}/v1
+              # TTS - Fish Speech
+              AUDIO_TTS_ENGINE: openai
+              AUDIO_TTS_OPENAI_API_BASE_URL: http://fish-speech.home.svc.cluster.local:8080/v1
+              AUDIO_TTS_OPENAI_API_KEY: "placeholder"
+              AUDIO_TTS_MODEL: "fish-speech"
+              AUDIO_TTS_VOICE: "default"
 
             envFrom:
               - secretRef:
