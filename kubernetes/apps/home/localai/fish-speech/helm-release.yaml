@@ -92,6 +92,20 @@ spec:
             env:
               - name: COMPILE
                 value: "0"
+            lifecycle:
+              postStart:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - |
+                      # Fix Python scoping bug: `import torchaudio.io._load_audio_fileobj`
+                      # inside an except block makes Python treat `torchaudio` as a local
+                      # variable throughout __init__, causing UnboundLocalError in the try block.
+                      sed -i 's/import torchaudio.io._load_audio_fileobj/import torchaudio.io._load_audio_fileobj as _torchaudio_fileobj/' \
+                        /app/fish_speech/inference_engine/reference_loader.py
+                      find /app/fish_speech/inference_engine -name "*.pyc" -delete
+                      find /app/fish_speech/inference_engine -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
             probes:
               liveness:
                 enabled: true
