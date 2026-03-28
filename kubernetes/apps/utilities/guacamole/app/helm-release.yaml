@@ -104,10 +104,11 @@ spec:
 #        subPath: guacamole.properties
 #        mountPath: /config/guacamole/guacamole.properties
 #        defaultMode: 0777
-#    resources:
-#      requests:
-#        cpu: 10m
-#        memory: 50Mi
-#      limits:
-#        memory: 500Mi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 1000m
+        memory: 1024Mi
         type: persistentVolumeClaim
