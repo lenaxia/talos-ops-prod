@@ -52,13 +52,20 @@ spec:
     innodb_autoinc_lock_mode=2
     max_allowed_packet=256M
     max_connections=300
-    
+  
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
+  
   resources:
     requests:
       cpu: 100m
       memory: 512Mi
     limits:
       memory: 2Gi
+
+  nodeSelector:
+    node-role.kubernetes.io/worker: 'true'
   
   livenessProbe:
     initialDelaySeconds: 20
