@@ -34,11 +34,35 @@ spec:
               tag: 2026.1.5
             probes:
               liveness:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 6052
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
               readiness:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 6052
+                  initialDelaySeconds: 10
+                  periodSeconds: 5
+                  timeoutSeconds: 1
+                  failureThreshold: 3
               startup:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 6052
+                  initialDelaySeconds: 10
+                  periodSeconds: 5
+                  timeoutSeconds: 1
+                  failureThreshold: 30
             resources:
               requests:
                 cpu: 5m
