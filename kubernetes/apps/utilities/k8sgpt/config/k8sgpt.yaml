@@ -18,9 +18,9 @@ spec:
   # prometheus:
   #  enabled: true
   #  namespace: monitoring
-  sink:
-    type: slack
-    webhook: ${SECRET_SLACK_HOMEOPS_WEBHOOK}
+  #sink:
+  #  type: slack
+  #  webhook: ${SECRET_SLACK_HOMEOPS_WEBHOOK}
   #extraOptions:
   #   backstage:
   #     enabled: true
