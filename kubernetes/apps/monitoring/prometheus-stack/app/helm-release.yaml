@@ -245,6 +245,13 @@ spec:
         walCompression: true
         enableFeatures:
           - memory-snapshot-on-shutdown
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 4Gi
         storageSpec:
           volumeClaimTemplate:
             spec:
