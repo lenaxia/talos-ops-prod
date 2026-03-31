@@ -42,6 +42,21 @@ spec:
               TZ: "${TIMEZONE}"
               SERVER_PORT: &port 8080
               KOMGA_OAUTH2_ACCOUNT_CREATION: "true"
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
             resources:
               requests:
                 memory: 4282M
