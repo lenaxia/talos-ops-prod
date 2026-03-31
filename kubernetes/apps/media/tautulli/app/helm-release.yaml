@@ -46,20 +46,39 @@ spec:
             args: ["--config", "/config/config.ini", "--datadir", "/config", "--port",
               "8181"]
             probes:
-              liveness: &probes
-                enabled: false
+              liveness:
+                enabled: true
                 custom: true
                 spec:
                   httpGet:
                     path: /
                     port: &port 8181
-                  initialDelaySeconds: 0
+                  initialDelaySeconds: 15
                   periodSeconds: 10
                   timeoutSeconds: 1
                   failureThreshold: 3
-              readiness: *probes
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8181
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
               startup:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8181
+                  initialDelaySeconds: 0
+                  periodSeconds: 5
+                  timeoutSeconds: 1
+                  failureThreshold: 60
             securityContext: &securityContext
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
