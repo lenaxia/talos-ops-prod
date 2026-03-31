@@ -72,6 +72,40 @@ spec:
               requests:
                 cpu: 15m
                 memory: 128M
+            probes:
+              liveness:
+                enabled: true
+                type: HTTP
+                spec:
+                  httpGet:
+                    path: /
+                    port: http
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                type: HTTP
+                spec:
+                  httpGet:
+                    path: /
+                    port: http
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                type: HTTP
+                spec:
+                  httpGet:
+                    path: /
+                    port: http
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
             securityContext:
               privileged: true
     service:
