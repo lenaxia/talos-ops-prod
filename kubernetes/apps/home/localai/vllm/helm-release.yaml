@@ -78,19 +78,30 @@ spec:
               - secretRef:
                   name: *appname
             probes:
-              liveness: &probe
-                enabled: false
+              liveness:
+                enabled: true
                 custom: true
                 spec:
                   httpGet:
                     path: /health
                     port: 8000
                   initialDelaySeconds: 120
-                  periodSeconds: 15
+                  periodSeconds: 20
+                  successThreshold: 1
+                  failureThreshold: 5
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8000
+                  initialDelaySeconds: 90
+                  periodSeconds: 10
                   successThreshold: 1
                   failureThreshold: 3
-                  timeoutSeconds: 10
-              readiness: *probe
+                  timeoutSeconds: 5
             resources:
               requests:
                 nvidia.com/gpu: "1"
