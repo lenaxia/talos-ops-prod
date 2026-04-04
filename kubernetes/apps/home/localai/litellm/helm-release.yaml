@@ -332,11 +332,11 @@ spec:
                 litellm_params:
                   model: openai/dall-e-3
 
-              # TTS - Fish Speech (via OpenAI-compat shim)
-              - model_name: fish-speech
+              # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
+              - model_name: kokoro
                 litellm_params:
-                  model: openai/fish-speech
-                  api_base: http://fish-speech.home.svc.cluster.local:8081/v1
+                  model: openai/kokoro
+                  api_base: http://kokoro.home.svc.cluster.local:8880/v1
                   api_key: placeholder
 
               # Bedrock
