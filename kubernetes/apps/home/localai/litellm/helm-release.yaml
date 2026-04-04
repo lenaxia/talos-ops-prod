@@ -339,6 +339,13 @@ spec:
                   api_base: http://kokoro.home.svc.cluster.local:8880/v1
                   api_key: placeholder
 
+              # TTS - Fish Speech (via OpenAI-compat shim)
+              - model_name: fish-speech
+                litellm_params:
+                  model: openai/fish-speech
+                  api_base: http://fish-speech.home.svc.cluster.local:8081/v1
+                  api_key: placeholder
+
               # Bedrock
               - model_name: bedrock-claude-sonnet-4.5
                 litellm_params:
