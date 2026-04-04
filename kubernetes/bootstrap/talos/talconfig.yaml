@@ -182,6 +182,35 @@ nodes:
             match: disk.transport == 'sata' && !system_disk
           minSize: "500GiB" # Talos will autogrow the size if more is available
           grow: true
+  - hostname: "worker-04"
+    ipAddress: "192.168.3.24"
+    installDiskSelector:
+      wwid: eui.e8238fa6bf530001001b448b4e165b7b
+    controlPlane: false
+    nodeLabels:
+      node-role.kubernetes.io/worker: true
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "9c:6b:00:cf:4e:12"
+        dhcp: false
+        addresses:
+          - "192.168.3.24/16"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "192.168.0.1"
+        mtu: 1500
+    patches:
+      - "@./patches/nvidia/gpu-worker-patch.yaml"
+      - "@./patches/nvidia/nvidia-default-runtimeclass.yaml"
+    schematic:
+      customization:
+        systemExtensions:
+            officialExtensions:
+              - siderolabs/iscsi-tools
+              - siderolabs/nvidia-container-toolkit
+              - siderolabs/nvidia-open-gpu-kernel-modules
+              - siderolabs/thunderbolt
+              - siderolabs/util-linux-tools
 
 # Global patches
 patches:
