@@ -62,7 +62,7 @@ spec:
                       --enable-chunked-prefill \
                       --enforce-eager \
                       --enable-auto-tool-choice \
-                      --tool-call-parser qwen25_vl \
+                      --tool-call-parser hermes \
                       --port 8000
             env:
               - name: TZ
