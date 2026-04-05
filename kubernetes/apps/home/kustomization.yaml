@@ -29,3 +29,4 @@ resources:
   - ./kokoro/ks.yaml
   - ./watersmart-scraper/ks.yaml
   - ./f1replaytiming/ks.yaml
+  - ./msedge/ks.yaml
