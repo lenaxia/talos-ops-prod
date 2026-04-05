@@ -1,4 +1,4 @@
-# talos-ops-prod-authelia Documentation - LLM Starting Point
+# talos-ops-prod Documentation - LLM Starting Point
 
 **This is the primary document for LLM-assisted development on this repository.**
 
@@ -8,7 +8,7 @@ All essential information is consolidated here.
 
 ## Project Overview
 
-**talos-ops-prod-authelia** is a GitOps repository managing a production Kubernetes cluster running on [Talos Linux](https://github.com/siderolabs/talos). It uses [Flux](https://github.com/fluxcd/flux2) to continuously reconcile cluster state from this repository.
+**talos-ops-prod** is a GitOps repository managing a production Kubernetes cluster running on [Talos Linux](https://github.com/siderolabs/talos). It uses [Flux](https://github.com/fluxcd/flux2) to continuously reconcile cluster state from this repository.
 
 This is a homelab/personal cluster serving:
 - Authentication (Authelia + OIDC for ~15 apps)
@@ -105,7 +105,7 @@ flux check --pre               # check Flux prerequisites
 ## Repository Structure
 
 ```
-talos-ops-prod-authelia/
+talos-ops-prod/
     kubernetes/
         apps/                  per-namespace application manifests
             cert-manager/
