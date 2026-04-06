@@ -226,6 +226,7 @@ nodes:
       customization:
         systemExtensions:
             officialExtensions:
+<<<<<<< HEAD
               - siderolabs/amd-ucode
               - siderolabs/i915
               - siderolabs/iscsi-tools
