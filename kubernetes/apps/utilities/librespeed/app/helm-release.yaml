@@ -27,6 +27,13 @@ spec:
               repository: linuxserver/librespeed
               tag: version-5.2.4
               pullPolicy: Always
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
 
             env:
               TZ: ${TIMEZONE}
