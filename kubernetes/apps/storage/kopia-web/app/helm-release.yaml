@@ -47,9 +47,8 @@ spec:
           main:
             image:
               repository: kopia/kopia
-              tag: 
-                20251215.0.232403@sha256:57a5f6dde2b8bb21362547e6a2e418be5585ea4ebf3e0bafc1d0a0a2f30a3fc1
-              pullPolicy: Always
+              tag: 20251215.0.232403@sha256:57a5f6dde2b8bb21362547e6a2e418be5585ea4ebf3e0bafc1d0a0a2f30a3fc1
+              pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
               KOPIA_PASSWORD: none
@@ -67,6 +66,47 @@ spec:
               - --address=0.0.0.0:80
               - --metrics-listen-addr=0.0.0.0:8080
               - --without-password
+            probes:
+              liveness:
+                enabled: true
+                type: HTTP
+                httpGet:
+                  path: /
+                  port: 80
+                initialDelaySeconds: 30
+                periodSeconds: 10
+                timeoutSeconds: 5
+                successThreshold: 1
+                failureThreshold: 3
+              readiness:
+                enabled: true
+                type: HTTP
+                httpGet:
+                  path: /
+                  port: 80
+                initialDelaySeconds: 10
+                periodSeconds: 5
+                timeoutSeconds: 3
+                successThreshold: 1
+                failureThreshold: 3
+              startup:
+                enabled: true
+                type: HTTP
+                httpGet:
+                  path: /
+                  port: 80
+                initialDelaySeconds: 5
+                periodSeconds: 5
+                timeoutSeconds: 3
+                successThreshold: 1
+                failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
     service:
       main:
         type: LoadBalancer
