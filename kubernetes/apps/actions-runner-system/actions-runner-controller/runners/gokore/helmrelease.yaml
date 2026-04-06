@@ -26,6 +26,8 @@ spec:
     controllerServiceAccount:
       name: actions-runner-controller
       namespace: actions-runner-system
+    jobTemplateSpec:
+      backoffLimit: 6
     template:
       spec:
         affinity:
