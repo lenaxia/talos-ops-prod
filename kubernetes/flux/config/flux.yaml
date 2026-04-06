@@ -84,3 +84,24 @@ spec:
       target:
         kind: Deployment
         name: helm-controller
+    # Improve image-automation-controller resilience by increasing replicas and adjusting resource/probe settings
+    # This prevents single-point-of-failure and handles transient issues better
+    - patch: |
+        - op: replace
+          path: /spec/replicas
+          value: 2
+        - op: replace
+          path: /spec/template/spec/containers/0/resources/limits/cpu
+          value: 2000m
+        - op: replace
+          path: /spec/template/spec/containers/0/resources/limits/memory
+          value: 2Gi
+        - op: replace
+          path: /spec/template/spec/containers/0/livenessProbe/failureThreshold
+          value: 6
+        - op: replace
+          path: /spec/template/spec/containers/0/readinessProbe/failureThreshold
+          value: 6
+      target:
+        kind: Deployment
+        name: image-automation-controller
