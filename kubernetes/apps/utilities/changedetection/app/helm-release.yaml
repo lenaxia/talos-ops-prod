@@ -33,15 +33,30 @@ spec:
             image:
               repository: ghcr.io/dgtlmoon/changedetection.io
               tag: 0.54.3
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
 
             env:
               TZ: ${TIMEZONE}
               MINIMUM_SECONDS_RECHECK_TIME: 1
+
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
           browser-chrome:
             image:
               repository: selenium/standalone-chrome-debug
               tag: 3.141.59
+              pullPolicy: IfNotPresent
+
+            resources:
+              requests:
+                cpu: 200m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
 
 
     service:
