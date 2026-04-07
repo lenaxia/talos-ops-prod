@@ -53,8 +53,8 @@ spec:
               SERVER_BASE_URL: "https://tinyrsvp.${SECRET_DEV_DOMAIN}"
               # Forward Auth — Traefik injects X-Forwarded-User / X-Forwarded-Email
               FORWARD_AUTH_ENABLED: "true"
-              FORWARD_AUTH_USER_HEADER: "X-Forwarded-User"
-              FORWARD_AUTH_EMAIL_HEADER: "X-Forwarded-Email"
+              FORWARD_AUTH_USER_HEADER: "Remote-User"
+              FORWARD_AUTH_EMAIL_HEADER: "Remote-Email"
               # Trust the Kubernetes pod network CIDR (covers Traefik/Authelia sidecar traffic)
               FORWARD_AUTH_TRUSTED_IPS: "127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
               SMTP_HOST: ${SECRET_AWS_SMTP_HOST}
