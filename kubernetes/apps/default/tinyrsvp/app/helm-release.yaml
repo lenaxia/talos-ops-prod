@@ -42,6 +42,7 @@ spec:
             image:
               repository: ghcr.io/lenaxia/tinyrsvp
               tag: 0.1.6
+              pullPolicy: Always
             env:
               TZ: ${TIMEZONE}
               SERVER_HOST: "0.0.0.0"
