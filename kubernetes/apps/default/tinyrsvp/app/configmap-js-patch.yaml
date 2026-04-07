@@ -169,6 +169,7 @@ data:
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-Token': getCSRFToken(),
                 },
             })
@@ -201,6 +202,7 @@ data:
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                             'X-CSRF-Token': getCSRFToken(),
                         },
                     }).then(r => {
@@ -232,6 +234,7 @@ data:
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                             'X-CSRF-Token': getCSRFToken(),
                         },
                         body: JSON.stringify({}),
@@ -331,6 +334,7 @@ data:
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-Token': getCSRFToken(),
                 },
                 body: JSON.stringify({ name, email }),
@@ -390,7 +394,7 @@ data:
     
             fetch(`/api/invites/$${inviteId}`, {
                 method: 'DELETE',
-                headers: { 'X-CSRF-Token': getCSRFToken() },
+                headers: { 'X-CSRF-Token': getCSRFToken(), 'Accept': 'application/json' },
             })
             .then(response => {
                 if (!response.ok) {
