@@ -129,3 +129,12 @@ spec:
         retain: true
         globalMounts:
           - path: /data
+      js-patch:
+        type: configMap
+        name: tinyrsvp-js-patch
+        advancedMounts:
+          main:
+            main:
+              - path: /app/static/js/invite_management.js
+                subPath: invite_management.js
+                readOnly: true
