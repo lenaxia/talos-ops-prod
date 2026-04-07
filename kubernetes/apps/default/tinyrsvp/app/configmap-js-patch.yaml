@@ -19,8 +19,8 @@ data:
         }
     
         function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
+            const value = `; $${document.cookie}`;
+            const parts = value.split(`; $${name}=`);
             if (parts.length === 2) {
                 return parts.pop().split(';').shift();
             }
@@ -41,7 +41,7 @@ data:
             }
     
             feedback.textContent = message;
-            feedback.className = `feedback feedback-${type}`;
+            feedback.className = `feedback feedback-$${type}`;
             feedback.style.display = 'block';
     
             setTimeout(() => {
@@ -108,7 +108,7 @@ data:
                 bulkRevoke.addEventListener('click', function() {
                     const ids = getSelectedIds();
                     if (ids.length === 0) return;
-                    if (!confirm(`Revoke ${ids.length} invite(s)? This cannot be undone.`)) return;
+                    if (!confirm(`Revoke $${ids.length} invite(s)? This cannot be undone.`)) return;
                     handleBulkRevoke(ids);
                 });
             }
@@ -165,7 +165,7 @@ data:
         // ── Single-invite send ────────────────────────────────────────────────────
     
         function handleSendInvite(inviteId) {
-            fetch(`/api/invites/${inviteId}/send`, {
+            fetch(`/api/invites/$${inviteId}/send`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -197,7 +197,7 @@ data:
     
             Promise.allSettled(
                 ids.map(id =>
-                    fetch(`/api/invites/${id}/send`, {
+                    fetch(`/api/invites/$${id}/send`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -212,9 +212,9 @@ data:
                 const succeeded = results.filter(r => r.status === 'fulfilled').length;
                 const failed    = results.filter(r => r.status === 'rejected').length;
                 if (failed === 0) {
-                    showFeedback(`${succeeded} invite(s) queued for sending`, 'success');
+                    showFeedback(`$${succeeded} invite(s) queued for sending`, 'success');
                 } else {
-                    showFeedback(`${succeeded} sent, ${failed} failed`, 'error');
+                    showFeedback(`$${succeeded} sent, $${failed} failed`, 'error');
                 }
                 setTimeout(() => window.location.reload(), 1000);
             }).finally(() => {
@@ -228,7 +228,7 @@ data:
     
             Promise.allSettled(
                 ids.map(id =>
-                    fetch(`/api/invites/${id}/revoke`, {
+                    fetch(`/api/invites/$${id}/revoke`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -244,9 +244,9 @@ data:
                 const succeeded = results.filter(r => r.status === 'fulfilled').length;
                 const failed    = results.filter(r => r.status === 'rejected').length;
                 if (failed === 0) {
-                    showFeedback(`${succeeded} invite(s) revoked`, 'success');
+                    showFeedback(`$${succeeded} invite(s) revoked`, 'success');
                 } else {
-                    showFeedback(`${succeeded} revoked, ${failed} failed`, 'error');
+                    showFeedback(`$${succeeded} revoked, $${failed} failed`, 'error');
                 }
                 setTimeout(() => window.location.reload(), 1000);
             }).finally(() => {
@@ -280,7 +280,7 @@ data:
             submitBtn.disabled = true;
             submitBtn.textContent = 'Importing...';
     
-            fetch(`/api/events/${currentEventId}/invites/import`, {
+            fetch(`/api/events/$${currentEventId}/invites/import`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-Token': getCSRFToken(),
@@ -296,7 +296,7 @@ data:
                 return response.json();
             })
             .then(data => {
-                showFeedback(`Successfully imported ${data.imported || 0} invites`, 'success');
+                showFeedback(`Successfully imported $${data.imported || 0} invites`, 'success');
                 form.reset();
                 if (importModal) importModal.close();
                 setTimeout(() => window.location.reload(), 1000);
@@ -327,7 +327,7 @@ data:
             submitBtn.disabled = true;
             submitBtn.textContent = 'Adding...';
     
-            fetch(`/api/events/${currentEventId}/invites`, {
+            fetch(`/api/events/$${currentEventId}/invites`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -344,7 +344,7 @@ data:
                 return response.json();
             })
             .then(data => {
-                showFeedback(`Successfully added ${data.invite?.name || 'Guest'}`, 'success');
+                showFeedback(`Successfully added $${data.invite?.name || 'Guest'}`, 'success');
                 form.reset();
                 if (createModal) createModal.close();
                 setTimeout(() => window.location.reload(), 1000);
@@ -359,7 +359,7 @@ data:
         }
     
         function handleCopyLink(inviteId) {
-            fetch(`/api/invites/${inviteId}`, {
+            fetch(`/api/invites/$${inviteId}`, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' },
             })
@@ -374,7 +374,7 @@ data:
             .then(data => {
                 const token = data.token;
                 if (!token) throw new Error('No token available for this invite');
-                const inviteURL = `${window.location.origin}/rsvp/${token}`;
+                const inviteURL = `$${window.location.origin}/rsvp/$${token}`;
                 return navigator.clipboard.writeText(inviteURL);
             })
             .then(() => {
@@ -388,7 +388,7 @@ data:
         function handleDeleteWithConfirm(inviteId) {
             if (!confirm('Are you sure you want to delete this invite? This action cannot be undone.')) return;
     
-            fetch(`/api/invites/${inviteId}`, {
+            fetch(`/api/invites/$${inviteId}`, {
                 method: 'DELETE',
                 headers: { 'X-CSRF-Token': getCSRFToken() },
             })
