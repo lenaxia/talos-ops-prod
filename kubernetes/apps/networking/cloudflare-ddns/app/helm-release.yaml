@@ -32,6 +32,7 @@ spec:
           schedule: "@hourly"
           successfulJobsHistory: 2
           ttlSecondsAfterFinished: 3600
+          backoffLimit: 10
         containers:
           app:
             image:
