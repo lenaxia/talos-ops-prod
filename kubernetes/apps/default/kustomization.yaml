@@ -6,3 +6,4 @@ resources:
     #- ./authelia-shadow/ks.yaml
   - ./echo-server-shadow/ks.yaml
   - ./tinyrsvp/ks.yaml
+# Note: mechanic is not managed by Flux - see ./mechanic/README.md for manual fix
