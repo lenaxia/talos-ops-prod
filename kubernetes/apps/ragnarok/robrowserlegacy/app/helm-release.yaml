@@ -95,6 +95,14 @@ spec:
                 packetver:  20200401,
                 renewal:    true,
                 socketProxy: 'wss://ro.${SECRET_DEV_DOMAIN}/ws/',
+              },
+              {
+                display:    'Localhost',
+                address:    '127.0.0.1',
+                port:       6900,
+                packetver:  20200401,
+                renewal:    true,
+                socketProxy: 'wss://ro.${SECRET_DEV_DOMAIN}/ws/',
               }],
               /* GRF asset server — served by this container */
               remoteClient:    'https://ro.${SECRET_DEV_DOMAIN}/',
