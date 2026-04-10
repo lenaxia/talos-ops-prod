@@ -1,0 +1,11 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: mechanic
+  namespace: default
+spec:
+  interval: 24h
+  url: oci://ghcr.io/lenaxia/charts/mechanic
+  ref:
+    tag: 0.4.4
