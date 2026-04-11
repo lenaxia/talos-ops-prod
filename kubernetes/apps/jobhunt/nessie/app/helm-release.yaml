@@ -38,8 +38,11 @@ spec:
             configDefaults:
               s3.path-style-access: "true"
               s3.endpoint: "http://minio.storage.svc.cluster.local:9000"
+              s3.region: "local"
         configOverrides:
           s3.path-style-access: "true"
+          s3.endpoint: "http://minio.storage.svc.cluster.local:9000"
+          s3.region: "local"
       storage:
         s3:
           defaultOptions:
