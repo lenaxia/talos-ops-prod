@@ -51,6 +51,9 @@ spec:
               name: *app
               awsAccessKeyId: MINIO_ACCESS_KEY
               awsSecretAccessKey: MINIO_SECRET_KEY
+      # MinIO returns 400 on HeadBucket health checks due to AWS SDK v2 region
+      # signing quirks. Disable and rely on pod liveness instead.
+      objectStoresHealthCheckEnabled: false
 
     service:
       type: ClusterIP
