@@ -26,6 +26,11 @@ spec:
 
     server:
       workers: 1
+      config:
+        path: /etc/trino
+
+    additionalConfigProperties:
+      - http-server.process-forwarded=true
 
     coordinator:
       jvm:
