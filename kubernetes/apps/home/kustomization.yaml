@@ -30,3 +30,4 @@ resources:
   - ./watersmart-scraper/ks.yaml
   - ./f1replaytiming/ks.yaml
   - ./msedge/ks.yaml
+  - ./oncall-sim/ks.yaml
