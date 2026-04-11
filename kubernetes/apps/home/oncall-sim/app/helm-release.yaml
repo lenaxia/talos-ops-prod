@@ -32,12 +32,13 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
-          # Static React SPA — VITE_LLM_MODE=proxy so the browser calls /llm
+          # Static React SPA — VITE_LLM_MODE=proxy, VITE_LLM_BASE_URL=/llm
+          # Browser calls /llm (same origin) → Traefik routes it to the proxy sidecar
           # Credentials are never baked into the bundle
           client:
             image:
               repository: ghcr.io/lenaxia/oncall-sim/client
-              tag: 1.0.0
+              tag: 1.0.1
             ports:
               - containerPort: 3000
             resources:
@@ -51,7 +52,7 @@ spec:
           proxy:
             image:
               repository: ghcr.io/lenaxia/oncall-sim/proxy
-              tag: 1.0.0
+              tag: 1.0.1
             env:
               # Restrict CORS to pod-internal traffic only; Traefik is the public face
               CORS_ORIGINS: "https://oncall-sim.${SECRET_DEV_DOMAIN}"
@@ -98,6 +99,11 @@ spec:
                 service:
                   identifier: main
                   port: http
+              - path: /llm
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: proxy
         tls:
           - hosts:
               - *uri
