@@ -55,6 +55,11 @@ spec:
       # signing quirks. Disable and rely on pod liveness instead.
       objectStoresHealthCheckEnabled: false
 
+    # The chart has a bug where objectStoresHealthCheckEnabled=false is ignored.
+    # Override the underlying Quarkus property directly.
+    advancedConfig:
+      "nessie.catalog.object-stores.health-check.enabled": "false"
+
     service:
       type: ClusterIP
       port: 19120
