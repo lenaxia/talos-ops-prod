@@ -43,7 +43,7 @@ spec:
       storage:
         s3:
           defaultOptions:
-            region: us-east-1   # MinIO ignores this but the field is required
+            region: local
             endpoint: "http://minio.storage.svc.cluster.local:9000"
             pathStyleAccess: true
             authType: STATIC
