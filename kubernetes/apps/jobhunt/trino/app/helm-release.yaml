@@ -29,23 +29,31 @@ spec:
 
     coordinator:
       jvm:
-        maxHeapSize: "1G"
+        maxHeapSize: "2G"
+      config:
+        memory:
+          heapHeadroomPerNode: 256MB
+          maxQueryMemoryPerNode: 1GB
       resources:
         requests:
           cpu: 200m
-          memory: 1.5Gi
+          memory: 2.5Gi
         limits:
-          memory: 2Gi
+          memory: 3Gi
 
     worker:
       jvm:
-        maxHeapSize: "1G"
+        maxHeapSize: "2G"
+      config:
+        memory:
+          heapHeadroomPerNode: 256MB
+          maxQueryMemoryPerNode: 1GB
       resources:
         requests:
           cpu: 200m
-          memory: 1.5Gi
+          memory: 2.5Gi
         limits:
-          memory: 2Gi
+          memory: 3Gi
 
     # Inject MinIO credentials as env vars into every pod.
     # The catalog properties reference them via ${ENV:VAR} substitution.
