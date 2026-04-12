@@ -77,11 +77,6 @@ spec:
                 value: "192.168.5.134"
               - name: MYSQL_ACCOUNTSANDCHARS
                 value: "1"
-          debug:
-            image:
-              repository: alpine
-              tag: latest
-            command: ["/bin/sh", "-c", "sleep 60m"]
     service:
       main:
         enabled: true
