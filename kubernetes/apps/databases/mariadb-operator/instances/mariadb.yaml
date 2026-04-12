@@ -44,10 +44,8 @@ spec:
   updateStrategy:
     type: RollingUpdate
 
-  podTemplate:
-    spec:
-      nodeSelector:
-        node-role.kubernetes.io/worker: 'true'
+  nodeSelector:
+    node-role.kubernetes.io/worker: 'true'
   
   myCnf: |
     [mariadb]
