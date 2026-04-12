@@ -78,11 +78,6 @@ spec:
                 value: "1"
               - name: RENEWAL
                 value: "true"
-          debug:
-            image:
-              repository: alpine
-              tag: latest
-            command: ["/bin/sh", "-c", "sleep 60m"]
     service:
       main:
         enabled: true
