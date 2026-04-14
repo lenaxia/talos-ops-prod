@@ -25,6 +25,8 @@ spec:
       retries: 3
   values:
     defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
       securityContext:
         runAsUser: 568
         runAsGroup: 568
