@@ -39,6 +39,8 @@ spec:
             image:
               repository: ghcr.io/lenaxia/oncall-sim/client
               tag: 1.0.38
+            env:
+              DEBUG: "true"
             ports:
               - containerPort: 3000
             resources:
@@ -53,6 +55,8 @@ spec:
             image:
               repository: ghcr.io/lenaxia/oncall-sim/proxy
               tag: 1.0.38
+            env:
+              # Restrict CORS to pod-internal traffic only; Traefik is the public face
               CORS_ORIGINS: "https://oncall-sim.${SECRET_DEV_DOMAIN}"
             envFrom:
               - secretRef:
