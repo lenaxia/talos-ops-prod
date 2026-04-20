@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fission-router
+  namespace: fission
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-no-auth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: &host fission-router.${SECRET_DEV_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: router
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - *host
+      secretName: *host
