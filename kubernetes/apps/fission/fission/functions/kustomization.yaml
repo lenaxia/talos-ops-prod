@@ -4,3 +4,4 @@ kind: Kustomization
 namespace: fission
 resources:
   - ./matriarch.yaml
+  - ./secret.sops.yaml
