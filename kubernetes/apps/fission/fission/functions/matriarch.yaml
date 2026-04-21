@@ -10,7 +10,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/latest/download/matriarch-1.0.6.zip
+    url: https://github.com/lenaxia/functions/releases/latest/download/matriarch-1.0.7.zip
 ---
 apiVersion: fission.io/v1
 kind: Function
