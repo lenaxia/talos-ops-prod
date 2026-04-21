@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app tinyrsvp
+  namespace: default
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+
+    controllers:
+      main:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/tinyrsvp
+              tag: 0.2.2
+              pullPolicy: Always
+            env:
+              TZ: ${TIMEZONE}
+              SERVER_HOST: "0.0.0.0"
+              SERVER_PORT: "8080"
+              DATABASE_TYPE: "sqlite"
+              DATABASE_PATH: "/data/tinyrsvp.db"
+              STORAGE_TYPE: "local"
+              STORAGE_LOCAL_PATH: "/data/uploads"
+              SERVER_BASE_URL: "https://tinyrsvp.${SECRET_DEV_DOMAIN}"
+              # Forward Auth — Traefik injects X-Forwarded-User / X-Forwarded-Email
+              FORWARD_AUTH_ENABLED: "true"
+              FORWARD_AUTH_USER_HEADER: "Remote-User"
+              FORWARD_AUTH_EMAIL_HEADER: "Remote-Email"
+              # Trust the Kubernetes pod network CIDR (covers Traefik/Authelia sidecar traffic)
+              FORWARD_AUTH_TRUSTED_IPS: "127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+              SMTP_HOST: ${SECRET_AWS_SMTP_HOST}
+              SMTP_PORT: ${SECRET_AWS_SMTP_PORT}
+              SMTP_USERNAME: ${SECRET_AWS_SMTP_USERNAME}
+              SMTP_PASSWORD: ${SECRET_AWS_SMTP_PASSWORD}
+              EMAIL_FROM: ${SECRET_AWS_SMTP_FROM_ADDR}
+              EMAIL_FROM_NAME: ${SECRET_AWS_SMTP_FROM_NAME}
+            envFrom:
+              - secretRef:
+                  name: *app
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+
+    service:
+      main:
+        primary: true
+        controller: main
+        ports:
+          http:
+            port: 8080
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri tinyrsvp.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+
+    persistence:
+      data:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 2Gi
+        retain: true
+        globalMounts:
+          - path: /data
+      js-patch:
+        type: configMap
+        name: tinyrsvp-js-patch
+        advancedMounts:
+          main:
+            main:
+              - path: /app/static/js/invite_management.js
+                subPath: invite_management.js
+                readOnly: true

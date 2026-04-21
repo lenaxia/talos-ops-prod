@@ -177,12 +177,12 @@ nodes:
       - interface: eth0
         bond:
           deviceSelectors:
-            - physical: true
-        dhcp: false
-        addresses:
-          - "192.168.3.23/16"
-        routes:
-          - network: 0.0.0.0/0
+            - physicaukl: true
+        dhcp: falseic
+        addresses:k
+          - "192.nc168.3.23/16"
+        routes:cb
+          - networifk: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
     schematic:

@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname kokoro
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  upgrade:
+    timeout: 15m
+    remediation:
+      retries: 3
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "special"
+          effect: "NoSchedule"
+
+    controllers:
+      app:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          app:
+            image:
+              repository: ghcr.io/remsky/kokoro-fastapi-gpu
+              tag: v0.2.4-master
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8880
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 10
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8880
+                  initialDelaySeconds: 15
+                  periodSeconds: 15
+                  failureThreshold: 3
+                  timeoutSeconds: 10
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8880
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 10
+            resources:
+              requests:
+                nvidia.com/gpu: "1"
+                memory: "4Gi"
+              limits:
+                nvidia.com/gpu: "1"
+                memory: "8Gi"
+
+    service:
+      app:
+        controller: app
+        primary: true
+        type: LoadBalancer
+        loadBalancerIP: ${SVC_KOKORO_ADDR}
+        ports:
+          http:
+            port: 8880
