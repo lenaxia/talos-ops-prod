@@ -28,8 +28,10 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - deviceSelector:
-          hardwareAddr: "f4:4d:30:68:a3:b3"
+      - interface: eth0
+        bond:
+          deviceSelectors:
+            - physical: true
         dhcp: false
         addresses:
           - "192.168.3.10/16"
@@ -44,10 +46,10 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - deviceSelector:
-          #hardwareAddr: "b8:ae:ed:eb:51:4f"
-          physical: "enp0s25"
-        interface: eth0
+      - interface: eth0
+        bond:
+          deviceSelectors:
+            - physical: true
         dhcp: false
         addresses:
           - "192.168.3.11/16"
@@ -62,8 +64,10 @@ nodes:
     installDisk: "/dev/nvme0n1"
     controlPlane: true
     networkInterfaces:
-      - deviceSelector:
-          hardwareAddr: "b8:ae:ed:ea:42:de"
+      - interface: eth0
+        bond:
+          deviceSelectors:
+            - physical: true
         dhcp: false
         addresses:
           - "192.168.3.12/16"
@@ -95,8 +99,10 @@ nodes:
     nodeLabels:
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - deviceSelector:
-          hardwareAddr: "00:e0:4c:68:00:4d"
+      - interface: eth0
+        bond:
+          deviceSelectors:
+            - physical: true
         dhcp: false
         addresses:
           - "192.168.3.20/16"
@@ -126,8 +132,10 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - deviceSelector:
-          hardwareAddr: "00:e0:4c:68:00:a1"
+      - interface: eth0
+        bond:
+          deviceSelectors:
+            - physical: true
         dhcp: false
         addresses:
           - "192.168.3.21/16"
@@ -145,8 +153,10 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - deviceSelector:
-          hardwareAddr: "00:e0:4c:68:00:0e"
+      - interface: eth0
+        bond:
+          deviceSelectors:
+            - physical: true
         dhcp: false
         addresses:
           - "192.168.3.22/16"
@@ -164,8 +174,10 @@ nodes:
     nodeLabels: 
       node-role.kubernetes.io/worker: true
     networkInterfaces:
-      - deviceSelector:
-          hardwareAddr: "00:e0:67:1b:54:db"
+      - interface: eth0
+        bond:
+          deviceSelectors:
+            - physical: true
         dhcp: false
         addresses:
           - "192.168.3.23/16"
@@ -173,8 +185,14 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
-    patches:
-      - "@./patches/global/containerd.yaml"
+    schematic:
+      customization:
+        systemExtensions:
+            officialExtensions:
+              - siderolabs/gasket-driver
+              - siderolabs/intel-ucode
+              - siderolabs/iscsi-tools
+              - siderolabs/util-linux-tools
     userVolumes:
       - name: longhorn
         provisioning:
@@ -182,6 +200,39 @@ nodes:
             match: disk.transport == 'sata' && !system_disk
           minSize: "500GiB" # Talos will autogrow the size if more is available
           grow: true
+  - hostname: "worker-04"
+    ipAddress: "192.168.3.24"
+    installDiskSelector:
+      wwid: eui.e8238fa6bf530001001b448b4e165b7b
+    controlPlane: false
+    nodeLabels:
+      node-role.kubernetes.io/worker: true
+    networkInterfaces:
+      - interface: eth0
+        bond:
+          deviceSelectors:
+            - physical: true
+        dhcp: false
+        addresses:
+          - "192.168.3.24/16"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "192.168.0.1"
+        mtu: 1500
+    patches:
+      - "@./patches/nvidia/gpu-worker-patch.yaml"
+      - "@./patches/nvidia/nvidia-default-runtimeclass.yaml"
+    schematic:
+      customization:
+        systemExtensions:
+            officialExtensions:
+              - siderolabs/amd-ucode
+              - siderolabs/i915
+              - siderolabs/iscsi-tools
+              - siderolabs/nvidia-container-toolkit-production
+              - siderolabs/nvidia-open-gpu-kernel-modules-production
+              - siderolabs/thunderbolt
+              - siderolabs/util-linux-tools
 
 # Global patches
 patches:
