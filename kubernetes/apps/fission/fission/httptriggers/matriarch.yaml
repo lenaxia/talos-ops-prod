@@ -1,0 +1,14 @@
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: matriarch
+  namespace: fission
+spec:
+  functionref:
+    name: matriarch
+    type: name
+  relativeurl: /matriarch
+  methods:
+    - GET
+    - POST
