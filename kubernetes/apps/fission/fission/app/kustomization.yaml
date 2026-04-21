@@ -4,3 +4,6 @@ kind: Kustomization
 resources:
   - ./helmrelease.yaml
   - ./ingress.yaml
+  - ../environments
+  - ../functions
+  - ../httptriggers

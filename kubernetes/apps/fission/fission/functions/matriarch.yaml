@@ -1,0 +1,33 @@
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: matriarch
+  namespace: fission
+spec:
+  environment:
+    name: python3-manga-updater
+    namespace: fission
+  source:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/latest/download/matriarch-1.0.2.zip
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: matriarch
+  namespace: fission
+spec:
+  environment:
+    name: python3-manga-updater
+    namespace: fission
+  package:
+    packageref:
+      name: matriarch
+      namespace: fission
+    functionName: main
+  invokeStrategy:
+    executionStrategy:
+      executorType: poolmgr
+      minScale: 0
+      maxScale: 1
