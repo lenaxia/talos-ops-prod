@@ -1,0 +1,13 @@
+---
+apiVersion: fission.io/v1
+kind: Environment
+metadata:
+  name: python3-manga-updater
+  namespace: fission
+spec:
+  version: 2
+  runtime:
+    image: fission/python-env:1.22.1
+  builder:
+    image: fission/python-builder:1.22.1
+    command: build
