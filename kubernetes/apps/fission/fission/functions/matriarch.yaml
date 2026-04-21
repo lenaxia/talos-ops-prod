@@ -30,5 +30,5 @@ spec:
     StrategyType: execution
     ExecutionStrategy:
       ExecutorType: poolmgr
-      MinScale: 0
+      MinScale: 1
       MaxScale: 1
