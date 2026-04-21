@@ -5,9 +5,9 @@ metadata:
   name: python3-manga-updater
   namespace: fission
 spec:
-  version: 2
+  version: 3
   runtime:
-    image: fission/python-env:1.22.1
+    image: fission/python-env:latest
   builder:
-    image: fission/python-builder:1.22.1
+    image: fission/python-builder:latest
     command: build
