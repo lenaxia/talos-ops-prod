@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: &host fission-router.${SECRET_DEV_DOMAIN}
+    - host: &host f.${SECRET_DEV_DOMAIN}
       http:
         paths:
           - path: /
