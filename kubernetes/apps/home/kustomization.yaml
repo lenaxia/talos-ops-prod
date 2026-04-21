@@ -11,7 +11,6 @@ resources:
   #- ./langserver/ks.yaml
   - ./monica/ks.yaml
   #- ./gamevault/ks.yaml
-  #- ./node-red/ks.yaml
   - ./stirling-pdf/ks.yaml
   - ./redlib/ks.yaml
   - ./dawarich/ks.yaml
@@ -25,6 +24,9 @@ resources:
   - ./mosquitto/ks.yaml
   #- ./linkwarden/ks.yaml
   - ./vscode/ks.yaml
-  #- ./vllm-classifier/ks.yaml
+  - ./vllm-classifier/ks.yaml
+  - ./kokoro/ks.yaml
   - ./watersmart-scraper/ks.yaml
   - ./f1replaytiming/ks.yaml
+  - ./msedge/ks.yaml
+  - ./oncall-sim/ks.yaml

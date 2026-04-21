@@ -1,0 +1,99 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app trino
+  namespace: jobhunt
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: trino
+      version: 1.42.1
+      sourceRef:
+        kind: HelmRepository
+        name: trino
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    image:
+      tag: "479"
+
+    server:
+      workers: 1
+      config:
+        path: /etc/trino
+
+    additionalConfigProperties:
+      - http-server.process-forwarded=true
+
+    coordinator:
+      jvm:
+        maxHeapSize: "2G"
+      config:
+        memory:
+          heapHeadroomPerNode: 256MB
+          maxQueryMemoryPerNode: 1GB
+      resources:
+        requests:
+          cpu: 200m
+          memory: 2.5Gi
+        limits:
+          memory: 3Gi
+
+    worker:
+      jvm:
+        maxHeapSize: "2G"
+      config:
+        memory:
+          heapHeadroomPerNode: 256MB
+          maxQueryMemoryPerNode: 1GB
+      resources:
+        requests:
+          cpu: 200m
+          memory: 2.5Gi
+        limits:
+          memory: 3Gi
+
+    # Credentials go into the catalog ConfigMap (not a Secret).
+    # Acceptable for a homelab learning environment — not for production.
+    catalogs:
+      iceberg: |
+        connector.name=iceberg
+        iceberg.catalog.type=rest
+        iceberg.rest-catalog.uri=http://nessie.jobhunt.svc.cluster.local:19120/iceberg
+        iceberg.rest-catalog.warehouse=iceberg
+        fs.native-s3.enabled=true
+        s3.endpoint=http://minio.storage.svc.cluster.local:9000
+        s3.region=local
+        s3.path-style-access=true
+        s3.aws-access-key=iceberg
+        s3.aws-secret-key=6&CZ3cltK2mLXdQ^I4UY
+
+    podAnnotations:
+      secret.reloader.stakater.com/reload: *app
+
+    ingress:
+      enabled: true
+      className: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-production
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hajimari.io/enable: "true"
+        hajimari.io/icon: database-search
+        hajimari.io/group: Jobhunt
+      hosts:
+        - host: &host trino.${SECRET_DEV_DOMAIN}
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - hosts:
+            - *host
+          secretName: *host
