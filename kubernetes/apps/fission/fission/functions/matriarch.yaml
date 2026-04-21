@@ -8,7 +8,7 @@ spec:
   environment:
     name: python3-manga-updater
     namespace: fission
-  source:
+  deployment:
     type: url
     url: https://github.com/lenaxia/functions/releases/latest/download/matriarch-1.0.2.zip
 ---
