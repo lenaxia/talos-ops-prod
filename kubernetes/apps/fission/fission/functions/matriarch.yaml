@@ -27,6 +27,7 @@ spec:
       namespace: fission
     functionName: main
   InvokeStrategy:
+    StrategyType: execution
     ExecutionStrategy:
       ExecutorType: poolmgr
       MinScale: 0
