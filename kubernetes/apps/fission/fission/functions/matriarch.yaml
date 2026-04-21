@@ -26,6 +26,9 @@ spec:
       name: matriarch
       namespace: fission
     functionName: main
+  secrets:
+    - name: matriarch
+      namespace: fission
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
