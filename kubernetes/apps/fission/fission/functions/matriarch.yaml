@@ -26,8 +26,8 @@ spec:
       name: matriarch
       namespace: fission
     functionName: main
-  invokeStrategy:
-    executionStrategy:
-      executorType: poolmgr
-      minScale: 0
-      maxScale: 1
+  InvokeStrategy:
+    ExecutionStrategy:
+      ExecutorType: poolmgr
+      MinScale: 0
+      MaxScale: 1
