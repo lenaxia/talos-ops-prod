@@ -32,6 +32,7 @@ spec:
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
-      ExecutorType: poolmgr
-      MinScale: 1
+      ExecutorType: newdeploy
+      MinScale: 0
       MaxScale: 1
+      SpecializationTimeout: 120
