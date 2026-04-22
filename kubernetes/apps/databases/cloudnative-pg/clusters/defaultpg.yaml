@@ -54,41 +54,6 @@ spec:
           name: postgres-minio
           key: MINIO_REGION
 
-# CNPG Recovery
-# https://cloudnative-pg.io/documentation/1.15/bootstrap/#bootstrap-from-a-backup-recovery
-
-  bootstrap:
-    recovery:
-      source: defaultpgBackup
-
-  externalClusters:
-    - name: defaultpgBackup
-      barmanObjectStore:
-        wal:
-          compression: bzip2
-          maxParallel: 8
-        destinationPath: "s3://${S3_CNPG}/pg16"
-        endpointURL: http://minio.storage.svc.cluster.local:9000
-        serverName: defaultpg-backup-v05
-        s3Credentials:
-          accessKeyId:
-            name: postgres-minio
-            key: MINIO_ACCESS_KEY
-          secretAccessKey:
-            name: postgres-minio
-            key: MINIO_SECRET_KEY
-          region:
-            name: postgres-minio
-            key: MINIO_REGION
-              #    - name: defaultpg16
-              #      connectionParameters:
-              #        host: defaultpg16-rw.databases.svc.cluster.local
-              #        user: postgres
-              #        dbname: postgres
-              #        sslmode: disable
-              #      password:
-              #        name: postgres-superuser
-              #        key: password
 
 ##########################
 #### PG 16 upgrade #######

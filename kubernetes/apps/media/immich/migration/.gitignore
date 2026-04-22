@@ -1,0 +1,10 @@
+# Secret files — never commit these
+02-upload/users.env
+03-face-migration/config.yaml
+03-face-migration/synofoto.dump
+
+# Script output
+02-upload/logs/
+03-face-migration/matched-*.csv
+03-face-migration/unmatched-*.csv
+03-face-migration/.venv/

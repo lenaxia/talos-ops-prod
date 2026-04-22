@@ -11,8 +11,12 @@ spec:
     podspec:
       volumes:
         - name: scratch
-          persistentVolumeClaim:
-            claimName: scratch-matriarch
+          csi:
+            driver: driver.longhorn.io
+            fsType: ext4
+            volumeAttributes:
+              share: "true"
+            volumeHandle: pvc-ef74068c-15b1-4151-b64f-7fc8e946fde0
       containers:
         - name: python3-manga-updater
           volumeMounts:
