@@ -11,12 +11,10 @@ spec:
     podspec:
       volumes:
         - name: scratch
-          csi:
-            driver: driver.longhorn.io
-            fsType: ext4
-            volumeAttributes:
-              share: "true"
-            volumeHandle: pvc-bda72dc7-8405-4e16-99a9-a88be18d5d97
+          nfs:
+            server: 10.96.71.134
+            path: /pvc-bda72dc7-8405-4e16-99a9-a88be18d5d97
+            readOnly: false
       containers:
         - name: python3-manga-updater
           volumeMounts:
