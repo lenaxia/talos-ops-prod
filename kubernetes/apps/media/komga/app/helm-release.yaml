@@ -94,3 +94,8 @@ spec:
           - path: /config/application.yml
             readOnly: true
             subPath: application.yml
+      scratch:
+        enabled: true
+        existingClaim: scratch-matriarch
+        globalMounts:
+          - path: /mnt/scratch

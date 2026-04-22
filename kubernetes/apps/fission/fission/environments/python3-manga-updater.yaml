@@ -8,6 +8,16 @@ spec:
   version: 3
   runtime:
     image: fission/python-env:latest
+    podspec:
+      volumes:
+        - name: scratch
+          persistentVolumeClaim:
+            claimName: scratch-matriarch
+      containers:
+        - name: python3-manga-updater
+          volumeMounts:
+            - name: scratch
+              mountPath: /mnt/scratch
   builder:
     image: fission/python-builder:latest
     command: build
