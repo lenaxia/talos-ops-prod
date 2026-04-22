@@ -11,4 +11,4 @@ spec:
     requests:
       storage: 10Gi
   storageClassName: longhorn
-  volumeName: pvc-ef74068c-15b1-4151-b64f-7fc8e946fde0
+  volumeName: pvc-bda72dc7-8405-4e16-99a9-a88be18d5d97

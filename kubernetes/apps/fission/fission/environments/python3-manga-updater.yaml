@@ -16,7 +16,7 @@ spec:
             fsType: ext4
             volumeAttributes:
               share: "true"
-            volumeHandle: pvc-ef74068c-15b1-4151-b64f-7fc8e946fde0
+            volumeHandle: pvc-bda72dc7-8405-4e16-99a9-a88be18d5d97
       containers:
         - name: python3-manga-updater
           volumeMounts:
