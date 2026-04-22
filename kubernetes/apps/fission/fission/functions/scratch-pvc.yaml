@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: scratch-matriarch
+  namespace: fission
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: longhorn
+  volumeName: pvc-a9b4b743-c8f5-43b8-9ffa-e28d19700d2d
