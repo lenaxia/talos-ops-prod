@@ -1,0 +1,142 @@
+node: worker-02
+metadata:
+    namespace: config
+    type: MachineConfigs.config.talos.dev
+    id: v1alpha1
+    version: 1
+    owner:
+    phase: running
+    created: 2026-03-23T05:50:34Z
+    updated: 2026-03-23T05:50:34Z
+spec: |
+    version: v1alpha1
+    debug: false
+    persist: true
+    machine:
+      type: worker
+      token: x92oi3.2tvo5wdebqscawii
+      ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQekNCOHFBREFnRUNBaEVBNlZvaDBUSHdTV2tTYUMzTTdMMS92VEFGQmdNclpYQXdFREVPTUF3R0ExVUUKQ2hNRmRHRnNiM013SGhjTk1qUXhNakl3TURZek5qQXhXaGNOTXpReE1qRTRNRFl6TmpBeFdqQVFNUTR3REFZRApWUVFLRXdWMFlXeHZjekFxTUFVR0F5dGxjQU1oQUw3WVRabEpjU3ZKVUNvYlVNSU9HSWIxSmRMVGJmWVhxOGN0Ck1LMk1kR3ZkbzJFd1h6QU9CZ05WSFE4QkFmOEVCQU1DQW9Rd0hRWURWUjBsQkJZd0ZBWUlLd1lCQlFVSEF3RUcKQ0NzR0FRVUZCd01DTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3SFFZRFZSME9CQllFRkVNUVUycTZENUNDNWhScgovcERLWEpqa05aQ2NNQVVHQXl0bGNBTkJBTlZER21Wd05yNTYvbkp4ZHRKS0pJMHdydHN4MWdVaGNZaVRwazIvClNhNTVqbTI2MWNCTWVkQ3NtRUZtbzdITGFDSUl5RVdWUit3NVo4VnZweXBGT0FNPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+      certSANs:
+        - 192.168.3.30
+        - 127.0.0.1
+      kubelet:
+        image: ghcr.io/siderolabs/kubelet:v1.33.2
+        extraArgs:
+          rotate-server-certificates: "true"
+        extraMounts:
+          - destination: /var/mnt/longhorn
+            type: bind
+            source: /var/mnt/longhorn
+            options:
+              - bind
+              - rshared
+              - rw
+          - destination: /var/openebs/local
+            type: bind
+            source: /var/openebs/local
+            options:
+              - bind
+              - rshared
+              - rw
+        defaultRuntimeSeccompProfileEnabled: true
+        nodeIP:
+          validSubnets:
+            - 192.168.0.0/16
+        disableManifestsDirectory: true
+      network:
+        hostname: worker-02
+        interfaces:
+          - interface: eth0
+            bond:
+              deviceSelectors:
+                - physical: true
+            addresses:
+              - 192.168.3.22/16
+            routes:
+              - network: 0.0.0.0/0
+                gateway: 192.168.0.1
+            mtu: 1500
+            dhcp: false
+        nameservers:
+          - 192.168.0.2
+          - 192.168.0.5
+          - 192.168.0.6
+        disableSearchDomain: true
+      install:
+        diskSelector:
+          wwid: naa.5002538e40bfb2cc
+        image: factory.talos.dev/metal-installer/0a87e2502b112e807c2dd3f91591fe372f3771188424e234a4283398297c2a33:v1.10.5
+        wipe: false
+      files:
+        - content: |-
+            [plugins."io.containerd.grpc.v1.cri"]
+              enable_unprivileged_ports = true
+              enable_unprivileged_icmp = true
+            [plugins."io.containerd.grpc.v1.cri".containerd]
+              discard_unpacked_layers = false
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+              discard_unpacked_layers = false
+          permissions: 0o0
+          path: /etc/cri/conf.d/20-customization.part
+          op: create
+      time:
+        disabled: false
+        servers:
+          - 162.159.200.1
+          - 162.159.200.123
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+        net.core.rmem_max: "7500000"
+        net.core.wmem_max: "7500000"
+        vm.nr_hugepages: "1024"
+      features:
+        rbac: true
+        stableHostname: true
+        apidCheckExtKeyUsage: true
+        diskQuotaSupport: true
+        kubePrism:
+          enabled: true
+          port: 7445
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+          resolveMemberNames: true
+      nodeLabels:
+        node-role.kubernetes.io/worker: "true"
+    cluster:
+      id: oEiWDsgx1wioNhY8j4L54rDLRgDbcGY_qCqpZMZi1zk=
+      secret: ur2I8Z9dnFp/VcIy590iUuxp0f3C0n+bHoaF94tGaSA=
+      controlPlane:
+        endpoint: https://192.168.3.30:6443
+      clusterName: home-kubernetes
+      network:
+        cni:
+          name: none
+        dnsDomain: cluster.local
+        podSubnets:
+          - 10.69.0.0/16
+        serviceSubnets:
+          - 10.96.0.0/16
+      token: m1akoo.tu7ho7ojt6aec13j
+      ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpakNDQVRDZ0F3SUJBZ0lSQUxadTluNUFRWDVpOE1LWGdCM1FiZVl3Q2dZSUtvWkl6ajBFQXdJd0ZURVQKTUJFR0ExVUVDaE1LYTNWaVpYSnVaWFJsY3pBZUZ3MHlOREV5TWpBd05qTTFOVGxhRncwek5ERXlNVGd3TmpNMQpOVGxhTUJVeEV6QVJCZ05WQkFvVENtdDFZbVZ5Ym1WMFpYTXdXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CCkJ3TkNBQVJWcUFDSEpwV0pUYnBHVEVHTUJOendZK3FLeisyMDVOMU1ReHJZdXc0REw5TVRzNklwKzdscDVtT2oKTmFwclh3Q280QkpuQW5nOUtYejIzeXZtRG4vMG8yRXdYekFPQmdOVkhROEJBZjhFQkFNQ0FvUXdIUVlEVlIwbApCQll3RkFZSUt3WUJCUVVIQXdFR0NDc0dBUVVGQndNQ01BOEdBMVVkRXdFQi93UUZNQU1CQWY4d0hRWURWUjBPCkJCWUVGTUNRMFczL3N6UTY4Q0RQbnFBVXpJRDhUcWRuTUFvR0NDcUdTTTQ5QkFNQ0EwZ0FNRVVDSUJjSVNZTXYKNEgyQ2dyYmVPckZlQ1lveUxad0h6ZVlKemNaZXBWcWFQdkZwQWlFQTVBUm80SWw4VC9YS29ud0dpaitmV0svdQo1WThVZVF6bEVlNTdOZkVOMUxFPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+      discovery:
+        enabled: true
+        registries:
+          kubernetes:
+            disabled: false
+          service:
+            disabled: true
+    ---
+    apiVersion: v1alpha1
+    kind: UserVolumeConfig
+    name: longhorn
+    provisioning:
+      diskSelector:
+        match: disk.transport == 'nvme'
+      grow: true
+      minSize: 500GiB
