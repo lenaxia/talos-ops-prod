@@ -42,38 +42,39 @@ spec:
             image:
               repository: vllm/vllm-openai
               # renovate: depName=vllm/vllm-openai
-              # NOTE: v0.12.0+ requires cuda>=12.9; worker-00 has driver 570.148.08 (cuda 12.8). Pin until driver is upgraded.
-              # renovate: ignore
-              tag: v0.11.0@sha256:014a95f21c9edf6abe0aea6b07353f96baa4ec291c427bb1176dc7c93a85845c
+              tag: v0.19.1-cu130-ubuntu2404@sha256:f35754668e5f7b82809f080da5491224fce37869fce6b6d4174b2675c4ab16c1
             command: ["/bin/sh", "-c"]
             args:
                - |
                   vllm serve \
-                      QuantTrio/Qwen3-VL-32B-Instruct-AWQ \
-                      --served-model-name qwen3-vl \
-                      --max-model-len 65535 \
-                      --swap-space 4 \
-                      --max-num-seqs 2 \
-                      --gpu-memory-utilization 0.9 \
+                      Lorbus/Qwen3.6-27B-int4-AutoRound \
+                      --served-model-name qwen3 \
+                      --dtype half \
+                      --max-model-len 262144 \
+                      --gpu-memory-utilization 0.90 \
                       --tensor-parallel-size 1 \
+                      --max-num-seqs 3 \
                       --trust-remote-code \
                       --disable-log-requests \
                       --host 0.0.0.0 \
                       --enable-chunked-prefill \
-                      --enforce-eager \
+                      --enable-prefix-caching \
+                      --kv-cache-dtype fp8 \
                       --enable-auto-tool-choice \
                       --tool-call-parser hermes \
+                      --reasoning-parser qwen3 \
+                      --compilation-config.cudagraph_mode none \
+                      --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
                       --port 8000
             env:
               - name: TZ
                 value: ${TIMEZONE}
-              - name: CUDA_LAUNCH_BLOCKING
-                value: 1
-              - name: TORCH_USE_CUDA_DSA
-                value: 1
               - name: NVIDIA_VISIBLE_DEVICES
                 value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090
-              #  value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547"
+              - name: VLLM_USE_FLASHINFER_SAMPLER
+                value: "1"
+              - name: PYTORCH_CUDA_ALLOC_CONF
+                value: "expandable_segments:True,max_split_size_mb:512"
             envFrom:
               - secretRef:
                   name: *appname
