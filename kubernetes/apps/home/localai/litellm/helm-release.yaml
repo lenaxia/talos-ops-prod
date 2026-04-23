@@ -56,52 +56,7 @@ spec:
           migrate:
             image:
               repository: ghcr.io/berriai/litellm
-              tag: v1.81.12-stable
-            command:
-              - sh
-              - -c
-              - |
-                set -e
-                echo "Starting database migration..."
-                echo "Database URL: postgresql://${INIT_POSTGRES_USER}:****@${INIT_POSTGRES_HOST}:5432/${INIT_POSTGRES_DBNAME}"
-                
-                # Check if schema directory exists
-                if [ ! -d "/app/litellm-proxy-extras" ]; then
-                  echo "ERROR: litellm-proxy-extras directory not found"
-                  exit 1
-                fi
-                
-                # Run Prisma migration
-                cd /app
-                echo "Running: prisma migrate deploy"
-                prisma migrate deploy --schema=/app/litellm-proxy-extras/litellm_proxy_extras/schema.prisma
-                
-                echo "✓ Migration completed successfully!"
-            env:
-              - name: INIT_POSTGRES_HOST
-                valueFrom:
-                  secretKeyRef:
-                    name: postgres-superuser
-                    key: host
-              - name: DATABASE_URL
-                value: "postgresql://$(INIT_POSTGRES_USER):$(INIT_POSTGRES_PASS)@$(INIT_POSTGRES_HOST):5432/$(INIT_POSTGRES_DBNAME)"
-              - name: USE_PRISMA_MIGRATE
-                value: "True"
-            envFrom:
-              - secretRef:
-                  name: *appname
-            resources:
-              requests:
-                cpu: 50m
-                memory: 512Mi
-              limits:
-                cpu: 200m
-                memory: 1Gi
-        containers:
-          app:
-            image:
-              repository: ghcr.io/berriai/litellm
-              tag: v1.81.12-stable
+              tag: v1.83.7-stable
             args:
               - "--config"
               - "/app/proxy_server_config.yaml"
@@ -273,13 +228,13 @@ spec:
               #    max_tokens: 40960
               - model_name: default
                 litellm_params:
-                  model: openai/qwen3-vl
+                  model: openai/qwen3
                   api_base: http://vllm.home.svc.cluster.local:8000/v1
                   api_key: doesnotmatter
                 model_info:
                   input_cost_per_token: 0.00001
                   output_cost_per_token: 0.00001
-                  max_tokens: 131072
+                  max_tokens: 262144
                   supports_tool_choice: true
               - model_name: classifier
                 litellm_params:
