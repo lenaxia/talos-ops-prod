@@ -64,6 +64,7 @@ spec:
                       --reasoning-parser qwen3 \
                       --compilation-config.cudagraph_mode none \
                       --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+                      --default-chat-template-kwargs '{"enable_thinking":false}' \
                       --port 8000
             env:
               - name: TZ
