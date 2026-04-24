@@ -55,7 +55,6 @@ spec:
                       --tensor-parallel-size 1 \
                       --max-num-seqs 3 \
                       --trust-remote-code \
-                      --disable-log-requests \
                       --host 0.0.0.0 \
                       --enable-chunked-prefill \
                       --enable-prefix-caching \
