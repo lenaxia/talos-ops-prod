@@ -16,13 +16,13 @@ spec:
         namespace: flux-system
   install:
     createNamespace: true
-    timeout: 30m
+    timeout: 60m
     remediation:
-      retries: 5
+      retries: 2
   upgrade:
-    timeout: 30m
+    timeout: 60m
     remediation:
-      retries: 5
+      retries: 2
   values:
     defaultPodOptions:
       nodeSelector:
@@ -86,11 +86,11 @@ spec:
                   httpGet:
                     path: /health
                     port: 8000
-                  initialDelaySeconds: 120
-                  periodSeconds: 20
+                  initialDelaySeconds: 600
+                  periodSeconds: 30
                   successThreshold: 1
                   failureThreshold: 5
-                  timeoutSeconds: 5
+                  timeoutSeconds: 10
               readiness:
                 enabled: true
                 custom: true
@@ -98,11 +98,11 @@ spec:
                   httpGet:
                     path: /health
                     port: 8000
-                  initialDelaySeconds: 90
-                  periodSeconds: 10
+                  initialDelaySeconds: 600
+                  periodSeconds: 15
                   successThreshold: 1
-                  failureThreshold: 3
-                  timeoutSeconds: 5
+                  failureThreshold: 5
+                  timeoutSeconds: 10
             resources:
               requests:
                 nvidia.com/gpu: "1"
