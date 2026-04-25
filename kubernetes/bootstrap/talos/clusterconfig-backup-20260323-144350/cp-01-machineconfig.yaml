@@ -153,7 +153,7 @@ spec: |
         disabled: true
         image: registry.k8s.io/kube-proxy:v1.33.2
       scheduler:
-        image: registry.k8s.io/kube-scheduler:v1.33.2
+        image: registry.k8s.io/kube-scheduler:v1.36.0
         extraArgs:
           bind-address: 0.0.0.0
         config:
