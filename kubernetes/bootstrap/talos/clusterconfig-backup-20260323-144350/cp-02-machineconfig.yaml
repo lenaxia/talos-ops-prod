@@ -145,7 +145,7 @@ spec: |
           rules:
             - level: Metadata
       controllerManager:
-        image: registry.k8s.io/kube-controller-manager:v1.33.2
+        image: registry.k8s.io/kube-controller-manager:v1.36.0
         extraArgs:
           bind-address: 0.0.0.0
       proxy:
@@ -334,7 +334,7 @@ spec: |
           rules:
             - level: Metadata
       controllerManager:
-        image: registry.k8s.io/kube-controller-manager:v1.33.2
+        image: registry.k8s.io/kube-controller-manager:v1.36.0
         extraArgs:
           bind-address: 0.0.0.0
       proxy:
