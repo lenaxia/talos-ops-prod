@@ -336,6 +336,16 @@ spec:
             - "^/v1/rerank"
           policy: bypass
 
+        # OpenWebUI static assets and health
+        - domain:
+            - "chat.${SECRET_DEV_DOMAIN}"
+          resources:
+            - "^/health"
+            - "^/static/.*$"
+            - "^/manifest.json$"
+            - "^/api/config"
+          policy: bypass
+
         # Local only bypass policies
         - domain: 
             - "ldap.${SECRET_DEV_DOMAIN}"
