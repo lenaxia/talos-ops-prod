@@ -17,6 +17,8 @@ spec:
   # See https://github.com/bjw-s/helm-charts/blob/main/charts/library/common/values.yaml
   values:
     defaultPodOptions:
+      terminationGracePeriodSeconds: 30
+      minReadySeconds: 5
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
     controllers:
