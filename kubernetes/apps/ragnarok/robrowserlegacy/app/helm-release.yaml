@@ -19,6 +19,7 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+      tolerations: []
 
     controllers:
       main:
