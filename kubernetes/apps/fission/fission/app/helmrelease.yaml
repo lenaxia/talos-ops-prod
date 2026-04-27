@@ -36,6 +36,14 @@ spec:
       archivePruner:
         enabled: true
         interval: 60
+      ## Schedule only on worker nodes where Longhorn managers run
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/worker
+                operator: Exists
 
     ## PVC for function package storage — use longhorn (cluster default)
     persistence:
