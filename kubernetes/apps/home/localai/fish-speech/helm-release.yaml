@@ -99,9 +99,11 @@ spec:
                     - /bin/sh
                     - -c
                     - |
-                      sed -i 's/import torchaudio.io._load_audio_fileobj/import torchaudio.io._load_audio_fileobj as _torchaudio_fileobj/' \
-                        /app/fish_speech/inference_engine/reference_loader.py
-                      find /app/fish_speech/inference_engine -name "*.pyc" -delete
+                      if [ -f /app/fish_speech/inference_engine/reference_loader.py ]; then
+                        sed -i 's/import torchaudio.io._load_audio_fileobj/import torchaudio.io._load_audio_fileobj as _torchaudio_fileobj/' \
+                          /app/fish_speech/inference_engine/reference_loader.py 2>/dev/null || true
+                      fi
+                      find /app/fish_speech/inference_engine -name "*.pyc" -delete 2>/dev/null || true
                       find /app/fish_speech/inference_engine -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
             probes:
               liveness:
