@@ -136,5 +136,4 @@ jobs:
           PROMPT_EOF
 
           # Run OpenCode analysis
-          # Run OpenCode analysis
-          opencode --model "$OPENAI_MODEL" --provider openai-compatible --base-url "$OPENAI_API_BASE" --api-key "$OPENAI_API_KEY" run "$(cat /tmp/renovate-analysis-prompt.txt)"
+          opencode run "$(cat /tmp/renovate-analysis-prompt.txt)"
