@@ -1,0 +1,24 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: dawarich-postgis
+  namespace: databases
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgis:16
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: postgres-superuser
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
+  monitoring:
+    enablePodMonitor: true
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: 256MB
