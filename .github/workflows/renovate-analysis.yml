@@ -84,7 +84,7 @@ jobs:
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          model: ${{ vars.OPENAI_MODEL }}
+          model: openai-compatible/${{ vars.OPENAI_MODEL }}
           use_github_token: "true"
           share: "false"
           prompt: |
