@@ -6,8 +6,8 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "Custom OpenAI-compatible endpoint",
       "options": {
-        "baseURL": "{env:OPENAI_API_BASE}",
-        "apiKey": "{env:OPENAI_API_KEY}"
+        "baseURL": "https://ai.thekao.cloud/v1",
+        "apiKey": "{env:LITELLM_API_KEY}"
       },
       "models": {
         "default": {
