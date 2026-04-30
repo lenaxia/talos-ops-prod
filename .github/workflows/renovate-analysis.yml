@@ -83,7 +83,7 @@ jobs:
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          model: glm-4.7
+          model: gpt-4o
           use_github_token: "true"
           share: "false"
           prompt: |
