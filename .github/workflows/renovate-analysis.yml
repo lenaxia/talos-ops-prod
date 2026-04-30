@@ -79,11 +79,11 @@ jobs:
         if: steps.pre-check.outputs.skip != 'true'
         uses: anomalyco/opencode/github@v1.14.30
         env:
-          LITELLM_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          model: litellm/${{ vars.OPENAI_MODEL }}
+          model: openai/${{ vars.OPENAI_MODEL }}
           use_github_token: "true"
           share: "false"
           prompt: |
