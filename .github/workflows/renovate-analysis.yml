@@ -77,64 +77,63 @@ jobs:
 
       - name: Analyze with OpenCode
         if: steps.pre-check.outputs.skip != 'true'
-        uses: anomalyco/opencode/github@v1.14.30
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          model: openai/${{ vars.OPENAI_MODEL }}
-          use_github_token: "true"
-          share: "false"
-          prompt: |
-            You are an AI assistant that analyzes Renovatebot pull requests for talos-ops-prod, a Talos Linux Kubernetes cluster managed with Flux GitOps.
+        run: |
+          # Create analysis prompt
+          cat > /tmp/renovate-analysis-prompt.txt <<'PROMPT_EOF'
+          You are an AI assistant that analyzes Renovatebot pull requests for talos-ops-prod, a Talos Linux Kubernetes cluster managed with Flux GitOps.
 
-            Target PR (empty = find and analyze all open Renovate PRs): ${{ inputs.pr_number }}
+          Task: Analyze Renovate PR(s) and post a detailed report as a PR comment. Do NOT merge any PRs.
 
-            Task: Analyze Renovate PR(s) and post a detailed report as a PR comment. Do NOT merge any PRs.
+          For each PR to analyze:
 
-            For each PR to analyze:
+          1. Parse the PR title: identify the dependency, version range (old → new), update type (patch/minor/major/digest).
 
-            1. Parse the PR title: identify the dependency, version range (old → new), update type (patch/minor/major/digest).
+          2. Identify the upstream repository:
+             - Helm charts: Chart.yaml repository URL or PR body links
+             - Docker images: image source repository
+             - GitHub Actions: the action's repository
+             - Check the PR body for links
 
-            2. Identify the upstream repository:
-               - Helm charts: Chart.yaml repository URL or PR body links
-               - Docker images: image source repository
-               - GitHub Actions: the action's repository
-               - Check the PR body for links
+          3. Fetch release notes from upstream for the new version(s). For minor/major, fetch all versions between old and new.
 
-            3. Fetch release notes from upstream for the new version(s). For minor/major, fetch all versions between old and new.
+          4. Analyze impact on this codebase:
+             - Helm charts: check the helmrelease.yaml values we're currently using
+             - GitHub Actions: check .github/workflows/ usage
+             - Breaking changes? Deprecated options we use? New required parameters?
 
-            4. Analyze impact on this codebase:
-               - Helm charts: check the helmrelease.yaml values we're currently using
-               - GitHub Actions: check .github/workflows/ usage
-               - Breaking changes? Deprecated options we use? New required parameters?
+          5. Post a comment on the PR using this exact structure:
+             ## Renovate PR Analysis
+             ### Update Summary
+             - Dependency: [name]
+             - Version: [old] → [new]
+             - Type: [patch/minor/major/digest]
+             ### Release Changes
+             [new features, bug fixes, security fixes]
+             ### Breaking Changes
+             [list, or "None affecting our usage"]
+             ### Configuration Changes Required
+             [specific changes needed to our Helm values or config, or "None"]
+             ### Migration Notes
+             [migration steps from upstream, or "None"]
+             ### Recommendation
+             [Safe to merge / Needs manual review / Requires code changes] — [reason]
 
-            5. Post a comment on the PR using this exact structure:
-               ## Renovate PR Analysis
-               ### Update Summary
-               - Dependency: [name]
-               - Version: [old] → [new]
-               - Type: [patch/minor/major/digest]
-               ### Release Changes
-               [new features, bug fixes, security fixes]
-               ### Breaking Changes
-               [list, or "None affecting our usage"]
-               ### Configuration Changes Required
-               [specific changes needed to our Helm values or config, or "None"]
-               ### Migration Notes
-               [migration steps from upstream, or "None"]
-               ### Recommendation
-               [Safe to merge / Needs manual review / Requires code changes] — [reason]
+          6. Act on the recommendation:
+             - Safe to merge: merge with squash method (github_merge_pull_request)
+             - Requires code changes: create branch config/renovate-pr-{number}-changes, make changes, open a PR, comment on the Renovate PR with the link
+             - Needs manual review: post comment only, do NOT merge
 
-            6. Act on the recommendation:
-               - Safe to merge: merge with squash method (github_merge_pull_request)
-               - Requires code changes: create branch config/renovate-pr-{number}-changes, make changes, open a PR, comment on the Renovate PR with the link
-               - Needs manual review: post comment only, do NOT merge
+          Special exclusions (always "Needs manual review", never auto-merge):
+          - MinIO — deprecated open source, became open source hostile
+          - Bitnami — revoked open-source license
 
-            Special exclusions (always "Needs manual review", never auto-merge):
-            - MinIO — deprecated open source, became open source hostile
-            - Bitnami — revoked open-source license
+          Skip PRs with "abandoned" in the title.
+          PROMPT_EOF
 
-            Skip PRs with "abandoned" in the title.
+          # Run OpenCode analysis
+          opencode run "$(cat /tmp/renovate-analysis-prompt.txt)"
