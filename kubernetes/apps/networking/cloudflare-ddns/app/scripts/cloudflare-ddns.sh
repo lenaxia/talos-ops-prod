@@ -16,13 +16,36 @@ error_exit() {
     exit 1
 }
 
+# Function to execute curl with retry logic for transient failures
+curl_with_retry() {
+    local max_retries=3
+    local retry_delay=2
+    local attempt=1
+    local curl_output
+    local curl_exit_code
+
+    while [[ $attempt -le $max_retries ]]; do
+        curl_output=$(curl -s "$@")
+        curl_exit_code=$?
+        if [[ $curl_exit_code -eq 0 ]]; then
+            echo "$curl_output"
+            return 0
+        fi
+        log "Curl attempt $attempt/$max_retries failed with exit code $curl_exit_code, retrying in ${retry_delay}s..."
+        sleep $retry_delay
+        ((attempt++))
+    done
+    log "Curl failed after $max_retries attempts"
+    return $curl_exit_code
+}
+
 # Fetch Current External IP
-current_ipv4="$(curl -s https://ipv4.icanhazip.com/)" || error_exit "Failed to fetch current IPv4 address"
+current_ipv4="$(curl_with_retry https://ipv4.icanhazip.com/)" || error_exit "Failed to fetch current IPv4 address"
 
 log "Fetched current IP Address: $current_ipv4"
 
 # Fetch Cloudflare Zone ID
-zone_id=$(curl -s -X GET \
+zone_id=$(curl_with_retry -X GET \
     "https://api.cloudflare.com/client/v4/zones?name=$CLOUDFLARE_DOMAIN&status=active" \
     -H "Authorization: Bearer $CLOUDFLARE_TOKEN" \
     -H "Content-Type: application/json" \
@@ -32,7 +55,7 @@ zone_id=$(curl -s -X GET \
 log "Fetched zone id: $zone_id"
 
 # Fetch Current DNS Record
-record_ipv4=$(curl -s -X GET \
+record_ipv4=$(curl_with_retry -X GET \
     "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records?name=$CLOUDFLARE_DOMAIN&type=A" \
     -H "Authorization: Bearer $CLOUDFLARE_TOKEN" \
     -H "Content-Type: application/json" || error_exit "Failed to fetch current DNS record")
@@ -54,7 +77,7 @@ record_ipv4_identifier="$(echo "$record_ipv4" | jq --raw-output '.result[0] | .i
 log "Fetched ipv4 identifier $record_ipv4_identifier"
 
 # Update DNS Record
-update_ipv4=$(curl -s -X PUT \
+update_ipv4=$(curl_with_retry -X PUT \
     "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$record_ipv4_identifier" \
     -H "Authorization: Bearer $CLOUDFLARE_TOKEN" \
     -H "Content-Type: application/json" \
