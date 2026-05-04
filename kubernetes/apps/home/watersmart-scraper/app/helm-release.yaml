@@ -63,10 +63,10 @@ spec:
                   httpGet:
                     path: /livez
                     port: &port 8080
-                  initialDelaySeconds: 10
+                  initialDelaySeconds: 30
                   periodSeconds: 30
                   timeoutSeconds: 5
-                  failureThreshold: 3
+                  failureThreshold: 6
               readiness:
                 enabled: true
                 custom: true
@@ -74,12 +74,21 @@ spec:
                   httpGet:
                     path: /readyz
                     port: *port
-                  initialDelaySeconds: 15
+                  initialDelaySeconds: 30
                   periodSeconds: 60
                   timeoutSeconds: 5
-                  failureThreshold: 3
+                  failureThreshold: 6
               startup:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /livez
+                    port: *port
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
             resources:
               requests:
                 cpu: 10m
