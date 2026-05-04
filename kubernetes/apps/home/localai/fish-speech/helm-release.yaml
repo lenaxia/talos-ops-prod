@@ -147,7 +147,7 @@ spec:
           shim:
             image:
               repository: python
-              tag: 3.12-slim
+              tag: 3.14-slim
             command: [python, /shim/shim.py]
             env:
               - name: FISH_SPEECH_URL
