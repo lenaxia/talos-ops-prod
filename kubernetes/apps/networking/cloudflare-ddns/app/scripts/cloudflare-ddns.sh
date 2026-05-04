@@ -16,26 +16,49 @@ error_exit() {
     exit 1
 }
 
+# Function to retry a command with backoff
+retry() {
+    local max_attempts=3
+    local delay=2
+    local attempt=1
+    local cmd="$1"
+    shift
+    
+    while [ $attempt -le $max_attempts ]; do
+        log "Attempt $attempt/$max_attempts: $cmd"
+        if "$cmd" "$@"; then
+            return 0
+        fi
+        if [ $attempt -lt $max_attempts ]; then
+            log "Command failed, retrying in ${delay}s..."
+            sleep $delay
+            delay=$((delay * 2))
+        fi
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
 # Fetch Current External IP
-current_ipv4="$(curl -s https://ipv4.icanhazip.com/)" || error_exit "Failed to fetch current IPv4 address"
+current_ipv4="$(retry curl -s https://ipv4.icanhazip.com/)" || error_exit "Failed to fetch current IPv4 address after multiple attempts"
 
 log "Fetched current IP Address: $current_ipv4"
 
 # Fetch Cloudflare Zone ID
-zone_id=$(curl -s -X GET \
+zone_id=$(retry curl -s -X GET \
     "https://api.cloudflare.com/client/v4/zones?name=$CLOUDFLARE_DOMAIN&status=active" \
     -H "Authorization: Bearer $CLOUDFLARE_TOKEN" \
     -H "Content-Type: application/json" \
-    | jq --raw-output ".result[0] | .id" || error_exit "Failed to fetch Cloudflare Zone ID")
+    | jq --raw-output ".result[0] | .id") || error_exit "Failed to fetch Cloudflare Zone ID after multiple attempts"
 
 
 log "Fetched zone id: $zone_id"
 
 # Fetch Current DNS Record
-record_ipv4=$(curl -s -X GET \
+record_ipv4=$(retry curl -s -X GET \
     "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records?name=$CLOUDFLARE_DOMAIN&type=A" \
     -H "Authorization: Bearer $CLOUDFLARE_TOKEN" \
-    -H "Content-Type: application/json" || error_exit "Failed to fetch current DNS record")
+    -H "Content-Type: application/json") || error_exit "Failed to fetch current DNS record after multiple attempts"
 
 log "ipv4 record $record_ipv4"
 
@@ -54,11 +77,11 @@ record_ipv4_identifier="$(echo "$record_ipv4" | jq --raw-output '.result[0] | .i
 log "Fetched ipv4 identifier $record_ipv4_identifier"
 
 # Update DNS Record
-update_ipv4=$(curl -s -X PUT \
+update_ipv4=$(retry curl -s -X PUT \
     "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$record_ipv4_identifier" \
     -H "Authorization: Bearer $CLOUDFLARE_TOKEN" \
     -H "Content-Type: application/json" \
-    --data "{\"id\":\"$zone_id\",\"type\":\"A\",\"proxied\":false,\"name\":\"$CLOUDFLARE_DOMAIN\",\"content\":\"$current_ipv4\"}" || error_exit "Failed to update DNS record")
+    --data "{\"id\":\"$zone_id\",\"type\":\"A\",\"proxied\":false,\"name\":\"$CLOUDFLARE_DOMAIN\",\"content\":\"$current_ipv4\"}") || error_exit "Failed to update DNS record after multiple attempts"
 
 if [[ "$(echo "$update_ipv4" | jq --raw-output '.success')" == "true" ]]; then
     log "Success - IP Address '$current_ipv4' has been updated"
