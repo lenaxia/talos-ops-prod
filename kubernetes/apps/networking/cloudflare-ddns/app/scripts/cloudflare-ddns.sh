@@ -5,9 +5,9 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-# Function to log messages
+# Function to log messages (to stderr so log lines don't contaminate command substitution output)
 log() {
-    echo "$(date -u) - $1"
+    echo "$(date -u) - $1" >&2
 }
 
 # Function to exit in case of an error
