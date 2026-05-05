@@ -33,31 +33,37 @@ spec:
             probes:
               liveness:
                 enabled: true
-                type: HTTP
-                path: /
-                port: 80
-                initialDelaySeconds: 30
-                periodSeconds: 10
-                timeoutSeconds: 5
-                failureThreshold: 3
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 80
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
               readiness:
                 enabled: true
-                type: HTTP
-                path: /
-                port: 80
-                initialDelaySeconds: 5
-                periodSeconds: 5
-                timeoutSeconds: 3
-                failureThreshold: 3
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 80
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 3
               startup:
                 enabled: true
-                type: HTTP
-                path: /
-                port: 80
-                initialDelaySeconds: 5
-                periodSeconds: 5
-                timeoutSeconds: 3
-                failureThreshold: 30
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 80
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 30
             resources:
               requests:
                 cpu: 10m
