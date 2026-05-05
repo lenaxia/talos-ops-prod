@@ -43,6 +43,7 @@ spec:
 
   updateStrategy:
     type: RollingUpdate
+    autoUpdateDataPlane: true  # required before operator upgrade to 26.3.x per upstream UPGRADE_26.3.0.md
 
   nodeSelector:
     node-role.kubernetes.io/worker: 'true'
