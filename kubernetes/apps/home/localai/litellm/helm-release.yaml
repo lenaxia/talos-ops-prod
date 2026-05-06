@@ -224,123 +224,123 @@ spec:
               disable_error_logs: True # turn off writing LLM Exceptions to DB
 
 
-              model_list:
-              - model_name: default
-                litellm_params:
-                  model: openai/qwen3
-                  api_base: http://vllm.home.svc.cluster.local:8000/v1
-                  api_key: doesnotmatter
-                model_info:
-                  input_cost_per_token: 0.00001
-                  output_cost_per_token: 0.00001
-                  max_tokens: 32768
-                  supports_tool_choice: true
-              - model_name: classifier
-                litellm_params:
-                  model: openai/classifier
-                  api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
-                  api_key: doesnotmatter
-                model_info:
-                  input_cost_per_token: 0.00001
-                  output_cost_per_token: 0.00001
-                  max_tokens: 1000
-                  supports_tool_choice: false
+            model_list:
+            - model_name: default
+              litellm_params:
+                model: openai/qwen3
+                api_base: http://vllm.home.svc.cluster.local:8000/v1
+                api_key: doesnotmatter
+              model_info:
+                input_cost_per_token: 0.00001
+                output_cost_per_token: 0.00001
+                max_tokens: 32768
+                supports_tool_choice: true
+            - model_name: classifier
+              litellm_params:
+                model: openai/classifier
+                api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
+                api_key: doesnotmatter
+              model_info:
+                input_cost_per_token: 0.00001
+                output_cost_per_token: 0.00001
+                max_tokens: 1000
+                supports_tool_choice: false
 
-              # Deepseek
-              - model_name: deepseek-v3-chat
-                litellm_params:
-                  model: deepseek/deepseek-chat
-                model_info:
-                  max_tokens: 8000
-                  supports_tool_choice: true
-              - model_name: deepseek-r1-reasoning
-                litellm_params:
-                  model: deepseek/deepseek-reasoner
-                model_info:
-                  max_tokens: 8000
-                  supports_tool_choice: false
-              - model_name: deepseek-v4-flash
-                litellm_params:
-                  model: deepseek/deepseek-v4-flash
-                model_info:
-                  max_tokens: 8000
-                  supports_tool_choice: true
-              - model_name: deepseek-v4-pro
-                litellm_params:
-                  model: deepseek/deepseek-v4-pro
-                model_info:
-                  max_tokens: 8000
-                  supports_tool_choice: true
+            # Deepseek
+            - model_name: deepseek-v3-chat
+              litellm_params:
+                model: deepseek/deepseek-chat
+              model_info:
+                max_tokens: 8000
+                supports_tool_choice: true
+            - model_name: deepseek-r1-reasoning
+              litellm_params:
+                model: deepseek/deepseek-reasoner
+              model_info:
+                max_tokens: 8000
+                supports_tool_choice: false
+            - model_name: deepseek-v4-flash
+              litellm_params:
+                model: deepseek/deepseek-v4-flash
+              model_info:
+                max_tokens: 8000
+                supports_tool_choice: true
+            - model_name: deepseek-v4-pro
+              litellm_params:
+                model: deepseek/deepseek-v4-pro
+              model_info:
+                max_tokens: 8000
+                supports_tool_choice: true
 
-              - model_name: glm-4.7
-                litellm_params:
-                  model: openai/glm-4.7
-                  api_base: https://api.z.ai/api/coding/paas/v4
-                  api_key: os.environ/ZAI_API_KEY
-                model_info:
-                  max_tokens: 128000
-                  supports_tool_choice: true
-              - model_name: glm-4.6
-                litellm_params:
-                  model: openai/glm-4.6
-                  api_base: https://api.z.ai/api/coding/paas/v4
-                  api_key: os.environ/ZAI_API_KEY
-                model_info:
-                  max_tokens: 128000
-                  supports_tool_choice: true
-              - model_name: glm-5.1
-                litellm_params:
-                  model: openai/glm-5.1
-                  api_base: https://api.z.ai/api/coding/paas/v4
-                  api_key: os.environ/ZAI_API_KEY
-                model_info:
-                  max_tokens: 128000
-                  supports_tool_choice: true
+            - model_name: glm-4.7
+              litellm_params:
+                model: openai/glm-4.7
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_tokens: 128000
+                supports_tool_choice: true
+            - model_name: glm-4.6
+              litellm_params:
+                model: openai/glm-4.6
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_tokens: 128000
+                supports_tool_choice: true
+            - model_name: glm-5.1
+              litellm_params:
+                model: openai/glm-5.1
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_tokens: 128000
+                supports_tool_choice: true
 
-              # OpenAI
-              - model_name: o3-mini-reasoning
-                litellm_params:
-                  model: openai/o3-mini
-                model_info:
-                  max_tokens: 100000
-                  supports_tool_choice: true
-              - model_name: gpt-5.5
-                litellm_params:
-                  model: openai/gpt-5.5
-                model_info:
-                  max_tokens: 128000
-                  supports_tool_choice: true
-              - model_name: gpt-5.4
-                litellm_params:
-                  model: openai/gpt-5.4
-                model_info:
-                  max_tokens: 128000
-                  supports_tool_choice: true
-              - model_name: gpt-5.4-mini
-                litellm_params:
-                  model: openai/gpt-5.4-mini
-                model_info:
-                  max_tokens: 128000
-                  supports_tool_choice: true
-              # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
-              - model_name: kokoro
-                litellm_params:
-                  model: openai/kokoro
-                  api_base: http://kokoro.home.svc.cluster.local:8880/v1
-                  api_key: placeholder
+            # OpenAI
+            - model_name: o3-mini-reasoning
+              litellm_params:
+                model: openai/o3-mini
+              model_info:
+                max_tokens: 100000
+                supports_tool_choice: true
+            - model_name: gpt-5.5
+              litellm_params:
+                model: openai/gpt-5.5
+              model_info:
+                max_tokens: 128000
+                supports_tool_choice: true
+            - model_name: gpt-5.4
+              litellm_params:
+                model: openai/gpt-5.4
+              model_info:
+                max_tokens: 128000
+                supports_tool_choice: true
+            - model_name: gpt-5.4-mini
+              litellm_params:
+                model: openai/gpt-5.4-mini
+              model_info:
+                max_tokens: 128000
+                supports_tool_choice: true
+            # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
+            - model_name: kokoro
+              litellm_params:
+                model: openai/kokoro
+                api_base: http://kokoro.home.svc.cluster.local:8880/v1
+                api_key: placeholder
 
-              # Bedrock
-              - model_name: bedrock-claude-sonnet-4.6
-                litellm_params:
-                  model: bedrock/global.anthropic.claude-sonnet-4-6
-                  aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
-                  aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
-                  aws_region_name: os.environ/AWS_REGION_NAME
-                  additional_drop_params: ["parent_id"]
-                model_info:
-                  max_tokens: 64000
-                  supports_tool_choice: true
-                  supported_openai_params: ["max_tokens", "max_completion_tokens", "stream", "stream_options", "stop", "temperature", "top_p", "extra_headers", "response_format", "requestMetadata", "service_tier", "tools", "tool_choice", "thinking", "reasoning_effort"]
+            # Bedrock
+            - model_name: bedrock-claude-sonnet-4.6
+              litellm_params:
+                model: bedrock/global.anthropic.claude-sonnet-4-6
+                aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+                aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+                aws_region_name: os.environ/AWS_REGION_NAME
+                additional_drop_params: ["parent_id"]
+              model_info:
+                max_tokens: 64000
+                supports_tool_choice: true
+                supported_openai_params: ["max_tokens", "max_completion_tokens", "stream", "stream_options", "stop", "temperature", "top_p", "extra_headers", "response_format", "requestMetadata", "service_tier", "tools", "tool_choice", "thinking", "reasoning_effort"]
     persistence:
       config-yaml:
         enabled: true
