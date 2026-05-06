@@ -224,54 +224,8 @@ spec:
               disable_error_logs: True # turn off writing LLM Exceptions to DB
 
 
-            model_list: 
-              ## LocalAI
-              #- model_name: localai-llama3.1-q8-functioncall
-              #  litellm_params:
-              #    model: openai/meta-llama-3.1-8b-instruct:Q8_grammar-functioncall
-              #    api_base: http://localai.home.svc.cluster.local:8080
-              #    api_key: doesnotmatter
-
-              # Tabby API 
-              #- model_name: default
-              #  litellm_params:
-              #    model: openai/Qwen2.5-72B-Instruct-exl2-4_25
-              #    api_base: http://tabbyapi.home.svc.cluster.local:5000/v1
-              #    api_key: doesnotmatter
-              #  model_info:
-              #    input_cost_per_token: 0.00001
-              #    output_cost_per_token: 0.00001
-              #    max_tokens: 40960
-              #- model_name: exl2-qwen2.5-72b-instruct_4_25
-              #  litellm_params:
-              #    model: openai/Qwen2.5-72B-Instruct-exl2-4_25
-              #    api_base: http://tabbyapi.default.svc.cluster.local:5000/v1
-              #    api_key: doesnotmatter
-              #  model_info:
-              #    input_cost_per_token: 0.00001
-              #    output_cost_per_token: 0.00001
-              #    max_tokens: 40960
-
-              # vLLM
-              #- model_name: default
-              #  litellm_params:
-              #    model: hosted_vllm/default
-              #    api_base: http://vllm.home.svc.cluster.local:8000/v1
-              #    api_key: doesnotmatter
-              #  model_info:
-              #    input_cost_per_token: 0.00001
-              #    output_cost_per_token: 0.00001
-              #    max_tokens: 40960
-              #- model_name: qwen3-30a3b-test
-              #  litellm_params:
-              #    model: openai/cognitivecomputations/Qwen3-30B-A3B-AWQ
-              #    api_base: http://vllm.home.svc.cluster.local:8000/v1
-              #    api_key: doesnotmatter
-              #  model_info:
-              #    input_cost_per_token: 0.00001
-              #    output_cost_per_token: 0.00001
-              #    max_tokens: 40960
-              - model_name: default
+            model_list:
+               - model_name: default
                 litellm_params:
                   model: openai/qwen3
                   api_base: http://vllm.home.svc.cluster.local:8000/v1
@@ -279,7 +233,7 @@ spec:
                 model_info:
                   input_cost_per_token: 0.00001
                   output_cost_per_token: 0.00001
-                  max_tokens: 262144
+                  max_tokens: 32768
                   supports_tool_choice: true
               - model_name: classifier
                 litellm_params:
@@ -290,92 +244,103 @@ spec:
                   input_cost_per_token: 0.00001
                   output_cost_per_token: 0.00001
                   max_tokens: 1000
+                  supports_tool_choice: false
 
               # Deepseek
               - model_name: deepseek-v3-chat
                 litellm_params:
                   model: deepseek/deepseek-chat
                 model_info:
+                  max_tokens: 8000
                   supports_tool_choice: true
               - model_name: deepseek-r1-reasoning
                 litellm_params:
                   model: deepseek/deepseek-reasoner
+                model_info:
+                  max_tokens: 8000
+                  supports_tool_choice: false
+              - model_name: deepseek-v4-flash
+                litellm_params:
+                  model: deepseek/deepseek-v4-flash
+                model_info:
+                  max_tokens: 8000
+                  supports_tool_choice: true
+              - model_name: deepseek-v4-pro
+                litellm_params:
+                  model: deepseek/deepseek-v4-pro
+                model_info:
+                  max_tokens: 8000
+                  supports_tool_choice: true
 
               - model_name: glm-4.7
                 litellm_params:
                   model: openai/glm-4.7
                   api_base: https://api.z.ai/api/coding/paas/v4
                   api_key: os.environ/ZAI_API_KEY
+                model_info:
+                  max_tokens: 128000
+                  supports_tool_choice: true
               - model_name: glm-4.6
                 litellm_params:
                   model: openai/glm-4.6
                   api_base: https://api.z.ai/api/coding/paas/v4
                   api_key: os.environ/ZAI_API_KEY
-              - model_name: glm-5
+                model_info:
+                  max_tokens: 128000
+                  supports_tool_choice: true
+              - model_name: glm-5.1
                 litellm_params:
-                  model: openai/glm-5
+                  model: openai/glm-5.1
                   api_base: https://api.z.ai/api/coding/paas/v4
                   api_key: os.environ/ZAI_API_KEY
-            
+                model_info:
+                  max_tokens: 128000
+                  supports_tool_choice: true
 
-              # OpenAI
+               # OpenAI
               - model_name: o3-mini-reasoning
                 litellm_params:
                   model: openai/o3-mini
-              - model_name: gpt-4o
+                model_info:
+                  max_tokens: 100000
+                  supports_tool_choice: true
+              - model_name: gpt-5.5
                 litellm_params:
-                  model: openai/gpt-4o
-              - model_name: gpt-4o-mini
+                  model: openai/gpt-5.5
+                model_info:
+                  max_tokens: 128000
+                  supports_tool_choice: true
+              - model_name: gpt-5.4
                 litellm_params:
-                  model: openai/gpt-4o-mini
-              - model_name: dalle3
+                  model: openai/gpt-5.4
+                model_info:
+                  max_tokens: 128000
+                  supports_tool_choice: true
+              - model_name: gpt-5.4-mini
                 litellm_params:
-                  model: openai/dall-e-3
-
-              # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
+                  model: openai/gpt-5.4-mini
+                model_info:
+                  max_tokens: 128000
+                  supports_tool_choice: true
+               # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
               - model_name: kokoro
                 litellm_params:
                   model: openai/kokoro
                   api_base: http://kokoro.home.svc.cluster.local:8880/v1
                   api_key: placeholder
 
-              # TTS - Fish Speech (via OpenAI-compat shim)
-              - model_name: fish-speech
-                litellm_params:
-                  model: openai/fish-speech
-                  api_base: http://fish-speech.home.svc.cluster.local:8081/v1
-                  api_key: placeholder
-
               # Bedrock
-              - model_name: bedrock-claude-sonnet-4.5
+              - model_name: bedrock-claude-sonnet-4.6
                 litellm_params:
-                  model: bedrock/global.anthropic.claude-sonnet-4-5-20250929-v1:0
+                  model: bedrock/global.anthropic.claude-sonnet-4-6
                   aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
                   aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
                   aws_region_name: os.environ/AWS_REGION_NAME
                   additional_drop_params: ["parent_id"]
                 model_info:
+                  max_tokens: 64000
+                  supports_tool_choice: true
                   supported_openai_params: ["max_tokens", "max_completion_tokens", "stream", "stream_options", "stop", "temperature", "top_p", "extra_headers", "response_format", "requestMetadata", "service_tier", "tools", "tool_choice", "thinking", "reasoning_effort"]
-              #- model_name: bedrock-claude-v2-haiku
-              #  litellm_params:
-              #    model: bedrock/anthropic.claude-3-haiku-20240307-v1:0
-              #    aws_region_name: us-west-2
-              #- model_name: bedrock-claude-v2-opus
-              #  litellm_params:
-              #    model: bedrock/anthropic.claude-3-opus-20240229-v1:0
-              #    aws_region_name: us-west-2
-              #- model_name: bedrock-mixtral-8x7b
-              #  litellm_params:
-              #    model: bedrock/mistral.mixtral-8x7b-instruct-v0:1
-              #    aws_region_name: us-west-2
-              #- model_name: bedrock-llama3-70b
-              #  litellm_params:
-              #    model: bedrock/meta.llama3-70b-instruct-v1:0
-              #    aws_region_name: us-west-2
-              #- model_name: bedrock-command-r-plus
-              #  litellm_params:
-              #    model: bedrock/cohere.command-r-plus-v1:0
-              #    aws_region_name: us-west-2
     persistence:
       config-yaml:
         enabled: true
