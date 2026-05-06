@@ -224,8 +224,8 @@ spec:
               disable_error_logs: True # turn off writing LLM Exceptions to DB
 
 
-            model_list:
-               - model_name: default
+              model_list:
+              - model_name: default
                 litellm_params:
                   model: openai/qwen3
                   api_base: http://vllm.home.svc.cluster.local:8000/v1
@@ -297,7 +297,7 @@ spec:
                   max_tokens: 128000
                   supports_tool_choice: true
 
-               # OpenAI
+              # OpenAI
               - model_name: o3-mini-reasoning
                 litellm_params:
                   model: openai/o3-mini
@@ -322,7 +322,7 @@ spec:
                 model_info:
                   max_tokens: 128000
                   supports_tool_choice: true
-               # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
+              # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
               - model_name: kokoro
                 litellm_params:
                   model: openai/kokoro
