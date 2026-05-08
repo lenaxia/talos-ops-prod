@@ -83,7 +83,7 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /livez
+                    path: /readyz
                     port: *port
                   initialDelaySeconds: 10
                   periodSeconds: 10
@@ -91,7 +91,7 @@ spec:
                   failureThreshold: 30
             resources:
               requests:
-                cpu: 10m
+                cpu: 100m
                 memory: 64Mi
               limits:
                 memory: 256Mi
