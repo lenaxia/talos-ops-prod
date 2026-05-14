@@ -28,6 +28,10 @@ spec:
   affinity:
     nodeSelector:
       node-role.kubernetes.io/worker: "true"
+    tolerations:
+      - key: node.kubernetes.io/unschedulable
+        operator: Exists
+        effect: NoSchedule
   monitoring:
     enablePodMonitor: true
   postgresql:
