@@ -250,6 +250,25 @@ spec:
                 output_cost_per_token: 0.00001
                 max_tokens: 32768
                 supports_tool_choice: true
+
+            # ha-assistant: same backend as `default`, exposed under a
+            # distinct alias so Open-WebUI can pin a HA-specific system prompt
+            # and pre-attach the `hass` MCP server's tools (configured in the
+            # OWU model row, since LiteLLM has no per-model auto-tool-attach
+            # of MCP servers in v1.83.x). External clients calling LiteLLM
+            # directly with model=ha-assistant get the same backend, but
+            # without the OWU-side prompt/tool attachment unless they opt
+            # in via tools=[{type: "mcp", server_url: "litellm_proxy"}].
+            - model_name: ha-assistant
+              litellm_params:
+                model: openai/qwen3
+                api_base: http://vllm.home.svc.cluster.local:8000/v1
+                api_key: doesnotmatter
+              model_info:
+                input_cost_per_token: 0.00001
+                output_cost_per_token: 0.00001
+                max_tokens: 32768
+                supports_tool_choice: true
             - model_name: classifier
               litellm_params:
                 model: openai/classifier
