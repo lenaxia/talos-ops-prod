@@ -1,0 +1,142 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname hass-mcp
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 4.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 4
+  uninstall:
+    keepHistory: false
+  values:
+    # ──────────────────────────────────────────────────────────────────────
+    # hass-mcp wrapped by supergateway
+    # ──────────────────────────────────────────────────────────────────────
+    # supergateway (Node) listens on :8000 for SSE/MCP and spawns
+    # `uvx hass-mcp` (Python) as a stdio child. uvx fetches Python 3.13
+    # and the hass-mcp PyPI package on first start, caching to
+    # /home/app (emptyDir).
+    #
+    # Network exposure: ClusterIP only. Reachable as
+    #   http://hass-mcp.home.svc.cluster.local:8000/sse
+    # Security note: supergateway has no inbound auth (verified via --help).
+    # In-cluster access is the only protection. LiteLLM consumes this and
+    # is the documented client; LiteLLM itself is Authelia-protected.
+    # ──────────────────────────────────────────────────────────────────────
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+    controllers:
+      main:
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: supercorp/supergateway
+              # Pinned to digest of supercorp/supergateway:3.4.3-uvx
+              # verified 2026-05-15 from Docker Hub.
+              tag: 3.4.3-uvx@sha256:2ffee900c18d8375096b392c8be15cd344535a05b753a5b182da227ab6306a15
+              pullPolicy: IfNotPresent
+            command:
+              - supergateway
+            args:
+              - --stdio
+              - uvx hass-mcp
+              - --port
+              - "8000"
+              - --healthEndpoint
+              - /healthz
+              - --logLevel
+              - info
+            env:
+              # Required by hass-mcp; HA_TOKEN is loaded from secret below.
+              HA_URL: http://home-assistant.home.svc.cluster.local:8123
+              # Required so uv has a writable cache when running as UID 568.
+              # Default HOME=/root in the upstream image is not writable.
+              HOME: /home/app
+              XDG_CACHE_HOME: /home/app/.cache
+              XDG_DATA_HOME: /home/app/.local/share
+            envFrom:
+              - secretRef:
+                  name: hass-mcp
+            resources:
+              requests:
+                cpu: 10m
+                memory: 200Mi
+              limits:
+                memory: 512Mi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  # First start: uv must download Python 3.13 (~25 MiB)
+                  # and resolve hass-mcp's deps. Allow generous startup.
+                  initialDelaySeconds: 60
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 5
+              startup:
+                enabled: false
+    persistence:
+      # Writable HOME for uv cache + downloaded interpreter.
+      # emptyDir is fine: cache is rebuilt from PyPI/python.org on pod start.
+      home:
+        type: emptyDir
+        globalMounts:
+          - path: /home/app
+      # supergateway writes session/transient state under /tmp.
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+    service:
+      main:
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 8000
+            protocol: TCP
