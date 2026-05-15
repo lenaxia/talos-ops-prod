@@ -5,3 +5,5 @@ namespace: fission
 resources:
   - ./matriarch.yaml
   - ./secret.sops.yaml
+  - ./matriarch-vy.yaml
+  - ./secret-matriarch-vy.sops.yaml
