@@ -223,6 +223,21 @@ spec:
               disable_spend_logs: True # turn off writing each transaction to the db for better performance
               disable_error_logs: True # turn off writing LLM Exceptions to DB
 
+            # MCP Gateway: register hass-mcp (running as a sibling pod with
+            # supergateway exposing SSE). LiteLLM reads tools from this server
+            # and re-exposes them via its own /mcp endpoint and via the
+            # `tools: [{type: mcp, server_url: litellm_proxy}]` flow on
+            # /v1/chat/completions and /v1/responses.
+            #
+            # supergateway has no inbound auth (verified) so no auth_type/value.
+            # Security model: in-cluster ClusterIP only, LiteLLM is the only
+            # documented client.
+            mcp_servers:
+              hass:
+                url: http://hass-mcp.home.svc.cluster.local:8000/sse
+                transport: sse
+                description: Home Assistant control via voska/hass-mcp
+
 
             model_list:
             - model_name: default
