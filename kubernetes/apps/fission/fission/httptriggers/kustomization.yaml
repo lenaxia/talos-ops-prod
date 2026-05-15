@@ -5,3 +5,5 @@ namespace: fission
 resources:
   - ./matriarch.yaml
   - ./matriarch-timer.yaml
+  - ./matriarch-vy.yaml
+  - ./matriarch-vy-timer.yaml
