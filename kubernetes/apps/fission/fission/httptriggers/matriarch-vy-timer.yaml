@@ -1,0 +1,11 @@
+---
+apiVersion: fission.io/v1
+kind: TimeTrigger
+metadata:
+  name: matriarch-vy-daily
+  namespace: fission
+spec:
+  cron: "0 15 * * *"
+  functionref:
+    name: matriarch-vy
+    type: name
