@@ -27,7 +27,7 @@ spec:
           main:
             image:
               repository: httpd
-              tag: 2.4.66
+              tag: 2.4.67
             env:
               TZ: ${TIMEZONE}
             probes:
