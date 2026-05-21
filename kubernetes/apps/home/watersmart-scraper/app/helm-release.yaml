@@ -74,10 +74,10 @@ spec:
                   httpGet:
                     path: /readyz
                     port: *port
-                  initialDelaySeconds: 15
-                  periodSeconds: 60
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
                   timeoutSeconds: 5
-                  failureThreshold: 3
+                  failureThreshold: 2
               startup:
                 enabled: false
             resources:
