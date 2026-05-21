@@ -66,7 +66,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: home-kubernetes
-  wait: false
+  wait: true
   interval: 5m
   retryInterval: 1m
   timeout: 10m
