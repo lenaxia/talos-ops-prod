@@ -36,6 +36,8 @@ spec:
       archivePruner:
         enabled: true
         interval: 60
+      image:
+        tag: "1.22.1"
 
     ## PVC for function package storage — use longhorn (cluster default)
     persistence:
