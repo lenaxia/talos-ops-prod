@@ -58,8 +58,7 @@ spec:
                 drop:
                   - ALL
         pod:
-          imagePullSecrets:
-            - name: dockerhub-auth
+           annotations:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
