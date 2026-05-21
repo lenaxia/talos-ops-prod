@@ -255,9 +255,7 @@ spec:
       checkpoints:
         enabled: true
         type: persistentVolumeClaim
-        storageClass: longhorn
-        accessMode: ReadWriteOnce
-        size: 50Gi
+        existingClaim: fish-speech-checkpoints
         advancedMounts:
           app:
             download-checkpoints:
@@ -267,9 +265,7 @@ spec:
       references:
         enabled: true
         type: persistentVolumeClaim
-        storageClass: longhorn
-        accessMode: ReadWriteOnce
-        size: 5Gi
+        existingClaim: fish-speech-references
         advancedMounts:
           app:
             app:
