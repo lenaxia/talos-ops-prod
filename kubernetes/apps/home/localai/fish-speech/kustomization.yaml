@@ -7,3 +7,5 @@ commonLabels:
 resources:
   - helm-release.yaml
   - secret.sops.yaml
+  - pvc-checkpoints.yaml
+  - pvc-references.yaml
