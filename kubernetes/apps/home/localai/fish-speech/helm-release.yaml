@@ -6,6 +6,8 @@ metadata:
   namespace: &namespace home
 spec:
   interval: 15m
+  driftDetection:
+    mode: enabled
   chart:
     spec:
       chart: app-template
@@ -20,6 +22,7 @@ spec:
     remediation:
       retries: 3
   upgrade:
+    cleanupOnFail: true
     timeout: 15m
     remediation:
       retries: 3
