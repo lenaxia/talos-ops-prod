@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -51,7 +51,7 @@ spec:
             image:
               repository: ghcr.io/onedr0p/postgres-init
               tag: '17.4'
-          
+
           # Database migration initContainer
           migrate:
             image:
@@ -64,18 +64,18 @@ spec:
                 set -e
                 echo "Starting database migration..."
                 echo "Database URL: postgresql://${INIT_POSTGRES_USER}:****@${INIT_POSTGRES_HOST}:5432/${INIT_POSTGRES_DBNAME}"
-                
+
                 # Check if schema directory exists
                 if [ ! -d "/app/litellm-proxy-extras" ]; then
                   echo "ERROR: litellm-proxy-extras directory not found"
                   exit 1
                 fi
-                
+
                 # Run Prisma migration
                 cd /app
                 echo "Running: prisma migrate deploy"
                 prisma migrate deploy --schema=/app/litellm-proxy-extras/litellm_proxy_extras/schema.prisma
-                
+
                 echo "✓ Migration completed successfully!"
             env:
               - name: INIT_POSTGRES_HOST

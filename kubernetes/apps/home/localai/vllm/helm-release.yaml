@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -42,30 +42,31 @@ spec:
             image:
               repository: vllm/vllm-openai
               # renovate: depName=vllm/vllm-openai
-              tag: v0.20.0-cu130-ubuntu2404@sha256:aff65d7198dd284c37dd0a18a606544cc5e92bfb0d5eb608b77e8b8f1c6b8b0d
+              tag: 
+                v0.20.0-cu130-ubuntu2404@sha256:aff65d7198dd284c37dd0a18a606544cc5e92bfb0d5eb608b77e8b8f1c6b8b0d
             command: ["/bin/sh", "-c"]
             args:
-               - |
-                  vllm serve \
-                      Lorbus/Qwen3.6-27B-int4-AutoRound \
-                      --served-model-name qwen3 \
-                      --dtype half \
-                      --max-model-len 262144 \
-                      --gpu-memory-utilization 0.90 \
-                      --tensor-parallel-size 1 \
-                      --max-num-seqs 3 \
-                      --trust-remote-code \
-                      --host 0.0.0.0 \
-                      --enable-chunked-prefill \
-                      --enable-prefix-caching \
-                      --kv-cache-dtype fp8 \
-                      --enable-auto-tool-choice \
-                      --tool-call-parser hermes \
-                      --reasoning-parser qwen3 \
-                      --compilation-config.cudagraph_mode none \
-                      --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
-                      --default-chat-template-kwargs '{"enable_thinking":false}' \
-                      --port 8000
+              - |
+                vllm serve \
+                    Lorbus/Qwen3.6-27B-int4-AutoRound \
+                    --served-model-name qwen3 \
+                    --dtype half \
+                    --max-model-len 262144 \
+                    --gpu-memory-utilization 0.90 \
+                    --tensor-parallel-size 1 \
+                    --max-num-seqs 3 \
+                    --trust-remote-code \
+                    --host 0.0.0.0 \
+                    --enable-chunked-prefill \
+                    --enable-prefix-caching \
+                    --kv-cache-dtype fp8 \
+                    --enable-auto-tool-choice \
+                    --tool-call-parser hermes \
+                    --reasoning-parser qwen3 \
+                    --compilation-config.cudagraph_mode none \
+                    --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+                    --default-chat-template-kwargs '{"enable_thinking":false}' \
+                    --port 8000
             env:
               - name: TZ
                 value: ${TIMEZONE}
