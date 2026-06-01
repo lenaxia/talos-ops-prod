@@ -44,7 +44,11 @@ jobs:
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          model: ${{ vars.OPENAI_PROVIDER || 'openai' }}/${{ vars.OPENAI_MODEL }}
+          # Use the openai-compatible provider declared in /opencode.json
+          # (custom OPENAI_API_BASE pointing at a GLM/vLLM endpoint).
+          # The model id is `default` which resolves to {env:OPENAI_MODEL}
+          # at runtime via the config file.
+          model: openai-compatible/default
           use_github_token: "true"
           share: "false"
           prompt: |
