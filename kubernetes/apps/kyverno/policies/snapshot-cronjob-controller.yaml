@@ -132,11 +132,3 @@ spec:
                         nfs:
                           server: ${NAS_ADDR}
                           path: ${NFS_KOPIA}
-                    affinity:
-                      podAffinity:
-                        requiredDuringSchedulingIgnoredDuringExecution:
-                          - topologyKey: kubernetes.io/hostname
-                            namespaces:
-                              - "{{ namespace }}"
-                            labelSelector:
-                              matchExpressions: "{{ nodeAffinity.labels }}"
