@@ -44,6 +44,12 @@ LOG = logging.getLogger("app-template-upgrade-v5")
 
 TARGET_VERSION = "5.0.1"
 HELM_RELEASE_NAMES = ["helmrelease.yaml", "helm-release.yaml"]
+# Suffixes/patterns to also accept (e.g., subgen has worker-helm-release.yaml +
+# orchestrator-helm-release.yaml, ragnarok has test.yaml). The is_app_template_release
+# check verifies the file actually contains an app-template HelmRelease, so
+# accepting more filenames is safe.
+HELM_RELEASE_SUFFIXES = ["-helm-release.yaml", "-helmrelease.yaml"]
+HELM_RELEASE_EXTRA = ["test.yaml"]
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -224,7 +230,12 @@ def process_files(
     for filepath_str in all_files:
         filepath = Path(filepath_str)
 
-        if filepath.name not in HELM_RELEASE_NAMES:
+        is_release_filename = (
+            filepath.name in HELM_RELEASE_NAMES
+            or filepath.name in HELM_RELEASE_EXTRA
+            or any(filepath.name.endswith(s) for s in HELM_RELEASE_SUFFIXES)
+        )
+        if not is_release_filename:
             LOG.debug(f"Skipping {filepath}: not a helm-release file")
             skipped += 1
             continue
