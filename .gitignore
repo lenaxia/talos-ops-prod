@@ -9,6 +9,12 @@ talosconfig
 *.agekey
 *.pub
 *.key
+# Talos generated cluster config (contains unencrypted bootstrap tokens,
+# etcd secretbox encryption secret, machine certs, and CA keys). NEVER commit.
+kubernetes/bootstrap/talos/clusterconfig/
+kubernetes/bootstrap/talos/clusterconfig-backup-*/
+kubernetes/bootstrap/talos/talsecret.yaml
+kubernetes/bootstrap/talos/temp.yaml
 # Private
 .private
 .bin
