@@ -1,12 +1,14 @@
 name: Renovate PR Analysis
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  schedule:
+    # Every 2 hours — picks up newly-opened Renovate PRs and re-analyzes any
+    # that have been updated since the last analysis comment.
+    - cron: "0 */2 * * *"
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number to analyze (leave empty for all open Renovate PRs)'
+        description: "PR number to analyze (leave empty for all open Renovate PRs)"
         required: false
         type: string
 
@@ -16,68 +18,24 @@ env:
 
 jobs:
   analyze-prs:
-    # Only run for Renovate PRs or manual triggers
-    if: |
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.user.login == 'renovate[bot]'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: write
+      issues: write
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          fetch-depth: 0
           persist-credentials: false
 
-      # Skip analysis if the PR was already analyzed and hasn't been updated since
-      - name: Check if already analyzed
-        id: pre-check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TRIGGERING_PR: ${{ github.event.pull_request.number || inputs.pr_number || '' }}
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          # Only skip-check for single-PR pull_request events (not manual all-PR runs)
-          if [ "$EVENT_NAME" != "pull_request" ] || [ -z "$TRIGGERING_PR" ]; then
-            echo "skip=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "Checking if PR #$TRIGGERING_PR was already analyzed..."
-          PR_DATA=$(gh pr view "$TRIGGERING_PR" --json updatedAt)
-          PR_UPDATED=$(echo "$PR_DATA" | jq -r '.updatedAt')
-          echo "PR last updated: $PR_UPDATED"
-
-          EXISTING_COMMENTS=$(gh pr view "$TRIGGERING_PR" --json comments \
-            --jq '.comments[] | select(.author.login == "github-actions" and (.body | startswith("## Renovate PR Analysis")))')
-
-          if [ -z "$EXISTING_COMMENTS" ]; then
-            echo "No existing analysis found. Proceeding."
-            echo "skip=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "Found existing analysis comment(s)"
-          COMMENT_DATE=$(echo "$EXISTING_COMMENTS" | jq -r '.createdAt' | tail -1)
-          echo "Most recent analysis: $COMMENT_DATE"
-
-          PR_UPDATED_TS=$(date -d "$PR_UPDATED" +%s 2>/dev/null || echo "0")
-          COMMENT_DATE_TS=$(date -d "$COMMENT_DATE" +%s 2>/dev/null || echo "0")
-          COMMENT_BUFFER_TS=$((COMMENT_DATE_TS + 60))
-
-          if [ "$PR_UPDATED_TS" -le "$COMMENT_BUFFER_TS" ]; then
-            echo "PR #$TRIGGERING_PR already analyzed and not updated since. Skipping."
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "PR #$TRIGGERING_PR updated after last analysis. Re-analyzing."
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Analyze with OpenCode
-        if: steps.pre-check.outputs.skip != 'true'
-        uses: anomalyco/opencode/github@v1.15.13
+      - name: Run OpenCode
+        # Pinned to the same SHA as Issue Responder — older releases (pre-1.15)
+        # do not enforce the PR-author-must-have-write-perms check that breaks
+        # on Renovate-authored PRs.
+        uses: anomalyco/opencode/github@0cf0294787322664c6d668fa5ab0a9ce26796f78 # github-v1.2.9
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
@@ -93,6 +51,11 @@ jobs:
             Target PR (empty = find and analyze all open Renovate PRs): ${{ inputs.pr_number }}
 
             Task: Analyze Renovate PR(s) and post a detailed report as a PR comment. Do NOT merge any PRs.
+
+            Discovery:
+            - If a target PR number is given, fetch only that PR.
+            - Otherwise list all open PRs whose author is `renovate[bot]` (or branch starts with `renovate/`).
+            - For each PR, before doing any analysis, check whether the PR already has a comment authored by `github-actions[bot]` whose body starts with `## Renovate PR Analysis`. If the most-recent such comment was posted at or after the PR's `updatedAt` time, SKIP that PR — it is already analyzed and unchanged.
 
             For each PR to analyze:
 
