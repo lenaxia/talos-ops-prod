@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fish-speech-references
+  namespace: home
+  labels:
+    app.kubernetes.io/name: fish-speech
+    app.kubernetes.io/instance: fish-speech
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: longhorn
