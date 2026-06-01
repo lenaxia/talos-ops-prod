@@ -9,7 +9,7 @@ spec:
     name: mariadb-operator-secret
     key: root-password
   
-  image: mariadb:11.8.6
+  image: mariadb:11.8.8
   
   port: 3306
 
