@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -80,7 +80,7 @@ spec:
                 memory: 6000Mi
         statefulset:
           volumeClaimTemplates:
-            - name: modules 
+            - name: modules
               accessMode: ReadWriteOnce
               size: 1Gi
               storageClass: longhorn
@@ -101,7 +101,8 @@ spec:
           hajimari.io/group: Home
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri mm.${SECRET_DEV_DOMAIN}
             paths:

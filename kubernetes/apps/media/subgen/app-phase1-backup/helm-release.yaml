@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.6.2
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -26,12 +26,12 @@ spec:
         # nodeSelector:
         #   node-role.kubernetes.io/worker: 'true'
     controllers:
-       main:
-         type: deployment
-         annotations:
-           reloader.stakater.com/auto: 'true'
-         containers:
-           orchestrator:
+      main:
+        type: deployment
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          orchestrator:
             image:
               repository: ghcr.io/lenaxia/subgen-orchestrator
               tag: v0.3.5
@@ -42,38 +42,37 @@ spec:
               METRICS_PORT: "9090"
               LOG_LEVEL: "debug"
               LOG_FORMAT: "json"
-              
+
               # Queue configuration
               QUEUE_MAX_SIZE: "1000"
               QUEUE_WORKER_TIMEOUT: "18000"  # 5 hours
-              
               # Worker connection (CRITICAL for Phase 1)
               WORKER_DISCOVERY: "localhost"
               WORKER_ADDRESS: "localhost:50051"
-              
+
               # Processing flags
               PROCESS_ADDED_MEDIA: "true"
               PROCESS_MEDIA_ON_PLAY: "true"
               TRANSCRIBE_OR_TRANSLATE: "transcribe"
-              
+
               # Skip conditions
               SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: "eng"
               SKIP_IF_TARGET_SUBTITLES_EXIST: "true"
-              
+
               # Media server configuration
               PLEX_ENABLED: "true"
               PLEX_SERVER: "http://plex.media.svc.cluster.local:32400"
               PLEX_QUEUE_NEXT_EPISODE: "false"
-              
+
               # Path mapping for media files
               USE_PATH_MAPPING: "false"
-              
+
               # File monitoring configuration
               MONITOR: "false"
-              
+
               # Subtitle config
               SUBTITLE_LANGUAGE_NAME: "AA"
-              
+
               # Debug
               DEBUG: "true"
             envFrom:
@@ -103,7 +102,7 @@ spec:
                   periodSeconds: 5
                   timeoutSeconds: 5
                   failureThreshold: 30
-           worker:
+          worker:
             image:
               repository: ghcr.io/lenaxia/subgen-worker
               tag: v0.3.5-cpu
@@ -113,30 +112,30 @@ spec:
               GRPC_PORT: "50051"
               LOG_LEVEL: "INFO"
               LOG_FORMAT: "json"
-              
+
               # Whisper config
               WHISPER_MODEL: "small"
               WHISPER_THREADS: "4"
               TRANSCRIBE_DEVICE: "cpu"
               COMPUTE_TYPE: "auto"
               MODEL_PATH: "/models"
-              
+
               # Memory management
               MEMORY_THRESHOLD_MB: "3000"
               MODEL_CLEANUP_DELAY: "300"
               CLEAR_VRAM_ON_COMPLETE: "false"
-              
+
               # Concurrency settings
               MAX_WORKERS: "10"
               CONCURRENT_TRANSCRIPTIONS: "2"
-              
+
               # Subtitle config
               WORD_LEVEL_HIGHLIGHT: "false"
               CUSTOM_REGROUP: "cm_sl=84_sl=42++++++1"
               LRC_FOR_AUDIO_FILES: "true"
               APPEND: "false"
               SUBTITLE_LANGUAGE_NAME: "aa"
-              
+
               # Cache directories
               XDG_CACHE_HOME: "/cache"
               HF_HOME: "/cache/huggingface"
@@ -204,7 +203,8 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
         hosts:
           - host: subgen.example.com
             paths:

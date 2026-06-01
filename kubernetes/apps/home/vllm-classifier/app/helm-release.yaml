@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -41,24 +41,25 @@ spec:
           app:
             image:
               repository: vllm/vllm-openai
-              tag: v0.22.0@sha256:0fec7ec5f3e6bc168e54899935fb0557da908a4832a1dbc88e2debcf2f889416
+              tag: 
+                v0.22.0@sha256:0fec7ec5f3e6bc168e54899935fb0557da908a4832a1dbc88e2debcf2f889416
             command: ["/bin/sh", "-c"]
             args:
-                  - |
-                   vllm serve \
-                       Qwen/Qwen2.5-3B-Instruct-AWQ \
-                       --served-model-name classifier \
-                       --max-model-len 1000 \
-                       --max-num-seqs 30 \
-                       --gpu-memory-utilization 0.9 \
-                       --tensor-parallel-size 1 \
-                       --trust-remote-code \
-                       --quantization awq \
-                       --host 0.0.0.0 \
-                       --port 8000 \
-                       --dtype auto
-                   # NOTE: --disable-log-requests was removed in vllm v0.20
-                   # (replaced by opt-in --enable-log-requests; default is no request logging).
+              - |
+                vllm serve \
+                    Qwen/Qwen2.5-3B-Instruct-AWQ \
+                    --served-model-name classifier \
+                    --max-model-len 1000 \
+                    --max-num-seqs 30 \
+                    --gpu-memory-utilization 0.9 \
+                    --tensor-parallel-size 1 \
+                    --trust-remote-code \
+                    --quantization awq \
+                    --host 0.0.0.0 \
+                    --port 8000 \
+                    --dtype auto
+                # NOTE: --disable-log-requests was removed in vllm v0.20
+                # (replaced by opt-in --enable-log-requests; default is no request logging).
             env:
               - name: TZ
                 value: ${TIMEZONE}
