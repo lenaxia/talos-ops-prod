@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
 ---
 # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-talosVersion: v1.13.0
+talosVersion: v1.12.6
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
-kubernetesVersion: v1.36.0
+kubernetesVersion: v1.35.3
 
 clusterName: "home-kubernetes"
 endpoint: https://192.168.3.30:6443
@@ -120,8 +120,8 @@ nodes:
               - siderolabs/i915
               - siderolabs/intel-ucode
               - siderolabs/iscsi-tools
-              - siderolabs/nvidia-container-toolkit
-              - siderolabs/nvidia-open-gpu-kernel-modules
+              - siderolabs/nvidia-container-toolkit-lts
+              - siderolabs/nvidia-open-gpu-kernel-modules-lts
               - siderolabs/thunderbolt
               - siderolabs/util-linux-tools
   - hostname: "worker-01"
@@ -177,12 +177,12 @@ nodes:
       - interface: eth0
         bond:
           deviceSelectors:
-            - physicaukl: true
-        dhcp: falseic
-        addresses:k
-          - "192.nc168.3.23/16"
-        routes:cb
-          - networifk: 0.0.0.0/0
+            - physical: true
+        dhcp: false
+        addresses:
+          - "192.168.3.23/16"
+        routes:
+          - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
     schematic:
