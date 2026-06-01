@@ -32,10 +32,12 @@ jobs:
           persist-credentials: false
 
       - name: Run OpenCode
-        # Pinned to the same SHA as Issue Responder — older releases (pre-1.15)
-        # do not enforce the PR-author-must-have-write-perms check that breaks
-        # on Renovate-authored PRs.
-        uses: anomalyco/opencode/github@0cf0294787322664c6d668fa5ab0a9ce26796f78 # github-v1.2.9
+        # Pinned to a recent github-v1.2.x release. The v1.15.x line enforces
+        # a strict "PR author must have repo write perms" check which fails
+        # for renovate[bot]; the github-v1.2.x line keeps the looser permission
+        # model used by Issue Responder, while staying current enough to talk
+        # the latest opencode session protocol.
+        uses: anomalyco/opencode/github@76d814e7476c98dfc18b5cc51f959f6feae0ef9f # github-v1.2.24
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
