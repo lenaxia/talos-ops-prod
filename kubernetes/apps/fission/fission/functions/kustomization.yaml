@@ -9,3 +9,11 @@ resources:
   - ./secret-matriarch-vy.sops.yaml
   - ./imaizumi.yaml
   - ./secret-imaizumi.sops.yaml
+  - ./job-scraper-stripe.yaml
+  - ./secret-job-scraper-stripe.sops.yaml
+  - ./job-scraper-vanta.yaml
+  - ./secret-job-scraper-vanta.sops.yaml
+  - ./job-scraper-crowdstrike.yaml
+  - ./secret-job-scraper-crowdstrike.sops.yaml
+  - ./job-scraper-snowflake.yaml
+  - ./secret-job-scraper-snowflake.sops.yaml

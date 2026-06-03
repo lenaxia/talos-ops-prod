@@ -9,3 +9,11 @@ resources:
   - ./matriarch-vy-timer.yaml
   - ./imaizumi.yaml
   - ./imaizumi-timer.yaml
+  - ./job-scraper-stripe.yaml
+  - ./job-scraper-stripe-timer.yaml
+  - ./job-scraper-vanta.yaml
+  - ./job-scraper-vanta-timer.yaml
+  - ./job-scraper-crowdstrike.yaml
+  - ./job-scraper-crowdstrike-timer.yaml
+  - ./job-scraper-snowflake.yaml
+  - ./job-scraper-snowflake-timer.yaml
