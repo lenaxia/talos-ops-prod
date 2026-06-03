@@ -4,4 +4,6 @@ resources:
   - defaultpg.yaml
   - vectorpg.yaml
   - synofotopg.yaml
+  - synofotopg-lb.yaml
+  - vectorpg-lb.yaml
   #- backup.yaml

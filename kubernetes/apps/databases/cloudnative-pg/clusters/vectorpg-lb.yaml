@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vectorpg-lb
+  namespace: databases
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.5.217
+spec:
+  type: LoadBalancer
+  selector:
+    cnpg.io/cluster: vectorpg
+    role: primary
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+      protocol: TCP

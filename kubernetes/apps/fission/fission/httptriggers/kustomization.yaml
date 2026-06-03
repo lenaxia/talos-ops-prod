@@ -7,3 +7,5 @@ resources:
   - ./matriarch-timer.yaml
   - ./matriarch-vy.yaml
   - ./matriarch-vy-timer.yaml
+  - ./imaizumi.yaml
+  - ./imaizumi-timer.yaml

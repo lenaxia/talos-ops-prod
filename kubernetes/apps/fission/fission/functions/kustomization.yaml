@@ -7,3 +7,5 @@ resources:
   - ./secret.sops.yaml
   - ./matriarch-vy.yaml
   - ./secret-matriarch-vy.sops.yaml
+  - ./imaizumi.yaml
+  - ./secret-imaizumi.sops.yaml
