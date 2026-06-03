@@ -29,6 +29,9 @@ spec:
         node-role.kubernetes.io/worker: 'true'
     controllers:
       main:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
         containers:
           main:
             image:
@@ -76,14 +79,17 @@ spec:
               - path: /
                 pathType: Prefix
                 service:
+                  identifier: main
                   port: http
               - path: /notifications/hub/negotiate
                 pathType: Prefix
                 service:
+                  identifier: main
                   port: http
               - path: /notifications/hub
                 pathType: Prefix
                 service:
+                  identifier: main
                   port: websocket
         tls:
           - hosts:
@@ -96,12 +102,4 @@ spec:
         enabled: true
         existingClaim: vaultwarden-config-volume
         type: persistentVolumeClaim
-    strategy:
-      type: Recreate
-
-    mariadb:
-      enabled: false
-
-    postgresql:
-      enabled: false
 
