@@ -531,7 +531,7 @@ spec:
             subdomain: 'authelia'
             default_redirection_url: 'https://${SECRET_DEV_DOMAIN}'
           - domain: '${SECRET_SAFESPACES_DOMAIN}'
-            authelia_url: 'https://authelia.${SECRET_SAFESPACES_DOMAIN}'
+            subdomain: 'authelia'
             default_redirection_url: 'https://chat.${SECRET_SAFESPACES_DOMAIN}'
 
         ##
