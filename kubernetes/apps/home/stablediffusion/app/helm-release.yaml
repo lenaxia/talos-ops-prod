@@ -32,7 +32,7 @@ spec:
             image:
               repository: ghcr.io/gabe565/stable-diffusion/webui
               tag: 
-                1.10.1@sha256:db98ebc3c029f64d7ecca8df73a57123ddafb689b007a7c38c95b12c891367f2
+                1.10.1@sha256:a1ec448a1ef7016cc73f479e65db49bae172861fae1155c60fcba6b459866e59
               pullPolicy: IfNotPresent
             args:
             #  - --medvram-sdxl
