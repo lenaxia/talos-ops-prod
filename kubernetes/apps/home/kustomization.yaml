@@ -25,8 +25,8 @@ resources:
   - ./mosquitto/ks.yaml
   #- ./linkwarden/ks.yaml
   - ./vscode/ks.yaml
-  - ./vllm-classifier/ks.yaml
-  - ./kokoro/ks.yaml
+    #- ./vllm-classifier/ks.yaml
+    #- ./kokoro/ks.yaml
   - ./watersmart-scraper/ks.yaml
   - ./f1replaytiming/ks.yaml
   - ./msedge/ks.yaml
