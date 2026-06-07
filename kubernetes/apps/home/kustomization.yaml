@@ -15,7 +15,7 @@ resources:
   - ./redlib/ks.yaml
   - ./dawarich/ks.yaml
   - ./localai/ks.yaml
-    #- ./stablediffusion/ks.yaml
+  - ./stablediffusion/ks.yaml
   - ./home-assistant/ks.yaml
   - ./hass-mcp/ks.yaml
   - ./esphome/ks.yaml
