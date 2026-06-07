@@ -23,7 +23,20 @@ spec:
             name: *appname
             port:
               number: 80
+  - host: "authelia.${SECRET_SAFESPACES_DOMAIN}"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: *appname
+            port:
+              number: 80
   tls:
   - hosts:
     - *uri
     secretName: *uri
+  - hosts:
+    - "authelia.${SECRET_SAFESPACES_DOMAIN}"
+    secretName: "authelia.${SECRET_SAFESPACES_DOMAIN}"
