@@ -10,7 +10,6 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
-    #- name: cluster-networking-multus
   path: ./kubernetes/apps/home/esphome/app
   prune: true
   sourceRef:
