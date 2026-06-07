@@ -1,0 +1,14 @@
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: job-scraper-vanta
+  namespace: fission
+spec:
+  functionref:
+    name: job-scraper-vanta
+    type: name
+  relativeurl: /job-scraper-vanta
+  methods:
+    - GET
+    - POST
