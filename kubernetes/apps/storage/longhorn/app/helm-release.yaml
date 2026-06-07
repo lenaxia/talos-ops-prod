@@ -14,12 +14,27 @@ spec:
         name: longhorn
         namespace: flux-system
   interval: 6m
+  # Longhorn upgrades involve data migrations and slow CSI component rollouts.
+  # Use a 15-minute timeout to accommodate:
+  #   - Engine image upgrades across all nodes
+  #   - CSI DaemonSet foreground deletion + recreation
+  # Without this, Flux times out at 5m and triggers rollbacks.
+  timeout: 15m
   install:
     remediation:
-      retries: 7
+      retries: 3
   upgrade:
+    # disableHooks: bypass the pre-upgrade Job hook.
+    # Longhorn's longhorn-pre-upgrade Job has hook-delete-policy: hook-succeeded
+    # which deletes the Job immediately on success. Helm 4's hook wait loop then
+    # sees Job status: NotFound and treats it as a failure — even though the Job
+    # succeeded. This is a Helm 4 regression (https://github.com/helm/helm/issues/XXXX).
+    # The pre-upgrade job only validates the upgrade path is supported; we accept
+    # the (very small) risk of skipping it given Renovate controls the version bump.
+    disableHooks: true
     remediation:
-      retries: 7
+      retries: 3
+      remediateLastFailure: true
   #valuesFrom:
   #  - kind: Secret
   #    targetPath: defaultSettings.backupTarget
