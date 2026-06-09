@@ -248,8 +248,12 @@ spec:
               model_info:
                 input_cost_per_token: 0.00001
                 output_cost_per_token: 0.00001
+                max_input_tokens: 32768
                 max_tokens: 32768
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
 
             # ha-assistant: same backend as `default`, exposed under a
             # distinct alias so Open-WebUI can pin a HA-specific system prompt
@@ -267,8 +271,12 @@ spec:
               model_info:
                 input_cost_per_token: 0.00001
                 output_cost_per_token: 0.00001
+                max_input_tokens: 32768
                 max_tokens: 32768
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
             - model_name: classifier
               litellm_params:
                 model: openai/classifier
@@ -277,93 +285,124 @@ spec:
               model_info:
                 input_cost_per_token: 0.00001
                 output_cost_per_token: 0.00001
+                max_input_tokens: 1000
                 max_tokens: 1000
                 supports_tool_choice: false
+                supports_function_calling: false
+                supports_response_schema: false
+                supports_vision: false
 
-            # Deepseek
-            - model_name: deepseek-v3-chat
-              litellm_params:
-                model: deepseek/deepseek-chat
-              model_info:
-                max_tokens: 8000
-                supports_tool_choice: true
-            - model_name: deepseek-r1-reasoning
-              litellm_params:
-                model: deepseek/deepseek-reasoner
-              model_info:
-                max_tokens: 8000
-                supports_tool_choice: false
+            # DeepSeek
+            # Note: deepseek-chat and deepseek-reasoner aliases were deprecated
+            # 2026-07-24 and now map to deepseek-v4-flash (284B, 13B active).
+            # No versioned V3/R1 endpoint is available on DeepSeek's API.
             - model_name: deepseek-v4-flash
               litellm_params:
                 model: deepseek/deepseek-v4-flash
               model_info:
-                max_tokens: 8000
+                max_input_tokens: 1000000
+                max_tokens: 384000
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            - model_name: deepseek-v4-flash-reasoning
+              litellm_params:
+                model: deepseek/deepseek-v4-flash
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 384000
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
             - model_name: deepseek-v4-pro
               litellm_params:
                 model: deepseek/deepseek-v4-pro
               model_info:
-                max_tokens: 8000
+                max_input_tokens: 1000000
+                max_tokens: 384000
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
 
+            # Z.AI GLM models
+            # Context: 200K, Max output: 131072 (source: docs.z.ai)
+            # Text-only: GLM-4.x/5.x are text-in/text-out (no vision)
             - model_name: glm-4.7
               litellm_params:
                 model: openai/glm-4.7
                 api_base: https://api.z.ai/api/coding/paas/v4
                 api_key: os.environ/ZAI_API_KEY
               model_info:
-                max_tokens: 128000
+                max_input_tokens: 200000
+                max_tokens: 131072
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
             - model_name: glm-4.6
               litellm_params:
                 model: openai/glm-4.6
                 api_base: https://api.z.ai/api/coding/paas/v4
                 api_key: os.environ/ZAI_API_KEY
               model_info:
-                max_tokens: 128000
+                max_input_tokens: 200000
+                max_tokens: 131072
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
             - model_name: glm-5.1
               litellm_params:
                 model: openai/glm-5.1
                 api_base: https://api.z.ai/api/coding/paas/v4
                 api_key: os.environ/ZAI_API_KEY
               model_info:
-                max_tokens: 128000
+                max_input_tokens: 200000
+                max_tokens: 131072
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
 
             # OpenAI
-            - model_name: o3-mini-reasoning
-              litellm_params:
-                model: openai/o3-mini
-              model_info:
-                max_tokens: 100000
-                supports_tool_choice: true
+            # Context windows and max output from developers.openai.com/api/docs/models
             - model_name: gpt-5.5
               litellm_params:
                 model: openai/gpt-5.5
               model_info:
+                max_input_tokens: 1000000
                 max_tokens: 128000
                 supports_tool_choice: true
-            - model_name: gpt-5.4
-              litellm_params:
-                model: openai/gpt-5.4
-              model_info:
-                max_tokens: 128000
-                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
             - model_name: gpt-5.4-mini
               litellm_params:
                 model: openai/gpt-5.4-mini
               model_info:
+                max_input_tokens: 400000
                 max_tokens: 128000
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
             # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
             - model_name: kokoro
               litellm_params:
                 model: openai/kokoro
                 api_base: http://kokoro.home.svc.cluster.local:8880/v1
                 api_key: placeholder
+              model_info:
+                supports_tool_choice: false
+                supports_function_calling: false
+                supports_response_schema: false
+                supports_vision: false
 
             # Bedrock
+            # Context: 1M, Max output: 64K (source: docs.anthropic.com)
             - model_name: bedrock-claude-sonnet-4.6
               litellm_params:
                 model: bedrock/global.anthropic.claude-sonnet-4-6
@@ -372,8 +411,12 @@ spec:
                 aws_region_name: os.environ/AWS_REGION_NAME
                 additional_drop_params: ["parent_id"]
               model_info:
+                max_input_tokens: 1000000
                 max_tokens: 64000
                 supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
                 supported_openai_params: ["max_tokens", "max_completion_tokens", "stream", "stream_options", "stop", "temperature", "top_p", "extra_headers", "response_format", "requestMetadata", "service_tier", "tools", "tool_choice", "thinking", "reasoning_effort"]
     persistence:
       config-yaml:
