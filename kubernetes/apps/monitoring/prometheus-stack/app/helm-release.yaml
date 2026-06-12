@@ -245,6 +245,9 @@ spec:
         walCompression: true
         enableFeatures:
           - memory-snapshot-on-shutdown
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            effect: NoSchedule
         storageSpec:
           volumeClaimTemplate:
             spec:
