@@ -734,7 +734,7 @@ spec:
             client_secret: "${SECRET_OUTLINE_OAUTH_CLIENT_SECRET_HASHED}"
             public: false
             authorization_policy: one_factor
-            consent_mode: implicit
+            consent_mode: explicit
             pre_configured_consent_duration: 1y
             scopes: ["openid", "profile", "email", "offline_access"]
             redirect_uris: ["https://w.${SECRET_DEV_DOMAIN}/auth/oidc.callback"]
