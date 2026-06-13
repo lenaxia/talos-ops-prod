@@ -31,3 +31,4 @@ resources:
   - ./f1replaytiming/ks.yaml
   - ./msedge/ks.yaml
   - ./oncall-sim/ks.yaml
+  - ./hortusfox/ks.yaml

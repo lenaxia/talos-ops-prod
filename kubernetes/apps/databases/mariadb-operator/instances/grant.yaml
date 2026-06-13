@@ -30,3 +30,19 @@ spec:
   username: ragnarok
   retryInterval: 5s
   grantOption: true
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: hortusfox-grant
+  namespace: databases
+spec:
+  mariaDbRef:
+    name: mariadb-operator
+  privileges:
+    - "ALL PRIVILEGES"
+  database: "hortusfox"
+  table: "*"
+  username: hortusfox
+  retryInterval: 5s
+  grantOption: false

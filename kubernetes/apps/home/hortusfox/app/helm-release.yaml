@@ -1,0 +1,207 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname hortusfox
+  namespace: home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+      interval: 15m
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+
+    controllers:
+      main:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/danielbrendel/hortusfox-web
+              tag: v5.8
+            env:
+              APP_TIMEZONE: ${TIMEZONE}
+              DB_CHARSET: utf8mb4
+              DB_DATABASE: *appname
+              DB_USERNAME: *appname
+              PROXY_ENABLE: "true"
+              PROXY_HEADER_USERNAME: Remote-User
+              PROXY_HEADER_EMAIL: Remote-Email
+              PROXY_AUTO_SIGNUP: "true"
+              PROXY_HIDE_LOGOUT: "true"
+              PROXY_OVERWRITE_VALUES: "true"
+              DB_HOST:
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-operator-connection
+                    key: host
+              DB_PORT:
+                valueFrom:
+                  secretKeyRef:
+                    name: mariadb-operator-connection
+                    key: port
+            envFrom:
+              - secretRef:
+                  name: *appname
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 80
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+                  failureThreshold: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 80
+                  initialDelaySeconds: 60
+                  periodSeconds: 30
+                  failureThreshold: 5
+
+      cron:
+        type: cronjob
+        cronjob:
+          schedule: "0 */3 * * *"
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+          ttlSecondsAfterFinished: 3600
+        containers:
+          app:
+            image:
+              repository: curlimages/curl
+              tag: 8.12.1
+            env:
+              CRONPW:
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: CRONPW
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                BASE="http://hortusfox.home.svc.cluster.local"
+                for ep in tasks/overdue tasks/tomorrow tasks/recurring calendar/reminder; do
+                  echo "Triggering cronjob: ${ep}"
+                  curl -sf -X POST "${BASE}/cronjob/${ep}" -d "cronpw=${CRONPW}" || echo "WARN: cronjob ${ep} failed"
+                done
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 64Mi
+
+      cron-backup:
+        type: cronjob
+        cronjob:
+          schedule: "0 4 * * *"
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+          ttlSecondsAfterFinished: 86400
+        containers:
+          app:
+            image:
+              repository: curlimages/curl
+              tag: 8.12.1
+            env:
+              CRONPW:
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: CRONPW
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                BASE="http://hortusfox.home.svc.cluster.local"
+                echo "Triggering auto backup cronjob"
+                curl -sf -X POST "${BASE}/cronjob/backup/auto" -d "cronpw=${CRONPW}" || echo "WARN: backup cronjob failed"
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 64Mi
+
+    service:
+      main:
+        controller: main
+        primary: true
+        ports:
+          http:
+            port: 80
+            targetPort: 80
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          hajimari.io/enable: "true"
+          hajimari.io/icon: flower
+          hajimari.io/info: Plant management
+          hajimari.io/group: home
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri plants.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+
+    persistence:
+      data:
+        enabled: true
+        existingClaim: hortusfox-data-volume
+        advancedMounts:
+          main:
+            main:
+              - path: /var/www/html/public/img
+                subPath: img
+              - path: /var/www/html/app/logs
+                subPath: logs
+              - path: /var/www/html/public/backup
+                subPath: backup
+              - path: /var/www/html/public/themes
+                subPath: themes
