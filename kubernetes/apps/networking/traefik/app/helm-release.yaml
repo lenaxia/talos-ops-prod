@@ -28,7 +28,7 @@ spec:
   values:
     image:
       repository: traefik
-      tag: v3.7.4
+      tag: v3.7.5
     deployment:
       kind: Deployment
       replicas: 4
