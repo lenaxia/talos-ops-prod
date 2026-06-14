@@ -32,3 +32,4 @@ resources:
   - ./msedge/ks.yaml
   - ./oncall-sim/ks.yaml
   - ./hortusfox/ks.yaml
+  - ./hortusfox-mcp/ks.yaml
