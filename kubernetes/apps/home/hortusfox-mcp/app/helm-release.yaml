@@ -1,0 +1,129 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname hortusfox-mcp
+  namespace: home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 4
+  uninstall:
+    keepHistory: false
+  values:
+    # ──────────────────────────────────────────────────────────────────────
+    # hortusfox-mcp wrapped by supergateway
+    # ──────────────────────────────────────────────────────────────────────
+    # The image bundles supergateway + the compiled hortusfox-mcp server.
+    # supergateway listens on :8000 for SSE/MCP and spawns
+    # `node /app/dist/index.js` as a stdio child.
+    #
+    # Network exposure: ClusterIP only. Reachable as
+    #   http://hortusfox-mcp.home.svc.cluster.local:8000/sse
+    # Security note: supergateway has no inbound auth.
+    # In-cluster access is the only protection. LiteLLM consumes this and
+    # is the documented client; LiteLLM itself is Authelia-protected.
+    #
+    # Image: ghcr.io/lenaxia/hortusfox-mcp:0.1.0
+    # Built by docker-publish.yml on tag v0.1.0 push.
+    # ──────────────────────────────────────────────────────────────────────
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+    controllers:
+      main:
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/hortusfox-mcp
+              tag: 0.1.0
+              pullPolicy: IfNotPresent
+            command:
+              - supergateway
+            args:
+              - --stdio
+              - node /app/dist/index.js
+              - --port
+              - "8000"
+              - --healthEndpoint
+              - /healthz
+              - --logLevel
+              - info
+            env:
+              HORTUSFOX_BASE_URL: http://hortusfox.home.svc.cluster.local
+              HORTUSFOX_ENABLE_WRITES: "true"
+              HORTUSFOX_ENABLE_BACKUP: "false"
+              HOME: /tmp
+            envFrom:
+              - secretRef:
+                  name: hortusfox-mcp
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 5
+              startup:
+                enabled: false
+    persistence:
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+    service:
+      main:
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 8000
+            protocol: TCP
