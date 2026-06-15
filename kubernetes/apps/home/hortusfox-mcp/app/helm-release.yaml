@@ -53,7 +53,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/hortusfox-mcp
-              tag: 0.1.2
+              tag: 0.1.3
               pullPolicy: IfNotPresent
             command:
               - supergateway
@@ -110,7 +110,7 @@ spec:
           sse:
             image:
               repository: ghcr.io/lenaxia/hortusfox-mcp
-              tag: 0.1.2
+              tag: 0.1.3
               pullPolicy: IfNotPresent
             command:
               - supergateway
