@@ -29,18 +29,10 @@ spec:
     # ──────────────────────────────────────────────────────────────────────
     # hortusfox-mcp wrapped by supergateway
     # ──────────────────────────────────────────────────────────────────────
-    # The image bundles supergateway + the compiled hortusfox-mcp server.
-    # supergateway listens on :8000 for SSE/MCP and spawns
-    # `node /app/dist/index.js` as a stdio child.
-    #
-    # Network exposure: ClusterIP only. Reachable as
-    #   http://hortusfox-mcp.home.svc.cluster.local:8000/sse
-    # Security note: supergateway has no inbound auth.
-    # In-cluster access is the only protection. LiteLLM consumes this and
-    # is the documented client; LiteLLM itself is Authelia-protected.
-    #
-    # Image: ghcr.io/lenaxia/hortusfox-mcp:0.1.0
-    # Built by docker-publish.yml on tag v0.1.0 push.
+    # Two supergateway sidecars in the same pod share the env/secret:
+    #   - main (port 8000): streamableHttp  → /mcp
+    #   - sse  (port 8001): SSE             → /sse
+    # Both spawn their own `node /app/dist/index.js` stdio child.
     # ──────────────────────────────────────────────────────────────────────
     defaultPodOptions:
       nodeSelector:
@@ -115,6 +107,63 @@ spec:
                   timeoutSeconds: 5
               startup:
                 enabled: false
+          sse:
+            image:
+              repository: ghcr.io/lenaxia/hortusfox-mcp
+              tag: 0.1.1
+              pullPolicy: IfNotPresent
+            command:
+              - supergateway
+            args:
+              - --stdio
+              - node /app/dist/index.js
+              - --outputTransport
+              - sse
+              - --port
+              - "8001"
+              - --healthEndpoint
+              - /healthz
+              - --logLevel
+              - info
+            env:
+              HORTUSFOX_BASE_URL: http://hortusfox.home.svc.cluster.local
+              HORTUSFOX_ENABLE_WRITES: "true"
+              HORTUSFOX_ENABLE_BACKUP: "false"
+              HOME: /tmp
+            envFrom:
+              - secretRef:
+                  name: hortusfox-mcp
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8001
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8001
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 5
+              startup:
+                enabled: false
     persistence:
       tmp:
         type: emptyDir
@@ -128,4 +177,7 @@ spec:
         ports:
           http:
             port: 8000
+            protocol: TCP
+          sse:
+            port: 8001
             protocol: TCP
