@@ -61,7 +61,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/hortusfox-mcp
-              tag: 0.1.0
+              tag: 0.1.1
               pullPolicy: IfNotPresent
             command:
               - supergateway
