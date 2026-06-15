@@ -68,6 +68,8 @@ spec:
             args:
               - --stdio
               - node /app/dist/index.js
+              - --outputTransport
+              - streamableHttp
               - --port
               - "8000"
               - --healthEndpoint
