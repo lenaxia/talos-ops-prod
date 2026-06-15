@@ -122,7 +122,7 @@ spec:
       main:
         primary: true
         controller: main
-        type: ClusterIP
+        type: LoadBalancer
         ports:
           http:
             port: 8000
