@@ -63,6 +63,59 @@ spec:
                   secretKeyRef:
                     name: *appname
                     key: DB_PASSWORD
+          migrate:
+            dependsOn: init-db
+            image:
+              repository: freikin/dawarich
+              tag: 1.7.11
+            envFrom:
+              - secretRef:
+                  name: *appname
+            env:
+              - name: RAILS_ENV
+                value: production
+              - name: DATABASE_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DB_HOST
+              - name: DATABASE_PORT
+                value: '5432'
+              - name: DATABASE_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DB_NAME
+              - name: DATABASE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DB_PASSWORD
+              - name: DATABASE_NAME
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DB_NAME
+            command:
+              - bin/rails
+              - db:migrate
+          sync-assets:
+            dependsOn: migrate
+            image:
+              repository: freikin/dawarich
+              tag: 1.7.11
+            command:
+              - sh
+              - -c
+              - |
+                if [ -d /tmp/public_assets ]; then
+                  echo "Syncing static assets to public volume..."
+                  rm -rf /var/app/public/assets
+                  cp -r /tmp/public_assets/* /var/app/public/
+                  echo "Static assets synced."
+                else
+                  echo "No /tmp/public_assets found, skipping."
+                fi
         containers:
           app:
             image:
