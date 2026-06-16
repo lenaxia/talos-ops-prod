@@ -67,18 +67,13 @@ spec:
               OPENID_AUTO_REDIRECT: "true"
               OPENID_USE_END_SESSION_ENDPOINT: "true"
               OPENID_ISSUER: https://authelia.${SECRET_DEV_DOMAIN}
-              # We share the existing `open-webui` Authelia OIDC client. The
-              # Authelia config lists chat2.<domain>/oauth/openid/callback as
-              # an additional redirect_uri on the same client entry, so both
-              # apps authenticate against one client_id + client_secret.
-              OPENID_CLIENT_ID: open-webui
-              # Reuse the open-webui client_secret from cluster-secrets
-              # (SECRET_OPEN_WEBUI_OAUTH_CLIENT_SECRET). Because Flux variable
-              # substitution requires this value to come from the cluster
-              # ConfigMap/Secret rather than a per-app Secret, we set it
-              # inline here. The client_secret is the *plaintext* value;
-              # Authelia's helm-release stores its bcrypt hash separately.
-              OPENID_CLIENT_SECRET: ${SECRET_OPEN_WEBUI_OAUTH_CLIENT_SECRET}
+              # LibreChat has its own dedicated Authelia OIDC client.
+              # client_id `librechat`. The plaintext client_secret lives in
+              # cluster-secrets as SECRET_LIBRECHAT_OAUTH_CLIENT_SECRET; the
+              # PBKDF2-SHA512 hash of that same value is what Authelia stores
+              # under SECRET_LIBRECHAT_OAUTH_CLIENT_SECRET_HASHED.
+              OPENID_CLIENT_ID: librechat
+              OPENID_CLIENT_SECRET: ${SECRET_LIBRECHAT_OAUTH_CLIENT_SECRET}
               OPENID_SCOPE: "openid profile email"
               # LibreChat hardcodes this callback path; Authelia must allow it.
               OPENID_CALLBACK_URL: /oauth/openid/callback
