@@ -192,9 +192,15 @@ spec:
               # the in-cluster LiteLLM router via its public ingress. The
               # API key is a LiteLLM virtual key (not the master key) so
               # spend/usage gets attributed to LibreChat separately.
+              # NOTE the `$$` — Flux postBuild.substituteFrom uses ${VAR}
+              # syntax too, and would otherwise replace ${THEKAO_AI_API_KEY}
+              # with empty string at apply time. `$${VAR}` is escaped and
+              # written to the rendered ConfigMap as the literal `${VAR}`,
+              # which LibreChat's extractEnvVariable() then resolves from
+              # process.env at request time.
               custom:
                 - name: 'The Kao Cloud'
-                  apiKey: '${THEKAO_AI_API_KEY}'
+                  apiKey: '$${THEKAO_AI_API_KEY}'
                   baseURL: 'https://ai.thekao.cloud/v1'
                   models:
                     # Pull the live model list from /v1/models on every page
