@@ -355,6 +355,17 @@ spec:
             - "^/api/config"
           policy: bypass
 
+        # LibreChat static assets and health
+        - domain:
+            - "chat2.${SECRET_DEV_DOMAIN}"
+          resources:
+            - "^/health"
+            - "^/assets/.*$"
+            - "^/images/.*$"
+            - "^/manifest.webmanifest$"
+            - "^/manifest.json$"
+          policy: bypass
+
         # Local only bypass policies
         - domain: 
             - "ldap.${SECRET_DEV_DOMAIN}"
@@ -447,6 +458,7 @@ spec:
             #home
             - "baby*.${SECRET_DEV_DOMAIN}"
             - "chat.${SECRET_DEV_DOMAIN}"
+            - "chat2.${SECRET_DEV_DOMAIN}"
             # monitoring
             - "grafana.${SECRET_DEV_DOMAIN}"
             #media
@@ -690,7 +702,11 @@ spec:
             require_pkce: true
             pkce_challenge_method: 'S256'
             scopes: ["openid", "profile", "groups", "email"]
-            redirect_uris: ["https://chat.${SECRET_DEV_DOMAIN}/oauth/oidc/callback"]
+            redirect_uris:
+              - "https://chat.${SECRET_DEV_DOMAIN}/oauth/oidc/callback"
+              # LibreChat at chat2.* shares this client (same client_id and
+              # client_secret) — its callback path is `/oauth/openid/callback`.
+              - "https://chat2.${SECRET_DEV_DOMAIN}/oauth/openid/callback"
             response_types:
               - 'code'
             grant_types:
