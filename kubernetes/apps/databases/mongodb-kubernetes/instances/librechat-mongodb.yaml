@@ -1,0 +1,72 @@
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: librechat-mongodb
+  namespace: databases
+spec:
+  members: 1
+  type: ReplicaSet
+  version: "7.0.14"
+  security:
+    authentication:
+      modes: ["SCRAM"]
+  users:
+    - name: librechat
+      db: LibreChat
+      passwordSecretRef:
+        name: librechat-mongodb-password
+        # key defaults to "password" — matches our Secret skeleton
+      roles:
+        - name: readWrite
+          db: LibreChat
+        - name: dbAdmin
+          db: LibreChat
+      scramCredentialsSecretName: librechat-scram
+      # Pin the connection-string Secret name so LibreChat can reference it
+      # deterministically. The operator generates this Secret automatically and
+      # populates `connectionString.standardSrv` with a working mongodb+srv://
+      # URI that includes the librechat user/password and replicaSet name.
+      connectionStringSecretName: librechat-mongodb-conn
+
+  additionalMongodConfig:
+    storage.wiredTiger.engineConfig.journalCompressor: zlib
+
+  statefulSet:
+    spec:
+      template:
+        spec:
+          nodeSelector:
+            node-role.kubernetes.io/worker: "true"
+          containers:
+            - name: mongod
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  memory: 2Gi
+            - name: mongodb-agent
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 256Mi
+      volumeClaimTemplates:
+        - metadata:
+            name: data-volume
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            storageClassName: longhorn
+            resources:
+              requests:
+                storage: 10Gi
+        - metadata:
+            name: logs-volume
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            storageClassName: longhorn
+            resources:
+              requests:
+                storage: 2Gi

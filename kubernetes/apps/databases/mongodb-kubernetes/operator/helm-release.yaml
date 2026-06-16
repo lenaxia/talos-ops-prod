@@ -1,0 +1,51 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mongodb-kubernetes
+  namespace: databases
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: mongodb-kubernetes
+      version: 1.8.1
+      sourceRef:
+        kind: HelmRepository
+        name: mongodb-charts
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    crds: Create
+    remediation:
+      retries: 3
+  upgrade:
+    # CRDs are shipped via Helm's `crds/` directory which `helm upgrade` skips by
+    # default. CreateReplace tells Flux to apply CRD updates on chart bumps.
+    crds: CreateReplace
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    operator:
+      # Watch the databases namespace where MongoDBCommunity instances live.
+      # Defaults to operator's own namespace; we set it explicitly for clarity.
+      watchNamespace: databases
+      # Community-only — drop Enterprise-related watches to reduce log noise.
+      watchedResources:
+        - mongodbcommunity
+      # We only run MongoDBCommunity, no Enterprise ClusterMongoDBRole.
+      enableClusterMongoDBRoles: false
+      replicas: 1
+      resources:
+        requests:
+          cpu: 50m
+          memory: 200Mi
+        limits:
+          memory: 500Mi
+    # Default community image: quay.io/mongodb/mongodb-community-server:<version>-ubi8
+    # The `version` field on the MongoDBCommunity CR controls the tag.
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"

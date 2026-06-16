@@ -33,3 +33,4 @@ resources:
   - ./oncall-sim/ks.yaml
   - ./hortusfox/ks.yaml
   - ./hortusfox-mcp/ks.yaml
+  - ./librechat/ks.yaml

@@ -1,0 +1,202 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname librechat
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+
+    controllers:
+      main:
+        type: deployment
+        # RWO PVC + single-replica ⇒ Recreate avoids stuck rollouts.
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+
+        containers:
+          main:
+            image:
+              repository: ghcr.io/danny-avila/librechat
+              tag: v0.8.6
+            env:
+              # ── Server config ────────────────────────────────────────────
+              # Dockerfile already sets HOST=0.0.0.0; PORT defaults to 3080.
+              TZ: ${TIMEZONE}
+              NODE_ENV: production
+              DOMAIN_CLIENT: https://chat2.${SECRET_DEV_DOMAIN}
+              DOMAIN_SERVER: https://chat2.${SECRET_DEV_DOMAIN}
+              # Disable file logging — use stdout so it lands in Loki/Vector.
+              LOG_TO_FILE: "false"
+              DEBUG_LOGGING: "false"
+              CONSOLE_JSON: "false"
+              # No public search engines.
+              NO_INDEX: "true"
+
+              # ── Optional services we are NOT running ─────────────────────
+              SEARCH: "false"          # disables MeiliSearch dependency
+              # RAG_API_URL intentionally unset ⇒ RAG features disabled.
+
+              # ── Auth: OIDC-only via Authelia ─────────────────────────────
+              ALLOW_EMAIL_LOGIN: "false"
+              ALLOW_REGISTRATION: "false"
+              ALLOW_SOCIAL_LOGIN: "true"
+              ALLOW_SOCIAL_REGISTRATION: "true"
+              # Skip the LibreChat login form and bounce straight to Authelia.
+              OPENID_AUTO_REDIRECT: "true"
+              OPENID_USE_END_SESSION_ENDPOINT: "true"
+              OPENID_ISSUER: https://authelia.${SECRET_DEV_DOMAIN}
+              # We share the existing `open-webui` Authelia OIDC client. The
+              # Authelia config lists chat2.<domain>/oauth/openid/callback as
+              # an additional redirect_uri on the same client entry, so both
+              # apps authenticate against one client_id + client_secret.
+              OPENID_CLIENT_ID: open-webui
+              # Reuse the open-webui client_secret from cluster-secrets
+              # (SECRET_OPEN_WEBUI_OAUTH_CLIENT_SECRET). Because Flux variable
+              # substitution requires this value to come from the cluster
+              # ConfigMap/Secret rather than a per-app Secret, we set it
+              # inline here. The client_secret is the *plaintext* value;
+              # Authelia's helm-release stores its bcrypt hash separately.
+              OPENID_CLIENT_SECRET: ${SECRET_OPEN_WEBUI_OAUTH_CLIENT_SECRET}
+              OPENID_SCOPE: "openid profile email"
+              # LibreChat hardcodes this callback path; Authelia must allow it.
+              OPENID_CALLBACK_URL: /oauth/openid/callback
+              OPENID_BUTTON_LABEL: Sign in with The Kao Cloud
+              OPENID_USERNAME_CLAIM: preferred_username
+              OPENID_NAME_CLAIM: name
+
+              # ── Endpoint allow-list ──────────────────────────────────────
+              # Talk to the in-cluster LiteLLM router for everything. We pass
+              # the LiteLLM master key as the OpenAI-compatible API key.
+              ENDPOINTS: "openAI,agents"
+              OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm
+                    key: LITELLM_MASTER_KEY
+              OPENAI_REVERSE_PROXY: http://litellm.home.svc.cluster.local:4000/v1
+              # No other provider envs are set ⇒ those endpoints stay disabled.
+
+              # ── Trust proxy (we sit behind Traefik) ──────────────────────
+              TRUST_PROXY: "1"
+
+            envFrom:
+              # Secret carries: MONGO_URI, CREDS_KEY, CREDS_IV, JWT_SECRET,
+              # JWT_REFRESH_SECRET, OPENID_CLIENT_SECRET, OPENID_SESSION_SECRET
+              - secretRef:
+                  name: *appname
+
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 3080
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 3080
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 3080
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 30
+
+    service:
+      main:
+        primary: true
+        controller: main
+        ports:
+          http:
+            port: 3080
+
+    persistence:
+      # /app/uploads — RAG/file uploads
+      # /app/client/public/images — user-uploaded chat images
+      # We cover both with a single PVC + advancedMounts using subPaths.
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 10Gi
+        storageClass: longhorn
+        advancedMounts:
+          main:
+            main:
+              - path: /app/uploads
+                subPath: uploads
+              - path: /app/client/public/images
+                subPath: images
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          hajimari.io/enable: "true"
+          hajimari.io/icon: chat-processing-outline
+          hajimari.io/info: LibreChat
+          hajimari.io/group: *namespace
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares:
+            networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri chat2.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
