@@ -91,8 +91,11 @@ spec:
               X-Forwarded-Uri: keep
               X-Forwarded-Method: keep
               # Auth state — REDACT so we see presence/absence without leaking values
+              # TEMPORARY: Cookie kept (not redacted) to diagnose what cookie names
+              # the Dart Conduit client is actually sending. Authorization stays
+              # redacted (it's a real JWT). REVERT once diagnosed.
               Authorization: redact
-              Cookie: redact
+              Cookie: keep
               Set-Cookie: redact
 
     experimental:
