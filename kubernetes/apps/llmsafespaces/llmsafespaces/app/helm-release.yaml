@@ -57,11 +57,19 @@ spec:
       create: false
       existingSecret: llmsafespaces-credentials
 
-    # The migrate Job uses the API image; the API image's tag falls back to
-    # Chart.AppVersion (0.1.0). Pin a real published API tag here when the
-    # project starts cutting them — for now we accept the appVersion default.
+    # The migrate Job uses the API image. Chart appVersion (`0.1.0`) is a
+    # placeholder — no such tag is published. We pin to the latest ts-tag
+    # from ghcr.io/lenaxia/llmsafespaces/api as of 2026-06-26. To upgrade,
+    # check available tags:
+    #   curl -sH "Authorization: Bearer $(curl -s 'https://ghcr.io/token?\
+    #     scope=repository%3Alenaxia%2Fllmsafespaces%2Fapi%3Apull&\
+    #     service=ghcr.io' | jq -r .token)" \
+    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/tags/list?n=200
+    # and pick the largest ts-<unix-timestamp>.
     api:
       replicaCount: 2
+      image:
+        tag: ts-1782309430
       config:
         security:
           allowedOrigins:
@@ -70,6 +78,9 @@ spec:
 
     controller:
       replicaCount: 1
+      # Same ts-tag policy as api.image.tag above.
+      image:
+        tag: ts-1782309430
       # InferenceRelay + free-models refresher require external internet
       # egress + a published Worker. Leave both off in this homelab deploy.
       inferenceRelay:
@@ -124,6 +135,11 @@ spec:
     frontend:
       enabled: true
       replicaCount: 1
+      # Latest published frontend ts-tag as of 2026-06-26. Frontend CI runs
+      # separately from api/controller, hence the lag. Same tag-lookup
+      # procedure as api.image.tag above, but target the frontend image.
+      image:
+        tag: ts-1782183253
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -163,3 +179,10 @@ spec:
         enabled: true
       serviceMonitors:
         enabled: true
+        # The chart's agentd PodMonitor template uses `endpoints:` instead
+        # of `podMetricsEndpoints:` — `endpoints` is the ServiceMonitor
+        # field name; PodMonitor has always used `podMetricsEndpoints`.
+        # Prometheus Operator's strict CRD validation rejects it.
+        # Disable until upstream fixes the template.
+        agentdPodMonitor:
+          enabled: false
