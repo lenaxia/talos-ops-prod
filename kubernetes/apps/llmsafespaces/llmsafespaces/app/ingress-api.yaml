@@ -9,7 +9,13 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # API handles its own auth (JWT bearer tokens + per-org OIDC). Forcing
     # Authelia would break programmatic clients (SDKs, agentd, MCP).
-    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-no-auth@kubernetescrd
+    #
+    # Middleware order matters: CORS middleware MUST run before the shared
+    # secure-headers in chain-no-auth so its Allow-Origin/Allow-Methods are
+    # what Traefik returns when it short-circuits OPTIONS preflight. The
+    # shared chain still applies rate-limit + secure-headers to non-OPTIONS
+    # responses.
+    traefik.ingress.kubernetes.io/router.middlewares: llmsafespaces-llmsafespaces-api-cors@kubernetescrd,networking-chain-no-auth@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
