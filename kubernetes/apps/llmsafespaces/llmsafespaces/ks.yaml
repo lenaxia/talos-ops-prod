@@ -1,0 +1,64 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/kustomization_v1.json
+# ----------------------------------------------------------------------------
+# Stage 1 — DB role + secret. Runs BEFORE the chart's HelmRelease so the
+# pre-install Helm-hook migration Job can connect on the first reconcile.
+#
+# Health-check on the postgres-init Job: Flux marks this Kustomization
+# Ready only when the Job completes successfully (succeeded=True), which is
+# what `cluster-llmsafespaces-app`'s dependsOn waits on.
+# ----------------------------------------------------------------------------
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-llmsafespaces-db-init
+  namespace: flux-system
+  labels:
+    substitution.flux.home.arpa/enabled: "true"
+spec:
+  dependsOn:
+    - name: cluster-databases-postgres-clusters
+  path: ./kubernetes/apps/llmsafespaces/llmsafespaces/db-init
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  wait: true
+  healthChecks:
+    - apiVersion: batch/v1
+      kind: Job
+      name: llmsafespaces-postgres-init
+      namespace: llmsafespaces
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/kustomization_v1.json
+# ----------------------------------------------------------------------------
+# Stage 2 — the chart itself. Waits for db-init + valkey + cert-manager.
+# ----------------------------------------------------------------------------
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-llmsafespaces-app
+  namespace: flux-system
+  labels:
+    substitution.flux.home.arpa/enabled: "true"
+spec:
+  dependsOn:
+    - name: cluster-llmsafespaces-db-init
+    - name: cluster-llmsafespaces-valkey
+    - name: cert-manager-issuers
+  path: ./kubernetes/apps/llmsafespaces/llmsafespaces/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+      kind: HelmRelease
+      name: llmsafespaces
+      namespace: llmsafespaces
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m

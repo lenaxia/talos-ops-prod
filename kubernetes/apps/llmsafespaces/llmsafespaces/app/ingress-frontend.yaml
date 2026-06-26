@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: llmsafespaces-frontend
+  namespace: llmsafespaces
+  annotations:
+    hajimari.io/enable: "true"
+    hajimari.io/icon: chat-processing-outline
+    hajimari.io/info: LLMSafeSpaces
+    hajimari.io/group: llmsafespaces
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # llmsafespaces ships its own JWT + per-org SSO auth — do NOT force
+    # Authelia in front. chain-no-auth gives us rate limiting + secure
+    # headers without an extra forwardAuth round trip.
+    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-no-auth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: &host chat.safespaces.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: llmsafespaces-frontend
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - *host
+      secretName: chat.safespaces.dev-tls

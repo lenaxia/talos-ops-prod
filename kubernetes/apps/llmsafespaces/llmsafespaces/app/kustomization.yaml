@@ -1,0 +1,11 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: llmsafespaces
+commonLabels:
+  app.kubernetes.io/name: &app llmsafespaces
+  app.kubernetes.io/instance: *app
+resources:
+  - helm-release.yaml
+  - ingress-frontend.yaml
+  - ingress-api.yaml
