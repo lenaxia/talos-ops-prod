@@ -1,0 +1,29 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: llmsafespaces-api
+  namespace: llmsafespaces
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # API handles its own auth (JWT bearer tokens + per-org OIDC). Forcing
+    # Authelia would break programmatic clients (SDKs, agentd, MCP).
+    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-no-auth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: &host api.safespaces.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: llmsafespaces-api
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - *host
+      secretName: api.safespaces.dev-tls

@@ -1,0 +1,16 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: llmsafespaces
+  namespace: flux-system
+spec:
+  interval: 30m
+  url: https://github.com/lenaxia/LLMSafeSpaces.git
+  ref:
+    branch: main
+  ignore: |
+    # exclude everything
+    /*
+    # include only the helm chart
+    !/charts/llmsafespaces

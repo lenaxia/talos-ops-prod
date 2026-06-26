@@ -6,4 +6,5 @@ resources:
   - synofotopg.yaml
   - synofotopg-lb.yaml
   - vectorpg-lb.yaml
+  - llmsafespacespg.yaml
   #- backup.yaml

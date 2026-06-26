@@ -1,0 +1,123 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname llmsafespaces-valkey
+  namespace: llmsafespaces
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+      interval: 15m
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    remediation:
+      retries: 4
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+
+    controllers:
+      valkey:
+        type: statefulset
+        # RWO PVC + single-replica ⇒ Recreate avoids stuck rollouts.
+        strategy: OnDelete
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: valkey/valkey
+              tag: 9.1.0
+            command:
+              - sh
+            args:
+              - -c
+              - >-
+                valkey-server --requirepass "$VALKEY_PASSWORD"
+                --appendonly yes
+                --maxmemory 1024mb
+                --maxmemory-policy allkeys-lru
+            env:
+              VALKEY_PORT: "6379"
+              VALKEY_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: VALKEY_PASSWORD
+            probes:
+              startup:
+                enabled: true
+                spec:
+                  exec:
+                    command:
+                      - sh
+                      - -c
+                      - valkey-cli -a "$VALKEY_PASSWORD" --no-auth-warning ping | grep -q PONG
+                  failureThreshold: 30
+                  periodSeconds: 5
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - sh
+                      - -c
+                      - valkey-cli -a "$VALKEY_PASSWORD" --no-auth-warning ping | grep -q PONG
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - sh
+                      - -c
+                      - valkey-cli -a "$VALKEY_PASSWORD" --no-auth-warning ping | grep -q PONG
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 5
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 1280Mi
+        statefulset:
+          volumeClaimTemplates:
+            - name: data
+              accessMode: ReadWriteOnce
+              size: 5Gi
+              storageClass: longhorn
+              globalMounts:
+                - path: /data
+
+    # bjw-s service naming: when `service.main` is primary, the rendered
+    # Service is named after the release (here: `llmsafespaces-valkey`).
+    # The chart's llmsafespaces helm-release.yaml sets redis.host explicitly
+    # to this fully-qualified name, so we don't need any nameOverride hack.
+    service:
+      main:
+        primary: true
+        controller: valkey
+        ports:
+          redis:
+            port: 6379
+            targetPort: 6379
+            protocol: TCP
