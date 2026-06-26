@@ -40,8 +40,11 @@ spec:
                 2025.3.2@sha256:309a7587c2aa7ce6a99812a61c5024240a21b708f94802a09105c61513572164
             command: ["/app/cloudflare-ddns.sh"]
             env:
-              - name: CLOUDFLARE_DOMAIN
-                value: "${SECRET_DEV_DOMAIN}"
+              # Comma-separated zone=record_name pairs. record_name is the
+              # full FQDN (wildcards permitted). SECRET_CLOUDFLARE_TOKEN
+              # below must have Zone.DNS:Edit on every zone in this list.
+              - name: CLOUDFLARE_RECORDS
+                value: "${SECRET_DEV_DOMAIN}=${SECRET_DEV_DOMAIN},${SECRET_SAFESPACES_DOMAIN}=${SECRET_SAFESPACES_DOMAIN},${SECRET_SAFESPACES_DOMAIN}=*.${SECRET_SAFESPACES_DOMAIN}"
               - name: CLOUDFLARE_TOKEN
                 value: "${SECRET_CLOUDFLARE_TOKEN}"
               - name: PUSHOVER_USER_KEY
