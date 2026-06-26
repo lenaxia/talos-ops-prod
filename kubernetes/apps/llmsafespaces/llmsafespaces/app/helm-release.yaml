@@ -163,6 +163,19 @@ spec:
     mcp:
       enabled: false
 
+    # ── Workspace runtime images ────────────────────────────────────────────
+    # The chart seeds a `base` RuntimeEnvironment CR pointing at the base
+    # workspace runtime image. Like api/controller/frontend, the default tag
+    # falls back to Chart.AppVersion (0.1.0) which doesn't exist on ghcr —
+    # workspace pods crash-loop on Init:ErrImagePull without an override.
+    # Pinning to latest published ts-tag as of 2026-06-26. Refresh procedure:
+    # see the api.image.tag comment above (substitute /base for /api in the
+    # tags-list URL).
+    runtimeEnvironments:
+      base:
+        image:
+          tag: ts-1782512394
+
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
     # — that's the chart author's own CF Worker, NOT ours. Override to empty
