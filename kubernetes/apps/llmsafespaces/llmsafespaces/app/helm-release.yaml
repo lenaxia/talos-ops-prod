@@ -69,7 +69,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: ts-1782309430
+        tag: ts-1782512394
       config:
         security:
           allowedOrigins:
@@ -80,7 +80,7 @@ spec:
       replicaCount: 1
       # Same ts-tag policy as api.image.tag above.
       image:
-        tag: ts-1782309430
+        tag: ts-1782512394
       # InferenceRelay + free-models refresher require external internet
       # egress + a published Worker. Leave both off in this homelab deploy.
       inferenceRelay:
