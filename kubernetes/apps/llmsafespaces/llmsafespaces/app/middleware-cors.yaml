@@ -1,0 +1,50 @@
+---
+# CORS middleware for the LLMSafeSpaces API.
+#
+# Why this exists:
+#   The cluster's shared `middlewares-secure-headers` (referenced by
+#   `networking-chain-no-auth`) sets accessControlAllowMethods but does NOT
+#   set accessControlAllowOriginList. With ANY accessControl* set, Traefik
+#   short-circuits browser preflight (OPTIONS) requests at the edge and
+#   responds with whatever ACL headers are configured — without an
+#   Allow-Origin header in that response, every browser rejects the
+#   preflight (the symptom user saw: "No 'Access-Control-Allow-Origin'
+#   header is present").
+#
+#   Adding Allow-Origin to the shared middleware would affect every app on
+#   the cluster, so we ship a scoped middleware here and chain it into the
+#   API ingress's middleware list explicitly.
+#
+# The API process itself ALSO does CORS (api.config.security.allowedOrigins
+# / allowCredentials in the chart values). Both layers responding with the
+# same Allow-Origin is fine — Traefik's response wins for preflight, the
+# API's response handles same-headers on the actual request.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: llmsafespaces-api-cors
+  namespace: llmsafespaces
+spec:
+  headers:
+    accessControlAllowOriginList:
+      - https://chat.safespaces.dev
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    accessControlAllowHeaders:
+      - Authorization
+      - Content-Type
+      - X-Request-Id
+      - X-Internal-Token
+      - X-Forwarded-For
+      - X-Forwarded-Host
+      - X-Forwarded-Proto
+    accessControlAllowCredentials: true
+    accessControlExposeHeaders:
+      - X-Request-Id
+    accessControlMaxAge: 600
+    addVaryHeader: true
