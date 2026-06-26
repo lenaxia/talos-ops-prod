@@ -36,13 +36,18 @@ spec:
       - DELETE
       - OPTIONS
     accessControlAllowHeaders:
+      - Accept
       - Authorization
+      - Cache-Control
       - Content-Type
-      - X-Request-Id
-      - X-Internal-Token
+      - Last-Event-ID
+      - Pragma
       - X-Forwarded-For
       - X-Forwarded-Host
       - X-Forwarded-Proto
+      - X-Internal-Token
+      - X-Request-Id
+      - X-Requested-With
     accessControlAllowCredentials: true
     accessControlExposeHeaders:
       - X-Request-Id
