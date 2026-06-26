@@ -88,6 +88,19 @@ spec:
       freeModelsRefresher:
         enabled: false
 
+    # ── RBAC ────────────────────────────────────────────────────────────────
+    # Chart default `rbac.scope: namespace` is broken for this chart: the
+    # controller-runtime informer cache does cluster-wide list/watch on
+    # Pods/Secrets/PVCs/ServiceAccounts by default, and the chart ships a
+    # cluster-scoped CRD (RuntimeEnvironment). With namespace-scoped RBAC
+    # the controller floods logs with `forbidden ... at the cluster scope`
+    # and the watch loop never establishes. Switching to `cluster` grants
+    # the controller cluster-wide list/watch — least-privilege correctness
+    # vs functionality trade-off the chart should resolve internally.
+    rbac:
+      create: true
+      scope: cluster
+
     # gVisor is not installed on the Talos workers. Workspace pods will run
     # under runc — fine for a single-operator deployment, NOT fine for
     # multi-tenant. Document the trade-off in chart values.
