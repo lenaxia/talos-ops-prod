@@ -69,7 +69,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: ts-1782512394
+        tag: ts-1782531615
       config:
         security:
           allowedOrigins:
@@ -80,7 +80,7 @@ spec:
       replicaCount: 1
       # Same ts-tag policy as api.image.tag above.
       image:
-        tag: ts-1782512394
+        tag: ts-1782531615
       # InferenceRelay + free-models refresher require external internet
       # egress + a published Worker. Leave both off in this homelab deploy.
       inferenceRelay:
@@ -152,7 +152,7 @@ spec:
       # separately from api/controller, hence the lag. Same tag-lookup
       # procedure as api.image.tag above, but target the frontend image.
       image:
-        tag: ts-1782183253
+        tag: ts-1782531615
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -174,7 +174,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: ts-1782512394
+          tag: ts-1782531615
 
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
