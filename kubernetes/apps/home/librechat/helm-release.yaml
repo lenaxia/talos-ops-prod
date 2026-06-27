@@ -39,7 +39,7 @@ spec:
           main:
             image:
               repository: ghcr.io/danny-avila/librechat
-              tag: v0.8.6
+              tag: v0.8.7
             env:
               # ── Server config ────────────────────────────────────────────
               # Dockerfile already sets HOST=0.0.0.0; PORT defaults to 3080.
