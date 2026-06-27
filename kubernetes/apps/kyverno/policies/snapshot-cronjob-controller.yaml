@@ -76,6 +76,9 @@ spec:
               spec:
                 # Keep at least one job in completed state in accordance to the schedule
                 ttlSecondsAfterFinished: 86400
+                # Kill hung snapshot jobs so they release the source RWO PVC
+                # instead of holding it indefinitely and blocking the owning app
+                activeDeadlineSeconds: 1800
                 template:
                   spec:
                     automountServiceAccountToken: false
