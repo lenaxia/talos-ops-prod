@@ -16,13 +16,6 @@ spec:
         name: llmsafespaces
         namespace: flux-system
       interval: 15m
-      # The chart isn't versioned (Chart.yaml is pinned to 0.1.0 forever
-      # because it's never published to a Helm registry). Default
-      # reconcileStrategy=ChartVersion would only re-package when 0.1.0
-      # changed, missing every code push. Track git revisions instead so
-      # Flux re-packages on each commit (and rolls deployments + reruns
-      # migrations when image-tag values below are bumped).
-      reconcileStrategy: Revision
   install:
     # CRDs are installed by Helm from the chart's crds/ directory on initial
     # install only (`Create`). For upgrades, CRD schema changes must be
@@ -76,7 +69,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: ts-1782531615
+        tag: ts-1782606313
       config:
         security:
           allowedOrigins:
@@ -87,7 +80,7 @@ spec:
       replicaCount: 1
       # Same ts-tag policy as api.image.tag above.
       image:
-        tag: ts-1782531615
+        tag: ts-1782606313
       # InferenceRelay + free-models refresher require external internet
       # egress + a published Worker. Leave both off in this homelab deploy.
       inferenceRelay:
@@ -155,11 +148,12 @@ spec:
     frontend:
       enabled: true
       replicaCount: 1
-      # Latest published frontend ts-tag as of 2026-06-26. Frontend CI runs
-      # separately from api/controller, hence the lag. Same tag-lookup
-      # procedure as api.image.tag above, but target the frontend image.
+      # Latest published frontend ts-tag. Frontend CI runs separately from
+      # api/controller, hence the lag — but for Epic 55 they are pinned
+      # together to the same merge-commit tag because the kind/slug wire
+      # format must roll out atomically across all three.
       image:
-        tag: ts-1782531615
+        tag: ts-1782606313
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -181,7 +175,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: ts-1782531615
+          tag: ts-1782606313
 
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
