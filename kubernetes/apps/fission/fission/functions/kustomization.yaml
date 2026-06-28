@@ -9,6 +9,9 @@ resources:
   - ./secret-matriarch-vy.sops.yaml
   - ./imaizumi.yaml
   - ./secret-imaizumi.sops.yaml
+  # Generic violetscans Package + per-series Function CRs.
+  # See ./violetscans/README.md for how to add a new series.
+  - ./violetscans
   - ./job-scraper-stripe.yaml
   - ./secret-job-scraper-stripe.sops.yaml
   - ./job-scraper-vanta.yaml

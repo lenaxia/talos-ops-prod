@@ -1,0 +1,8 @@
+---
+# Per-series Function CRs for the violetscans Package.
+# Add a new entry below for each new series.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: fission
+resources:
+  - ./may-i-please

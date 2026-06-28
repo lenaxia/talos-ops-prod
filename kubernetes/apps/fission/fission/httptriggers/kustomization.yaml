@@ -9,6 +9,8 @@ resources:
   - ./matriarch-vy-timer.yaml
   - ./imaizumi.yaml
   - ./imaizumi-timer.yaml
+  # Generic violetscans triggers — one directory per series.
+  - ./violetscans
   - ./job-scraper-stripe.yaml
   - ./job-scraper-stripe-timer.yaml
   - ./job-scraper-vanta.yaml

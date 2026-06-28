@@ -1,0 +1,31 @@
+---
+# Function CR for "May I Please Ask You Just One Last Thing".
+#
+# Identity convention: the Function `metadata.name`, the referenced Secret
+# `name`, and the directory name MUST all match. The generic violetscans
+# scraper discovers its identity at runtime by reading from its mounted
+# Secret directory at /secrets/fission/<secret-name>/.
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: may-i-please
+  namespace: fission
+spec:
+  environment:
+    name: python3-manga-updater
+    namespace: fission
+  package:
+    packageref:
+      name: violetscans
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: may-i-please
+      namespace: fission
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 1
+      MaxScale: 1
+      SpecializationTimeout: 120
