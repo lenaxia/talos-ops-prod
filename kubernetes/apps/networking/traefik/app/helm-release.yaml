@@ -58,12 +58,12 @@ spec:
       labels:
         cilium.io/l2-ip-pool: reserved
     logs:
-      general:
+      log:
         format: json
         # TEMPORARY DEBUG: bumped from INFO for diagnosing Conduit/Authelia/OpenWebUI
         # auth flow (issue cogwheel0/conduit#407). Revert to INFO once diagnosed.
         level: DEBUG
-      access:
+      accessLog:
         enabled: true
         format: json
         # TEMPORARY DEBUG: capture auth-relevant request and response headers in
