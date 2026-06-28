@@ -1,0 +1,16 @@
+---
+# HTTPTrigger for manual invocation of the may-i-please Function.
+# Reachable in-cluster at http://router.fission.svc.cluster.local/may-i-please
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: may-i-please
+  namespace: fission
+spec:
+  functionref:
+    name: may-i-please
+    type: name
+  relativeurl: /may-i-please
+  methods:
+    - GET
+    - POST

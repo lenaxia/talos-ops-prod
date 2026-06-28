@@ -1,0 +1,12 @@
+---
+# Daily scheduled run for may-i-please. Matches matriarch's schedule (14:00 UTC).
+apiVersion: fission.io/v1
+kind: TimeTrigger
+metadata:
+  name: may-i-please-daily
+  namespace: fission
+spec:
+  cron: "0 14 * * *"
+  functionref:
+    name: may-i-please
+    type: name
