@@ -24,4 +24,4 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/latest/download/violetscans-1.0.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/violetscans-1.0.1/violetscans-1.0.1.zip
