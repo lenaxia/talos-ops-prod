@@ -37,3 +37,20 @@ data:
       --appendonly yes \
       --save 60 1 \
       --replicaof "redis-0.$HEADLESS" 6379
+
+  sentinel-entrypoint.sh: |
+    #!/bin/sh
+    set -e
+
+    cat > /tmp/sentinel.conf <<EOF
+    port 26379
+    sentinel resolve-hostnames yes
+    sentinel announce-hostnames yes
+    sentinel monitor mymaster redis-0.redis-headless.databases.svc.cluster.local 6379 2
+    sentinel auth-pass mymaster $REDIS_PASSWORD
+    sentinel down-after-milliseconds mymaster 5000
+    sentinel failover-timeout mymaster 30000
+    sentinel parallel-syncs mymaster 1
+    EOF
+
+    exec redis-server /tmp/sentinel.conf --sentinel
