@@ -1,4 +1,5 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -16,7 +17,6 @@ spec:
         namespace: flux-system
       interval: 15m
   install:
-    createNamespace: true
     remediation:
       retries: 4
   upgrade:
@@ -25,25 +25,49 @@ spec:
   values:
     defaultPodOptions:
       nodeSelector:
-        node-role.kubernetes.io/worker: 'true'
+        node-role.kubernetes.io/worker: "true"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: redis
+              topologyKey: kubernetes.io/hostname
     controllers:
-      redis:
+      main:
         type: statefulset
+        replicas: 3
+        pod:
+          labels:
+            redis-role: replica
+          serviceAccountName: redis
         containers:
-          main:
+          valkey:
             image:
               repository: valkey/valkey
-              tag: 9.1.0
+              tag: "9.1.0"
             command:
-              - sh
-            args:
-              - -c
-              - >-
-                redis-server --requirepass $REDIS_PASSWORD
+              - /scripts/valkey-entrypoint.sh
+            env:
+              REDIS_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: redis-secret
+                    key: password
+              REDISCLI_AUTH:
+                valueFrom:
+                  secretKeyRef:
+                    name: redis-secret
+                    key: password
             probes:
               startup:
                 enabled: true
                 spec:
+                  exec:
+                    command:
+                      - sh
+                      - -c
+                      - redis-cli -h 127.0.0.1 -p 6379 ping
                   failureThreshold: 30
                   periodSeconds: 5
               liveness:
@@ -54,11 +78,8 @@ spec:
                     command:
                       - sh
                       - -c
-                      - /health/ping_liveness.sh 5
-                  initialDelaySeconds: 5
-                  timeoutSeconds: 6
-                  periodSeconds: 5
-                  successThreshold: 1
+                      - redis-cli -h 127.0.0.1 -p 6379 ping
+                  periodSeconds: 10
                   failureThreshold: 5
               readiness:
                 enabled: true
@@ -68,43 +89,81 @@ spec:
                     command:
                       - sh
                       - -c
-                      - /health/ping_readiness.sh 1
-                  initialDelaySeconds: 5
-                  timeoutSeconds: 2
+                      - redis-cli -h 127.0.0.1 -p 6379 ping
                   periodSeconds: 5
-                  successThreshold: 1
                   failureThreshold: 5
             resources:
               requests:
-                cpu: 34m
-                memory: 204Mi
+                cpu: 50m
+                memory: 256Mi
               limits:
-                memory: 241Mi
+                memory: 512Mi
+          sentinel:
+            image:
+              repository: valkey/valkey
+              tag: "9.1.0"
+            command:
+              - /scripts/sentinel-entrypoint.sh
             env:
-              REDIS_PORT: "6379"
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:
                     name: redis-secret
                     key: password
-    service:
-      main:
-        ports:
-          http:
-            port: 6379
+            probes:
+              startup:
+                enabled: true
+                spec:
+                  tcpSocket:
+                    port: 26379
+                  failureThreshold: 30
+                  periodSeconds: 5
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 26379
+                  periodSeconds: 15
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 26379
+                  periodSeconds: 10
+                  failureThreshold: 5
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 128Mi
+        statefulset:
+          volumeClaimTemplates:
+            - name: data
+              accessMode: ReadWriteOnce
+              size: 2Gi
+              storageClass: longhorn
+              advancedMounts:
+                main:
+                  valkey:
+                    - path: /data
     persistence:
-      data:
-        enabled: true
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 1Gi
-        storageClass: longhorn
-        globalMounts:
-          - path: /data
-      healthcheck:
-        enabled: true
+      scripts:
         type: configMap
-        name: redis-healthcheck
+        name: redis-scripts
         defaultMode: 0755
         globalMounts:
-          - path: /health
+          - path: /scripts
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: StatefulSet
+              name: redis
+            patch: |
+              - op: add
+                path: /spec/serviceName
+                value: redis-headless

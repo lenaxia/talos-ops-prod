@@ -10,7 +10,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-databases-postgres-clusters
-    - name: cluster-databases-redis-lb
+    - name: cluster-databases-redis
   path: ./kubernetes/apps/networking/authelia/app
   prune: true
   sourceRef:

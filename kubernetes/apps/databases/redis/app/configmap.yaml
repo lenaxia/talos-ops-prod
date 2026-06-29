@@ -1,38 +1,100 @@
 ---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.26.1-standalone-strict/configmap-v1.json
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: redis-healthcheck
+  name: redis-scripts
   namespace: databases
   labels:
     app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: redis
 data:
-  ping_readiness.sh: |-
-    #!/bin/sh
-    export REDISCLI_AUTH="$REDIS_PASSWORD"
-    response=$(
-      timeout -s 3 $1 \
-      redis-cli \
-        -h localhost \
-        -p $REDIS_PORT \
-        ping
-    )
-    if [ "$response" != "PONG" ]; then
-      echo "$response"
-      exit 1
+  valkey-entrypoint.sh: |
+    #!/bin/bash
+    set -e
+
+    ORDINAL="${HOSTNAME##*-}"
+    HEADLESS="redis-headless.databases.svc.cluster.local"
+
+    if [ "$ORDINAL" = "0" ]; then
+      echo "Pod ordinal 0 — starting as primary"
+      exec redis-server \
+        --requirepass "$REDIS_PASSWORD" \
+        --masterauth "$REDIS_PASSWORD" \
+        --appendonly yes \
+        --save 60 1
     fi
-  ping_liveness.sh: |-
-    #!/bin/sh
-    export REDISCLI_AUTH="$REDIS_PASSWORD"
-    response=$(
-      timeout -s 3 $1 \
-      redis-cli \
-        -h localhost \
-        -p $REDIS_PORT \
-        ping
-    )
-    if [ "$response" != "PONG" ] && [ "$response" != "LOADING Redis is loading the dataset in memory" ]; then
-      echo "$response"
-      exit 1
+
+    echo "Pod ordinal $ORDINAL — waiting for redis-0..."
+    until redis-cli -h "redis-0.${HEADLESS}" -p 6379 --user default -a "$REDIS_PASSWORD" --no-auth-warning ping 2>/dev/null; do
+      echo "  redis-0 not ready yet..."
+      sleep 3
+    done
+
+    echo "redis-0 is up — starting as replica"
+    exec redis-server \
+      --requirepass "$REDIS_PASSWORD" \
+      --masterauth "$REDIS_PASSWORD" \
+      --appendonly yes \
+      --save 60 1 \
+      --replicaof "redis-0.${HEADLESS}" 6379
+
+  sentinel-entrypoint.sh: |
+    #!/bin/bash
+    set -e
+
+    if ! command -v curl >/dev/null 2>&1; then
+      apt-get update -qq && apt-get install -y -qq curl >/dev/null 2>&1
     fi
+
+    POD_NAME="$HOSTNAME"
+    NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+    TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+    HEADLESS="redis-headless.databases.svc.cluster.local"
+
+    cat > /tmp/sentinel.conf <<EOF
+    port 26379
+    sentinel resolve-hostnames yes
+    sentinel announce-hostnames yes
+    sentinel monitor mymaster redis-0.${HEADLESS} 6379 2
+    sentinel auth-pass mymaster ${REDIS_PASSWORD}
+    sentinel auth-user mymaster default
+    sentinel down-after-milliseconds mymaster 5000
+    sentinel failover-timeout mymaster 30000
+    sentinel parallel-syncs mymaster 1
+    requirepass ${REDIS_PASSWORD}
+    EOF
+
+    /scripts/label-updater.sh &
+
+    exec redis-server /tmp/sentinel.conf --sentinel
+
+  label-updater.sh: |
+    #!/bin/bash
+
+    POD_NAME="$HOSTNAME"
+    NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+    TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+    API="https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/pods/${POD_NAME}"
+
+    patch_label() {
+      local role="$1"
+      curl -sk -X PATCH \
+        -H "Authorization: Bearer ${TOKEN}" \
+        -H "Content-Type: application/merge-patch+json" \
+        "${API}" \
+        -d "{\"metadata\":{\"labels\":{\"redis-role\":\"${role}\"}}}" \
+        >/dev/null 2>&1
+    }
+
+    while true; do
+      sleep 10
+
+      ROLE="$(redis-cli -h 127.0.0.1 -p 6379 --user default -a "$REDIS_PASSWORD" --no-auth-warning INFO replication 2>/dev/null \
+        | grep '^role:' | cut -d: -f2 | tr -d '\r\n')"
+
+      if [ "$ROLE" = "master" ]; then
+        patch_label "primary"
+      elif [ "$ROLE" = "slave" ]; then
+        patch_label "replica"
+      fi
+    done

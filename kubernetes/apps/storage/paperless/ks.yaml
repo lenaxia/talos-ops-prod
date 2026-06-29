@@ -12,7 +12,6 @@ spec:
     - name: cluster-storage-longhorn
     - name: cluster-databases-postgres-clusters
     - name: cluster-databases-redis
-    - name: cluster-databases-redis-lb
   path: ./kubernetes/apps/storage/paperless/app
   prune: true
   sourceRef:
