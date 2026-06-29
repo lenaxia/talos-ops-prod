@@ -25,7 +25,7 @@ data:
     fi
 
     echo "Pod ordinal $ORDINAL - waiting for redis-0..."
-    until redis-cli -h "redis-0.${HEADLESS}" -p 6379 --user default -a "$REDIS_PASSWORD" --no-auth-warning ping 2>/dev/null; do
+    until redis-cli -h "redis-0.$HEADLESS" -p 6379 -a "$REDIS_PASSWORD" --no-auth-warning ping 2>/dev/null; do
       echo "  redis-0 not ready yet..."
       sleep 3
     done
@@ -36,4 +36,4 @@ data:
       --masterauth "$REDIS_PASSWORD" \
       --appendonly yes \
       --save 60 1 \
-      --replicaof "redis-0.${HEADLESS}" 6379
+      --replicaof "redis-0.$HEADLESS" 6379
