@@ -48,6 +48,10 @@ spec:
               - name: valkey
                 containerPort: 6379
             env:
+              POD_NAME:
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
               REDIS_PASSWORD:
                 valueFrom:
                   secretKeyRef:
