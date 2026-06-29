@@ -16,6 +16,15 @@ spec:
         name: llmsafespaces
         namespace: flux-system
       interval: 15m
+      # Chart.yaml is pinned at 0.1.0 forever because it's never published.
+      # Default reconcileStrategy=ChartVersion only re-packages on version
+      # change, so source-controller would never re-package after a code
+      # push — leaving helm-controller running against a stale chart
+      # snapshot. Worklog c914dc2e first set this; PR-1d6975f9 (Epic 55)
+      # accidentally dropped it; PR-451 surfaced the regression because
+      # its migration 000004 never reached the ConfigMap. Track git
+      # revisions so Flux re-packages on every commit.
+      reconcileStrategy: Revision
   install:
     # CRDs are installed by Helm from the chart's crds/ directory on initial
     # install only (`Create`). For upgrades, CRD schema changes must be
