@@ -50,6 +50,21 @@ spec:
     namespace:
       create: false
 
+    # ── Migrations ──────────────────────────────────────────────────────────
+    # The chart's migrate Job uses migrate/migrate:v4.17.1 with `-database`
+    # set to libpq KV form (host=… port=… password=… …). PR #437 introduced
+    # the KV form to avoid URL-encoding the password, but the
+    # migrate/migrate v4 CLI rejects KV form with `error: no scheme` — it
+    # requires `postgres://...` URLs. The KV form only works when callers
+    # use golang-migrate as a Go library (e.g. api/Makefile's migrate-up
+    # target compiled into a local binary). In the Docker CLI image it
+    # fails outright. Until that's fixed upstream (LLMSafeSpaces issue
+    # forthcoming), run migrations out-of-band and disable the chart's
+    # pre-upgrade migrate Job. Schema is currently at v=4; verify with:
+    #   psql -d llmsafespaces -c 'SELECT version, dirty FROM schema_migrations'
+    migrations:
+      enabled: false
+
     # ── Datastores ──────────────────────────────────────────────────────────
     postgresql:
       host: llmsafespacespg-rw.databases.svc.cluster.local
