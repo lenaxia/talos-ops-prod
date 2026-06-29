@@ -5,6 +5,5 @@ metadata:
 resources:
   - helm-release.yaml
   - configmap.yaml
-  - rbac.yaml
   - service.yaml
   - secret.sops.yaml

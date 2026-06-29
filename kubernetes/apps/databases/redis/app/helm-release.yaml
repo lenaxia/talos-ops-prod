@@ -37,11 +37,6 @@ spec:
       main:
         type: statefulset
         replicas: 3
-        pod:
-          labels:
-            redis-role: replica
-        serviceAccount:
-          name: redis
         containers:
           valkey:
             image:
@@ -103,52 +98,6 @@ spec:
                 memory: 256Mi
               limits:
                 memory: 512Mi
-          sentinel:
-            image:
-              repository: valkey/valkey
-              tag: "9.1.0"
-            command:
-              - /scripts/sentinel-entrypoint.sh
-            ports:
-              - name: sentinel
-                containerPort: 26379
-            env:
-              REDIS_PASSWORD:
-                valueFrom:
-                  secretKeyRef:
-                    name: redis-secret
-                    key: password
-            probes:
-              startup:
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: 26379
-                  failureThreshold: 30
-                  periodSeconds: 5
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: 26379
-                  periodSeconds: 15
-                  failureThreshold: 5
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: 26379
-                  periodSeconds: 10
-                  failureThreshold: 5
-            resources:
-              requests:
-                cpu: 10m
-                memory: 64Mi
-              limits:
-                memory: 128Mi
         statefulset:
           serviceName: redis-headless
           volumeClaimTemplates:

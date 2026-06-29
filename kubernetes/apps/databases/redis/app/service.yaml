@@ -17,30 +17,6 @@ spec:
     - name: valkey
       port: 6379
       targetPort: 6379
-    - name: sentinel
-      port: 26379
-      targetPort: 26379
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: redis
-  namespace: databases
-  labels:
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/instance: redis
-spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/instance: redis
-  ports:
-    - name: valkey
-      port: 6379
-      targetPort: 6379
-    - name: sentinel
-      port: 26379
-      targetPort: 26379
 ---
 apiVersion: v1
 kind: Service
@@ -51,12 +27,5 @@ metadata:
     app.kubernetes.io/name: redis
     app.kubernetes.io/instance: redis
 spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/instance: redis
-    redis-role: primary
-  ports:
-    - name: valkey
-      port: 6379
-      targetPort: 6379
+  type: ExternalName
+  externalName: redis-0.redis-headless.databases.svc.cluster.local
