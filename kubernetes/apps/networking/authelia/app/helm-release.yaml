@@ -551,13 +551,12 @@ spec:
         ##
         redis:
           enabled: true
-          host: redis-lb.databases.svc.cluster.local
+          host: redis-primary.databases.svc.cluster.local
           port: 6379
           username: ""
           database_index: 0
-          maximum_active_connections: 8
-          minimum_idle_connections: 0
-
+          maximum_active_connections: 16
+          minimum_idle_connections: 2
           tls:
             enabled: false
 
