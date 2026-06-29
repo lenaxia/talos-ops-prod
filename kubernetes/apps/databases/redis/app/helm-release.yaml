@@ -150,8 +150,7 @@ spec:
               storageClass: longhorn
               advancedMounts:
                 main:
-                  valkey:
-                    - path: /data
+                  - path: /data
     persistence:
       scripts:
         type: configMap
