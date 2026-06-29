@@ -49,6 +49,9 @@ spec:
               tag: "9.1.0"
             command:
               - /scripts/valkey-entrypoint.sh
+            ports:
+              - name: valkey
+                containerPort: 6379
             env:
               REDIS_PASSWORD:
                 valueFrom:
@@ -63,6 +66,7 @@ spec:
             probes:
               startup:
                 enabled: true
+                custom: true
                 spec:
                   exec:
                     command:
@@ -105,6 +109,9 @@ spec:
               tag: "9.1.0"
             command:
               - /scripts/sentinel-entrypoint.sh
+            ports:
+              - name: sentinel
+                containerPort: 26379
             env:
               REDIS_PASSWORD:
                 valueFrom:
@@ -114,6 +121,7 @@ spec:
             probes:
               startup:
                 enabled: true
+                custom: true
                 spec:
                   tcpSocket:
                     port: 26379
