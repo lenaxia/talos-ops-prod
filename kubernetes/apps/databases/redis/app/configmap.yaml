@@ -12,8 +12,7 @@ data:
     #!/bin/sh
     set -e
 
-    POD_NAME="${POD_NAME}"
-    ORDINAL="${POD_NAME##*-}"
+    ORDINAL="$${POD_NAME##*-}"
     HEADLESS="redis-headless.databases.svc.cluster.local"
 
     if [ "$ORDINAL" = "0" ]; then
