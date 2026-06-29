@@ -40,7 +40,8 @@ spec:
         pod:
           labels:
             redis-role: replica
-          serviceAccountName: redis
+        serviceAccount:
+          name: redis
         containers:
           valkey:
             image:
@@ -141,6 +142,7 @@ spec:
               limits:
                 memory: 128Mi
         statefulset:
+          serviceName: redis-headless
           volumeClaimTemplates:
             - name: data
               accessMode: ReadWriteOnce
@@ -157,13 +159,3 @@ spec:
         defaultMode: 0755
         globalMounts:
           - path: /scripts
-  postRenderers:
-    - kustomize:
-        patches:
-          - target:
-              kind: StatefulSet
-              name: redis
-            patch: |
-              - op: add
-                path: /spec/serviceName
-                value: redis-headless
