@@ -1,0 +1,53 @@
+---
+# WORKAROUND for an upstream chart bug.
+#
+# charts/llmsafespaces/templates/rbac.yaml grants the API ServiceAccount
+# `create` on Secrets via three rules of the form
+#   verbs: ["get", "create", "update", "patch"]
+#   resourceNames: ["oci-credentials" | "gcp-credentials" | "aws-relay-irwa"]
+#
+# Kubernetes RBAC silently ignores `resourceNames` on the `create` verb (and
+# on `deletecollection`) — the rule grants get/update/patch on those names
+# and grants nothing for create. See:
+#   https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-resources
+#   > You cannot restrict create or deletecollection requests by their
+#   > resource name.
+#
+# Effect: POST /api/v1/admin/relay/{aws,oci,gcp}-creds returns 500 with
+#   "secrets is forbidden: User \"system:serviceaccount:llmsafespaces:llmsafespaces-api\"
+#    cannot create resource \"secrets\""
+# the very first time you configure a provider (the Secret doesn't exist
+# yet, so the upsert path goes Create → 403).
+#
+# This Role/RoleBinding adds the missing `create` permission, namespace-
+# scoped to llmsafespaces. The blast radius is identical to what the chart
+# author intended: the API can write Secrets only in its own release
+# namespace. There is no resourceNames filter because none is enforceable
+# on create — once the Secret exists, the chart's get/update/patch rules
+# (which DO respect resourceNames) still scope subsequent writes.
+#
+# Remove this file once the upstream chart PR is merged + a release pin
+# rolls through here.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: llmsafespaces-api-secrets-create-workaround
+  namespace: llmsafespaces
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: llmsafespaces-api-secrets-create-workaround
+  namespace: llmsafespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: llmsafespaces-api-secrets-create-workaround
+subjects:
+  - kind: ServiceAccount
+    name: llmsafespaces-api
+    namespace: llmsafespaces
