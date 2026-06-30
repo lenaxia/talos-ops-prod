@@ -105,10 +105,17 @@ spec:
       # Same ts-tag policy as api.image.tag above.
       image:
         tag: ts-1782802624
-      # InferenceRelay + free-models refresher require external internet
-      # egress + a published Worker. Leave both off in this homelab deploy.
+      # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
+      # The relay-router Deployment renders in this namespace and the
+      # controller's InferenceRelay reconciler starts, but no InferenceRelay
+      # CR exists yet — so the router has no peers and returns 503 for free-
+      # model inference until one is created with provider credentials.
+      # Prereqs already satisfied: rbac.scope=cluster (below) and the
+      # InferenceRelay CRD is installed.
+      # freeModelsRefresher still requires external egress + a published
+      # Worker, so it stays off in this homelab deploy.
       inferenceRelay:
-        enabled: false
+        enabled: true
       freeModelsRefresher:
         enabled: false
 
@@ -204,9 +211,14 @@ spec:
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
     # — that's the chart author's own CF Worker, NOT ours. Override to empty
-    # so workspace pods don't hit a relay we don't control. Combined with
-    # controller.inferenceRelay.enabled: false above, free-model inference
-    # via the relay fleet is fully disabled in this deploy.
+    # so workspace pods don't hit a relay we don't control. With
+    # controller.inferenceRelay.enabled: true above and this left empty, the
+    # chart derives the cross-namespace FQDN
+    #   http://relay-router.llmsafespaces.svc.cluster.local:8080
+    # for workspace pods to reach the in-cluster router. Until an
+    # InferenceRelay CR is created and peers are healthy, the router has no
+    # backends and free-model inference will 503 (acceptable for the
+    # router-only stage — no fleet provisioned yet).
     inferenceRelayURL: ""
 
     # ── Subdomain routing ───────────────────────────────────────────────────
