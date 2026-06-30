@@ -82,18 +82,26 @@ spec:
       existingSecret: llmsafespaces-credentials
 
     # The migrate Job uses the API image. Chart appVersion (`0.1.0`) is a
-    # placeholder — no such tag is published. We pin to the latest ts-tag
-    # from ghcr.io/lenaxia/llmsafespaces/api as of 2026-06-26. To upgrade,
-    # check available tags:
-    #   curl -sH "Authorization: Bearer $(curl -s 'https://ghcr.io/token?\
+    # placeholder — no such tag is published. We pin to a published ts-tag
+    # from ghcr.io/lenaxia/llmsafespaces/api. To upgrade, check available
+    # tags (note: ?n=200 truncates; use ?n=2000 to see recent ones):
+    #   TOKEN=$(curl -s 'https://ghcr.io/token?\
     #     scope=repository%3Alenaxia%2Fllmsafespaces%2Fapi%3Apull&\
-    #     service=ghcr.io' | jq -r .token)" \
-    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/tags/list?n=200
-    # and pick the largest ts-<unix-timestamp>.
+    #     service=ghcr.io' | jq -r .token)
+    #   curl -sH "Authorization: Bearer $TOKEN" \
+    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/tags/list?n=2000 \
+    #     | jq -r '.tags[]' | grep ^ts- | sort | tail
+    # To verify a tag's manifest is actually present (not just listed),
+    # ghcr requires the OCI Accept header (plain GET returns 404):
+    #   curl -sH "Authorization: Bearer $TOKEN" \
+    #     -H "Accept: application/vnd.oci.image.index.v1+json" \
+    #     -o /dev/null -w "%{http_code}\n" \
+    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/ts-<TS>
+    # Pick the largest verified ts-<unix-timestamp>.
     api:
       replicaCount: 2
       image:
-        tag: ts-1782802624
+        tag: ts-1782849126
       config:
         security:
           allowedOrigins:
@@ -104,7 +112,7 @@ spec:
       replicaCount: 1
       # Same ts-tag policy as api.image.tag above.
       image:
-        tag: ts-1782802624
+        tag: ts-1782849126
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -118,13 +126,15 @@ spec:
         enabled: true
         # Chart default tag falls back to appVersion (0.1.0) which doesn't
         # exist on ghcr.io/lenaxia/llmsafespaces/relay-router. Pin to the
-        # latest published ts-tag. The relay-router is built less often than
-        # api/controller/frontend so its ts-tag lags theirs (ts-1782802624).
-        # To refresh, follow the api.image.tag procedure (substitute
-        # /relay-router for /api in the ghcr tags-list URL).
+        # same ts-tag as api/controller/frontend so the whole platform
+        # rolls atomically. (Historical note: relay-router used to lag
+        # because the per-image build matrix was opt-in; that's no longer
+        # the case — every CI run on main produces all five images at the
+        # same ts-tag.) To refresh, follow the api.image.tag procedure
+        # above (substitute /relay-router for /api in the ghcr URLs).
         router:
           image:
-            tag: ts-1782309430
+            tag: ts-1782849126
       freeModelsRefresher:
         enabled: false
 
@@ -193,7 +203,7 @@ spec:
       # together to the same merge-commit tag because the kind/slug wire
       # format must roll out atomically across all three.
       image:
-        tag: ts-1782802624
+        tag: ts-1782849126
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -215,7 +225,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: ts-1782802624
+          tag: ts-1782849126
 
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
