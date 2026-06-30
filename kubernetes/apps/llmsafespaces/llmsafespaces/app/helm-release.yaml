@@ -116,6 +116,15 @@ spec:
       # Worker, so it stays off in this homelab deploy.
       inferenceRelay:
         enabled: true
+        # Chart default tag falls back to appVersion (0.1.0) which doesn't
+        # exist on ghcr.io/lenaxia/llmsafespaces/relay-router. Pin to the
+        # latest published ts-tag. The relay-router is built less often than
+        # api/controller/frontend so its ts-tag lags theirs (ts-1782802624).
+        # To refresh, follow the api.image.tag procedure (substitute
+        # /relay-router for /api in the ghcr tags-list URL).
+        router:
+          image:
+            tag: ts-1782309430
       freeModelsRefresher:
         enabled: false
 
