@@ -10,3 +10,4 @@ resources:
   - ingress-frontend.yaml
   - ingress-api.yaml
   - middleware-cors.yaml
+  - rbac-relay-creds-workaround.yaml
