@@ -93,7 +93,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: ts-1782767449
+        tag: ts-1782775991
       config:
         security:
           allowedOrigins:
@@ -104,7 +104,7 @@ spec:
       replicaCount: 1
       # Same ts-tag policy as api.image.tag above.
       image:
-        tag: ts-1782767449
+        tag: ts-1782775991
       # InferenceRelay + free-models refresher require external internet
       # egress + a published Worker. Leave both off in this homelab deploy.
       inferenceRelay:
@@ -177,7 +177,7 @@ spec:
       # together to the same merge-commit tag because the kind/slug wire
       # format must roll out atomically across all three.
       image:
-        tag: ts-1782767449
+        tag: ts-1782775991
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -199,7 +199,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: ts-1782767449
+          tag: ts-1782775991
 
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
