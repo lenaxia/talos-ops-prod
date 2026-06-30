@@ -51,19 +51,19 @@ spec:
       create: false
 
     # ── Migrations ──────────────────────────────────────────────────────────
-    # The chart's migrate Job uses migrate/migrate:v4.17.1 with `-database`
-    # set to libpq KV form (host=… port=… password=… …). PR #437 introduced
-    # the KV form to avoid URL-encoding the password, but the
-    # migrate/migrate v4 CLI rejects KV form with `error: no scheme` — it
-    # requires `postgres://...` URLs. The KV form only works when callers
-    # use golang-migrate as a Go library (e.g. api/Makefile's migrate-up
-    # target compiled into a local binary). In the Docker CLI image it
-    # fails outright. Until that's fixed upstream (LLMSafeSpaces issue
-    # forthcoming), run migrations out-of-band and disable the chart's
-    # pre-upgrade migrate Job. Schema is currently at v=4; verify with:
-    #   psql -d llmsafespaces -c 'SELECT version, dirty FROM schema_migrations'
-    migrations:
-      enabled: false
+    # PR #457 (closes LLMSafeSpaces#455) replaces the broken libpq KV form
+    # with a /bin/sh -ec wrapper that percent-encodes DB_USER + DB_PASSWORD
+    # and exec's migrate against a postgres:// URL — works with the
+    # standalone CLI in migrate/migrate:v4.17.1.
+    # Combined with PR #458's reconcileStrategy docs (LLMSafeSpaces#456)
+    # and the chart-source reconcileStrategy: Revision below, the chart's
+    # pre-upgrade migrate Job is safe to re-enable.
+    # (Default for this value is `true` in the chart; the override is
+    # removed entirely. Block kept for context — delete if/when the
+    # narrative becomes irrelevant.)
+    # Schema was advanced out-of-band on 2026-06-29 to v=4 (apply via
+    # talos-ops-prod helm-release commit 34464313's mitigation path); the
+    # re-enabled Job is a no-op against an already-current schema.
 
     # ── Datastores ──────────────────────────────────────────────────────────
     postgresql:
@@ -93,7 +93,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: ts-1782775991
+        tag: ts-1782802624
       config:
         security:
           allowedOrigins:
@@ -104,7 +104,7 @@ spec:
       replicaCount: 1
       # Same ts-tag policy as api.image.tag above.
       image:
-        tag: ts-1782775991
+        tag: ts-1782802624
       # InferenceRelay + free-models refresher require external internet
       # egress + a published Worker. Leave both off in this homelab deploy.
       inferenceRelay:
@@ -177,7 +177,7 @@ spec:
       # together to the same merge-commit tag because the kind/slug wire
       # format must roll out atomically across all three.
       image:
-        tag: ts-1782775991
+        tag: ts-1782802624
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -199,7 +199,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: ts-1782775991
+          tag: ts-1782802624
 
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
