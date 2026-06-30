@@ -50,17 +50,17 @@ spec:
 #                sleep infinity
           main:
             image:
-              repository: docker.io/alexta69/metube
-              tag: latest
-              pullPolicy: Always
+              repository: ghcr.io/alexta69/metube
+              tag: 2026.06.28
+              pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
               OUTPUT_TEMPLATE: '%(upload_date)s - %(title)s [%(id)s].%(ext)s'
               YTDL_OPTIONS: '{"writethumbnail": true, "writesubtitles": true, "subtitleslangs":
                 ["en", "-live_chat"], "merge_output_format": "mp4", "impersonate":
                 "chrome", "extractor_args": {"youtube": {"player_client": ["default",
-                "web_safari", "mweb"]}}, "postprocessors": [{"key": "Exec", "exec_cmd":
-                "chmod 0664", "when": "after_move"}, {"key": "FFmpegEmbedSubtitle",
+                "web_safari", "mweb", "android_vr", "ios"]}}, "postprocessors": [{"key":
+                "Exec", "exec_cmd": "chmod 0664", "when": "after_move"}, {"key": "FFmpegEmbedSubtitle",
                 "already_have_subtitle": false}, {"key": "FFmpegMetadata", "add_metadata":
                 true, "add_chapters": true}, { "key": "EmbedThumbnail", "already_have_thumbnail":
                 true}]}'
