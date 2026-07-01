@@ -101,7 +101,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: ts-1782855556
+        tag: ts-1782861291
       config:
         security:
           allowedOrigins:
@@ -112,7 +112,7 @@ spec:
       replicaCount: 1
       # Same ts-tag policy as api.image.tag above.
       image:
-        tag: ts-1782855556
+        tag: ts-1782861291
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -134,7 +134,7 @@ spec:
         # above (substitute /relay-router for /api in the ghcr URLs).
         router:
           image:
-            tag: ts-1782855556
+            tag: ts-1782861291
       freeModelsRefresher:
         enabled: false
 
@@ -203,7 +203,7 @@ spec:
       # together to the same merge-commit tag because the kind/slug wire
       # format must roll out atomically across all three.
       image:
-        tag: ts-1782855556
+        tag: ts-1782861291
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -225,7 +225,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: ts-1782855556
+          tag: ts-1782861291
 
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
