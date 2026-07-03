@@ -17,7 +17,7 @@ This is a homelab/personal cluster serving:
 - Self-hosted services (Forgejo, Vaultwarden, Nextcloud, Outline, etc.)
 - Ragnarok Online game servers (rAthena, Hercules, OpenKore)
 - AI/ML services (vLLM, LocalAI, LiteLLM, Open-WebUI)
-- Infrastructure (Traefik, cert-manager, Cilium, MetalLB, OpenEBS, monitoring)
+- Infrastructure (Traefik, cert-manager, Cilium, OpenEBS, Longhorn, monitoring)
 
 **Domain:** `${SECRET_DEV_DOMAIN}` — resolved from SOPS-encrypted secrets. In cluster files this appears as a variable substitution.
 
@@ -108,16 +108,20 @@ flux check --pre               # check Flux prerequisites
 talos-ops-prod/
     kubernetes/
         apps/                  per-namespace application manifests
+            actions-runner-system/  self-hosted GitHub Actions runners
             cert-manager/
             databases/         postgres (cnpg), mariadb, redis, influxdb, telegraf
             default/           shadow/canary testing deployments
+            fission/           Fission serverless
             flux-system/       flux monitoring + alerts
             home/              home automation + AI apps + misc
-            kube-system/       cilium, coredns, multus, GPU plugins, reloader
+            jobhunt/           jobhunt tooling
+            kube-system/       cilium, coredns, GPU plugins, multus (manifests present but not enabled), reloader, spegel
             kyverno/           policy engine
+            llmsafespaces/     LLM safe-spaces platform
             media/             plex, sonarr, radarr, jellyfin, etc.
             monitoring/        prometheus-stack, grafana, loki, vector
-            networking/        traefik, authelia, external-dns, cloudflared
+            networking/        traefik, authelia, external-dns, cloudflared, cloudflare-ddns, webfinger
             openebs-system/    storage provisioner
             ragnarok/          rathena, hercules, openkore game servers
             storage/           minio, longhorn, volsync, kopia, paperless
@@ -245,13 +249,15 @@ spec:
 | `192.168.5.11` | Authelia (LoadBalancer) |
 | `192.168.5.12` | Traefik (LoadBalancer, primary ingress) |
 | `192.168.5.13` | Forgejo SSH |
-| `192.168.5.1–5.67` | MetalLB devinfra pool |
-| `192.168.5.68–5.255` | MetalLB default pool |
+| `192.168.5.0/25` | Cilium `l2-pool-reserved` (opt-in via `cilium.io/l2-ip-pool: reserved`) |
+| `192.168.5.128/25` | Cilium `l2-pool` (default pool for all other LoadBalancer services) |
 | `192.168.0.120` | NAS (Synology) |
 | `192.168.0.5` | AdGuard Home (DNS) |
 | `192.168.5.15` | MariaDB primary |
 | `192.168.5.16` | MariaDB secondary |
 | `192.168.5.17` | Redis |
+
+**LoadBalancer IPAM is handled by Cilium, not MetalLB.** MetalLB is NOT deployed. Some services still carry stale `metallb.universe.tf/*` annotations from a previous era — they are ignored. The real IP assignment comes from `spec.loadBalancerIP` plus `CiliumLoadBalancerIPPool` (config in `kubernetes/apps/kube-system/cilium/config/cilium-l2.yaml`). To share an IP across services, use `io.cilium/lb-ipam-sharing-key`, not `metallb.universe.tf/allow-shared-ip`.
 
 ### Ingress Flow
 
@@ -351,9 +357,9 @@ NFS paths are defined as `NFS_*` variables in `cluster-settings.yaml`.
 
 | Component | Namespace | Version | Purpose |
 |---|---|---|---|
-| Traefik | networking | v3.6.10 (chart 39.0.5) | Ingress controller |
-| Authelia | networking | 4.39.13 | Authentication gateway |
-| Cilium | kube-system | — | CNI + L2 announcements (MetalLB-like) |
+| Traefik | networking | chart 40.3.0 (proxy v3.7.4-compatible) | Ingress controller |
+| Authelia | networking | chart 0.11.6, image 4.39.20 | Authentication gateway |
+| Cilium | kube-system | — | CNI + native LoadBalancer IPAM + L2 announcements |
 | cert-manager | cert-manager | — | TLS certificate management (Let's Encrypt) |
 | external-dns | networking | — | DNS record management (split-horizon) |
 | cloudflared | networking | — | Cloudflare Tunnel for external access |
@@ -603,14 +609,14 @@ Variable substitution happens at the `apps` Kustomization level, injecting all `
 
 ### Version in this cluster
 
-The cluster currently uses **app-template `4.3.0`** (some older apps may still be on `3.x`). The chart is fetched from the `bjw-s` HelmRepository (Helm repo at `https://bjw-s-labs.github.io/helm-charts`).
+The cluster currently uses **app-template `5.0.1`** for the vast majority of apps (some older apps may still be on `4.x`, and one on `3.1.0`). The chart is fetched from the `bjw-s` HelmRepository (Helm repo at `https://bjw-s-labs.github.io/helm-charts`).
 
 ```yaml
 # How to reference it in a HelmRelease
 chart:
   spec:
     chart: app-template
-    version: 4.3.0
+    version: 5.0.1
     sourceRef:
       kind: HelmRepository
       name: bjw-s
@@ -1093,7 +1099,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s

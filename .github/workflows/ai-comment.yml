@@ -1,0 +1,134 @@
+name: AI Commands
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  respond:
+    if: |
+      (startsWith(github.event.comment.body, '/ai') ||
+       startsWith(github.event.comment.body, '/review') ||
+       startsWith(github.event.comment.body, '/fix') ||
+       startsWith(github.event.comment.body, '/implement') ||
+       startsWith(github.event.comment.body, '/analyze') ||
+       startsWith(github.event.comment.body, '/test') ||
+       startsWith(github.event.comment.body, '/security') ||
+       startsWith(github.event.comment.body, '/explain') ||
+       startsWith(github.event.comment.body, '/triage') ||
+       startsWith(github.event.comment.body, '/help') ||
+       startsWith(github.event.comment.body, '/design') ||
+       startsWith(github.event.comment.body, '/merge') ||
+       contains(github.event.comment.body, ' /ai') ||
+       contains(github.event.comment.body, ' /review') ||
+       contains(github.event.comment.body, ' /fix') ||
+       contains(github.event.comment.body, ' /implement') ||
+       contains(github.event.comment.body, ' /analyze') ||
+       contains(github.event.comment.body, ' /test') ||
+       contains(github.event.comment.body, ' /security') ||
+       contains(github.event.comment.body, ' /explain') ||
+       contains(github.event.comment.body, ' /triage') ||
+       contains(github.event.comment.body, ' /help') ||
+       contains(github.event.comment.body, ' /design') ||
+       contains(github.event.comment.body, ' /merge')) &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Build the PROMPT that opencode uses as userPrompt.
+      # The action appends PR/issue context (title, body, diff, comments) automatically —
+      # PROMPT only needs to carry the instruction.
+      #
+      # Routing:
+      #   /review [text]    → pr-review.md + optional focus text
+      #   /fix [text]       → fix.md + code-change-workflow.md + optional description
+      #   /implement [text] → implement.md + code-change-workflow.md + optional description
+      #   /test [text]      → test.md + code-change-workflow.md + optional target
+      #   /security [text]  → security.md + code-change-workflow.md + optional focus
+      #   /analyze [text]   → analyze.md + optional focus
+      #   /explain [text]   → explain.md + required topic
+      #   /triage [text]    → triage.md + optional context
+      #   /design [text]    → design.md + code-change-workflow.md + optional focus (HOLDS merge)
+      #   /merge            → merge.md (finalize an approved PR; no code changes)
+      #   /help             → help.md (full command reference)
+      #   /ai [text]        → original behavior (context-dependent)
+      #   /ai on PR         → full re-review (pr-review.md)
+      #   /ai on issue      → issue responder (issue-responder.md)
+      #
+      # Routing logic lives in .github/scripts/route-command.sh (sourced) so it
+      # is exercised by tests/gharouter/route_test.go — a regression guard for
+      # command detection, NOTE extraction, --no-merge hold, and prompt assembly.
+      - name: Build prompt
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          PR_URL: ${{ github.event.issue.pull_request.url }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=.github/scripts/route-command.sh
+          source .github/scripts/route-command.sh
+          OUT_FILE=/tmp/opencode_prompt.txt route_command
+
+          # Export as multiline GITHUB_ENV entry
+          {
+            echo "OPENCODE_PROMPT<<__PROMPT_EOF__"
+            cat "$OUT_FILE"
+            echo "__PROMPT_EOF__"
+          } >> "$GITHUB_ENV"
+
+      - name: Run OpenCode
+        uses: anomalyco/opencode/github@0cf0294787322664c6d668fa5ab0a9ce26796f78 # github-v1.2.9
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: openai-compatible/default
+          use_github_token: "true"
+          share: "false"
+          mentions: /ai
+          prompt: ${{ env.OPENCODE_PROMPT }}
+
+      # Post the AI command reference as its own comment, exactly once per thread.
+      # Deduplicated by a hidden marker so repeat triggers (/ai, re-pushes, re-reviews)
+      # never produce a second copy. The footer is intentionally NOT part of the prompt:
+      # OPENCODE_PROMPT is the userPrompt (model input), and the model is never told to
+      # echo it back — so it never reached posted comments. See worklog 0219 + this fix.
+      - name: Post AI command reference (once per thread)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          MARKER: '<!-- ai-commands-footer -->'
+        run: |
+          set -euo pipefail
+          if [ -z "${ISSUE_NUMBER:-}" ]; then
+            echo "No issue/PR number resolved; skipping command-reference comment."
+            exit 0
+          fi
+          # Post at most once per thread: scan existing issue comments for the marker.
+          if gh api "repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
+               --paginate -q '.[].body' | grep -qF "$MARKER"; then
+            echo "Command reference already present in thread #${ISSUE_NUMBER}; skipping."
+            exit 0
+          fi
+          {
+            printf '%s\n\n' "$MARKER"
+            cat .github/prompts/commands-footer.md
+          } > /tmp/commands-footer-comment.md
+          gh issue comment "$ISSUE_NUMBER" --body-file /tmp/commands-footer-comment.md
+          echo "Posted AI command reference to thread #${ISSUE_NUMBER}."
