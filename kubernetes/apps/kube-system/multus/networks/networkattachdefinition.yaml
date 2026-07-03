@@ -3,7 +3,23 @@
 # into eth0 (see kubernetes/bootstrap/talos/talconfig.yaml). macvlan cannot be
 # created on a bond slave, so the macvlan master must be the bond itself.
 #
-# TODO(ipam): host-local IPAM is per-node state, so if two nodes each assign
+# ROUTE SCOPE — dst is deliberately 192.168.0.0/24 (the physical home-LAN
+# subnet where Sonos / Roomba / ESPHome / NAS / AdGuard live), NOT the whole
+# 192.168.0.0/20. If dst covered /20, the pod's routing table would send
+# traffic to 192.168.5.x (Cilium LoadBalancer VIPs like Mosquitto, Authelia,
+# LiteLLM) and 192.168.3.x (Talos node IPs) out the macvlan too. macvlan
+# cannot reach its own parent host, so any VIP announced by the same node
+# the pod runs on would silently fail — verified: worker-01 currently owns
+# home-mosquitto, home-litellm, networking-authelia leases, and home-assistant
+# is pinned to worker-01. See the CiliumL2Announcement leader elections in
+# `kubectl -n kube-system get lease | grep cilium-l2announce`.
+#
+# IPAM SUBNET — kept at /24 for the multus pool (192.168.6.0/24). The pod's
+# net1 gets an on-link route for 192.168.6.0/24 by kernel; the explicit
+# routes[] entry adds 192.168.0.0/24. Everything outside those two ranges
+# routes via the pod's default (eth0 / Cilium primary interface).
+#
+# TODO(ipam): host-local IPAM is per-node state. If two nodes each assign
 # 192.168.6.5 there will be an L2 IP conflict. Current consumers (esphome,
 # zwavejs, home-assistant) are pinned to individual workers so collisions are
 # unlikely today. If additional multus consumers are added, migrate to
@@ -22,11 +38,11 @@ spec:
       "mode": "bridge",
       "ipam": {
         "type": "host-local",
-        "subnet": "192.168.0.0/20",
+        "subnet": "192.168.6.0/24",
         "rangeStart": "192.168.6.1",
         "rangeEnd": "192.168.6.50",
         "routes": [
-          { "dst": "192.168.0.0/20" }
+          { "dst": "192.168.0.0/24" }
         ],
         "gateway": "192.168.0.1"
       }
