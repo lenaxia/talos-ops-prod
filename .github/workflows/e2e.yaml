@@ -93,6 +93,22 @@ jobs:
         shell: bash
         run: brew install go-task
 
+      # Homebrew 6.0+ enforces HOMEBREW_REQUIRE_TAP_TRUST — third-party taps
+      # must be explicitly trusted before their formulae can be loaded, even
+      # from a Brewfile. `brew tap` alone is not sufficient (the tap is
+      # cloned but not trusted). See:
+      #   https://github.com/orgs/Homebrew/discussions/6898
+      #   https://github.com/homebrew/brew/issues/22551
+      # We trust every non-core tap referenced by the Brewfile so
+      # `brew bundle` can complete non-interactively. Idempotent.
+      - name: Trust third-party Homebrew taps
+        if: ${{ github.event_name == 'pull_request' && steps.cache-homebrew-packages.outputs.cache-hit != 'true' }}
+        shell: bash
+        run: |
+          brew trust fluxcd/tap
+          brew trust go-task/tap
+          brew trust siderolabs/tap
+
       - name: Run Workstation Brew tasks
         if: ${{ github.event_name == 'pull_request' && steps.cache-homebrew-packages.outputs.cache-hit != 'true' }}
         shell: bash
