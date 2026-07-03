@@ -19,7 +19,10 @@ cluster:
   id: 1
   name: "home-kubernetes"
 cni:
-  exclusive: true
+  # exclusive must be false to allow Multus to write /etc/cni/net.d/00-multus.conf.
+  # Cilium remains the delegate/default network via multus's config; see
+  # kubernetes/apps/kube-system/multus/app/resources/00-multus.conf
+  exclusive: false
 # NOTE: devices might need to be set if you have more than one active NIC on your hosts
 devices: eno+ eth+ enp+
 enableIPv4BIGTCP: true
