@@ -83,8 +83,6 @@ spec:
       type: ClusterIP
       port: 8086
       targetPort: 8086
-      annotations:
-        metallb.universe.tf/address-pool: dev-infra
       labels:
         app: influxdb
       portName: http

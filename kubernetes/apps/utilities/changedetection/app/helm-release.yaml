@@ -46,8 +46,6 @@ spec:
 
     service:
       main:
-        annotations:
-          metallb.universe.tf/address-pool: dev-infra
         type: ClusterIP
 
         ports:

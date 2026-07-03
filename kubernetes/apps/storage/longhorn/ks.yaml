@@ -8,8 +8,6 @@ metadata:
   labels:
     substitution.flux.home.arpa/enabled: "true"
 spec:
-  #  dependsOn:
-  #    - name: cluster-networking-metallb
   path: ./kubernetes/apps/storage/longhorn/app
   prune: true
   sourceRef:

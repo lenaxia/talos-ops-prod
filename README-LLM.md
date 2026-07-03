@@ -257,7 +257,7 @@ spec:
 | `192.168.5.16` | MariaDB secondary |
 | `192.168.5.17` | Redis |
 
-**LoadBalancer IPAM is handled by Cilium, not MetalLB.** MetalLB is NOT deployed. Some services still carry stale `metallb.universe.tf/*` annotations from a previous era — they are ignored. The real IP assignment comes from `spec.loadBalancerIP` plus `CiliumLoadBalancerIPPool` (config in `kubernetes/apps/kube-system/cilium/config/cilium-l2.yaml`). To share an IP across services, use `io.cilium/lb-ipam-sharing-key`, not `metallb.universe.tf/allow-shared-ip`.
+**LoadBalancer IPAM is handled by Cilium, not MetalLB.** MetalLB is NOT deployed. Cilium performs LoadBalancer IPAM via `CiliumLoadBalancerIPPool` (config in `kubernetes/apps/kube-system/cilium/config/cilium-l2.yaml`) and L2 announcements via `CiliumL2AnnouncementPolicy`. To pin a specific IP use `spec.loadBalancerIP`. To select the reserved pool use the label `cilium.io/l2-ip-pool: reserved` on the service. To share an IP across services (e.g. TCP+UDP DNS on the same VIP) use the `lbipam.cilium.io/sharing-key` annotation, NOT `metallb.universe.tf/allow-shared-ip`.
 
 ### Ingress Flow
 

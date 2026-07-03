@@ -4,7 +4,7 @@ metadata:
   name: vectorpg-lb
   namespace: databases
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.5.217
+    lbipam.cilium.io/ips: 192.168.5.150
 spec:
   type: LoadBalancer
   selector:
