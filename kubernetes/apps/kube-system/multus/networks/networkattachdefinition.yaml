@@ -1,4 +1,14 @@
 ---
+# The Talos machine config bonds every physical interface (eno1 + enp0s20f0u3)
+# into eth0 (see kubernetes/bootstrap/talos/talconfig.yaml). macvlan cannot be
+# created on a bond slave, so the macvlan master must be the bond itself.
+#
+# TODO(ipam): host-local IPAM is per-node state, so if two nodes each assign
+# 192.168.6.5 there will be an L2 IP conflict. Current consumers (esphome,
+# zwavejs, home-assistant) are pinned to individual workers so collisions are
+# unlikely today. If additional multus consumers are added, migrate to
+# whereabouts IPAM (cluster-wide state via CRDs) or split this range into
+# per-node NADs.
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
@@ -8,7 +18,7 @@ spec:
       "cniVersion": "0.3.0",
       "type": "macvlan",
       "capabilities": { "dns": false },
-      "master": "enp0s20f0u3",
+      "master": "eth0",
       "mode": "bridge",
       "ipam": {
         "type": "host-local",
