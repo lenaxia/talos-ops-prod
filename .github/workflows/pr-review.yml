@@ -1,0 +1,75 @@
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    # Skip renovate[bot] PRs — handled by renovate-analysis.yml
+    if: github.event.pull_request.user.login != 'renovate[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build prompt
+        run: |
+          set -euo pipefail
+          {
+            echo "OPENCODE_PROMPT<<__PROMPT_EOF__"
+            cat .github/prompts/context.md
+            printf '\n\n---\n\n'
+            cat .github/prompts/core-rules.md
+            printf '\n\n---\n\n'
+            cat .github/prompts/pr-review.md
+            printf '\n\nA new pull request has been opened. Perform a thorough review and post your findings as a PR review comment.\n'
+            echo "__PROMPT_EOF__"
+          } >> "$GITHUB_ENV"
+
+      - name: Run OpenCode
+        uses: anomalyco/opencode/github@0cf0294787322664c6d668fa5ab0a9ce26796f78 # github-v1.2.9
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: openai-compatible/default
+          use_github_token: "true"
+          share: "false"
+          prompt: ${{ env.OPENCODE_PROMPT }}
+
+      # Post the AI command reference as its own comment, exactly once per thread.
+      # Deduplicated by a hidden marker so repeat triggers (open + each push) never
+      # produce a second copy.
+      - name: Post AI command reference (once per thread)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          MARKER: '<!-- ai-commands-footer -->'
+        run: |
+          set -euo pipefail
+          if [ -z "${ISSUE_NUMBER:-}" ]; then
+            echo "No PR number resolved; skipping command-reference comment."
+            exit 0
+          fi
+          if gh api "repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
+               --paginate -q '.[].body' | grep -qF "$MARKER"; then
+            echo "Command reference already present in thread #${ISSUE_NUMBER}; skipping."
+            exit 0
+          fi
+          {
+            printf '%s\n\n' "$MARKER"
+            cat .github/prompts/commands-footer.md
+          } > /tmp/commands-footer-comment.md
+          gh issue comment "$ISSUE_NUMBER" --body-file /tmp/commands-footer-comment.md
+          echo "Posted AI command reference to thread #${ISSUE_NUMBER}."
