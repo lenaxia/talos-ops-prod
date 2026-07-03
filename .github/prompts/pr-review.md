@@ -44,8 +44,8 @@ This is a **GitOps Kubernetes cluster repository**, not a traditional applicatio
 
 - The correct way to pin a service to a specific IP is `spec.loadBalancerIP: 192.168.5.x` (referenced from `${SVC_*_ADDR}` variables).
 - The correct way to select the reserved pool is the label `cilium.io/l2-ip-pool: reserved` on the Service.
-- The legacy `metallb.universe.tf/*` annotations still linger on many services — they are dead but harmless. If a PR ADDS a new such annotation, that is a finding. If a PR TOUCHES an existing one, prefer removing it and using the Cilium-native mechanism.
-- IP-sharing across services (e.g. TCP+UDP DNS on the same VIP) uses `io.cilium/lb-ipam-sharing-key`, NOT `metallb.universe.tf/allow-shared-ip`. Flag any use of the MetalLB annotation.
+- **The repo has been purged of `metallb.universe.tf/*` annotations.** Any new such annotation (adding or re-adding) is an immediate finding — MetalLB is not deployed, the annotations are dead weight, and their presence signals the author is unaware of the migration.
+- IP-sharing across services (e.g. TCP+UDP DNS on the same VIP) uses `lbipam.cilium.io/sharing-key`, NOT `metallb.universe.tf/allow-shared-ip`. Flag any use of the MetalLB annotation.
 
 ### 6. INGRESS + AUTHELIA
 
