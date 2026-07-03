@@ -11,7 +11,6 @@ spec:
   dependsOn:
     - name: cluster-storage-longhorn
     - name: cluster-databases-postgres-clusters
-    #- name: cluster-networking-multus
   path: ./kubernetes/apps/home/monica/app
   prune: true
   sourceRef:
