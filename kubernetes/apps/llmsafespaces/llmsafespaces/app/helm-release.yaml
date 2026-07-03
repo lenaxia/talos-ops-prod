@@ -101,7 +101,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: ts-1783036774
+        tag: ts-1783069414
       config:
         security:
           allowedOrigins:
@@ -112,7 +112,7 @@ spec:
       replicaCount: 1
       # Same ts-tag policy as api.image.tag above.
       image:
-        tag: ts-1783036774
+        tag: ts-1783069414
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -134,7 +134,7 @@ spec:
         # above (substitute /relay-router for /api in the ghcr URLs).
         router:
           image:
-            tag: ts-1783036774
+            tag: ts-1783069414
       freeModelsRefresher:
         enabled: false
 
@@ -203,12 +203,14 @@ spec:
       # together to the same merge-commit tag because the kind/slug wire
       # format must roll out atomically across all three.
       #
-      # 2026-07-02: all five images (api, controller, base, relay-router,
-      # frontend) re-aligned to ts-1783036774 (main@6a0dc526, PR #494,
-      # LLMSafeSpaces#493 pod-recreation auto-push secrets). API-only
-      # data-plane change; frontend rolls forward with no behavior change.
+      # 2026-07-03: all five images (api, controller, base, relay-router,
+      # frontend) aligned to ts-1783069414 (main@a9ad2602, PR
+      # lenaxia/LLMSafeSpaces#497, KeyService.GetDEKForUser +
+      # SigningKeyEnumerator primitive). API-only foundation for a
+      # follow-up background auto-push consumer; frontend rolls forward
+      # with no behavior change.
       image:
-        tag: ts-1783036774
+        tag: ts-1783069414
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -230,7 +232,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: ts-1783036774
+          tag: ts-1783069414
 
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
