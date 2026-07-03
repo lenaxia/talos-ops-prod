@@ -44,7 +44,7 @@ This is a **GitOps Kubernetes cluster repository**, not a traditional applicatio
 
 - The correct way to pin a service to a specific IP is `spec.loadBalancerIP: 192.168.5.x` (referenced from `${SVC_*_ADDR}` variables).
 - The correct way to select the reserved pool is the label `cilium.io/l2-ip-pool: reserved` on the Service.
-- **The repo has been purged of `metallb.universe.tf/*` annotations.** Any new such annotation (adding or re-adding) is an immediate finding — MetalLB is not deployed, the annotations are dead weight, and their presence signals the author is unaware of the migration.
+- **The repo has been purged of `metallb.universe.tf/*` annotations, with one intentionally-retained exception:** `kubernetes/apps/utilities/smokeping/app/helm-release.yaml` keeps an inert `metallb.universe.tf/address-pool: dev-infra` annotation because the `nicholaswilde/smokeping@0.1.24` chart ships an invalid `values.schema.json`, and any values change to that HelmRelease breaks the Flux Diff CI step. If a PR touches smokeping and does not fix the schema/chart migration, keep the annotation. Anywhere else, a new/re-added `metallb.universe.tf/*` annotation is an immediate finding.
 - IP-sharing across services (e.g. TCP+UDP DNS on the same VIP) uses `lbipam.cilium.io/sharing-key`, NOT `metallb.universe.tf/allow-shared-ip`. Flag any use of the MetalLB annotation.
 
 ### 6. INGRESS + AUTHELIA
