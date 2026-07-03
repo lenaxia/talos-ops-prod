@@ -13,7 +13,7 @@ Production homelab serving:
 - **Self-hosted services** — Forgejo, Vaultwarden, Nextcloud, Outline, Paperless-ngx
 - **Ragnarok Online servers** — rAthena classic/renewal, Hercules classic/renewal, OpenKore bots
 - **AI / ML** — vLLM, LocalAI, LiteLLM, Open-WebUI, LLMSafeSpaces
-- **Infrastructure** — Traefik, cert-manager, Cilium, MetalLB-style L2 announcements, OpenEBS, Longhorn, CloudNative-PG, MariaDB, Redis, Prometheus stack, Loki, Vector
+- **Infrastructure** — Traefik, cert-manager, Cilium (CNI + native LoadBalancer IPAM + L2 announcements), OpenEBS, Longhorn, CloudNative-PG, MariaDB, Redis, Prometheus stack, Loki, Vector
 
 Domain: `${SECRET_DEV_DOMAIN}` — sourced from SOPS-encrypted cluster secrets.
 
@@ -23,7 +23,7 @@ Domain: `${SECRET_DEV_DOMAIN}` — sourced from SOPS-encrypted cluster secrets.
 
 - **Talos Linux** — 3 control-plane nodes (`cp-00/01/02` on 192.168.3.10–12) + workers (`worker-00/01/02/03` on 192.168.3.20–23; `worker-04` defined in talconfig but not currently joined).
 - **VIP** — `192.168.3.30` for control-plane HA.
-- **CNI + LoadBalancer** — Cilium in native routing mode. LoadBalancer IPAM and L2 announcements are handled entirely by Cilium via `CiliumLoadBalancerIPPool` + `CiliumL2AnnouncementPolicy` (config in `kubernetes/apps/kube-system/cilium/config/cilium-l2.yaml`). **MetalLB is NOT deployed.** Some services still carry stale `metallb.universe.tf/*` annotations from an earlier era — these are dead weight; the real IP allocation comes from Cilium and `spec.loadBalancerIP`. No BGP currently active.
+- **CNI + LoadBalancer** — Cilium in native routing mode. LoadBalancer IPAM and L2 announcements are handled entirely by Cilium via `CiliumLoadBalancerIPPool` + `CiliumL2AnnouncementPolicy` (config in `kubernetes/apps/kube-system/cilium/config/cilium-l2.yaml`). **MetalLB is NOT deployed.** The repo has been purged of `metallb.universe.tf/*` annotations — any new one is a review finding — with a single documented exception on `utilities/smokeping` where the chart's broken `values.schema.json` prevents any change. No BGP currently active.
 - **Kubernetes** — v1.36.x on Talos v1.13.x per `kubernetes/bootstrap/talos/talconfig.yaml`. Older nodes may temporarily lag during rolling upgrades.
 - **Flux** — reconciles the whole `kubernetes/` tree from GitHub. Root Kustomization is `kubernetes/flux/apps.yaml`.
 

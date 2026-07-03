@@ -42,8 +42,6 @@ spec:
         #DB_PORT: 3306
     service:
       main:
-        annotations:
-          metallb.universe.tf/address-pool: dev-infra
         ports:
           http:
             port: 80

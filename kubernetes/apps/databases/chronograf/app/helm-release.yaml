@@ -57,8 +57,6 @@ spec:
       type: ClusterIP
       port: 80
       targetPort: 8086
-      annotations:
-        metallb.universe.tf/address-pool: dev-infra
       labels:
         app: chronograf 
       portName: http
