@@ -57,46 +57,45 @@ spec:
         external-dns.alpha.kubernetes.io/hostname: "${SECRET_DEV_DOMAIN}"
       labels:
         cilium.io/l2-ip-pool: reserved
-    logs:
-      general:
-        format: json
-        # TEMPORARY DEBUG: bumped from INFO for diagnosing Conduit/Authelia/OpenWebUI
-        # auth flow (issue cogwheel0/conduit#407). Revert to INFO once diagnosed.
-        level: DEBUG
-      access:
-        enabled: true
-        format: json
-        # TEMPORARY DEBUG: capture auth-relevant request and response headers in
-        # access logs so we can see Authelia injecting Remote-Email/Remote-Name
-        # on chat.${SECRET_DEV_DOMAIN} and confirm whether OpenWebUI's auto-signin
-        # via WEBUI_AUTH_TRUSTED_EMAIL_HEADER actually receives them. The default
-        # for headers is "drop"; we opt specific ones in as "keep" / "redact".
-        # Revert this whole `fields:` block once diagnosed.
-        fields:
-          defaultMode: keep
-          headers:
-            defaultMode: drop
-            names:
-              # Authelia forwardAuth response headers (injected onto request to backend)
-              Remote-User: keep
-              Remote-Name: keep
-              Remote-Email: keep
-              Remote-Groups: keep
-              # Request context — useful for correlating WebView page loads
-              User-Agent: keep
-              Referer: keep
-              Host: keep
-              X-Forwarded-For: keep
-              X-Forwarded-Host: keep
-              X-Forwarded-Uri: keep
-              X-Forwarded-Method: keep
-              # Auth state — REDACT so we see presence/absence without leaking values
-              # TEMPORARY: Cookie kept (not redacted) to diagnose what cookie names
-              # the Dart Conduit client is actually sending. Authorization stays
-              # redacted (it's a real JWT). REVERT once diagnosed.
-              Authorization: redact
-              Cookie: keep
-              Set-Cookie: redact
+    log:
+      format: json
+      # TEMPORARY DEBUG: bumped from INFO for diagnosing Conduit/Authelia/OpenWebUI
+      # auth flow (issue cogwheel0/conduit#407). Revert to INFO once diagnosed.
+      level: DEBUG
+    accessLog:
+      enabled: true
+      format: json
+      # TEMPORARY DEBUG: capture auth-relevant request and response headers in
+      # access logs so we can see Authelia injecting Remote-Email/Remote-Name
+      # on chat.${SECRET_DEV_DOMAIN} and confirm whether OpenWebUI's auto-signin
+      # via WEBUI_AUTH_TRUSTED_EMAIL_HEADER actually receives them. The default
+      # for headers is "drop"; we opt specific ones in as "keep" / "redact".
+      # Revert this whole `fields:` block once diagnosed.
+      fields:
+        defaultMode: keep
+        headers:
+          defaultMode: drop
+          names:
+            # Authelia forwardAuth response headers (injected onto request to backend)
+            Remote-User: keep
+            Remote-Name: keep
+            Remote-Email: keep
+            Remote-Groups: keep
+            # Request context — useful for correlating WebView page loads
+            User-Agent: keep
+            Referer: keep
+            Host: keep
+            X-Forwarded-For: keep
+            X-Forwarded-Host: keep
+            X-Forwarded-Uri: keep
+            X-Forwarded-Method: keep
+            # Auth state — REDACT so we see presence/absence without leaking values
+            # TEMPORARY: Cookie kept (not redacted) to diagnose what cookie names
+            # the Dart Conduit client is actually sending. Authorization stays
+            # redacted (it's a real JWT). REVERT once diagnosed.
+            Authorization: redact
+            Cookie: keep
+            Set-Cookie: redact
 
     experimental:
       plugins: 
