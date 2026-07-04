@@ -32,6 +32,7 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-rr
         dhcp: false
         addresses:
           - "192.168.3.10/16"
@@ -50,6 +51,7 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-rr
         dhcp: false
         addresses:
           - "192.168.3.11/16"
@@ -68,6 +70,7 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-rr
         dhcp: false
         addresses:
           - "192.168.3.12/16"
@@ -103,6 +106,7 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-rr
         dhcp: false
         addresses:
           - "192.168.3.20/16"
@@ -136,6 +140,7 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-rr
         dhcp: false
         addresses:
           - "192.168.3.21/16"
@@ -157,6 +162,7 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-rr
         dhcp: false
         addresses:
           - "192.168.3.22/16"
@@ -178,6 +184,7 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-rr
         dhcp: false
         addresses:
           - "192.168.3.23/16"
@@ -212,6 +219,7 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-rr
         dhcp: false
         addresses:
           - "192.168.3.24/16"
