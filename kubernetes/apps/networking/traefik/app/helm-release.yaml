@@ -30,7 +30,7 @@ spec:
       repository: traefik
       # chart 40.3.0 only supports proxy up to v3.7.4 — see chart Chart.yaml
       # kube-version annotation. Pin matches chart's max supported version.
-      tag: v3.7.5
+      tag: v3.7.6
     deployment:
       kind: Deployment
       replicas: 4
