@@ -11,7 +11,7 @@ spec:
   dependsOn:
     - name: cluster-storage-longhorn
     - name: cluster-databases-postgres-clusters
-    #- name: cluster-multus-networks
+    - name: cluster-multus-networks
   path: ./kubernetes/apps/home/home-assistant/app
   prune: true
   sourceRef:

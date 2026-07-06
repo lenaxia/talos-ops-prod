@@ -177,5 +177,3 @@ spec:
           - hosts:
               - *host2
             secretName: *host2
-    podAnnotations:
-      k8s.v1.cni.cncf.io/networks: macvlan-static-iot-hass
