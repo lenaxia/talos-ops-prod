@@ -99,11 +99,18 @@ spec:
               IMMICH_LOG_LEVEL: log
               DB_VECTOR_EXTENSION: pgvector
               DB_STORAGE_TYPE: HDD
-              REDIS_PASSWORD:
+              # Sentinel-aware Redis URL from the cluster-wide redis-secret
+              # (synced into the media namespace by the Kyverno sync-redis-secrets
+              # ClusterPolicy). The value is an "ioredis://<base64-json>" string
+              # whose JSON is {"sentinels":[...],"name":"mymaster","password":"..."}
+              # so Immich's ioredis client follows Sentinel failover automatically.
+              # When REDIS_URL is set, REDIS_HOSTNAME/REDIS_PORT/REDIS_PASSWORD
+              # are ignored (per Immich env-var docs).
+              REDIS_URL:
                 valueFrom:
                   secretKeyRef:
                     name: redis-secret
-                    key: password
+                    key: ioredis_sentinel
             envFrom:
               - secretRef:
                   name: *appname
