@@ -24,6 +24,8 @@ Every Multus rollout is preceded by an etcd snapshot. Latest snapshot lives at:
 If the snapshot doesn't exist, DO NOT PROCEED with the rollout — take one first:
 
 ```bash
+# 192.168.3.10 = cp-00 (control-plane node #0). See kubernetes/bootstrap/talos/talconfig.yaml
+# for the full CP layout: cp-00/01/02 on 192.168.3.10/11/12 with VIP 192.168.3.30.
 talosctl -n 192.168.3.10 -e 192.168.3.10 etcd snapshot \
   ~/etcd-snapshots/pre-multus-$(date +%Y%m%d-%H%M%S).snapshot
 ```
