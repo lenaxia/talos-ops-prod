@@ -10,6 +10,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-databases-postgres-clusters
+    - name: cluster-databases-redis
     - name: cluster-storage-minio
   path: ./kubernetes/apps/media/outline/app
   prune: true
