@@ -11,6 +11,7 @@ spec:
   dependsOn:
     - name: cluster-storage-longhorn
     - name: cluster-databases-postgres-clusters
+    - name: cluster-databases-redis
   path: ./kubernetes/apps/media/immich/app
   prune: true
   sourceRef:
