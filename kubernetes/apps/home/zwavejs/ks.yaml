@@ -10,7 +10,6 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
-    - name: cluster-multus-networks
   path: ./kubernetes/apps/home/zwavejs/app
   prune: true
   sourceRef:
