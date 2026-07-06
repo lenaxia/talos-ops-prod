@@ -26,17 +26,21 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: "true"
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app.kubernetes.io/name: redis
-              topologyKey: kubernetes.io/hostname
+      # No podAntiAffinity needed at replicas=1. (Preserved as commented reference
+      # for a future scale-up back to HA — see the git history of this file for
+      # the previous 3-replica + Sentinel manifest, and the fix/redis-sentinel-
+      # discovery branch closed on 2026-07-06 for the client-side migration work.)
     controllers:
       main:
         type: statefulset
-        replicas: 3
+        # Single-replica by deliberate design as of 2026-07-06. See PR #1962
+        # (closed unmerged) and its commit history for context: repeated Sentinel
+        # failovers were causing more outages than they prevented in this cluster,
+        # because clients hardcoded to the `redis-primary` ExternalName never
+        # followed Sentinel-elected master changes. With one replica: no elections,
+        # no drift, no cascade failures. Trade-off: any pod restart = ~30-90s of
+        # Redis unavailability affecting Authelia/Outline/Immich/LiteLLM.
+        replicas: 1
         containers:
           valkey:
             image:
@@ -102,52 +106,13 @@ spec:
                 memory: 256Mi
               limits:
                 memory: 512Mi
-          sentinel:
-            image:
-              repository: valkey/valkey
-              tag: "9.1.0"
-            command:
-              - /scripts/sentinel-entrypoint.sh
-            ports:
-              - name: sentinel
-                containerPort: 26379
-            env:
-              REDIS_PASSWORD:
-                valueFrom:
-                  secretKeyRef:
-                    name: redis-secret
-                    key: password
-            probes:
-              startup:
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: 26379
-                  failureThreshold: 30
-                  periodSeconds: 5
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: 26379
-                  periodSeconds: 15
-                  failureThreshold: 5
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: 26379
-                  periodSeconds: 10
-                  failureThreshold: 5
-            resources:
-              requests:
-                cpu: 10m
-                memory: 64Mi
-              limits:
-                memory: 128Mi
+          # Sentinel container removed as of 2026-07-06.
+          # Reason: Sentinel is a failover-coordination service. With replicas=1
+          # there is nothing to fail over to. Keeping a lone Sentinel container
+          # would waste ~10m CPU + 64Mi RAM and serve no purpose.
+          # To reintroduce HA later, restore the previous helm-release.yaml,
+          # configmap.yaml sentinel-entrypoint.sh, and redis-headless service
+          # port from git history.
         statefulset:
           serviceName: redis-headless
           volumeClaimTemplates:

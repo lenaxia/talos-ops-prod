@@ -34,6 +34,35 @@ jobs:
           ref: "${{ github.event.repository.default_branch }}"
           path: default
 
+      # Workaround for a known false positive on Authelia HelmRelease templating.
+      # flux-local cannot decrypt SOPS secrets, so ${SECRET_..._OAUTH_CLIENT_SECRET_HASHED}
+      # substitutes to an empty string, which Authelia's chart validator rejects
+      # ("must have a hash prefix"). This blocks every Authelia PR from ever getting a
+      # green helmrelease diff. The Kustomization diff (matrix.resources=kustomization)
+      # is unaffected and still runs, providing the actionable resource-level diff for
+      # reviewers. Adjacent checks (Kubeconform, workstation e2e) also validate the
+      # HelmRelease shape. See README-LLM.md → "Known CI limitations" for full details.
+      #
+      # This step removes Authelia from both checkouts ONLY for the helmrelease matrix
+      # leg, so flux-local's template phase never sees it and cannot fail on it.
+      - name: Strip Authelia (helmrelease diff only, known SOPS/validator false positive)
+        if: ${{ matrix.resources == 'helmrelease' }}
+        run: |
+          set -euo pipefail
+          for root in pull default; do
+            authelia_dir="$root/${{ matrix.paths }}/apps/networking/authelia"
+            authelia_ks_ref="$root/${{ matrix.paths }}/apps/networking/kustomization.yaml"
+            if [ -d "$authelia_dir" ]; then
+              echo "Removing $authelia_dir"
+              rm -rf "$authelia_dir"
+            fi
+            if [ -f "$authelia_ks_ref" ]; then
+              echo "Removing ./authelia/ks.yaml reference from $authelia_ks_ref"
+              # Delete the resource entry so networking kustomization still builds
+              sed -i '/^\s*-\s*\.\/authelia\/ks\.yaml\s*$/d' "$authelia_ks_ref"
+            fi
+          done
+
       - name: Diff Resources
         uses: docker://ghcr.io/allenporter/flux-local:v8.4.0
         with:

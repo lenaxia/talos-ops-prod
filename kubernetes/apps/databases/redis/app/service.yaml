@@ -17,9 +17,8 @@ spec:
     - name: valkey
       port: 6379
       targetPort: 6379
-    - name: sentinel
-      port: 26379
-      targetPort: 26379
+    # sentinel port (26379) removed as of 2026-07-06 when we scaled to single-replica.
+    # See helm-release.yaml and the closed PR #1962 for context.
 ---
 apiVersion: v1
 kind: Service
