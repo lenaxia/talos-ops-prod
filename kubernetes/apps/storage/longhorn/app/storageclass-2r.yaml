@@ -1,0 +1,33 @@
+# Alternate Longhorn StorageClass with 2 replicas instead of 3.
+#
+# Rationale: ephemeral / low-durability workloads (LLMSafeSpaces workspace
+# PVCs, scratch caches, dev sandboxes) don't need triple-replication and the
+# storage cost of 3r crowds worker disks into DiskPressure (Longhorn refuses
+# to schedule replicas once free space < 25% of disk max). See 2026-07-07
+# workspace-stuck-in-creating incident.
+#
+# NOT default. Opt-in via `spec.storageClassName: longhorn-2r` on the PVC,
+# or (for LLMSafeSpaces) via chart value `workspace.defaultStorageClass:
+# longhorn-2r`.
+#
+# All other parameters match the chart-managed `longhorn` StorageClass
+# (see helm-release.yaml). Keep in sync if the chart changes defaults.
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-2r
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: "2"
+  staleReplicaTimeout: "30"
+  fromBackup: ""
+  fsType: "ext4"
+  dataLocality: "best-effort"
+  unmapMarkSnapChainRemoved: "ignored"
+  disableRevisionCounter: "true"
+  dataEngine: "v1"
+  backupTargetName: "default"
