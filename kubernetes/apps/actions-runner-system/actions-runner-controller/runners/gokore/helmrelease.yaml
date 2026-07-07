@@ -45,3 +45,7 @@ spec:
             env:
               - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
                 value: "false"
+              # Force clean checkout on every job — prevents stale cached files
+              # from persisting on the ReadWriteOnce work volume between runs.
+              - name: ACTIONS_RUNNER_CLEAN_WORKSPACE
+                value: "true"
