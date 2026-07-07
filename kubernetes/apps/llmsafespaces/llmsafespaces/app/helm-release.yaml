@@ -16,14 +16,14 @@ spec:
         name: llmsafespaces
         namespace: flux-system
       interval: 15m
-      # Chart.yaml is pinned at 0.1.0 forever because it's never published.
-      # Default reconcileStrategy=ChartVersion only re-packages on version
-      # change, so source-controller would never re-package after a code
-      # push — leaving helm-controller running against a stale chart
-      # snapshot. Worklog c914dc2e first set this; PR-1d6975f9 (Epic 55)
-      # accidentally dropped it; PR-451 surfaced the regression because
-      # its migration 000004 never reached the ConfigMap. Track git
-      # revisions so Flux re-packages on every commit.
+      # `reconcileStrategy: Revision` is retained even though the GitRepository
+      # is now pinned to a semver tag (v0.2.1). Rationale: if we ever move a
+      # tag or point at a branch during an emergency rollback, ChartVersion
+      # would refuse to re-package (Chart.yaml version wouldn't change). With
+      # Revision, source-controller re-packages on every commit SHA change,
+      # so the fallback path is safe. Worklog c914dc2e first set this;
+      # PR-1d6975f9 (Epic 55) accidentally dropped it; PR-451 surfaced the
+      # regression because its migration 000004 never reached the ConfigMap.
       reconcileStrategy: Revision
   install:
     # CRDs are installed by Helm from the chart's crds/ directory on initial
@@ -81,27 +81,25 @@ spec:
       create: false
       existingSecret: llmsafespaces-credentials
 
-    # The migrate Job uses the API image. Chart appVersion (`0.1.0`) is a
-    # placeholder — no such tag is published. We pin to a published ts-tag
-    # from ghcr.io/lenaxia/llmsafespaces/api. To upgrade, check available
-    # tags (note: ?n=200 truncates; use ?n=2000 to see recent ones):
-    #   TOKEN=$(curl -s 'https://ghcr.io/token?\
-    #     scope=repository%3Alenaxia%2Fllmsafespaces%2Fapi%3Apull&\
-    #     service=ghcr.io' | jq -r .token)
-    #   curl -sH "Authorization: Bearer $TOKEN" \
-    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/tags/list?n=2000 \
-    #     | jq -r '.tags[]' | grep ^ts- | sort | tail
-    # To verify a tag's manifest is actually present (not just listed),
-    # ghcr requires the OCI Accept header (plain GET returns 404):
+    # The migrate Job uses the API image. The chart's `image.tag` default
+    # falls back to Chart.AppVersion, but historically that field lagged the
+    # actual published tags, so we always pin explicitly. As of 2026-07-06
+    # (upstream v0.2.0+) the project cuts real semver releases and CI
+    # publishes `<major>.<minor>.<patch>` OCI tags alongside the immutable
+    # `ts-<unix>` tags. We pin to the semver — the GitRepository above is
+    # pinned to the matching `tag: v0.2.1`, so the chart-source tree and
+    # the deployed images roll atomically. To upgrade, bump both the
+    # GitRepository ref and every `image.tag` below in the same commit.
+    # To verify a semver tag is present on ghcr:
+    #   TOKEN=$(curl -sS 'https://ghcr.io/token?scope=repository%3Alenaxia%2Fllmsafespaces%2Fapi%3Apull&service=ghcr.io' | jq -r .token)
     #   curl -sH "Authorization: Bearer $TOKEN" \
     #     -H "Accept: application/vnd.oci.image.index.v1+json" \
     #     -o /dev/null -w "%{http_code}\n" \
-    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/ts-<TS>
-    # Pick the largest verified ts-<unix-timestamp>.
+    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/0.2.1
     api:
       replicaCount: 2
       image:
-        tag: ts-1783097792
+        tag: "0.2.1"
       config:
         security:
           allowedOrigins:
@@ -110,9 +108,9 @@ spec:
 
     controller:
       replicaCount: 1
-      # Same ts-tag policy as api.image.tag above.
+      # Same semver-tag policy as api.image.tag above.
       image:
-        tag: ts-1783097792
+        tag: "0.2.1"
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -124,17 +122,14 @@ spec:
       # Worker, so it stays off in this homelab deploy.
       inferenceRelay:
         enabled: true
-        # Chart default tag falls back to appVersion (0.1.0) which doesn't
-        # exist on ghcr.io/lenaxia/llmsafespaces/relay-router. Pin to the
-        # same ts-tag as api/controller/frontend so the whole platform
-        # rolls atomically. (Historical note: relay-router used to lag
-        # because the per-image build matrix was opt-in; that's no longer
-        # the case — every CI run on main produces all five images at the
-        # same ts-tag.) To refresh, follow the api.image.tag procedure
-        # above (substitute /relay-router for /api in the ghcr URLs).
+        # Chart default tag falls back to Chart.AppVersion; pinning explicitly
+        # keeps the five images rolling atomically with the chart source.
+        # (Historical note: relay-router used to lag because the per-image
+        # build matrix was opt-in; that's no longer the case — every CI run
+        # on main and every release tag builds all five.)
         router:
           image:
-            tag: ts-1783097792
+            tag: "0.2.1"
       freeModelsRefresher:
         enabled: false
 
@@ -198,21 +193,13 @@ spec:
     frontend:
       enabled: true
       replicaCount: 1
-      # Latest published frontend ts-tag. Frontend CI runs separately from
-      # api/controller, hence the lag — but for Epic 55 they are pinned
-      # together to the same merge-commit tag because the kind/slug wire
-      # format must roll out atomically across all three.
-      #
-      # 2026-07-03: all five images (api, controller, base, relay-router,
-      # frontend) aligned to ts-1783097792 (main@ee6da738, PR
-      # lenaxia/LLMSafeSpaces#498, watcher-driven auto-push replaces
-      # #494's pod-identity detection). Requires the new CRD field
-      # workspace.status.userCredsPresent (schema mirror synced in
-      # charts/llmsafespaces/crds/workspace.yaml) and migration 000006
-      # which drops the workspace_agent_state.last_seen_pod_* columns
-      # from #494.
+      # Pinned to the same semver as api/controller/relay-router/base — the
+      # platform rolls atomically because kind/slug wire format, CRD field
+      # `workspace.status.userCredsPresent`, and DB migrations must all be
+      # in lockstep. The upstream release-tag build produces `frontend:0.2.1`
+      # alongside the other four images.
       image:
-        tag: ts-1783097792
+        tag: "0.2.1"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -225,16 +212,12 @@ spec:
 
     # ── Workspace runtime images ────────────────────────────────────────────
     # The chart seeds a `base` RuntimeEnvironment CR pointing at the base
-    # workspace runtime image. Like api/controller/frontend, the default tag
-    # falls back to Chart.AppVersion (0.1.0) which doesn't exist on ghcr —
-    # workspace pods crash-loop on Init:ErrImagePull without an override.
-    # Pinning to latest published ts-tag as of 2026-06-26. Refresh procedure:
-    # see the api.image.tag comment above (substitute /base for /api in the
-    # tags-list URL).
+    # workspace runtime image. Same semver pinning as api/controller/etc —
+    # release-tag builds publish `base:0.2.1` alongside the other four.
     runtimeEnvironments:
       base:
         image:
-          tag: ts-1783097792
+          tag: "0.2.1"
 
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`

@@ -7,8 +7,16 @@ metadata:
 spec:
   interval: 30m
   url: https://github.com/lenaxia/LLMSafeSpaces.git
+  # Pinned to a semver release tag so upgrades are deliberate. Prior state
+  # tracked `branch: main`, which combined with `reconcileStrategy: Revision`
+  # on the HelmRelease meant every push to main immediately reached
+  # production. Semver pinning matches the pattern established when the
+  # upstream project started cutting real releases at v0.2.0 (2026-07-06).
+  # To upgrade, bump this ref + the five `image.tag: 0.x.y` overrides in
+  # kubernetes/apps/llmsafespaces/llmsafespaces/app/helm-release.yaml
+  # together in one PR.
   ref:
-    branch: main
+    tag: v0.2.1
   ignore: |
     # exclude everything
     /*
