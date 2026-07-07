@@ -10,3 +10,4 @@ resources:
   - ingress.yaml
   - servicemonitor.yaml
   - prometheusrules.yaml
+  - storageclass-2r.yaml
