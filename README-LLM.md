@@ -510,51 +510,62 @@ For Authelia specifically — the chart (`version`) and image (`tag`) are versio
 
 ## Known CI limitations
 
-### Flux Diff (kubernetes, helmrelease) fails on any PR touching Authelia values
+### Flux Diff (kubernetes, helmrelease) false positives
 
-**Symptom:** A CI check named `Flux Diff (kubernetes, helmrelease)` fails with:
+The `Flux Diff (kubernetes, helmrelease)` check has multiple known false-positive failure modes rooted in `flux-local`'s architecture: it runs in a stock Docker image with no cluster context, cannot decrypt SOPS by design, and cannot install cluster CRDs before rendering helm templates. Charts that assume either substituted secrets or pre-installed CRDs will hard-fail `helm template` in CI even though they work fine in production.
+
+The workflow (`.github/workflows/flux-diff.yaml`) maintains an `EXCLUDED_APPS` list that removes known-incompatible apps from the `helmrelease` matrix leg only. The `kustomization` matrix leg still runs on those apps and produces the actionable per-resource diff for reviewers.
+
+**Currently excluded apps and why:**
+
+#### Authelia (`networking/authelia`) — OIDC `client_secret` validation
 
 ```
 Error: execution error at (authelia/templates/validations.configMap.check.yaml:99:3):
 The value 'secret.value' for the 'configMap.identity_providers.oidc.clients'
-must have a hash prefix. At this time the '$plaintext$' prefix is still accepted
-however we recommend taking the opportunity to properly hash it as the plaintext
-variants will only be accepted in the future for the 'client_secret_jwt'
-authentication method.
+must have a hash prefix.
 ```
-
-**Why it happens:**
 
 1. The Authelia HelmRelease has an `identity_providers.oidc.clients` list where each entry's `client_secret` is a Flux variable placeholder like `${SECRET_TAILSCALE_OAUTH_CLIENT_SECRET_HASHED}`.
 2. In production, Flux substitutes these from the SOPS-encrypted `cluster-secrets` Secret at reconcile time. The real values are already-hashed strings (e.g. `$argon2id$v=19$...`) that pass Authelia chart's built-in validator.
-3. In CI, the `Flux Diff` workflow runs `flux-local diff helmrelease` from a Docker image against the checked-out repo. `flux-local` **cannot decrypt SOPS** by design (documented behavior — no access to the age private key). So it substitutes the placeholders with **empty strings**.
+3. In CI, `flux-local diff helmrelease` runs from a Docker image against the checked-out repo. `flux-local` **cannot decrypt SOPS** by design (documented behavior — no access to the age private key). So it substitutes the placeholders with **empty strings**.
 4. `flux-local` then runs `helm template` on the Authelia chart with empty-string `client_secret` values. Authelia's chart validator sees no `$argon2id$` / `$plaintext$` prefix and hard-fails the template step.
-5. The workflow step exits non-zero → check is red.
 
-**Impact:** None on runtime. Real cluster is unaffected — production has the real hashed secrets. The failing CI check is a false positive specific to `flux-local`'s inability to decrypt SOPS.
+#### Traefik (`networking/traefik`) — ServiceMonitor CRD not installed
 
-**Adjacent checks that still work correctly:**
+```
+Error: execution error at (traefik/templates/servicemonitor.yaml:5:10):
+ERROR: You have to deploy monitoring.coreos.com/v1 first
+```
+
+The Traefik chart renders a `ServiceMonitor` resource which requires the Prometheus Operator's `monitoring.coreos.com/v1` CRD. `flux-local`'s helm-template environment has no cluster CRDs installed, so the render aborts. Added to the exclusion list in the same PR that bumped Traefik to chart 41.0.2.
+
+**Adjacent checks that still work correctly for excluded apps:**
 - `Flux Diff (kubernetes, kustomization)` passes and its auto-comment on the PR shows the exact final resource diff that will be applied to the cluster
 - `Kubeconform` passes (validates YAML shape against Kubernetes schemas)
 - `workstation (archlinux|generic-linux)` pass (e2e validation of workspace bootstrap)
 
 **Historical context:**
-- Commit `e2dc2f2c` ("fix(authelia): revert helm-release values changes to unblock Flux Diff CI") is a partial workaround: it reverts non-essential Authelia edits so `flux-local` sees "no change" and skips re-templating Authelia. Only works for PRs that don't intentionally touch Authelia's values.
+- Commit `e2dc2f2c` ("fix(authelia): revert helm-release values changes to unblock Flux Diff CI") is a partial workaround: it reverts non-essential Authelia edits so `flux-local` sees "no change" and skips re-templating Authelia. Only works for PRs that don't intentionally touch Authelia's values. Superseded by the exclusion list.
 - `flux-local` itself is deprecated (see the workflow's warning banner). Upstream recommends migrating to [`flate`](https://github.com/home-operations/flate) / [`konflate`](https://github.com/home-operations/konflate), which may or may not have the same limitation — not investigated yet.
 
-**Options to fix (none applied yet):**
-1. **Wire real SOPS decryption into CI.** Store the age key as a `SOPS_AGE_KEY` GitHub Actions repo secret. Add a pre-`flux-local` step that runs `sops -d` in-place on the checked-out repo. Same trust model as production Flux; decrypted files live only on the ephemeral runner. Standard pattern for fleets doing SOPS + flux-local CI.
-2. **Throwaway age keypair + dummy hashed secrets.** Create a separate age keypair used only for CI. Encrypt a stripped-down `cluster-secrets` file with placeholder hashed values (e.g. `$plaintext$dummy` for every `SECRET_*_OAUTH_CLIENT_SECRET_HASHED` key). Store the throwaway key as a GitHub Actions secret. Never touches real cluster secrets.
-3. **Exclude Authelia from `Flux Diff (helmrelease)`.** Simplest patch: strip `kubernetes/apps/networking/authelia/**` (or the whole `networking/authelia` Kustomization file) from the `pull/` and `default/` checkouts before invoking `flux-local`. Loses CI coverage for Authelia HelmRelease changes but every other check still validates them.
-4. **Migrate off `flux-local` to `flate`/`konflate`.** Larger scope. Would need to investigate whether the newer tools handle this case.
+**Proper fixes (none applied yet — the exclusion list is the pragmatic patch):**
+1. **Wire real SOPS decryption + CRD installation into CI.** Store the age key as a `SOPS_AGE_KEY` GitHub Actions repo secret. Add a pre-`flux-local` step that runs `sops -d` in-place, and install the Prometheus Operator CRDs into the runner. Same trust model as production Flux; decrypted files and CRDs live only on the ephemeral runner.
+2. **Throwaway age keypair + dummy hashed secrets.** Create a separate age keypair used only for CI. Encrypt a stripped-down `cluster-secrets` file with placeholder hashed values. Store the throwaway key as a GitHub Actions secret. Never touches real cluster secrets. Doesn't help the CRD case.
+3. **Migrate off `flux-local` to `flate`/`konflate`.** Larger scope. Might handle both cases better; needs investigation.
+
+**Adding a new app to the exclusion list:**
+
+1. Confirm the failure is a false positive, not a real chart error. Look at the log — if it's a value-substitution or CRD-missing error, likely false positive. If it's a genuine templating error (typo in values, missing required field, etc.), fix the manifest instead.
+2. Edit `.github/workflows/flux-diff.yaml`, add the app's `namespace/app-name` path to the `EXCLUDED_APPS` list env var in the "Strip helmrelease-diff-incompatible apps" step.
+3. Add a subsection to this README-LLM section explaining which chart and why.
 
 **When reviewing a PR:**
 
-If `Flux Diff (kubernetes, helmrelease)` is the *only* failing check and the PR touches Authelia (`kubernetes/apps/networking/authelia/**`), it is almost certainly this known false positive. Verify by reading the workflow log for the `hash prefix` error. Do not spend cycles debugging the substitution — it will render correctly in the cluster.
-
-If a PR touches Authelia and `Flux Diff (kubernetes, kustomization)` is *also* failing (or any other check), that is a real issue and must be investigated.
+If `Flux Diff (kubernetes, helmrelease)` is the *only* failing check and the PR touches an app in `EXCLUDED_APPS`, it is almost certainly the known false positive. Verify by reading the workflow log for the specific error message. If any other check is also failing, it is a real issue and must be investigated.
 
 ---
+
 
 ## SOPS / Secrets Reference
 

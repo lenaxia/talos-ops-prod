@@ -1,9 +1,17 @@
 ---
+# PV renamed to `paperless-nfs-v1` to force k8s to create a fresh PV object.
+# The prior `paperless-nfs` PV was created with `spec.nfs.path=/volume3/paperless`
+# back when the Synology NAS served the volume there. When the NAS was
+# reorganized and the volume moved to `/volume1/paperless`, only the
+# ${NFS_PAPERLESS} variable in cluster-settings.yaml was updated — but
+# `spec.nfs.path` on an existing PV is immutable, so paperless-0 has been
+# stuck in ContainerCreating since 2026-07-03 with
+# "mount.nfs: access denied by server while mounting 192.168.0.120:/volume3/paperless".
+# See flux worklog 2026-07-06 for detail.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: paperless-nfs
-  namespace: storage
+  name: paperless-nfs-v1
 spec:
   capacity:
     storage: 1Mi
@@ -19,6 +27,9 @@ spec:
     - nconnect=8
     - hard
     - noatime
+  claimRef:
+    namespace: storage
+    name: paperless-nfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -29,6 +40,7 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: paperless-nfs
+  volumeName: paperless-nfs-v1
   resources:
     requests:
       storage: 1Mi

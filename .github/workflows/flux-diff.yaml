@@ -34,33 +34,52 @@ jobs:
           ref: "${{ github.event.repository.default_branch }}"
           path: default
 
-      # Workaround for a known false positive on Authelia HelmRelease templating.
-      # flux-local cannot decrypt SOPS secrets, so ${SECRET_..._OAUTH_CLIENT_SECRET_HASHED}
-      # substitutes to an empty string, which Authelia's chart validator rejects
-      # ("must have a hash prefix"). This blocks every Authelia PR from ever getting a
-      # green helmrelease diff. The Kustomization diff (matrix.resources=kustomization)
-      # is unaffected and still runs, providing the actionable resource-level diff for
-      # reviewers. Adjacent checks (Kubeconform, workstation e2e) also validate the
-      # HelmRelease shape. See README-LLM.md → "Known CI limitations" for full details.
+      # Workaround for known false positives in flux-local's helmrelease templating.
+      # flux-local (running in a Docker image) cannot decrypt SOPS secrets, and it
+      # cannot install cluster CRDs before rendering. Two classes of chart trip on
+      # this:
       #
-      # This step removes Authelia from both checkouts ONLY for the helmrelease matrix
-      # leg, so flux-local's template phase never sees it and cannot fail on it.
-      - name: Strip Authelia (helmrelease diff only, known SOPS/validator false positive)
+      #   - Authelia: `${SECRET_..._OAUTH_CLIENT_SECRET_HASHED}` substitutes to ""
+      #     -> Authelia's chart validator: "must have a hash prefix" -> hard fail.
+      #   - Traefik: chart references `monitoring.coreos.com/v1` ServiceMonitor CRD
+      #     which flux-local doesn't install first -> "You have to deploy
+      #     monitoring.coreos.com/v1 first" -> hard fail.
+      #
+      # The Kustomization diff (matrix.resources=kustomization) is unaffected and
+      # still runs, providing the actionable per-resource diff for reviewers.
+      # Adjacent checks (Kubeconform, workstation e2e) also validate the HelmRelease
+      # shape. See README-LLM.md → "Known CI limitations" for full detail.
+      #
+      # For each app in the exclusion list below, we strip the app tree from both
+      # checkouts (pull/ and default/) ONLY for the helmrelease matrix leg, so
+      # flux-local's template phase never sees it and cannot fail on it. The parent
+      # namespace kustomization.yaml has the app's `./<app>/ks.yaml` line removed
+      # via sed so the parent Kustomization still builds cleanly.
+      - name: Strip helmrelease-diff-incompatible apps (known flux-local false positives)
         if: ${{ matrix.resources == 'helmrelease' }}
+        env:
+          # Format: `namespace/app-name` — the paths under kubernetes/apps/
+          EXCLUDED_APPS: |
+            networking/authelia
+            networking/traefik
         run: |
           set -euo pipefail
-          for root in pull default; do
-            authelia_dir="$root/${{ matrix.paths }}/apps/networking/authelia"
-            authelia_ks_ref="$root/${{ matrix.paths }}/apps/networking/kustomization.yaml"
-            if [ -d "$authelia_dir" ]; then
-              echo "Removing $authelia_dir"
-              rm -rf "$authelia_dir"
-            fi
-            if [ -f "$authelia_ks_ref" ]; then
-              echo "Removing ./authelia/ks.yaml reference from $authelia_ks_ref"
-              # Delete the resource entry so networking kustomization still builds
-              sed -i '/^\s*-\s*\.\/authelia\/ks\.yaml\s*$/d' "$authelia_ks_ref"
-            fi
+          echo "$EXCLUDED_APPS" | while IFS= read -r app_path; do
+            app_path="$(echo "$app_path" | tr -d '[:space:]')"
+            [ -z "$app_path" ] && continue
+            app_name="${app_path##*/}"
+            for root in pull default; do
+              app_dir="$root/${{ matrix.paths }}/apps/$app_path"
+              parent_ks="$root/${{ matrix.paths }}/apps/${app_path%/*}/kustomization.yaml"
+              if [ -d "$app_dir" ]; then
+                echo "Removing $app_dir"
+                rm -rf "$app_dir"
+              fi
+              if [ -f "$parent_ks" ]; then
+                echo "Removing ./$app_name/ks.yaml reference from $parent_ks"
+                sed -i "\|^\s*-\s*\./$app_name/ks\.yaml\s*\$|d" "$parent_ks"
+              fi
+            done
           done
 
       - name: Diff Resources
