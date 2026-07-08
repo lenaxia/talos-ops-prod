@@ -24,8 +24,6 @@ spec:
         type: deployment
         replicas: 1
         strategy: Recreate
-        pod:
-          hostNetwork: true
         containers:
           server:
             image:
@@ -87,7 +85,15 @@ spec:
     service:
       main:
         enabled: true
+        primary: true
+        controller: main
         type: LoadBalancer
+        # Pin the VIP so removing hostNetwork doesn't reshuffle it.
+        loadBalancerIP: 192.168.5.145
+        # Preserve client source IP for rAthena's IP-ban / login-log features.
+        # Cilium L2 announcements route traffic only to nodes with a Ready
+        # endpoint pod, so `Local` is safe with our single-replica deployment.
+        externalTrafficPolicy: Local
         labels:
           app: rathena
         ports:
@@ -100,7 +106,6 @@ spec:
           map:
             port: 5121
             enabled: true
-        primary: true
     persistence:
       entrypoint-sh:
         enabled: true
