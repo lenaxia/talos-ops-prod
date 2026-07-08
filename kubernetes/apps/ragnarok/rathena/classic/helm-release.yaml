@@ -25,8 +25,6 @@ spec:
         type: deployment
         replicas: 1
         strategy: Recreate
-        pod:
-          hostNetwork: true
         containers:
           server:
             image:
@@ -70,15 +68,16 @@ spec:
               - name: ADD_SUBNET_MAP1
                 value: "255.255.255.255:10.96.255.255"
               - name: SET_CHAR_PUBLIC_IP
-                value: "192.168.5.134"
+                value: ${SVC_RATHENA_CLASSIC_ADDR}
               - name: SET_MAP_PUBLIC_IP
-                value: "192.168.5.134"
+                value: ${SVC_RATHENA_CLASSIC_ADDR}
               - name: SET_MAP_TO_CHAR_IP
-                value: "192.168.5.134"
-              # Internal char->login handshake stays on loopback. hostNetwork means
-              # login-server and char-server share the pod's network namespace, so
-              # 127.0.0.1 is always reachable and immune to Cilium/multus/interface
-              # autodetect changes that were picking a link-local 169.254.x/32 route.
+                value: ${SVC_RATHENA_CLASSIC_ADDR}
+              # Internal char->login handshake stays on loopback. Both processes
+              # run in the same pod (same netns), so 127.0.0.1 is always
+              # reachable and immune to interface-autodetect regressions that
+              # previously grabbed a link-local 169.254.x/32 host route when
+              # hostNetwork: true was in use.
               - name: SET_CHAR_TO_LOGIN_IP
                 value: "127.0.0.1"
               - name: MYSQL_ACCOUNTSANDCHARS
@@ -86,7 +85,15 @@ spec:
     service:
       main:
         enabled: true
+        primary: true
+        controller: main
         type: LoadBalancer
+        # Pin the VIP so removing hostNetwork doesn't reshuffle it.
+        loadBalancerIP: ${SVC_RATHENA_CLASSIC_ADDR}
+        # Preserve client source IP for rAthena's IP-ban / login-log features.
+        # Cilium L2 announcements route traffic only to nodes with a Ready
+        # endpoint pod, so `Local` is safe with our single-replica deployment.
+        externalTrafficPolicy: Local
         labels:
           app: rathena
         ports:
@@ -99,4 +106,3 @@ spec:
           map:
             port: 5121
             enabled: true
-        primary: true
