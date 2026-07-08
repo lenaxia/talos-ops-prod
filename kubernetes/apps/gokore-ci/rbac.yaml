@@ -33,6 +33,12 @@ rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # ReplicaSets — read-only. Helm --wait lists ReplicaSets (owned by the
+  # Deployments above) to track rollout status. The Deployment controller
+  # creates/owns them; the runner only needs to read them.
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
   # Events — for debugging scheduling failures:
   - apiGroups: [""]
     resources: ["events"]
