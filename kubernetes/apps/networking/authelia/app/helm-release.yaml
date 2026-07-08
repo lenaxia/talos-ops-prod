@@ -584,13 +584,6 @@ spec:
         encryption_key:
           path: "storage.encryption.key"
 
-        mysql:
-          enabled: false
-          address: 'tcp://${RURI_ADDR}:3306'
-          database: authelia-k3s
-          username: authelia-k3s
-          timeout: 10s
-
         postgres:
           enabled: true
           address: 'tcp://defaultpg-rw.databases.svc.cluster.local:5432'
