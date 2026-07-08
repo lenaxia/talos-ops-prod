@@ -6,11 +6,11 @@ metadata:
   name: gokore-ci
   namespace: flux-system
 spec:
-  # The RoleBinding in rbac.yaml references the gokore-ci-runner ServiceAccount,
-  # which is created by the actions-runner-controller-runners Kustomization (in
-  # actions-runner-system). Reconcile after it so the SA exists first. (K8s
-  # tolerates a RoleBinding referencing a not-yet-existing SA, but explicit
-  # ordering avoids a brief inert-binding window on first reconcile.)
+  # The RoleBinding in rbac.yaml references the gokore-runner-gha-rs-kube-mode
+  # ServiceAccount, which ARC auto-creates via the actions-runner-controller-runners
+  # Kustomization. Reconcile after it so the SA exists first. (K8s tolerates a
+  # RoleBinding referencing a not-yet-existing SA, but explicit ordering avoids
+  # a brief inert-binding window on first reconcile.)
   dependsOn:
     - name: actions-runner-controller-runners
   path: ./kubernetes/apps/gokore-ci

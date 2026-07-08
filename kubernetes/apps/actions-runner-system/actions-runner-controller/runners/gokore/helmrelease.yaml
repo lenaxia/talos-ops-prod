@@ -28,11 +28,6 @@ spec:
       namespace: actions-runner-system
     template:
       spec:
-        # Run runner pods as the gokore-ci-runner ServiceAccount so they can
-        # deploy ephemeral rathena-test-server releases into the gokore-ci
-        # namespace (RBAC: Role/RoleBinding in gokore-ci/rbac.yaml). Without
-        # this, e2e-live.yml's `helm install` fails with permissions errors.
-        serviceAccountName: gokore-ci-runner
         affinity:
           nodeAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
