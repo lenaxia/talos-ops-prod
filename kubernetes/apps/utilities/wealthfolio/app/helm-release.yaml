@@ -1,0 +1,111 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app wealthfolio
+  namespace: &namespace utilities
+spec:
+  releaseName: *app
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+      interval: 10m
+  interval: 6m
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+
+    controllers:
+      main:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              repository: wealthfolio/wealthfolio
+              tag: 3.6.1
+            env:
+              TZ: ${TIMEZONE}
+              WF_LISTEN_ADDR: 0.0.0.0:8088
+              WF_DB_PATH: /data/wealthfolio.db
+              WF_CORS_ALLOW_ORIGINS: https://wealthfolio.${SECRET_DEV_DOMAIN}
+              WF_STATIC_DIR: dist
+              WF_AUTH_REQUIRED: "false"
+              WF_COOKIE_SECURE: auto
+              # TODO: Move WF_SECRET_KEY to a SOPS-encrypted secret.sops.yaml
+              # Generate: openssl rand -base64 32
+              # Then add secret.sops.yaml to app/kustomization.yaml and
+              # uncomment the envFrom block below:
+              WF_SECRET_KEY: "CHANGE-ME-REPLACE-WITH-REAL-KEY"
+            # envFrom:
+            #   - secretRef:
+            #       name: *app
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+
+    service:
+      main:
+        primary: true
+        ports:
+          http:
+            port: 8088
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: cash-multiple
+          hajimari.io/group: Utilities
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares:
+            networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri wealthfolio.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+
+    persistence:
+      data:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: longhorn
+        retain: true
+        globalMounts:
+          - path: /data
