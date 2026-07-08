@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/kustomization_v1beta2.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gokore-ci
+  namespace: flux-system
+spec:
+  # The RBAC (namespace + SA + Role + RoleBinding) must exist before the
+  # gokore-runner can deploy ephemeral test-server releases. No dependsOn the
+  # runner itself — the runner is in actions-runner-system and managed
+  # separately; this just provisions the target namespace + permissions.
+  path: ./kubernetes/apps/gokore-ci
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  targetNamespace: gokore-ci
+  wait: true
+  interval: 30m
+  retryInterval: 1m
+  timeout: 2m
