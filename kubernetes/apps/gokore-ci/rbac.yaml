@@ -1,0 +1,56 @@
+---
+# Role grants the gokore-ci-runner ServiceAccount (in actions-runner-system)
+# exactly the permissions needed to deploy and tear down ephemeral
+# rathena-test-server Helm releases in this namespace.
+#
+# Scoped to the gokore-ci namespace only — the runner cannot touch other
+# namespaces (ragnarok prod, openkore, etc.). This is the least privilege
+# required for `helm upgrade --install` + `helm uninstall` + `kubectl logs/wait`.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gokore-ci-runner
+  namespace: gokore-ci
+  labels:
+    app.kubernetes.io/name: gokore-runner
+    app.kubernetes.io/component: ci-rbac
+rules:
+  # Core resources helm installs/updates:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - services
+      - configmaps
+      - secrets
+      - persistentvolumeclaims
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Pods/log + pods/exec — for `kubectl logs` (readiness probe + failure dumps)
+  # and `kubectl wait`:
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get", "list"]
+  # Deployments (the rathena + mariadb workloads):
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Events — for debugging scheduling failures:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gokore-ci-runner
+  namespace: gokore-ci
+  labels:
+    app.kubernetes.io/name: gokore-runner
+    app.kubernetes.io/component: ci-rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gokore-ci-runner
+subjects:
+  - kind: ServiceAccount
+    name: gokore-ci-runner
+    namespace: actions-runner-system
