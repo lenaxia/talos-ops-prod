@@ -75,6 +75,12 @@ spec:
                 value: "192.168.5.134"
               - name: SET_MAP_TO_CHAR_IP
                 value: "192.168.5.134"
+              # Internal char->login handshake stays on loopback. hostNetwork means
+              # login-server and char-server share the pod's network namespace, so
+              # 127.0.0.1 is always reachable and immune to Cilium/multus/interface
+              # autodetect changes that were picking a link-local 169.254.x/32 route.
+              - name: SET_CHAR_TO_LOGIN_IP
+                value: "127.0.0.1"
               - name: MYSQL_ACCOUNTSANDCHARS
                 value: "1"
     service:
