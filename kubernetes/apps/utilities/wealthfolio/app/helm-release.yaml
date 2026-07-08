@@ -52,14 +52,9 @@ spec:
               WF_STATIC_DIR: dist
               WF_AUTH_REQUIRED: "false"
               WF_COOKIE_SECURE: auto
-              # TODO: Move WF_SECRET_KEY to a SOPS-encrypted secret.sops.yaml
-              # Generate: openssl rand -base64 32
-              # Then add secret.sops.yaml to app/kustomization.yaml and
-              # uncomment the envFrom block below:
-              WF_SECRET_KEY: "CHANGE-ME-REPLACE-WITH-REAL-KEY"
-            # envFrom:
-            #   - secretRef:
-            #       name: *app
+            envFrom:
+              - secretRef:
+                  name: *app
             resources:
               requests:
                 cpu: 100m
