@@ -6,10 +6,13 @@ metadata:
   name: gokore-ci
   namespace: flux-system
 spec:
-  # The RBAC (namespace + SA + Role + RoleBinding) must exist before the
-  # gokore-runner can deploy ephemeral test-server releases. No dependsOn the
-  # runner itself — the runner is in actions-runner-system and managed
-  # separately; this just provisions the target namespace + permissions.
+  # The RoleBinding in rbac.yaml references the gokore-ci-runner ServiceAccount,
+  # which is created by the actions-runner-controller-runners Kustomization (in
+  # actions-runner-system). Reconcile after it so the SA exists first. (K8s
+  # tolerates a RoleBinding referencing a not-yet-existing SA, but explicit
+  # ordering avoids a brief inert-binding window on first reconcile.)
+  dependsOn:
+    - name: actions-runner-controller-runners
   path: ./kubernetes/apps/gokore-ci
   prune: true
   sourceRef:
