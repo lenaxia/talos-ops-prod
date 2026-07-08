@@ -28,6 +28,11 @@ spec:
       namespace: actions-runner-system
     template:
       spec:
+        # Mount the runner pod's SA token so helm/kubectl can auth to the API.
+        # ARC kubernetes-mode pods don't automount the token by default (they're
+        # designed for container jobs, not API access). The e2e-live workflow
+        # needs API access to deploy Helm releases into gokore-ci.
+        automountServiceAccountToken: true
         affinity:
           nodeAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
