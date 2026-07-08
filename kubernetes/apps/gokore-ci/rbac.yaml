@@ -57,6 +57,10 @@ roleRef:
   kind: Role
   name: gokore-ci-runner
 subjects:
+  # ARC auto-creates this ServiceAccount for the gokore-runner scale set
+  # (containerMode: kubernetes). The runner pods run as this SA, so it's the
+  # correct subject for the gokore-ci Role — the runner pods need these
+  # permissions to deploy ephemeral rathena-test-server Helm releases.
   - kind: ServiceAccount
-    name: gokore-ci-runner
+    name: gokore-runner-gha-rs-kube-mode
     namespace: actions-runner-system
