@@ -7,3 +7,15 @@ commonLabels:
 resources:
   - helm-release.yaml
   - secret.sops.yaml
+# Shared ESPHome packages are managed in git and mounted read-only at
+# /config/common/. Device YAMLs are created/edited via the ESPHome UI and
+# live on the PVC at /config/*.yaml. They reference these shared packages
+# via !include common/<file>.yaml.
+configMapGenerator:
+  - name: esphome-common-packages
+    files:
+      - config/common/respeaker-satellite-base.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: enabled
