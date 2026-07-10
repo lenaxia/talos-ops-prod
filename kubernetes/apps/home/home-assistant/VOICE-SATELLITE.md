@@ -195,6 +195,46 @@ curl -o kubernetes/apps/home/esphome/app/config/common/respeaker-satellite-base.
 Check FormatBCE's changelog before updating — they may break things.
 Test on a non-production satellite first if you have one.
 
+## Multi-satellite routing
+
+When two or more satellites hear the same wake word, HA's built-in
+`WAKE_WORD_COOLDOWN = 2s` (in `homeassistant/components/assist_pipeline/const.py`)
+blocks the second pipeline from starting. The first-to-fire wins. This handles
+the common case but has known gaps:
+
+- Beyond 2 seconds, both satellites can fire independently.
+- Adjacent-room sensitivity settings may cause wrong-room wins.
+- No spatial preference — purely first-across-the-line.
+
+### Amplitude-based routing (DIY)
+
+Each satellite publishes a `sensor.<device>_mic_rms_level` entity via
+ESPHome's built-in `sound_level` sensor (passive mode, taps the same mic
+stream `micro_wake_word` uses). Values are in relative dBFS where 0 is
+the loudest the mic can measure, more negative is quieter.
+
+For the same utterance, the closest satellite typically reads 20-40 dB
+louder than one in an adjacent room. Component tolerance, XMOS AGC, and
+room acoustics add ~5 dB of noise — but the signal vastly exceeds the
+noise in most home layouts.
+
+A HA automation listens for `esphome.wake_word_detected` events, collects
+RMS from all satellites over a short window (~250ms), and routes TTS to
+the Sonos in the room of the loudest satellite. Building this is left to
+the user — see https://www.home-assistant.io/voice_control/ for current
+pipeline behavior.
+
+### Calibration
+
+Single-tone-at-known-distance calibration corrects for per-device gain
+offset (mic tolerance, XMOS AGC settings). Play a 1kHz tone from a
+speaker at 1m, record RMS per satellite, save the offsets as a HA
+input_number per device. Subtract the offset in the routing automation.
+
+Calibration does NOT correct for room acoustics, mic orientation, or
+obstructions. Those add ±5-10 dB of variability. In practice this
+matters only for adjacent-room edge cases.
+
 ## References
 
 - FormatBCE repo: https://github.com/formatBCE/Respeaker-Lite-ESPHome-integration
