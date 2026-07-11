@@ -41,18 +41,68 @@ tasks:
     dir: '{{.ROOT_DIR}}/.bin'
     platforms: ['linux/amd64', 'linux/arm64']
     cmds:
-      - for:
-          - budimanjojo/talhelper?as=talhelper
-          - cloudflare/cloudflared?as=cloudflared
-          - FiloSottile/age?as=age
-          - fluxcd/flux2?as=flux
-          - helmfile/helmfile?as=helmfile
-          - jqlang/jq?as=jq
-          - kubernetes-sigs/kustomize?as=kustomize
-          - mikefarah/yq?as=yq
-          - siderolabs/talos?as=talosctl
-          - yannh/kubeconform?as=kubeconform
-        cmd: curl -fsSL "https://i.jpillora.com/{{.ITEM}}&type=script" | bash
+      # Install CLI tools directly from GitHub releases. Previously this used
+      # the i.jpillora.com installer proxy, which is a third-party service that
+      # has become unreliable (returning 500s). Going direct to the GitHub API
+      # removes a runtime dependency and is the same source the proxy used.
+      # Each `gh_release_install` call fetches the latest release from
+      # api.github.com and picks the asset whose name matches the local arch.
+      - cmd: |
+          set -euo pipefail
+          ARCH=$(uname -m)
+          case "$ARCH" in
+              x86_64)         ARCH='amd64' ;;
+              aarch64|arm64)  ARCH='arm64' ;;
+              *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
+          esac
+          gh_release_install() {
+              local repo="$1" name="$2" asset_re="$3"
+              local release
+              release=$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest")
+              local url
+              url=$(printf '%s' "$release" \
+                  | jq -r --arg arch "$ARCH" --arg re "$asset_re" \
+                      '.assets[] | select(.name|test($re)) | select(.name|test($arch;"i")) | .browser_download_url' \
+                  | head -n1)
+              if [ -z "$url" ]; then
+                  echo "no asset matched repo=$repo arch=$ARCH pattern=$asset_re" >&2
+                  return 1
+              fi
+              echo "installing $name from $url"
+              case "$url" in
+                  *.tar.gz|*.tgz)
+                      local tmpdir; tmpdir=$(mktemp -d)
+                      curl -fsSL "$url" | tar xzf - -C "$tmpdir"
+                      # Find the named binary in the extracted tree and move it.
+                      local found
+                      found=$(find "$tmpdir" -type f -name "$name" -perm -u+x | head -n1)
+                      [ -z "$found" ] && found=$(find "$tmpdir" -type f -name "$name" | head -n1)
+                      if [ -z "$found" ]; then
+                          echo "binary '$name' not found in $url" >&2
+                          rm -rf "$tmpdir"
+                          return 1
+                      fi
+                      mv "$found" "./$name"
+                      rm -rf "$tmpdir"
+                      ;;
+                  *)
+                      curl -fsSL -o "$name" "$url"
+                      ;;
+              esac
+              chmod +x "$name" 2>/dev/null || true
+          }
+          export -f gh_release_install
+          export ARCH
+          gh_release_install budimanjojo/talhelper        talhelper    'talhelper.*linux'
+          gh_release_install cloudflare/cloudflared       cloudflared  'cloudflared-linux'
+          gh_release_install FiloSottile/age              age          "age.*linux.*${ARCH}"
+          gh_release_install fluxcd/flux2                 flux         'flux_.*linux'
+          gh_release_install helmfile/helmfile            helmfile     "helmfile_.*linux_${ARCH}"
+          gh_release_install jqlang/jq                    jq           "jq-linux-${ARCH}"
+          gh_release_install kubernetes-sigs/kustomize    kustomize    "kustomize_.*_?linux_${ARCH}"
+          gh_release_install mikefarah/yq                 yq           "yq_linux_${ARCH}"
+          gh_release_install siderolabs/talos             talosctl     "talosctl-linux-${ARCH}"
+          gh_release_install yannh/kubeconform            kubeconform  "kubeconform.*linux.*${ARCH}"
       - cmd: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl";
           curl -sSfL -o sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64

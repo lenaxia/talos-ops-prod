@@ -1,0 +1,285 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app kicad
+  namespace: home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 4
+  uninstall:
+    keepHistory: false
+  dependsOn:
+    # Intel GPU device plugin — needed so the gpu.intel.com/i915 resource
+    # request resolves and /dev/dri is mounted into the container.
+    - name: intel-device-plugin-gpu
+      namespace: flux-system
+    # Longhorn — needed so the config + projects PVCs bind.
+    - name: longhorn
+      namespace: longhorn-system
+  values:
+    # ──────────────────────────────────────────────────────────────────────
+    # KiCad 9 Streaming Workstation
+    # ──────────────────────────────────────────────────────────────────────
+    # One pod, one main container. The kicad-desktop image bundles:
+    #   supervisord → Xvfb + Xfce4 + KiCad + Selkies-GStreamer + Sunshine
+    #                 + pipewire + nginx + coturn
+    # Both Selkies (browser WebRTC) and Sunshine (Moonlight) capture the
+    # SAME X server (DISPLAY=:20), so a browser user and a Moonlight user
+    # see the same KiCad session.
+    #
+    # The MCP sidecar is a SEPARATE Deployment (./mcp/app) — it does not need
+    # /dev/dri and runs on any worker node.
+    # ──────────────────────────────────────────────────────────────────────
+    defaultPodOptions:
+      nodeSelector:
+        # Pin to a worker with Intel iGPU. The intel.feature label is set by
+        # the Intel GPU plugin's NodeFeatureRule.
+        node-role.kubernetes.io/worker: "true"
+        intel.feature.node.kubernetes.io/gpu: "true"
+      securityContext:
+        # The kicad-desktop image runs as ubuntu (UID 1000). The /projects
+        # PVC is RWX and is shared with the MCP pod (runs as 568) and the
+        # kibot Job (runs as root inside its own image). Supplemental groups
+        # bridge the UIDs.
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups:
+          - 109   # 'render' on Ubuntu — needed for /dev/dri/renderD128 access
+          - 44    # 'video' on Ubuntu — needed for /dev/dri/card0 access
+          - 568   # APP_UID — lets the MCP pod share PVC ownership
+      # Same-pod containers already share IPC by default; be explicit so a
+      # future sidecar (e.g. an IPC API forwarder) inherits MIT-SHM.
+      shareProcessNamespace: true
+    controllers:
+      main:
+        type: statefulset
+        # StatefulSet so /config has a stable identity for VolumeSnapshots.
+        replicas: 1
+        strategy: RollingUpdate
+        annotations:
+          reloader.staketer.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/kicad-desktop
+              tag: 0.1.0
+              pullPolicy: IfNotPresent
+            env:
+              TZ: ${TIMEZONE}
+              # ── Selkies knobs ───────────────────────────────────────────
+              SELKIES_ENCODER: vah264enc            # Intel VAAPI H.264 (Quick Sync)
+              SELKIES_FRAMERATE: "60"
+              SELKIES_VIDEO_BITRATE: "8"            # Mbps; bump to 16+ for dense layouts
+              SELKIES_AUDIO_BITRATE: "128000"
+              SELKIES_GPU_ID: "0"                   # → /dev/dri/renderD128
+              DISPLAY: ":20"
+              # Selkies NGINX HTTP basic-auth creds. The user is fixed at
+              # 'ubuntu' by the Selkies base image. Password comes from the
+              # SOPS-encrypted Secret.
+              SELKIES_ENABLE_BASIC_AUTH: "true"
+              SELKIES_BASIC_AUTH_USER: ubuntu
+              SELKIES_BASIC_AUTH_PASSWORD:
+                valueFrom:
+                  configMapKeyRef:
+                    name: *app
+                    key: SELKIES_BASIC_AUTH_PASSWORD
+              # libva driver selection. For Iris Plus 655 (Kaby Lake R),
+              # i965 is the correct classic driver. Newer gens (Ice Lake+)
+              # would use 'iHD' instead.
+              LIBVA_DRIVER_NAME: i965
+              # ── KiCad config home ──────────────────────────────────────
+              # Pinned to /config/kicad so user settings + plugin state
+              # survive pod restarts.
+              KICAD_DOCUMENTS_HOME: /config/kicad
+              XDG_CONFIG_HOME: /config/xdg/config
+              XDG_DATA_HOME: /config/xdg/data
+              XDG_CACHE_HOME: /config/xdg/cache
+            resources:
+              requests:
+                cpu: 1000m
+                memory: 4Gi
+                gpu.intel.com/i915: "1"
+              limits:
+                cpu: 8000m
+                memory: 16Gi
+                gpu.intel.com/i915: "1"
+            # Selkies' NGINX listens on :8080 once supervisord has booted.
+            # Generous startup delay: Xvfb + Xfce4 + GStreamer + Sunshine +
+            # KiCad can take 60-90s on a cold PVC.
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  periodSeconds: 10
+                  failureThreshold: 60
+                  timeoutSeconds: 5
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  periodSeconds: 15
+                  failureThreshold: 10
+                  timeoutSeconds: 5
+            securityContext:
+              # The Selkies+Sunshine stack needs to access /dev/dri and
+              # /dev/uinput. The intel GPU plugin handles /dev/dri via the
+              # gpu.intel.com/i915 resource; we don't need privileged mode.
+              # /dev/uinput (if mounted) requires CAP_SYS_ADMIN OR the
+              # 'input' supplemental group.
+              privileged: false
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+        # ── StatefulSet PVC templates ─────────────────────────────────────
+        # /config  — RWO Longhorn, KiCad settings + plugin state + Sunshine config
+        # /projects — RWX Longhorn via NFS provisioner, shared with MCP + fab Job
+        statefulset:
+          volumeClaimTemplates:
+            - name: config
+              accessMode: ReadWriteOnce
+              size: 5Gi
+              storageClass: longhorn
+              labels:
+                snapshot.home.arpa/enabled: "true"
+              globalMounts:
+                - path: /config
+            - name: projects
+              accessMode: ReadWriteMany
+              size: 50Gi
+              storageClass: longhorn
+              labels:
+                snapshot.home.arpa/enabled: "true"
+              globalMounts:
+                - path: /projects
+    # ── Services ────────────────────────────────────────────────────────────
+    # Three Services:
+    #   selkies  — ClusterIP, port 8080 (browser UI). Exposed via Traefik
+    #              IngressRoute (see ingressroute.yaml).
+    #   sunshine — LoadBalancer, ports 47984/47989/47990/48010 TCP + 47998-48000
+    #              UDP. Pinned to a Cilium reserved-pool IP via SVC_KICAD_SUNSHINE_ADDR.
+    #   metrics  — ClusterIP, port 9081 (Selkies Prometheus). Scraped by the
+    #              kube-prometheus-stack via the ServiceMonitor below.
+    service:
+      selkies:
+        controller: main
+        primary: true
+        type: ClusterIP
+        ports:
+          http:
+            port: 8080
+            targetPort: 8080
+            protocol: TCP
+            primary: true
+      sunshine:
+        controller: main
+        type: LoadBalancer
+        loadBalancerIP: ${SVC_KICAD_SUNSHINE_ADDR}
+        annotations:
+          cilium.io/l2-ip-pool: reserved
+        externalTrafficPolicy: Local
+        ports:
+          # Sunshine uses a base port (47989) and derives everything else.
+          # See https://docs.lizardbyte.dev/sunshine/latest/configuration/config.html
+          sunshine-https:
+            port: 47984
+            targetPort: 47984
+            protocol: TCP
+          sunshine-http:
+            port: 47989
+            targetPort: 47989
+            protocol: TCP
+          sunshine-webui:
+            port: 47990
+            targetPort: 47990
+            protocol: TCP
+            primary: true
+          sunshine-rtsp:
+            port: 48010
+            targetPort: 48010
+            protocol: TCP
+          sunshine-video:
+            port: 47998
+            targetPort: 47998
+            protocol: UDP
+          sunshine-control:
+            port: 47999
+            targetPort: 47999
+            protocol: UDP
+          sunshine-audio:
+            port: 48000
+            targetPort: 48000
+            protocol: UDP
+      metrics:
+        controller: main
+        type: ClusterIP
+        labels:
+          # Matched by the ServiceMonitor selector.
+          kicad.io/service: metrics
+        ports:
+          metrics:
+            port: 9081
+            targetPort: 9081
+            protocol: TCP
+    # ── Persistence (beyond StatefulSet templates) ────────────────────────
+    # /dev/shm as tmpfs for SHM-backed X server + GStreamer zero-copy paths.
+    persistence:
+      shm:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 4Gi
+        globalMounts:
+          - path: /dev/shm
+      # /tmp/kicad is where KiCad 9's IPC API server creates api.sock. The
+      # MCP pod will eventually mount this same emptyDir to consume the
+      # socket. In v1 the MCP server is file-based and does NOT use this;
+      # it's here so the upgrade to KiCad 11 headless IPC is a no-op.
+      kicad-ipc:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp/kicad
+      # /tmp/.X11-unix — X server socket. Already on tmpfs via /dev/shm +
+      # Selkies base; explicit mount is belt-and-suspenders for the IPC
+      # socket the MCP pod will mount when IPC support lands.
+      x11-socket:
+        type: emptyDir
+        medium: Memory
+        globalMounts:
+          - path: /tmp/.X11-unix

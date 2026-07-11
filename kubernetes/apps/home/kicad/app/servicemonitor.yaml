@@ -1,0 +1,29 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kicad-selkies
+  namespace: home
+  labels:
+    # The kube-prometheus-stack release selects ServiceMonitors with this label.
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      # Match the `metrics` Service created by the kicad HelmRelease.
+      app.kubernetes.io/name: kicad
+      app.kubernetes.io/instance: kicad
+      # The metrics Service is named `kicad-metrics` and labelled with the
+      # controller's common labels; we add `kicad.io/service: metrics` below
+      # to disambiguate from the selkies + sunshine Services.
+      kicad.io/service: metrics
+  namespaceSelector:
+    matchNames:
+      - home
+  endpoints:
+    # Selkies exposes Prometheus metrics on /metrics at port 9081.
+    # See selkies-gstreamer-entrypoint.sh in the upstream image.
+    - port: metrics
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s

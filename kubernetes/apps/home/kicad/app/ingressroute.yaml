@@ -1,0 +1,55 @@
+---
+# Traefik IngressRoute CRD for the Selkies-GStreamer browser WebRTC endpoint.
+#
+# WHY IngressRoute INSTEAD of a standard Ingress:
+#   - WebRTC traffic carries WebSockets (/ws, /webrtc/signalling) which work
+#     fine through standard Ingress, but the WebRTC media path negotiates
+#     candidate IPs inside the JSON signalling payload. Traefik cannot help
+#     there — the client needs direct UDP reachability to either the pod IP
+#     or a TURN relay. For a same-LAN deployment with no NAT, the browser's
+#     ICE host candidates suffice once the signalling WS is established.
+#   - This repo standardises on Traefik IngressRoute CRDs (see
+#     kubernetes/apps/default/echo-server-shadow/app/ingressroute.yaml) for
+#     any non-trivial routing.
+#
+# WHAT THIS DOES:
+#   - Routes https://kicad.${SECRET_DEV_DOMAIN}/ to the `selkies` Service
+#     (port 8080, the Selkies NGINX frontend).
+#   - TLS via cert-manager (letsencrypt-production).
+#   - Behind Authelia forward-auth (chain-authelia) — protects the WebRTC
+#     signalling handshake. Once the WebRTC session is established, the media
+#     flows peer-to-peer and does NOT hit Traefik.
+#
+# WHAT THIS DOES NOT DO:
+#   - It does NOT proxy the Sunshine LoadBalancer endpoints. Those are L4
+#     TCP+UDP and must hit the Cilium LB IP (SVC_KICAD_SUNSHINE_ADDR)
+#     directly from the Moonlight client.
+#   - It does NOT help with WebRTC media (UDP 49152-65535 ephemeral). For
+#     same-LAN that's already reachable; for remote users, configure a TURN
+#     server in the Selkies config.
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kicad-selkies
+  namespace: home
+  annotations:
+    # cert-manager issues a real LE cert for this hostname.
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`kicad.${SECRET_DEV_DOMAIN}`)
+      kind: Rule
+      services:
+        - name: kicad-selkies
+          namespace: home
+          port: 8080
+      middlewares:
+        - name: chain-authelia
+          namespace: networking
+  tls:
+    secretName: kicad.${SECRET_DEV_DOMAIN}
+    domains:
+      - main: kicad.${SECRET_DEV_DOMAIN}

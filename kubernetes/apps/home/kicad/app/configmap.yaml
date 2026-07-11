@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: kicad
+    namespace: home
+data:
+    # ──────────────────────────────────────────────────────────────────────
+    # KiCad streaming workstation secrets.
+    #
+    # Populate with real values before deploying. When ready to secure,
+    # convert this ConfigMap to a SOPS-encrypted Secret by:
+    #   1. Rename this file to secret.sops.yaml
+    #   2. Change kind: ConfigMap → kind: Secret, add type: Opaque
+    #   3. Change data: → stringData:
+    #   4. Fill in real values, then `sops -e -i`
+    #
+    # Keys:
+    #   SELKIES_BASIC_AUTH_PASSWORD  — Browser UI basic-auth password.
+    #                                  The username is fixed at 'ubuntu' by
+    #                                  the Selkies base image. Choose a long
+    #                                  random string.
+    #
+    #   SUNSHINE_USER                — First-run Sunshine Web UI admin username
+    #                                  (used by the sunshine-init initContainer
+    #                                  in the kicad-mcp pod to run
+    #                                  `sunshine creds <user> <pass>`).
+    #   SUNSHINE_PASS                — First-run Sunshine Web UI admin password.
+    # ──────────────────────────────────────────────────────────────────────
+    SELKIES_BASIC_AUTH_PASSWORD: PLACEHOLDER
+    SUNSHINE_USER: PLACEHOLDER
+    SUNSHINE_PASS: PLACEHOLDER

@@ -1,0 +1,166 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app kicad-mcp
+  namespace: home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 4
+  uninstall:
+    keepHistory: false
+  dependsOn:
+    # The MCP pod reads/writes the /projects PVC; Longhorn must be ready.
+    - name: longhorn
+      namespace: longhorn-system
+  values:
+    # ──────────────────────────────────────────────────────────────────────
+    # kicad-mcp — MCP server bridging LLM agents to KiCad 9
+    # ──────────────────────────────────────────────────────────────────────
+    # Architecture mirrors hass-mcp in this cluster:
+    #   supergateway (Node, HTTP/SSE on :8000)
+    #     └── stdio child: python3 -m kicad_mcp
+    #
+    # The image bundles kicad-cli + kibot + pcbnew Python bindings, so the
+    # MCP server can run ERC/DRC/gerber/BOM/step export against any project
+    # on the shared /projects PVC.
+    #
+    # Network exposure: ClusterIP only. Reachable as
+    #   http://kicad-mcp.home.svc.cluster.local:8000/sse
+    # Security note: supergateway has no inbound auth (verified via --help).
+    # In-cluster access is the only protection. LiteLLM consumes this and
+    # is the documented client; LiteLLM itself is Authelia-protected.
+    # ──────────────────────────────────────────────────────────────────────
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      securityContext:
+        # MCP image runs as app (UID 568 = APP_UID). The /projects PVC is
+        # owned by fsGroup=1000 (the kicad-desktop pod) but supplemental
+        # group 568 is granted there too, so this pod can read/write.
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups:
+          - 1000  # ubuntu (the kicad-desktop pod's UID)
+    controllers:
+      main:
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/kicad-mcp
+              tag: 0.1.0
+              pullPolicy: IfNotPresent
+            env:
+              # Where to discover KiCad projects. Mounted from the same RWX
+              # PVC the kicad-desktop pod uses, via the existingClaim below.
+              PROJECTS_DIR: /projects
+              # kicad-cli needs DISPLAY set even when invoked headless (KiAuto
+              # wraps it in xvfb-run automatically inside the image).
+              DISPLAY: ":99"
+              # Writable HOME — uv/pip cache, kicad-cli config.
+              HOME: /home/app
+              XDG_CACHE_HOME: /home/app/.cache
+              XDG_CONFIG_HOME: /home/app/.config
+              XDG_DATA_HOME: /home/app/.local/share
+              TZ: ${TIMEZONE}
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                cpu: 2000m
+                memory: 4Gi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 5
+    persistence:
+      # Writable HOME for kicad-cli config + pip cache. Rebuilt on pod start.
+      home:
+        type: emptyDir
+        sizeLimit: 1Gi
+        globalMounts:
+          - path: /home/app
+      # X server runtime for xvfb-run (used by kicad-cli + kibot's KiAuto).
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      # Shared KiCad projects volume — the same Longhorn RWX PVC the
+      # kicad-desktop StatefulSet created. We reference it via existingClaim
+      # so this Deployment does not try to create a competing PVC.
+      #
+      # NOTE: The kicad-desktop HelmRelease uses a StatefulSet
+      # volumeClaimTemplate named `projects`. That produces a PVC named
+      # `projects-kicad-0`. Update this existingClaim value if you change
+      # the StatefulSet name or replica count.
+      projects:
+        type: persistentVolumeClaim
+        existingClaim: projects-kicad-0
+        advancedMounts:
+          main:
+            main:
+              - path: /projects
+    service:
+      main:
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 8000
+            targetPort: 8000
+            protocol: TCP
