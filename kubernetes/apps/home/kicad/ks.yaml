@@ -12,11 +12,11 @@ spec:
     # The KiCad desktop pod needs the Intel GPU plugin so the
     # gpu.intel.com/i915 resource request resolves and /dev/dri is mounted.
     - name: cluster-apps-node-feature-discovery-rules
-    - name: cluster-kube-system-intel-device-plugin-gpu
+    - name: cluster-apps-intel-device-plugin-gpu
     # Both the desktop and MCP pods use Longhorn PVCs.
     - name: cluster-storage-longhorn
     # cert-manager issues the Traefik TLS cert for kicad.${SECRET_DEV_DOMAIN}.
-    - name: cluster-cert-manager-certificates
+    - name: cert-manager-issuers
   path: ./kubernetes/apps/home/kicad/app
   prune: true
   sourceRef:

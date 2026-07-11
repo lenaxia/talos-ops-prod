@@ -30,7 +30,7 @@ spec:
     # Intel GPU device plugin — needed so the gpu.intel.com/i915 resource
     # request resolves and /dev/dri is mounted into the container.
     - name: intel-device-plugin-gpu
-      namespace: flux-system
+      namespace: kube-system
     # Longhorn — needed so the config + projects PVCs bind.
     - name: longhorn
       namespace: longhorn-system
