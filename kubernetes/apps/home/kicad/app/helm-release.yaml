@@ -100,7 +100,7 @@ spec:
               SELKIES_BASIC_AUTH_USER: ubuntu
               SELKIES_BASIC_AUTH_PASSWORD:
                 valueFrom:
-                  configMapKeyRef:
+                  secretKeyRef:
                     name: *app
                     key: SELKIES_BASIC_AUTH_PASSWORD
               # libva driver selection. For Iris Plus 655 (Kaby Lake R),
@@ -114,6 +114,9 @@ spec:
               XDG_CONFIG_HOME: /config/xdg/config
               XDG_DATA_HOME: /config/xdg/data
               XDG_CACHE_HOME: /config/xdg/cache
+            envFrom:
+              - secretRef:
+                  name: *app
             resources:
               requests:
                 cpu: 1000m
