@@ -84,9 +84,8 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/kicad-desktop
-              tag: "2026.7.11"
-              digest: sha256:4fe3cf370ec8e6423b653332437eb356567f6c271adb5f0f92debadad6fcf521
-              pullPolicy: IfNotPresent
+              tag: rolling
+              pullPolicy: Always
             env:
               TZ: ${TIMEZONE}
               # ── Selkies knobs ───────────────────────────────────────────
