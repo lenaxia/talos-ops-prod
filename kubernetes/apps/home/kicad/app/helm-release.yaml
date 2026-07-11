@@ -85,6 +85,7 @@ spec:
             image:
               repository: ghcr.io/lenaxia/kicad-desktop
               tag: rolling
+              digest: sha256:73aa23c387fbcd9871475869d4298f067f0b2bf00c4553b8beabb7c0ddcdc759
               pullPolicy: Always
             env:
               TZ: ${TIMEZONE}
