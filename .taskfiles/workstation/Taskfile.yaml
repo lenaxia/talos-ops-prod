@@ -94,8 +94,8 @@ tasks:
           export -f gh_release_install
           export ARCH
           gh_release_install budimanjojo/talhelper        talhelper    'talhelper.*linux'
-          gh_release_install cloudflare/cloudflared       cloudflared  'cloudflared.*linux'
-          gh_release_install FiloSottile/age              age          "age.*-${ARCH}.*linux"
+          gh_release_install cloudflare/cloudflared       cloudflared  'cloudflared-linux'
+          gh_release_install FiloSottile/age              age          "age.*linux.*${ARCH}"
           gh_release_install fluxcd/flux2                 flux         'flux_.*linux'
           gh_release_install helmfile/helmfile            helmfile     "helmfile_.*linux_${ARCH}"
           gh_release_install jqlang/jq                    jq           "jq-linux-${ARCH}"
