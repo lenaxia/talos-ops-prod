@@ -128,17 +128,18 @@ spec:
                 cpu: 8000m
                 memory: 16Gi
                 gpu.intel.com/i915: "1"
-            # Selkies' NGINX listens on :8080 once supervisord has booted.
-            # Generous startup delay: Xvfb + Xfce4 + GStreamer + Sunshine +
-            # KiCad can take 60-90s on a cold PVC.
+            # Selkies' NGINX listens on :8080, but basic auth returns 401 for
+            # unauthenticated requests including /health. Use the metrics port
+            # (9081) for probes — Selkies-GStreamer serves /metrics there without
+            # auth. Alternatively a tcpSocket probe on 8080 would work.
             probes:
               startup:
                 enabled: true
                 custom: true
                 spec:
                   httpGet:
-                    path: /health
-                    port: 8080
+                    path: /metrics
+                    port: 9081
                   periodSeconds: 10
                   failureThreshold: 60
                   timeoutSeconds: 5
@@ -147,8 +148,8 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /health
-                    port: 8080
+                    path: /metrics
+                    port: 9081
                   periodSeconds: 30
                   failureThreshold: 5
                   timeoutSeconds: 5
@@ -157,8 +158,8 @@ spec:
                 custom: true
                 spec:
                   httpGet:
-                    path: /health
-                    port: 8080
+                    path: /metrics
+                    port: 9081
                   periodSeconds: 15
                   failureThreshold: 10
                   timeoutSeconds: 5
