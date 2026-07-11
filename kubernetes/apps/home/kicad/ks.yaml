@@ -1,0 +1,87 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-home-kicad
+  namespace: flux-system
+  labels:
+    substitution.flux.home.arpa/enabled: "true"
+spec:
+  dependsOn:
+    # The KiCad desktop pod needs the Intel GPU plugin so the
+    # gpu.intel.com/i915 resource request resolves and /dev/dri is mounted.
+    - name: cluster-apps-node-feature-discovery-rules
+    - name: cluster-kube-system-intel-device-plugin-gpu
+    # Both the desktop and MCP pods use Longhorn PVCs.
+    - name: cluster-storage-longhorn
+    # cert-manager issues the Traefik TLS cert for kicad.${SECRET_DEV_DOMAIN}.
+    - name: cluster-cert-manager-certificates
+  path: ./kubernetes/apps/home/kicad/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: kicad
+      namespace: home
+  wait: false
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+---
+# kicad-mcp — MCP server sidecar (separate Kustomization so it can be
+# debugged/reverted independently of the desktop pod).
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-home-kicad-mcp
+  namespace: flux-system
+  labels:
+    substitution.flux.home.arpa/enabled: "true"
+spec:
+  dependsOn:
+    # The MCP pod references the projects-kicad-0 PVC created by the desktop
+    # StatefulSet, so the desktop Kustomization must reconcile first.
+    - name: cluster-home-kicad
+    - name: cluster-storage-longhorn
+  path: ./kubernetes/apps/home/kicad/mcp/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: kicad-mcp
+      namespace: home
+  wait: false
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+---
+# kicad-kibot — Job template for fab-output automation. Always present in the
+# cluster; triggered on demand by the MCP server or `kubectl create job --from`.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-home-kicad-kibot
+  namespace: flux-system
+  labels:
+    substitution.flux.home.arpa/enabled: "true"
+spec:
+  dependsOn:
+    # The Job references the projects-kicad-0 PVC created by the desktop
+    # StatefulSet.
+    - name: cluster-home-kicad
+    - name: cluster-storage-longhorn
+  path: ./kubernetes/apps/home/kicad/fab/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m

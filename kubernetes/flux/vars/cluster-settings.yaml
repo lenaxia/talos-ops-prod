@@ -30,6 +30,11 @@ data:
   SVC_JELLYFIN_ADDR: "192.168.5.105"
   SVC_SYSLOG_ADDR: "192.168.5.111"
 
+  # KiCad streaming workstation (Sunshine LoadBalancer).
+  # Browser WebRTC goes via Traefik IngressRoute on the traefik VIP; only
+  # Sunshine's L4 TCP+UDP ports need their own VIP.
+  SVC_KICAD_SUNSHINE_ADDR: "192.168.5.18"
+
   SVC_MARIADB_PRIMARY_ADDR: "192.168.5.15"
   SVC_MARIADB_SECONDARY_ADDR: "192.168.5.16"
   SVC_REDIS_ADDR: "192.168.5.17"

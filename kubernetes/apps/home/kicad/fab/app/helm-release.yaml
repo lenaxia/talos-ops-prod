@@ -1,0 +1,173 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+#
+# KiBot Job — on-demand ERC/DRC + JLCPCB fab-output pipeline.
+#
+# Triggered by the MCP server (or manually via `kubectl create job`) against
+# a project on the shared /projects PVC. Outputs land in
+#   /projects/<project>/fab/
+#
+# The Job controller is `type: job` (one-shot). Pass the project path via the
+# PROJECT env var.
+#
+# Image: ghcr.io/inti-cmnb/kicad9_auto_full:1.9.0 (the upstream INTI-CMNB
+# image bundles KiCad 9 + kibot + KiAuto + InteractiveHtmlBom + KiKit +
+# PanDoc + LaTeX + Blender).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app kicad-kibot
+  namespace: home
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    createNamespace: true
+    remediation:
+      retries: 1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 1
+  uninstall:
+    keepHistory: false
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        # amd64-only image (KiCad apt repo). Pin to arch to fail fast on a
+        # mixed-arch cluster.
+        kubernetes.io/arch: amd64
+        node-role.kubernetes.io/worker: "true"
+      securityContext:
+        # The kicad9_auto_full image expects to run as root (KiAuto creates
+        # X server sockets under /tmp). The /projects PVC is RWX with
+        # fsGroup=1000 on the desktop side; we set fsGroup here so the Job
+        # pod can read+write the same files.
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      # Kibot's kiplot preflights run KiCad under Xvfb; give the job enough
+      # time to start X, run ERC + DRC, generate gerbers + BOM + CPL + iBoM.
+      # Default to 30 minutes; override per-invocation via a Job patch.
+      terminationGracePeriodSeconds: 60
+    controllers:
+      main:
+        type: job
+        annotations:
+          # HelmRelease-managed Job template. The MCP server triggers an
+          # actual run by creating a child Job from this template via the
+          # Kubernetes API (see docs/kicad-streaming-workstation.md §"Triggering
+          # fab jobs from the MCP layer").
+          kicad.io/job-template: "true"
+        pod:
+          # Validated to be `Never` or `OnFailure` by the chart. Never = a
+          # failing preflight aborts the Job (no retry); OnFailure retries
+          # up to backoffLimit (default 6).
+          restartPolicy: Never
+        # ttlSecondsAfterFinished keeps the cluster from accumulating Job
+        # objects. 7 days is enough to inspect logs after a failed run.
+        job:
+          ttlSecondsAfterFinished: 604800
+          backoffLimit: 1
+        containers:
+          main:
+            image:
+              repository: ghcr.io/inti-cmnb/kicad9_auto_full
+              tag: "1.9.0"
+              pullPolicy: IfNotPresent
+            env:
+              TZ: ${TIMEZONE}
+              # Which project to build. MUST be set by the Job trigger
+              # (MCP server) or via `kubectl create job --from=job/kicad-kibot
+              # kicad-kibot-<run> -- PROJECT=<relative-path>`.
+              PROJECT:
+                value: ""
+              # Which kibot config filename to use (relative to the project
+              # dir). Empty = auto-discover first *.kibot.yaml.
+              KIBOT_CONFIG:
+                value: ""
+              # Comma-separated list of kibot targets to run (empty = all).
+              KIBOT_TARGETS:
+                value: ""
+              # HOME for KiCad config; an emptyDir mount prevents the Job
+              # from polluting the PVC with KiCad user settings.
+              HOME: /tmp/kibot-home
+            command:
+              - /bin/bash
+              - -ec
+              # The entrypoint expands $PROJECT into the working directory
+              # under /projects, then invokes kibot. The kicad9_auto image
+              # already bundles xvfb-run via KiAuto, so we don't need to
+              # wrap further.
+              - |
+                if [ -z "$PROJECT" ]; then
+                  echo "ERROR: PROJECT env var must be set to a relative path under /projects" >&2
+                  exit 2
+                fi
+                cd "/projects/$PROJECT"
+                if [ ! -d fab ]; then mkdir -p fab; fi
+                ARGS=(-c config.kibot.yaml -d fab)
+                if [ -n "$KIBOT_CONFIG" ] && [ -f "$KIBOT_CONFIG" ]; then
+                  ARGS=(-c "$KIBOT_CONFIG" -d fab)
+                fi
+                if [ -n "$KIBOT_TARGETS" ]; then
+                  ARGS+=(-t "$KIBOT_TARGETS")
+                fi
+                echo "Running: kibot ${ARGS[*]}"
+                exec kibot "${ARGS[@]}"
+            resources:
+              requests:
+                cpu: 500m
+                memory: 2Gi
+              limits:
+                cpu: 4000m
+                memory: 8Gi
+            # Jobs don't need probes.
+            probes:
+              liveness:
+                enabled: false
+              readiness:
+                enabled: false
+              startup:
+                enabled: false
+    persistence:
+      # HOME — writable scratch for kicad-cli config + xvfb.
+      home:
+        type: emptyDir
+        sizeLimit: 2Gi
+        globalMounts:
+          - path: /tmp/kibot-home
+      tmp:
+        type: emptyDir
+        sizeLimit: 5Gi
+        globalMounts:
+          - path: /tmp
+      # Shared KiCad projects volume — same PVC as the kicad-desktop
+      # StatefulSet and the kicad-mcp Deployment.
+      projects:
+        type: persistentVolumeClaim
+        existingClaim: projects-kicad-0
+        globalMounts:
+          - path: /projects
+      # Default kibot config — drop into each project's directory if absent
+      # so a fresh project has a sensible fab-output pipeline on first run.
+      # The ConfigMap is in this directory (configmap.yaml).
+      kibot-default-config:
+        type: configMap
+        name: kicad-kibot-default
+        defaultMode: 0644
+        advancedMounts:
+          main:
+            main:
+              - path: /etc/kibot-default/config.kibot.yaml
+                subPath: config.kibot.yaml
+                readOnly: true
