@@ -210,7 +210,6 @@ spec:
             primary: true
       sunshine:
         controller: main
-        name: sunshine
         type: LoadBalancer
         loadBalancerIP: ${SVC_KICAD_SUNSHINE_ADDR}
         annotations:
@@ -250,7 +249,6 @@ spec:
             protocol: UDP
       metrics:
         controller: main
-        name: metrics
         type: ClusterIP
         labels:
           # Matched by the ServiceMonitor selector.
