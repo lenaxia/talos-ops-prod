@@ -78,6 +78,14 @@ spec:
         job:
           ttlSecondsAfterFinished: 604800
           backoffLimit: 1
+          # Suspend the template so it never runs on its own. PROJECT is empty
+          # until a trigger (MCP server / manual clone) supplies a value, so an
+          # unsuspended Job fails immediately (the entrypoint exits 2 on an
+          # empty PROJECT) and drives the HelmRelease into an endless
+          # install/remediation loop ("BackoffLimitExceeded"). Flux's health
+          # check reports a suspended Job as Current/healthy, so the release
+          # reconciles cleanly. Triggers must start the run with suspend=false.
+          suspend: true
         containers:
           main:
             image:
