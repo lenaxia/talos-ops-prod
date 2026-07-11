@@ -71,9 +71,19 @@ tasks:
               echo "installing $name from $url"
               case "$url" in
                   *.tar.gz|*.tgz)
-                      curl -fsSL "$url" | tar xzf - -O > "$name" 2>/dev/null \
-                          || curl -fsSL "$url" | tar xzf - --strip-components=1 -C . 2>/dev/null \
-                          || curl -fsSL -o "${name}.tar.gz" "$url" && tar xzf "${name}.tar.gz" && rm -f "${name}.tar.gz"
+                      local tmpdir; tmpdir=$(mktemp -d)
+                      curl -fsSL "$url" | tar xzf - -C "$tmpdir"
+                      # Find the named binary in the extracted tree and move it.
+                      local found
+                      found=$(find "$tmpdir" -type f -name "$name" -perm -u+x | head -n1)
+                      [ -z "$found" ] && found=$(find "$tmpdir" -type f -name "$name" | head -n1)
+                      if [ -z "$found" ]; then
+                          echo "binary '$name' not found in $url" >&2
+                          rm -rf "$tmpdir"
+                          return 1
+                      fi
+                      mv "$found" "./$name"
+                      rm -rf "$tmpdir"
                       ;;
                   *)
                       curl -fsSL -o "$name" "$url"
