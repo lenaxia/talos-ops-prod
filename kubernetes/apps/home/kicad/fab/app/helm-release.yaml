@@ -115,15 +115,15 @@ spec:
                 fi
                 cd "/projects/$PROJECT"
                 if [ ! -d fab ]; then mkdir -p fab; fi
-                ARGS=(-c config.kibot.yaml -d fab)
+                set -- -c config.kibot.yaml -d fab
                 if [ -n "$KIBOT_CONFIG" ] && [ -f "$KIBOT_CONFIG" ]; then
-                  ARGS=(-c "$KIBOT_CONFIG" -d fab)
+                  set -- -c "$KIBOT_CONFIG" -d fab
                 fi
                 if [ -n "$KIBOT_TARGETS" ]; then
-                  ARGS+=(-t "$KIBOT_TARGETS")
+                  set -- "$@" -t "$KIBOT_TARGETS"
                 fi
-                echo "Running: kibot ${ARGS[*]}"
-                exec kibot "${ARGS[@]}"
+                echo "Running: kibot $*"
+                exec kibot "$@"
             resources:
               requests:
                 cpu: 500m
