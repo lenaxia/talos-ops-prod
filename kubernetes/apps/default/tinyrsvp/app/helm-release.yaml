@@ -39,7 +39,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/tinyrsvp
-              tag: 0.2.2
+              tag: 0.4.0
               pullPolicy: Always
             env:
               TZ: ${TIMEZONE}
