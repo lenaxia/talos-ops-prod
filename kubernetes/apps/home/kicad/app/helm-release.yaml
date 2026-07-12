@@ -101,7 +101,7 @@ spec:
               # to 49152-49161 (10 ports) to match the LB port exposure.
               SELKIES_TURN_HOST: ${SVC_KICAD_TURN_ADDR}
               SELKIES_TURN_PORT: "3478"
-              SELKIES_TURN_PROTOCOL: udp
+              SELKIES_TURN_PROTOCOL: tcp
               TURN_MIN_PORT: "49152"
               TURN_MAX_PORT: "49161"
               # Selkies basic auth disabled — Authelia forward auth on the
