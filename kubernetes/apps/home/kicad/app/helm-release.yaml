@@ -218,7 +218,7 @@ spec:
         controller: main
         type: LoadBalancer
         loadBalancerIP: ${SVC_KICAD_SUNSHINE_ADDR}
-        annotations:
+        labels:
           cilium.io/l2-ip-pool: reserved
         externalTrafficPolicy: Local
         ports:
