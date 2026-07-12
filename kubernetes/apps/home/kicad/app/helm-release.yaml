@@ -89,9 +89,9 @@ spec:
             env:
               TZ: ${TIMEZONE}
               # ── Selkies knobs ───────────────────────────────────────────
-              SELKIES_ENCODER: vah264enc            # Intel VAAPI H.264 (Quick Sync)
-              SELKIES_FRAMERATE: "60"
-              SELKIES_VIDEO_BITRATE: "8"            # Mbps; bump to 16+ for dense layouts
+              SELKIES_ENCODER: x264enc             # Software H.264 (VAAPI i965 broken on this node)
+              SELKIES_FRAMERATE: "30"
+              SELKIES_VIDEO_BITRATE: "4"            # Mbps; software encoder is CPU-limited
               SELKIES_AUDIO_BITRATE: "128000"
               SELKIES_GPU_ID: "0"                   # → /dev/dri/renderD128
               DISPLAY: ":20"
