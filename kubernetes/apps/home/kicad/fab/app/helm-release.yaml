@@ -78,6 +78,10 @@ spec:
         job:
           ttlSecondsAfterFinished: 604800
           backoffLimit: 1
+          # Suspend on install — this Job is a template triggered on-demand
+          # by the MCP server or kubectl. Without suspend, the HelmRelease
+          # install creates the Job immediately, and it fails because PROJECT="".
+          suspend: true
         containers:
           main:
             image:
