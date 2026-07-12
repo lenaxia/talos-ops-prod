@@ -95,6 +95,15 @@ spec:
               SELKIES_AUDIO_BITRATE: "128000"
               SELKIES_GPU_ID: "0"                   # → /dev/dri/renderD128
               DISPLAY: ":20"
+              # ── TURN / WebRTC NAT traversal ────────────────────────────
+              # Point Selkies at the dedicated TURN LoadBalancer VIP instead
+              # of the auto-detected public IP. Narrow coturn relay port range
+              # to 49152-49161 (10 ports) to match the LB port exposure.
+              SELKIES_TURN_HOST: ${SVC_KICAD_TURN_ADDR}
+              SELKIES_TURN_PORT: "3478"
+              SELKIES_TURN_PROTOCOL: tcp
+              TURN_MIN_PORT: "49152"
+              TURN_MAX_PORT: "49161"
               # Selkies basic auth disabled — Authelia forward auth on the
               # Ingress is the sole authentication layer for browser access.
               SELKIES_ENABLE_BASIC_AUTH: "false"
@@ -262,6 +271,67 @@ spec:
             port: 9081
             targetPort: 9081
             protocol: TCP
+      # TURN LoadBalancer — exposes coturn signalling (3478 TCP+UDP) and
+      # a narrow relay port range (49152-49161 UDP) for WebRTC media.
+      # The browser uses TURN to relay UDP through NAT when direct ICE
+      # host candidates aren't reachable.
+      turn:
+        controller: main
+        type: LoadBalancer
+        loadBalancerIP: ${SVC_KICAD_TURN_ADDR}
+        labels:
+          cilium.io/l2-ip-pool: reserved
+        externalTrafficPolicy: Local
+        ports:
+          turn-tcp:
+            port: 3478
+            targetPort: 3478
+            protocol: TCP
+            primary: true
+          turn-udp:
+            port: 3478
+            targetPort: 3478
+            protocol: UDP
+          relay-49152:
+            port: 49152
+            targetPort: 49152
+            protocol: UDP
+          relay-49153:
+            port: 49153
+            targetPort: 49153
+            protocol: UDP
+          relay-49154:
+            port: 49154
+            targetPort: 49154
+            protocol: UDP
+          relay-49155:
+            port: 49155
+            targetPort: 49155
+            protocol: UDP
+          relay-49156:
+            port: 49156
+            targetPort: 49156
+            protocol: UDP
+          relay-49157:
+            port: 49157
+            targetPort: 49157
+            protocol: UDP
+          relay-49158:
+            port: 49158
+            targetPort: 49158
+            protocol: UDP
+          relay-49159:
+            port: 49159
+            targetPort: 49159
+            protocol: UDP
+          relay-49160:
+            port: 49160
+            targetPort: 49160
+            protocol: UDP
+          relay-49161:
+            port: 49161
+            targetPort: 49161
+            protocol: UDP
     # ── Persistence (beyond StatefulSet templates) ────────────────────────
     # /dev/shm as tmpfs for SHM-backed X server + GStreamer zero-copy paths.
     persistence:
