@@ -72,7 +72,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/kicad-mcp
-              tag: "0.1.1"
+              tag: "0.1.2"
               pullPolicy: IfNotPresent
             env:
               # Where to discover KiCad projects. Mounted from the same RWX
