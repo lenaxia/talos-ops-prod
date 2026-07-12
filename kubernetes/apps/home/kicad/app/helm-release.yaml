@@ -227,7 +227,7 @@ spec:
         loadBalancerIP: ${SVC_KICAD_SUNSHINE_ADDR}
         labels:
           cilium.io/l2-ip-pool: reserved
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         ports:
           # Sunshine uses a base port (47989) and derives everything else.
           # See https://docs.lizardbyte.dev/sunshine/latest/configuration/config.html
@@ -281,7 +281,7 @@ spec:
         loadBalancerIP: ${SVC_KICAD_TURN_ADDR}
         labels:
           cilium.io/l2-ip-pool: reserved
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         ports:
           turn-tcp:
             port: 3478
