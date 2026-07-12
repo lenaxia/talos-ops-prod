@@ -95,11 +95,9 @@ spec:
               SELKIES_AUDIO_BITRATE: "128000"
               SELKIES_GPU_ID: "0"                   # → /dev/dri/renderD128
               DISPLAY: ":20"
-              # Selkies NGINX HTTP basic-auth creds. The user is fixed at
-              # 'ubuntu' by the Selkies base image. Password comes from the
-              # SOPS-encrypted Secret.
-              SELKIES_ENABLE_BASIC_AUTH: "true"
-              SELKIES_BASIC_AUTH_USER: ubuntu
+              # Selkies basic auth disabled — Authelia forward auth on the
+              # Ingress is the sole authentication layer for browser access.
+              SELKIES_ENABLE_BASIC_AUTH: "false"
               SELKIES_BASIC_AUTH_PASSWORD:
                 valueFrom:
                   secretKeyRef:
