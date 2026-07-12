@@ -30,10 +30,12 @@ data:
   SVC_JELLYFIN_ADDR: "192.168.5.105"
   SVC_SYSLOG_ADDR: "192.168.5.111"
 
-  # KiCad streaming workstation (Sunshine LoadBalancer).
-  # Browser WebRTC goes via Traefik IngressRoute on the traefik VIP; only
-  # Sunshine's L4 TCP+UDP ports need their own VIP.
+  # KiCad streaming workstation.
+  # Sunshine LoadBalancer — L4 TCP+UDP for Moonlight clients.
   SVC_KICAD_SUNSHINE_ADDR: "192.168.5.18"
+  # TURN LoadBalancer — coturn signalling (3478) + relay ports for WebRTC
+  # media traversal. Browser WebRTC uses TURN to relay UDP through NAT.
+  SVC_KICAD_TURN_ADDR: "192.168.5.19"
 
   SVC_MARIADB_PRIMARY_ADDR: "192.168.5.15"
   SVC_MARIADB_SECONDARY_ADDR: "192.168.5.16"
