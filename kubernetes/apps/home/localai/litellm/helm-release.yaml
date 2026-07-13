@@ -330,6 +330,18 @@ spec:
             # Z.AI GLM models
             # Context: 200K, Max output: 131072 (source: docs.z.ai)
             # Text-only: GLM-4.x/5.x are text-in/text-out (no vision)
+            - model_name: glm-4-plus
+              litellm_params:
+                model: openai/glm-4-plus
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_input_tokens: 128000
+                max_tokens: 4096
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
             - model_name: glm-4.7
               litellm_params:
                 model: openai/glm-4.7
