@@ -84,7 +84,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/kicad-desktop
-              tag: "0.3.0"
+              tag: "1.6.2"
               pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
