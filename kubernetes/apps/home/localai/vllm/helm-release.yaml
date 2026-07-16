@@ -49,7 +49,7 @@ spec:
             args:
               - |
                 vllm serve \
-                    QuantTrio/Qwen3.6-27B-AWQ-INT4 \
+                    cyankiwi/Qwen3.6-27B-AWQ-INT4 \
                     --served-model-name qwen3 \
                     --dtype half \
                     --max-model-len 262144 \
