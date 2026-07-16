@@ -47,14 +47,15 @@ spec:
             args:
               - |
                 vllm serve \
-                    Qwen/Qwen2.5-3B-Instruct-AWQ \
+                    Qwen/Qwen3-8B-AWQ \
                     --served-model-name classifier \
-                    --max-model-len 1000 \
-                    --max-num-seqs 30 \
-                    --gpu-memory-utilization 0.9 \
+                    --max-model-len 5000 \
+                    --max-num-seqs 15 \
+                    --gpu-memory-utilization 0.90 \
                     --tensor-parallel-size 1 \
                     --trust-remote-code \
                     --quantization awq \
+                    --kv-cache-dtype fp8 \
                     --host 0.0.0.0 \
                     --port 8000 \
                     --dtype auto
@@ -63,6 +64,8 @@ spec:
             env:
               - name: TZ
                 value: ${TIMEZONE}
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337" # 3090
               - name: CUDA_LAUNCH_BLOCKING
                 value: 0
               - name: TORCH_USE_CUDA_DSA
