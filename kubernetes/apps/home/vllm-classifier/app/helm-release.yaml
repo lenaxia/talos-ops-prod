@@ -47,15 +47,15 @@ spec:
             args:
               - |
                 vllm serve \
-                    Qwen/Qwen3-8B-AWQ \
+                    cyankiwi/gemma-4-12B-it-AWQ-INT4 \
                     --served-model-name classifier \
                     --max-model-len 5000 \
                     --max-num-seqs 15 \
                     --gpu-memory-utilization 0.90 \
                     --tensor-parallel-size 1 \
                     --trust-remote-code \
-                    --quantization awq \
                     --kv-cache-dtype fp8 \
+                    --enable-auto-tool-choice \
                     --host 0.0.0.0 \
                     --port 8000 \
                     --dtype auto
