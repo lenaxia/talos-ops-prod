@@ -50,11 +50,10 @@ spec:
                     cyankiwi/gemma-4-12B-it-AWQ-INT4 \
                     --served-model-name classifier \
                     --max-model-len 5000 \
-                    --max-num-seqs 15 \
+                    --max-num-seqs 10 \
                     --gpu-memory-utilization 0.90 \
                     --tensor-parallel-size 1 \
                     --trust-remote-code \
-                    --kv-cache-dtype fp8 \
                     --enable-auto-tool-choice \
                     --tool-call-parser gemma4 \
                     --host 0.0.0.0 \
@@ -75,8 +74,6 @@ spec:
                 value: "false"
               - name: VLLM_TORCH_COMPILE
                 value: "true"
-              - name: VLLM_ATTENTION_BACKEND
-                value: FLASHINFER
             envFrom:
               - secretRef:
                   name: *appname
