@@ -51,5 +51,9 @@ spec:
     accessControlAllowCredentials: true
     accessControlExposeHeaders:
       - X-Request-Id
+      - X-RateLimit-Limit
+      - X-RateLimit-Remaining
+      - X-RateLimit-Reset
+      - X-Next-Cursor
     accessControlMaxAge: 600
     addVaryHeader: true
