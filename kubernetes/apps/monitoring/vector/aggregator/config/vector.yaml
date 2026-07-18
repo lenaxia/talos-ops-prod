@@ -86,9 +86,10 @@ sinks:
       - journald_source
     labels:
       hostname: '{{ host }}'
-    out_of_order_action: accept
-    remove_label_fields: true
-    remove_timestamp: true
+      out_of_order_action: accept
+      remove_label_fields: true
+      remove_timestamp: true
+      dangerously_allow_unconfined_template_resolution: true
   kubernetes:
     type: loki
     batch:
@@ -105,6 +106,7 @@ sinks:
     out_of_order_action: accept
     remove_label_fields: true
     remove_timestamp: true
+    dangerously_allow_unconfined_template_resolution: true
 #  opnsense:
 #    type: loki
 #    batch:
