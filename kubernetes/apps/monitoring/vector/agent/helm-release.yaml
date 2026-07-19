@@ -34,8 +34,9 @@ spec:
           main:
             image:
               repository: docker.io/timberio/vector
-              tag: 0.56.0-debian
+              tag: 0.57.0-debian
             env:
+              VECTOR_DANGEROUSLY_ALLOW_ENV_VAR_INTERPOLATION: 'true'
               PROCFS_ROOT: /host/proc
               SYSFS_ROOT: /host/sys
               VECTOR_SELF_NODE_NAME:
