@@ -85,7 +85,7 @@ sinks:
     inputs:
       - journald_source
     labels:
-      hostname: '{{ host }}'
+      hostname: 'host-{{ host }}'
     out_of_order_action: accept
     remove_label_fields: true
     remove_timestamp: true
@@ -99,9 +99,9 @@ sinks:
     inputs:
       - kubernetes_remap
     labels:
-      app: '{{ custom_app_name }}'
-      namespace: '{{ kubernetes.pod_namespace }}'
-      node: '{{ kubernetes.pod_node_name }}'
+      app: 'app-{{ custom_app_name }}'
+      namespace: 'ns-{{ kubernetes.pod_namespace }}'
+      node: 'node-{{ kubernetes.pod_node_name }}'
     out_of_order_action: accept
     remove_label_fields: true
     remove_timestamp: true

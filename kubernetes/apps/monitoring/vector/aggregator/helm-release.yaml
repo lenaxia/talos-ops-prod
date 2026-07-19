@@ -44,7 +44,9 @@ spec:
           main:
             image:
               repository: docker.io/timberio/vector
-              tag: 0.56.0-debian
+              tag: 0.57.0-debian
+            env:
+              VECTOR_DANGEROUSLY_ALLOW_ENV_VAR_INTERPOLATION: 'true'
             args: [--config, /etc/vector/vector.yaml]
     service:
       main:
