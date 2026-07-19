@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sandboxd
+  namespace: home
+data:
+  # PLACEHOLDER values — sandboxd is NOT enabled (ks.yaml absent from
+  # home/kustomization.yaml), so nothing consumes these. When enabling:
+  #   1. Replace placeholders with real values.
+  #   2. If any value is sensitive (API tokens, encryption keys), move it
+  #      to a `secret.sops.yaml` and encrypt with `sops -e -i`. See
+  #      README-LLM.md → "Workflow: creating a new secret file".
+  SANDBOXD_API_TOKENS: PLACEHOLDER-default=sk_REPLACE_ME
+  SANDBOXD_SECRETS_KEY: PLACEHOLDER

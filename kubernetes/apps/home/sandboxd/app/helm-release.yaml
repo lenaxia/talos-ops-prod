@@ -63,7 +63,7 @@ spec:
               # --- idle lifecycle ---
               SANDBOXD_IDLE_THRESHOLD_SECONDS: '2100'
             envFrom:
-              - secretRef:
+              - configMapRef:
                   name: *app
             resources:
               requests:
