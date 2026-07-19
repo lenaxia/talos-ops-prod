@@ -35,3 +35,4 @@ resources:
   - ./hortusfox-mcp/ks.yaml
   - ./librechat/ks.yaml
   - ./kicad/ks.yaml
+  # - ./sandboxd/ks.yaml  # not enabled: see PR #XXX — needs Docker socket (Talos runs containerd); image registry TBD
