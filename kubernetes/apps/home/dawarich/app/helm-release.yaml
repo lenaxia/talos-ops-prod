@@ -67,7 +67,7 @@ spec:
             dependsOn: init-db
             image:
               repository: freikin/dawarich
-              tag: 1.9.2
+              tag: 1.10.0
             envFrom:
               - secretRef:
                   name: *appname
@@ -103,7 +103,7 @@ spec:
             dependsOn: migrate
             image:
               repository: freikin/dawarich
-              tag: 1.9.2
+              tag: 1.10.0
             command:
               - sh
               - -c
@@ -120,7 +120,7 @@ spec:
           app:
             image:
               repository: freikin/dawarich
-              tag: 1.9.2
+              tag: 1.10.0
             envFrom:
               - secretRef:
                   name: *appname
@@ -206,7 +206,7 @@ spec:
           sidekiq:
             image:
               repository: freikin/dawarich
-              tag: 1.9.2
+              tag: 1.10.0
             envFrom:
               - secretRef:
                   name: *appname
