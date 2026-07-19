@@ -43,7 +43,7 @@ spec:
           main:
             image:
               repository: wealthfolio/wealthfolio
-              tag: 3.6.1
+              tag: 3.6.2
             env:
               TZ: ${TIMEZONE}
               WF_LISTEN_ADDR: 0.0.0.0:8088
