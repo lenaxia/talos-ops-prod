@@ -23,8 +23,12 @@ cni:
   # Cilium remains the delegate/default network via multus's config; see
   # kubernetes/apps/kube-system/multus/app/resources/00-multus.conf
   exclusive: false
-# NOTE: devices might need to be set if you have more than one active NIC on your hosts
-devices: eno+ eth+ enp+
+# Only program the bond master (eth0). All nodes use eth0 as a bond interface
+# (CP: eno1 slave; workers 00-02: eno1 + enp0s20f0u3 USB 2.5GbE slaves; worker-04:
+# enp66s0f0/f1 slaves). Programming bond slaves AND the master corrupts the BPF
+# datapath — pod egress silently fails. eth0 is consistent across all nodes for
+# Multus compatibility.
+devices: eth0
 enableIPv4BIGTCP: true
 endpointRoutes:
   enabled: true
