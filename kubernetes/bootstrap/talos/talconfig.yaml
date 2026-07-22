@@ -115,6 +115,7 @@ nodes:
     patches:
       - "@./patches/nvidia/gpu-worker-patch.yaml"
       - "@./patches/nvidia/nvidia-default-runtimeclass.yaml"
+      - "@./patches/worker/max-pods-200.yaml"
     schematic:
       customization:
         systemExtensions:
@@ -172,6 +173,7 @@ nodes:
         mtu: 1500
     patches:
       - "@./patches/global/containerd.yaml"
+      - "@./patches/worker/max-pods-200.yaml"
   - hostname: "worker-03"
     ipAddress: "192.168.3.23"
     controlPlane: false
