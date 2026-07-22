@@ -14,15 +14,9 @@ spec:
     githubConfigUrl: https://github.com/lenaxia/goKore
     githubConfigSecret: *app
     minRunners: 0
-    maxRunners: 10
+    maxRunners: 30
     containerMode:
       type: kubernetes
-      kubernetesModeWorkVolumeClaim:
-        accessModes: ["ReadWriteOnce"]
-        storageClassName: openebs-hostpath
-        resources:
-          requests:
-            storage: 25Gi
     controllerServiceAccount:
       name: actions-runner-controller
       namespace: actions-runner-system
@@ -61,3 +55,6 @@ spec:
               # from persisting on the ReadWriteOnce work volume between runs.
               - name: ACTIONS_RUNNER_CLEAN_WORKSPACE
                 value: "true"
+        volumes:
+          - name: work
+            emptyDir: {}
