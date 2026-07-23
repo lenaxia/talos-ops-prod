@@ -10,7 +10,7 @@ spec:
     spec:
       # Chart is sourced from a GitRepository (kubernetes/flux/repositories/git/
       # llmsafespaces.yaml). The chart isn't published to a Helm/OCI registry.
-      chart: ./charts/llmsafespaces
+      chart: ./helm
       sourceRef:
         kind: GitRepository
         name: llmsafespaces
