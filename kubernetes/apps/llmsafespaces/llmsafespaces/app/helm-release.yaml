@@ -17,7 +17,8 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (v0.5.0). Rationale: if we ever move a
+      # is now pinned to a semver tag (v0.5.4). Rationale: if we ever move a
+      # is now pinned to a semver tag (v0.5.4). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -87,7 +88,8 @@ spec:
     # (upstream v0.2.0+) the project cuts real semver releases and CI
     # publishes `<major>.<minor>.<patch>` OCI tags alongside the immutable
     # `ts-<unix>` tags. We pin to the semver — the GitRepository above is
-    # pinned to the matching `tag: v0.5.0`, so the chart-source tree and
+    # pinned to the matching `tag: v0.5.4`, so the chart-source tree and
+    # pinned to the matching `tag: v0.5.4`, so the chart-source tree and
     # the deployed images roll atomically. To upgrade, bump both the
     # GitRepository ref and every `image.tag` below in the same commit.
     # To verify a semver tag is present on ghcr:
@@ -96,6 +98,7 @@ spec:
     #     -H "Accept: application/vnd.oci.image.index.v1+json" \
     #     -o /dev/null -w "%{http_code}\n" \
     #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/0.5.0
+    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/0.5.4
     api:
       replicaCount: 2
       image:
@@ -197,6 +200,7 @@ spec:
       # platform rolls atomically because kind/slug wire format, CRD field
       # `workspace.status.userCredsPresent`, and DB migrations must all be
       # in lockstep. The upstream release-tag build produces `frontend:0.5.0`
+      # in lockstep. The upstream release-tag build produces `frontend:0.5.4`
       # alongside the other four images.
       image:
         tag: "0.5.4"
@@ -214,6 +218,7 @@ spec:
     # The chart seeds a `base` RuntimeEnvironment CR pointing at the base
     # workspace runtime image. Same semver pinning as api/controller/etc —
     # release-tag builds publish `base:0.5.0` alongside the other four.
+    # release-tag builds publish `base:0.5.4` alongside the other four.
     runtimeEnvironments:
       base:
         image:
