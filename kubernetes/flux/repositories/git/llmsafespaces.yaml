@@ -21,4 +21,5 @@ spec:
     # exclude everything
     /*
     # include only the helm chart
-    !/charts/llmsafespaces
+    # Chart dir renamed from charts/llmsafespaces -> helm in v0.5.0 (worklog 0614)
+    !/helm
