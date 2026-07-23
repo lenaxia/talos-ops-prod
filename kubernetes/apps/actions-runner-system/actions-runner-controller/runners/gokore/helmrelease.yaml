@@ -16,7 +16,7 @@ spec:
     minRunners: 0
     maxRunners: 30
     containerMode:
-      type: kubernetes
+      type: kubernetes-novolume
     controllerServiceAccount:
       name: actions-runner-controller
       namespace: actions-runner-system
