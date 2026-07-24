@@ -16,9 +16,10 @@ spec:
   # kubernetes/apps/llmsafespaces/llmsafespaces/app/helm-release.yaml
   # together in one PR.
   ref:
-    tag: v0.3.0
+    tag: v0.5.4
   ignore: |
     # exclude everything
     /*
     # include only the helm chart
-    !/charts/llmsafespaces
+    # Chart dir renamed from charts/llmsafespaces -> helm in v0.5.0 (worklog 0614)
+    !/helm

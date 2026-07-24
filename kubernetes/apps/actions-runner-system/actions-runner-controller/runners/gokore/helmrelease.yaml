@@ -16,13 +16,7 @@ spec:
     minRunners: 0
     maxRunners: 30
     containerMode:
-      type: kubernetes
-      kubernetesModeWorkVolumeClaim:
-        accessModes: ["ReadWriteOnce"]
-        storageClassName: openebs-hostpath
-        resources:
-          requests:
-            storage: 25Gi
+      type: kubernetes-novolume
     controllerServiceAccount:
       name: actions-runner-controller
       namespace: actions-runner-system
@@ -42,6 +36,13 @@ spec:
                       operator: In
                       values:
                         - "true"
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: kubernetes.io/hostname
+            whenUnsatisfiable: ScheduleAnyway
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: *app
         containers:
           - name: runner
             image: ghcr.io/home-operations/actions-runner:2.335.1@sha256:0c6f38e8194f6c3714aa86c6dc8a72574484818ed625dd66074920b25c118508
@@ -54,3 +55,6 @@ spec:
               # from persisting on the ReadWriteOnce work volume between runs.
               - name: ACTIONS_RUNNER_CLEAN_WORKSPACE
                 value: "true"
+        volumes:
+          - name: work
+            emptyDir: {}
