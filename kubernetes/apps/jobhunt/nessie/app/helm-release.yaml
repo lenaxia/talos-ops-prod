@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: nessie
-      version: 0.108.2
+      version: 0.108.3
       sourceRef:
         kind: HelmRepository
         name: nessie
