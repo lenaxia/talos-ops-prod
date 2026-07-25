@@ -47,20 +47,17 @@ spec:
             args:
               - |
                 vllm serve \
-                    cyankiwi/gemma-4-12B-it-AWQ-INT4 \
+                    Qwen/Qwen3-30B-A3B-AWQ \
                     --served-model-name classifier \
                     --max-model-len 5000 \
                     --max-num-seqs 10 \
                     --gpu-memory-utilization 0.95 \
                     --tensor-parallel-size 1 \
                     --trust-remote-code \
-                    --enable-auto-tool-choice \
-                    --tool-call-parser gemma4 \
                     --host 0.0.0.0 \
                     --port 8000 \
-                    --dtype auto
-                # NOTE: --disable-log-requests was removed in vllm v0.20
-                # (replaced by opt-in --enable-log-requests; default is no request logging).
+                    --dtype auto \
+                    --enable-log-requests
             env:
               - name: TZ
                 value: ${TIMEZONE}
