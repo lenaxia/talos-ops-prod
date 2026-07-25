@@ -47,7 +47,7 @@ spec:
             args:
               - |
                 vllm serve \
-                    Qwen/Qwen3-30B-A3B-AWQ \
+                    cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
                     --served-model-name classifier \
                     --max-model-len 5000 \
                     --max-num-seqs 10 \
