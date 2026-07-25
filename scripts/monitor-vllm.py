@@ -25,7 +25,7 @@ def parse_metrics(text: str) -> dict[str, list[dict]]:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        m = re.match(r"^(\w+)\{(.+?)\}\s+([0-9eE.\+\-]+.*)$", line)
+        m = re.match(r"^([\w:]+)\{(.+?)\}\s+([0-9eE.\+\-]+.*)$", line)
         if m:
             name = m.group(1)
             labels_str = m.group(2)
@@ -37,7 +37,7 @@ def parse_metrics(text: str) -> dict[str, list[dict]]:
                 continue
             metrics[name].append({"labels": labels, "value": value})
         else:
-            m2 = re.match(r"^(\w+)\s+([0-9eE.\+\-]+)$", line)
+            m2 = re.match(r"^([\w:]+)\s+([0-9eE.\+\-]+)$", line)
             if m2:
                 name = m2.group(1)
                 metrics[name].append({"labels": {}, "value": float(m2.group(2))})
@@ -114,13 +114,16 @@ def extract_histograms(metrics: dict[str, list[dict]]) -> dict:
             lbl = s["labels"]
             val = s["value"]
             if "le" in lbl:
-                buckets[name].append(s)
-            elif name.endswith("_sum"):
+                base = name.removesuffix("_bucket")
+                buckets[base].append(s)
+            elif name.endswith("_sum") and not name.endswith("_sum_created"):
                 sum_count_sum[name[:-4]] = val
-            elif name.endswith("_count"):
-                sum_count_count[name[:-5]] = val
+            elif name.endswith("_count") and not name.endswith("_count_created"):
+                sum_count_count[name[:-6]] = val
+            elif name.endswith("_created"):
+                pass
             else:
-                gauges[name] = val
+                gauges[name] = gauges.get(name, 0.0) + val
 
     sum_count: dict[str, tuple[float, float]] = {}
     all_keys = set(sum_count_sum.keys()) | set(sum_count_count.keys())
@@ -144,10 +147,10 @@ def build_report(parsed: dict) -> dict:
     metric_map = {
         "ttft": "vllm:time_to_first_token_seconds",
         "e2e_latency": "vllm:e2e_request_latency_seconds",
-        "tpot": "vllm:time_per_output_token_seconds",
+        "tpot": "vllm:request_time_per_output_token_seconds",
         "prompt_tokens": "vllm:request_prompt_tokens",
         "gen_tokens": "vllm:request_generation_tokens",
-        "queue_time": "vllm:queue_time_seconds",
+        "queue_time": "vllm:request_queue_time_seconds",
     }
 
     for key, metric_name in metric_map.items():
@@ -166,15 +169,14 @@ def build_report(parsed: dict) -> dict:
     for gauge_name, display in [
         ("vllm:num_requests_running", "running"),
         ("vllm:num_requests_waiting", "waiting"),
-        ("vllm:num_requests_swapped", "swapped"),
-        ("vllm:gpu_cache_usage_perc", "gpu_cache_usage_perc"),
+        ("vllm:kv_cache_usage_perc", "kv_cache_usage_perc"),
     ]:
         if gauge_name in gauges:
             report[display] = gauges[gauge_name]
 
     for counter_name, display in [
-        ("vllm:request_success", "success"),
-        ("vllm:num_preemptions", "preemptions"),
+        ("vllm:request_success_total", "success"),
+        ("vllm:num_preemptions_total", "preemptions"),
     ]:
         if counter_name in gauges:
             report[display] = gauges[counter_name]
@@ -231,10 +233,9 @@ def print_report(report: dict, clear: bool = True):
     print("  --- Load ---")
     simple("running")
     simple("waiting")
-    simple("swapped")
     simple("success", " (total)")
     simple("preemptions", " (total)")
-    simple("gpu_cache_usage_perc", "%")
+    simple("kv_cache_usage_perc", "%")
     print()
 
 
