@@ -7,4 +7,5 @@ resources:
   - synofotopg-lb.yaml
   - vectorpg-lb.yaml
   - llmsafespacespg.yaml
+  - dawarich-postgis.yaml
   #- backup.yaml
