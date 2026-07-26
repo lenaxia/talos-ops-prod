@@ -32,6 +32,8 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-xor
+          xmitHashPolicy: layer3+4
         dhcp: false
         addresses:
           - "192.168.3.10/16"
@@ -50,6 +52,8 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-xor
+          xmitHashPolicy: layer3+4
         dhcp: false
         addresses:
           - "192.168.3.11/16"
@@ -68,6 +72,8 @@ nodes:
         bond:
           deviceSelectors:
             - physical: true
+          mode: balance-xor
+          xmitHashPolicy: layer3+4
         dhcp: false
         addresses:
           - "192.168.3.12/16"
@@ -94,10 +100,10 @@ nodes:
   - hostname: "worker-00"
     ipAddress: "192.168.3.20"
     installDiskSelector:
-      wwid: naa.5002538e405b5f41
+      type: ssd
     controlPlane: false
     nodeLabels:
-      node-role.kubernetes.io/worker: true
+      node-role.kubernetes.io/worker: "true"
     networkInterfaces:
       - interface: eth0
         bond:
@@ -129,11 +135,11 @@ nodes:
               - siderolabs/util-linux-tools
   - hostname: "worker-01"
     ipAddress: "192.168.3.21"
-    installDiskSelector: 
-      wwid: naa.5002538e4019fdec
+    installDiskSelector:
+      type: ssd
     controlPlane: false
     nodeLabels: 
-      node-role.kubernetes.io/worker: true
+      node-role.kubernetes.io/worker: "true"
     networkInterfaces:
       - interface: eth0
         bond:
@@ -154,9 +160,9 @@ nodes:
     ipAddress: "192.168.3.22"
     controlPlane: false
     installDiskSelector:
-      wwid: naa.5002538e40bfb2cc
+      type: ssd
     nodeLabels: 
-      node-role.kubernetes.io/worker: true
+      node-role.kubernetes.io/worker: "true"
     networkInterfaces:
       - interface: eth0
         bond:
@@ -178,9 +184,10 @@ nodes:
     ipAddress: "192.168.3.23"
     controlPlane: false
     installDiskSelector:
-      model: CHN-mSATAQ3-120
+      type: ssd
+      size: "<= 250GB"
     nodeLabels: 
-      node-role.kubernetes.io/worker: true
+      node-role.kubernetes.io/worker: "true"
     networkInterfaces:
       - interface: eth0
         bond:
@@ -195,28 +202,32 @@ nodes:
           - network: 0.0.0.0/0
             gateway: "192.168.0.1"
         mtu: 1500
+    patches:
+      - "@./patches/global/containerd.yaml"
+      - "@./patches/worker/gasket-apex.yaml"
     schematic:
       customization:
         systemExtensions:
             officialExtensions:
               - siderolabs/gasket-driver
+              - siderolabs/i915
               - siderolabs/intel-ucode
               - siderolabs/iscsi-tools
+              - siderolabs/thunderbolt
               - siderolabs/util-linux-tools
     userVolumes:
       - name: longhorn
         provisioning:
           diskSelector: 
             match: disk.transport == 'sata' && !system_disk
-          minSize: "500GiB" # Talos will autogrow the size if more is available
+          minSize: "400GiB"
           grow: true
   - hostname: "worker-04"
     ipAddress: "192.168.3.24"
-    installDiskSelector:
-      wwid: eui.e8238fa6bf530001001b448b4e165b7b
+    installDisk: /dev/nvme0n1
     controlPlane: false
     nodeLabels:
-      node-role.kubernetes.io/worker: true
+      node-role.kubernetes.io/worker: "true"
     networkInterfaces:
       - interface: eth0
         bond:
@@ -264,6 +275,7 @@ controlPlane:
     - "@./patches/controller/cluster.yaml"
     - "@./patches/controller/disable-admission-controller.yaml"
     - "@./patches/controller/etcd.yaml"
+    - "@./patches/controller/longhorn.yaml"
     - "@./patches/global/containerd.yaml"
   schematic:
     customization:
@@ -280,8 +292,8 @@ worker:
     - name: longhorn
       provisioning:
         diskSelector: 
-          match: disk.transport == 'nvme'
-        minSize: "500GiB" # Talos will autogrow the size if more is available
+          match: disk.transport == 'nvme' && !system_disk
+        minSize: "400GiB"
         grow: true
   schematic:
     customization:

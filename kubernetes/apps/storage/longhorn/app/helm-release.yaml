@@ -46,6 +46,7 @@ spec:
       dataLocality: "best-effort"
       replicaAutoBalance: "best-effort"
       defaultDataPath: "/var/mnt/longhorn"
+      storageMinimalAvailablePercentage: 15
       concurrentAutomaticEngineUpgradePerNodeLimit: 1
       defaultEngineImage: docker.io/longhornio/longhorn-engine:v1.12.0
       systemManagedComponentsNodeSelector: "node-role.kubernetes.io/worker: true"
