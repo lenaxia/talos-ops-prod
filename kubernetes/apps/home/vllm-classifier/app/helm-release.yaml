@@ -49,8 +49,8 @@ spec:
                 vllm serve \
                     cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
                     --served-model-name classifier \
-                    --max-model-len 5000 \
-                    --max-num-seqs 10 \
+                    --max-model-len 4000 \
+                    --max-num-seqs 20 \
                     --gpu-memory-utilization 0.95 \
                     --tensor-parallel-size 1 \
                     --trust-remote-code \
