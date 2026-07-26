@@ -45,7 +45,7 @@ spec:
           valkey:
             image:
               repository: valkey/valkey
-              tag: "9.1.0"
+              tag: "9.1.1"
             command:
               - /scripts/valkey-entrypoint.sh
             ports:
