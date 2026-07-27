@@ -1,17 +1,18 @@
 ---
-# PV renamed to `paperless-nfs-v1` to force k8s to create a fresh PV object.
-# The prior `paperless-nfs` PV was created with `spec.nfs.path=/volume3/paperless`
-# back when the Synology NAS served the volume there. When the NAS was
-# reorganized and the volume moved to `/volume1/paperless`, only the
-# ${NFS_PAPERLESS} variable in cluster-settings.yaml was updated — but
-# `spec.nfs.path` on an existing PV is immutable, so paperless-0 has been
-# stuck in ContainerCreating since 2026-07-03 with
-# "mount.nfs: access denied by server while mounting 192.168.0.120:/volume3/paperless".
-# See flux worklog 2026-07-06 for detail.
+# The PV and PVC are both named `paperless-nfs`. The NFS path is sourced from
+# the `${NFS_PAPERLESS}` variable (currently `/volume1/paperless` on the NAS).
+#
+# Historical note: a previous version renamed the PV to `paperless-nfs-v1` to
+# work around the fact that `spec.nfs.path` is immutable on an existing PV and
+# the live PV was stuck on the old `/volume3/paperless` path. That workaround
+# broke Flux reconciliation: the bound PVC's `spec.volumeName` is immutable, so
+# Flux could never apply the manifest. The live PV `paperless-nfs` has since
+# been recreated with the correct `/volume1/paperless` path, so the rename is no
+# longer needed. Do NOT change `volumeName` here — it must match the bound claim.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: paperless-nfs-v1
+  name: paperless-nfs
 spec:
   capacity:
     storage: 1Mi
@@ -40,7 +41,7 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: paperless-nfs
-  volumeName: paperless-nfs-v1
+  volumeName: paperless-nfs
   resources:
     requests:
       storage: 1Mi
