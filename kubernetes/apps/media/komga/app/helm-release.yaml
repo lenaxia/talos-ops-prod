@@ -77,15 +77,20 @@ spec:
             secretName: *uri
         className: traefik
     persistence:
-      media:
+      config:
         enabled: true
-        existingClaim: komga-media-volume
+        existingClaim: komga-config-volume
         globalMounts:
           - path: /config
-            subPath: config
+      media:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: ${NFS_KOMGA_MEDIA}
+        globalMounts:
           - path: /mnt/media
-            subPath: media
-          - path: /mnt/komga-media-volume
       secret:
         enabled: true
         type: secret
