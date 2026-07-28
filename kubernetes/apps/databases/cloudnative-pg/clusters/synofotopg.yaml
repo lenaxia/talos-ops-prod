@@ -42,7 +42,7 @@ spec:
         maxParallel: 8
       destinationPath: "s3://${S3_CNPG}/synofotopg16"
       endpointURL: http://minio.storage.svc.cluster.local:9000
-      serverName: synofotopg-backup-v01
+      serverName: synofotopg-backup-v02
       s3Credentials:
         accessKeyId:
           name: postgres-minio
