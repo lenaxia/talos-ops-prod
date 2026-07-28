@@ -55,4 +55,7 @@ spec:
           name: postgres-minio
           key: MINIO_REGION
   bootstrap:
-    initdb: {}
+    initdb:
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector CASCADE;
+        - ALTER USER immich WITH SUPERUSER;
