@@ -16,7 +16,7 @@ metadata:
   name: vectorpg
   namespace: databases
 spec:
-  instances: 1
+  instances: 3
   # CNPG standard image — includes pgvector, PGAudit, Postgres Failover Slots
   imageName: ghcr.io/cloudnative-pg/postgresql:16.8-standard-bookworm
   primaryUpdateStrategy: unsupervised
