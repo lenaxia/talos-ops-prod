@@ -4,4 +4,4 @@ namespace: home
 resources:
   - helm-release.yaml
   - msedge-pvc.yaml
-  - imwheel-configmap.yaml
+  - scrollfix-configmap.yaml

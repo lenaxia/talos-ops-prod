@@ -41,8 +41,6 @@ spec:
               PGID: "1000"
               TZ: ${TIMEZONE}
               # EDGE_CLI: "https://example.com"  # optional: set startup URL
-              DOCKER_MODS: linuxserver/mods:universal-package-install
-              INSTALL_PACKAGES: imwheel
             resources:
               requests:
                 cpu: 100m
@@ -97,26 +95,15 @@ spec:
         globalMounts:
           - path: /dev/shm
 
-      # imwheel init script — writes .imwheelrc before services start
-      imwheel-init:
+      # scrollfix init script — patches Selkies web-client JS to fix touchpad
+      # scroll sensitivity before the desktop services start
+      scrollfix:
         type: configMap
-        name: msedge-imwheel
+        name: msedge-scrollfix
         defaultMode: 0755
         advancedMounts:
           main:
             main:
-              - path: /custom-cont-init.d/imwheel-setup.sh
-                subPath: imwheel-setup.sh
-                readOnly: true
-
-      # imwheel service — runs imwheel as a persistent daemon
-      imwheel-svc:
-        type: configMap
-        name: msedge-imwheel
-        defaultMode: 0755
-        advancedMounts:
-          main:
-            main:
-              - path: /custom-services.d/imwheel
-                subPath: imwheel-service
+              - path: /custom-cont-init.d/scrollfix.sh
+                subPath: scrollfix.sh
                 readOnly: true
