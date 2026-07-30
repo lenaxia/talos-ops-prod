@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: msedge-scrollfix
+  namespace: home
+data:
+  # Runs at container start (s6 custom-cont-init.d) — patches the Selkies
+  # web client JS served from /usr/share/selkies to fix touchpad scroll
+  # sensitivity. See docs/msedge-scroll-fix.md for the full explanation.
+  #
+  # Why: the Selkies web client computes scroll magnitude entirely in the
+  # browser from wheel events. imwheel (a former workaround) runs on the X11
+  # side and cannot influence how many Button4/5 events the browser already
+  # decided to send, so it was a no-op and is removed. The real fix is to
+  # tune the JS defaults that the browser serves.
+  scrollfix.sh: |
+    #!/bin/bash
+    echo "**** patching Selkies web-client scroll sensitivity ****"
+    # _scrollMagnitude: max lines per scroll event (default 10, far too
+    #   aggressive for touchpads). Real mouse wheels compute n=1 and are
+    #   unaffected by this cap, so lowering it only damps touchpad scrolling.
+    # _wheelThreshold: trackpad scroll throttle in ms (default 100). Only
+    #   applies to precision/touchpad input; real wheels bypass it.
+    patched=0
+    for f in $(grep -rlE "_scrollMagnitude=10|_wheelThreshold=100" /usr/share/selkies/ 2>/dev/null); do
+        sed -i \
+            -e 's/_scrollMagnitude=10/_scrollMagnitude=3/g' \
+            -e 's/_wheelThreshold=100/_wheelThreshold=200/g' \
+            "$f" && patched=$((patched+1))
+    done
+    echo "**** patched $patched file(s): scroll magnitude 10->3, throttle 100ms->200ms ****"
