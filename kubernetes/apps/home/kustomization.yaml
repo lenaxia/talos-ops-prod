@@ -35,3 +35,4 @@ resources:
   - ./hortusfox-mcp/ks.yaml
   - ./librechat/ks.yaml
   - ./kicad/ks.yaml
+  - ./opengist/ks.yaml
