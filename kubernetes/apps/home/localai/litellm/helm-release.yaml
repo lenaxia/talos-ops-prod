@@ -90,7 +90,7 @@ spec:
               - name: DATABASE_URL
                 valueFrom:
                   secretKeyRef:
-                    name: litellm
+                    name: litellm-db
                     key: DATABASE_URL
               - name: USE_PRISMA_MIGRATE
                 value: "True"
@@ -136,7 +136,7 @@ spec:
               - name: DATABASE_URL
                 valueFrom:
                   secretKeyRef:
-                    name: litellm
+                    name: litellm-db
                     key: DATABASE_URL
               # SSO / OIDC
               - name: PROXY_BASE_URL
