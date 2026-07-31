@@ -237,6 +237,10 @@ spec:
                 url: http://hass-mcp.home.svc.cluster.local:8000/sse
                 transport: sse
                 description: Home Assistant control via voska/hass-mcp
+              opengist:
+                url: http://opengist-mcp.home.svc.cluster.local:8000/sse
+                transport: sse
+                description: Opengist CRUD via lenaxia/opengist-mcp
 
 
             model_list:
