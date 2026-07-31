@@ -245,10 +245,20 @@ spec:
         walCompression: true
         enableFeatures:
           - memory-snapshot-on-shutdown
+        # Data redundancy comes from prometheusSpec.replicas: 3 (each replica
+        # scrapes and stores a full copy), so node-local storage is fine and
+        # avoids Longhorn's write amplification on a write-heavy TSDB.
+        # On node loss the stuck PVC must be deleted so the StatefulSet replica
+        # can reschedule onto a healthy node and re-ingest — handled by the
+        # pvc-reaper CronJob in this namespace. The retention policy below
+        # ensures PVCs are also reclaimed on Prometheus CR deletion / scale-down.
+        persistentVolumeClaimRetentionPolicy:
+          whenDeleted: Delete
+          whenScaled: Retain
         storageSpec:
           volumeClaimTemplate:
             spec:
-              storageClassName: longhorn
+              storageClassName: openebs-hostpath
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:

@@ -1,0 +1,79 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone/cronjob-batch-v1.json
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pvc-reaper
+  namespace: monitoring
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          serviceAccountName: pvc-reaper
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+          containers:
+            - name: reaper
+              # kubectl + jq + yq, same minor as the cluster (1.36.x).
+              image: alpine/k8s:1.36.2
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: NAMESPACES
+                  value: monitoring
+              command:
+                - /bin/sh
+                - -ec
+                - |
+                  NS="${NAMESPACES:-monitoring}"
+
+                  # Nodes that are NOT Ready (covers Ready=False, Unknown, and
+                  # missing condition). These are the hosts whose local PVCs
+                  # can never be reattached and must be reaped.
+                  NOTREADY="$(kubectl get nodes -o json \
+                    | jq -r '[.items[]
+                        | select(((.status.conditions // [])
+                                  | map(select(.type=="Ready" and .status=="True"))
+                                  | length) == 0)
+                        | .metadata.name] | .[]')"
+
+                  if [ -z "$NOTREADY" ]; then
+                    echo "all nodes Ready; nothing to do"
+                    exit 0
+                  fi
+
+                  echo "not-ready nodes:"; echo "$NOTREADY"
+                  reaped=0
+
+                  for ns in $NS; do
+                    for pvc in $(kubectl -n "$ns" get pvc -o name 2>/dev/null); do
+                      pv="$(kubectl -n "$ns" get "$pvc" -o jsonpath='{.spec.volumeName}')"
+                      [ -z "$pv" ] && continue
+
+                      # Resolve the node a local PV (openebs-hostpath etc.) is
+                      # pinned to via its nodeAffinity. Networked PVs have no
+                      # such affinity and are skipped.
+                      node="$(kubectl get pv "$pv" -o json 2>/dev/null \
+                        | jq -r '.spec.nodeAffinity.required.nodeSelectorTerms[]?
+                                 .matchExpressions[]?
+                                 | select(.key=="kubernetes.io/hostname")
+                                 | .values[0]' 2>/dev/null | head -n1 || true)"
+                      [ -z "$node" ] && continue
+
+                      if echo "$NOTREADY" | grep -qFx "$node"; then
+                        echo "reaping $pvc in ns/$ns (pv=$pv pinned to not-ready node=$node)"
+                        kubectl -n "$ns" delete "$pvc" --ignore-not-found >/dev/null \
+                          && reaped=$((reaped+1))
+                      fi
+                    done
+                  done
+
+                  echo "done. reaped $reaped pvc(s)."
