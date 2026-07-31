@@ -68,7 +68,6 @@ spec:
               - |
                 set -e
                 echo "Starting database migration..."
-                echo "Database URL: postgresql://${INIT_POSTGRES_USER}:****@${INIT_POSTGRES_HOST}:5432/${INIT_POSTGRES_DBNAME}"
 
                 # Check if schema directory exists
                 if [ ! -d "/app/litellm-proxy-extras" ]; then
@@ -89,7 +88,10 @@ spec:
                     name: postgres-superuser
                     key: host
               - name: DATABASE_URL
-                value: "postgresql://$$(INIT_POSTGRES_USER):$$(INIT_POSTGRES_PASS)@$$(INIT_POSTGRES_HOST):5432/$$(INIT_POSTGRES_DBNAME)"
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm
+                    key: DATABASE_URL
               - name: USE_PRISMA_MIGRATE
                 value: "True"
             envFrom:
@@ -132,7 +134,10 @@ spec:
                     name: postgres-superuser
                     key: host
               - name: DATABASE_URL
-                value: "postgresql://$$(INIT_POSTGRES_USER):$$(INIT_POSTGRES_PASS)@$$(INIT_POSTGRES_HOST):5432/$$(INIT_POSTGRES_DBNAME)"
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm
+                    key: DATABASE_URL
               # SSO / OIDC
               - name: PROXY_BASE_URL
                 value: "https://ai.thekao.cloud"
