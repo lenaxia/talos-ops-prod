@@ -74,7 +74,7 @@ spec:
               HOME: /home/app
               TZ: ${TIMEZONE}
             envFrom:
-              - configMapRef:
+              - secretRef:
                   name: opengist-mcp
             resources:
               requests:
