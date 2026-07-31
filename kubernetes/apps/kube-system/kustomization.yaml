@@ -16,4 +16,5 @@ resources:
   - ./node-feature-discovery/ks.yaml
     #- ./nvidia-gpu-operator/ks.yaml
   - ./nvidia-device-plugin/ks.yaml
+  - ./nvidia-power-limit/ks.yaml
   - ./multus/ks.yaml
