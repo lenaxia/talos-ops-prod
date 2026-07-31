@@ -28,7 +28,7 @@ spec:
   values:
     defaultPodOptions:
       nodeSelector:
-        nvidia.com/gpu.present: "true"
+        feature.node.kubernetes.io/pci-10de.present: "true"
     controllers:
       main:
         type: daemonset
