@@ -1,0 +1,139 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app opengist-mcp
+  namespace: home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 4
+  uninstall:
+    keepHistory: false
+  values:
+    # ──────────────────────────────────────────────────────────────────────
+    # opengist-mcp — MCP server bridging LLM agents to Opengist
+    # ──────────────────────────────────────────────────────────────────────
+    # Architecture mirrors hass-mcp / kicad-mcp in this cluster:
+    #   supergateway (Node, HTTP/SSE on :8000)
+    #     └── stdio child: python3 -m opengist_mcp
+    #
+    # The ghcr.io/lenaxia/opengist-mcp image bundles supergateway and sets
+    # the stdio/port/healthEndpoint CMD, so no command/args override is
+    # needed.
+    #
+    # Network exposure: ClusterIP only. Reachable as
+    #   http://opengist-mcp.home.svc.cluster.local:8000/sse
+    # Security note: supergateway has no inbound auth (verified via --help).
+    # In-cluster access is the only protection. LiteLLM consumes this and
+    # is the documented client; LiteLLM itself is Authelia-protected.
+    # ──────────────────────────────────────────────────────────────────────
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+    controllers:
+      main:
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/opengist-mcp
+              tag: "0.1.0"
+              pullPolicy: IfNotPresent
+            env:
+              # Base URL of the in-cluster Opengist instance (REST API).
+              OPENGIST_URL: http://opengist.home.svc.cluster.local:6157
+              # HTTP timeout (seconds). Documented default is 30.
+              OPENGIST_TIMEOUT: "30"
+              # Writable HOME for any process cache/state.
+              HOME: /home/app
+              TZ: ${TIMEZONE}
+            envFrom:
+              - configMapRef:
+                  name: opengist-mcp
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8000
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 5
+    persistence:
+      # Writable HOME (image sets HOME=/home/app). Rebuilt on pod start.
+      home:
+        type: emptyDir
+        sizeLimit: 1Gi
+        globalMounts:
+          - path: /home/app
+      # supergateway writes session/transient state under /tmp.
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+    service:
+      main:
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 8000
+            targetPort: 8000
+            protocol: TCP
