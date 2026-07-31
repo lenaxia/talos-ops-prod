@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: opengist-mcp
+    namespace: home
+data:
+    # Opengist API token (og_...) for the service account the MCP server
+    # authenticates as. Generate one in Opengist under
+    #   User Settings -> Access Tokens
+    #
+    # NOTE: This is a ConfigMap placeholder so the manifest can be committed
+    # before a token exists. A real token is a credential — when you fill
+    # this in, convert it back to a SOPS-encrypted Secret (see
+    # README-LLM.md "CRITICAL RULES") and flip envFrom back to secretRef.
+    OPENGIST_TOKEN: PLACEHOLDER
