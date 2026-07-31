@@ -7,4 +7,3 @@ commonLabels:
 resources:
   - helm-release.yaml
   - secret.sops.yaml
-  - db-secret.sops.yaml
