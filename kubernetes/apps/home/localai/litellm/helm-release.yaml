@@ -50,9 +50,21 @@ spec:
                   secretKeyRef:
                     name: postgres-superuser
                     key: host
-            envFrom:
-              - secretRef:
-                  name: *appname
+              - name: INIT_POSTGRES_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_USER
+              - name: INIT_POSTGRES_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_PASS
+              - name: INIT_POSTGRES_DBNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_DBNAME
             image:
               repository: ghcr.io/onedr0p/postgres-init
               tag: '17.4'
@@ -87,16 +99,28 @@ spec:
                   secretKeyRef:
                     name: postgres-superuser
                     key: host
+              - name: INIT_POSTGRES_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_USER
+              - name: INIT_POSTGRES_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_PASS
+              - name: INIT_POSTGRES_DBNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_DBNAME
               - name: DATABASE_URL
                 valueFrom:
                   secretKeyRef:
-                    name: litellm-db
+                    name: *appname
                     key: DATABASE_URL
               - name: USE_PRISMA_MIGRATE
                 value: "True"
-            envFrom:
-              - secretRef:
-                  name: *appname
             resources:
               requests:
                 cpu: 50m
@@ -136,7 +160,7 @@ spec:
               - name: DATABASE_URL
                 valueFrom:
                   secretKeyRef:
-                    name: litellm-db
+                    name: *appname
                     key: DATABASE_URL
               # SSO / OIDC
               - name: PROXY_BASE_URL
