@@ -29,9 +29,14 @@ spec:
     controllers:
       app:
         type: deployment
+        replicas: 2
+        strategy: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 1
+          maxSurge: 1
         annotations:
           reloader.stakater.com/auto: 'true'
-          litellm-force-restart: "2026-01-31"
+          litellm-force-restart: "2026-07-31"
         initContainers:
           init-db:
             env:
