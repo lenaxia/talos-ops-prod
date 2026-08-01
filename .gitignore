@@ -1,6 +1,12 @@
 # Trash
 .DS_Store
 Thumbs.db
+# Binaries / generated artifacts (never belong in a GitOps repo)
+__pycache__/
+*.pyc
+*.sqlite
+*.sqlite3
+*.tar
 # k8s
 kubeconfig
 talosconfig
