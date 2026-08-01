@@ -34,6 +34,7 @@ spec:
                 - -ec
                 - |
                   NS="${NAMESPACES:-monitoring}"
+                  reaped=0
 
                   # Nodes that are NOT Ready (covers Ready=False, Unknown, and
                   # missing condition). These are the hosts whose local PVCs
@@ -45,16 +46,38 @@ spec:
                                   | length) == 0)
                         | .metadata.name] | .[]')"
 
-                  if [ -z "$NOTREADY" ]; then
-                    echo "all nodes Ready; nothing to do"
+                  # PVC claims whose consuming pod currently fails to mount or
+                  # attach a volume (FailedMount / FailedAttachVolume). This
+                  # catches node-local PVCs that lost their backing path on a
+                  # *Ready* node (e.g. host rebuilt, disk wiped) or that are
+                  # pinned to a node the pod can no longer be scheduled onto.
+                  # Only local (node-affinity) PVs are reaped below; networked
+                  # CSI volumes are portable and are deliberately left alone.
+                  STUCK_PVCS="$(kubectl get events -n "$NS" \
+                      --field-selector type=Warning -o json 2>/dev/null \
+                    | jq -r '[.items[]
+                        | select(.reason=="FailedMount"
+                                 or .reason=="FailedAttachVolume")
+                        | .involvedObject.name] | .[]' \
+                    | sort -u \
+                    | while IFS= read -r pod; do
+                        [ -z "$pod" ] && continue
+                        kubectl -n "$NS" get pod "$pod" \
+                          -o jsonpath='{range .spec.volumes[*]}{.persistentVolumeClaim.claimName}{"\n"}{end}' 2>/dev/null
+                      done \
+                    | grep -v '^$' | sort -u)"
+
+                  if [ -z "$NOTREADY" ] && [ -z "$STUCK_PVCS" ]; then
+                    echo "all nodes Ready and no stuck volume mounts; nothing to do"
                     exit 0
                   fi
 
-                  echo "not-ready nodes:"; echo "$NOTREADY"
-                  reaped=0
+                  [ -n "$NOTREADY" ] && { echo "not-ready nodes:"; echo "$NOTREADY"; }
+                  [ -n "$STUCK_PVCS" ] && { echo "pvc claims with stuck mounts:"; echo "$STUCK_PVCS"; }
 
                   for ns in $NS; do
                     for pvc in $(kubectl -n "$ns" get pvc -o name 2>/dev/null); do
+                      claim="$(kubectl -n "$ns" get "$pvc" -o jsonpath='{.metadata.name}')"
                       pv="$(kubectl -n "$ns" get "$pvc" -o jsonpath='{.spec.volumeName}')"
                       [ -z "$pv" ] && continue
 
@@ -68,8 +91,15 @@ spec:
                                  | .values[0]' 2>/dev/null | head -n1 || true)"
                       [ -z "$node" ] && continue
 
-                      if echo "$NOTREADY" | grep -qFx "$node"; then
+                      reap=0
+                      if [ -n "$NOTREADY" ] && echo "$NOTREADY" | grep -qFx "$node"; then
                         echo "reaping $pvc in ns/$ns (pv=$pv pinned to not-ready node=$node)"
+                        reap=1
+                      elif [ -n "$STUCK_PVCS" ] && echo "$STUCK_PVCS" | grep -qFx "$claim"; then
+                        echo "reaping $pvc in ns/$ns (pv=$pv on node=$node has stuck volume mount)"
+                        reap=1
+                      fi
+                      if [ "$reap" = "1" ]; then
                         kubectl -n "$ns" delete "$pvc" --ignore-not-found >/dev/null \
                           && reaped=$((reaped+1))
                       fi
