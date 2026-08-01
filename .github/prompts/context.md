@@ -69,8 +69,8 @@ talos-ops-prod/
 
     bootstrap/                         talhelper configs + initial helmfile (used only at cluster bootstrap)
     .taskfiles/                        Task runner definitions
-    docs/                              operational notes and upgrade logs
-    hack/                              one-off admin manifests (restore jobs, migrations)
+    docs/                              operational runbooks and worklogs
+    hack/                              one-off admin manifests (restore jobs)
     scripts/                           shell/python helpers
     .sops.yaml                         SOPS encryption config
     Taskfile.yaml                      top-level Task runner entrypoint
