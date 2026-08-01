@@ -192,7 +192,7 @@ scripts/
   0006_session_worklog.md    Session 6: DB restore, test suite, schema analysis
   0007_adversarial_review_fixes.md  Session 7: critical bug fixes
   0008_photo_migration_plan.md      Session 8: photo migration plan (APPROVED)
-  0009_session_worklog.md    This file
+  worklog-20260508-photo-upload-investigation-and-plan.md    This file
 ```
 
 **Test count: 158/158 passing**
