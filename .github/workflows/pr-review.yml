@@ -22,7 +22,7 @@ jobs:
   review:
     # Skip renovate[bot] PRs — handled by renovate-analysis.yml
     if: github.event.pull_request.user.login != 'renovate[bot]'
-    uses: lenaxia/ai-workflows/.github/workflows/pr-review.yml@v0.2.0
+    uses: lenaxia/ai-workflows/.github/workflows/pr-review.yml@v0.2.2
     secrets: inherit
     with:
       version: v0.2.0
