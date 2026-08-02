@@ -261,8 +261,8 @@ spec:
     # Authelia is registered as the IdP for the "thekaocloud" org — see the
     # llmsafespaces OIDC client in networking/authelia/app/helm-release.yaml.
     oidc:
-      redirectBaseUrl: "https://api.safespaces.dev"
-      frontendRedirectUrl: "https://chat.safespaces.dev"
+      redirectBaseUrl: "https://api.${SECRET_SAFESPACES_DOMAIN}"
+      frontendRedirectUrl: "https://chat.${SECRET_SAFESPACES_DOMAIN}"
 
     # ── Subdomain routing ───────────────────────────────────────────────────
     # Disabled — single-host frontend per design call. If we ever want
