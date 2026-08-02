@@ -422,14 +422,15 @@ spec:
                 supports_response_schema: true
                 supports_vision: false
             # GLM-5.2: 1M token context window (source: docs.z.ai)
-            # use_chat_completions_api forces the /responses -> /chat/completions
-            # bridge for OpenAI-compatible backends that lack a /responses endpoint.
+            # Uses the native zai provider (not openai/) so that Anthropic
+            # /v1/messages requests with thinking do NOT get bridged to the
+            # OpenAI /responses API (which Z.AI doesn't expose); the zai
+            # provider routes to /chat/completions instead.
             - model_name: glm-5.2
               litellm_params:
-                model: openai/glm-5.2
+                model: zai/glm-5.2
                 api_base: https://api.z.ai/api/coding/paas/v4
                 api_key: os.environ/ZAI_API_KEY
-                use_chat_completions_api: true
               model_info:
                 max_input_tokens: 1000000
                 max_tokens: 131072
@@ -439,14 +440,12 @@ spec:
                 supports_vision: false
             # Claude Code bait: exposes "claude-opus-4-5" as a model_name so that
             # claude code selects it, but the actual backend is Z.AI glm-5.2.
-            # use_chat_completions_api forces the /responses -> /chat/completions
-            # bridge for OpenAI-compatible backends that lack a /responses endpoint.
+            # Uses the native zai provider for the same reasons as glm-5.2 above.
             - model_name: claude-opus-4-5
               litellm_params:
-                model: openai/glm-5.2
+                model: zai/glm-5.2
                 api_base: https://api.z.ai/api/coding/paas/v4
                 api_key: os.environ/ZAI_API_KEY
-                use_chat_completions_api: true
               model_info:
                 max_input_tokens: 1000000
                 max_tokens: 131072
