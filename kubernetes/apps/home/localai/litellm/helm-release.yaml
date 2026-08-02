@@ -147,6 +147,12 @@ spec:
                 value: "PRODUCTION"
               - name: LITELLM_LOG
                 value: "ERROR"
+              # Route openai/* models through /chat/completions (not /responses)
+              # when called via the Anthropic /v1/messages endpoint, so that
+              # OpenAI-compatible backends without a /responses API (e.g. Z.AI
+              # GLM) work as Claude Code targets.
+              - name: LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES
+                value: "true"
               # Database Migration Settings - CRITICAL: Prevent pods from running migrations
               - name: DISABLE_SCHEMA_UPDATE
                 value: "true"
@@ -242,11 +248,6 @@ spec:
               request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds
               set_verbose: False      # Switch off Debug Logging for production
               json_logs: true         # Get logs in json format for better parsing
-              # Route openai/* models through /chat/completions (not /responses)
-              # when called via the Anthropic /v1/messages endpoint, so that
-              # OpenAI-compatible backends without a /responses API (e.g. Z.AI
-              # GLM) work as Claude Code targets.
-              use_chat_completions_url_for_anthropic_messages: true
 
             general_settings:
               master_key: os.environ/LITELLM_MASTER_KEY  # Use environment variable for security
