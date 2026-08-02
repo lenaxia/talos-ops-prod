@@ -17,8 +17,9 @@ metadata:
   namespace: databases
 spec:
   instances: 3
-  # CNPG standard image — includes pgvector, PGAudit, Postgres Failover Slots
-  imageName: ghcr.io/cloudnative-pg/postgresql:16.8-standard-bookworm
+  # Plain CNPG image — ships pgvector + barman-cloud (standard-bookworm is
+  # missing barman-cloud binaries, which broke all backups for 136 days).
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.8
   primaryUpdateStrategy: unsupervised
   storage:
     size: 20Gi
