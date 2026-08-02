@@ -252,6 +252,18 @@ spec:
     # router-only stage — no fleet provisioned yet).
     inferenceRelayURL: ""
 
+    # ── Per-org OIDC SSO plumbing ────────────────────────────────────────────
+    # Required for SSO: the API builds callback URLs as
+    #   {redirectBaseUrl}/api/v1/auth/sso/:orgSlug/callback
+    # Without this the start/callback endpoints return config_error (F11).
+    # The org-level IdP config (discovery URL, client ID/secret) is set per-org
+    # via the API and stored encrypted in the org_sso_configs table.
+    # Authelia is registered as the IdP for the "thekaocloud" org — see the
+    # llmsafespaces OIDC client in networking/authelia/app/helm-release.yaml.
+    oidc:
+      redirectBaseUrl: "https://api.${SECRET_SAFESPACES_DOMAIN}"
+      frontendRedirectUrl: "https://chat.${SECRET_SAFESPACES_DOMAIN}"
+
     # ── Subdomain routing ───────────────────────────────────────────────────
     # Disabled — single-host frontend per design call. If we ever want
     # per-org SSO subdomain routing, flip this on and add a wildcard cert.
