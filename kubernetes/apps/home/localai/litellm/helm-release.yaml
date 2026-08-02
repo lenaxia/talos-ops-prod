@@ -422,11 +422,14 @@ spec:
                 supports_response_schema: true
                 supports_vision: false
             # GLM-5.2: 1M token context window (source: docs.z.ai)
+            # use_chat_completions_api forces the /responses -> /chat/completions
+            # bridge for OpenAI-compatible backends that lack a /responses endpoint.
             - model_name: glm-5.2
               litellm_params:
                 model: openai/glm-5.2
                 api_base: https://api.z.ai/api/coding/paas/v4
                 api_key: os.environ/ZAI_API_KEY
+                use_chat_completions_api: true
               model_info:
                 max_input_tokens: 1000000
                 max_tokens: 131072
@@ -436,11 +439,14 @@ spec:
                 supports_vision: false
             # Claude Code bait: exposes "claude-opus-4-5" as a model_name so that
             # claude code selects it, but the actual backend is Z.AI glm-5.2.
+            # use_chat_completions_api forces the /responses -> /chat/completions
+            # bridge for OpenAI-compatible backends that lack a /responses endpoint.
             - model_name: claude-opus-4-5
               litellm_params:
                 model: openai/glm-5.2
                 api_base: https://api.z.ai/api/coding/paas/v4
                 api_key: os.environ/ZAI_API_KEY
+                use_chat_completions_api: true
               model_info:
                 max_input_tokens: 1000000
                 max_tokens: 131072
