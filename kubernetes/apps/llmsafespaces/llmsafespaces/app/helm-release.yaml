@@ -17,8 +17,8 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (v0.7.2). Rationale: if we ever move a
-      # is now pinned to a semver tag (v0.7.2). Rationale: if we ever move a
+      # is now pinned to a semver tag (v0.8.0). Rationale: if we ever move a
+      # is now pinned to a semver tag (v0.8.0). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -88,8 +88,8 @@ spec:
     # (upstream v0.2.0+) the project cuts real semver releases and CI
     # publishes `<major>.<minor>.<patch>` OCI tags alongside the immutable
     # `ts-<unix>` tags. We pin to the semver — the GitRepository above is
-    # pinned to the matching `tag: v0.7.2`, so the chart-source tree and
-    # pinned to the matching `tag: v0.7.2`, so the chart-source tree and
+    # pinned to the matching `tag: v0.8.0`, so the chart-source tree and
+    # pinned to the matching `tag: v0.8.0`, so the chart-source tree and
     # the deployed images roll atomically. To upgrade, bump both the
     # GitRepository ref and every `image.tag` below in the same commit.
     # To verify a semver tag is present on ghcr:
@@ -98,11 +98,11 @@ spec:
     #     -H "Accept: application/vnd.oci.image.index.v1+json" \
     #     -o /dev/null -w "%{http_code}\n" \
     #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/0.5.0
-    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/0.7.0
+    #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/0.8.0
     api:
       replicaCount: 2
       image:
-        tag: "0.7.2"
+        tag: "0.8.0"
       config:
         security:
           allowedOrigins:
@@ -113,7 +113,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.7.2"
+        tag: "0.8.0"
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -132,7 +132,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.7.2"
+            tag: "0.8.0"
       freeModelsRefresher:
         enabled: false
 
@@ -200,10 +200,10 @@ spec:
       # platform rolls atomically because kind/slug wire format, CRD field
       # `workspace.status.userCredsPresent`, and DB migrations must all be
       # in lockstep. The upstream release-tag build produces `frontend:0.5.0`
-      # in lockstep. The upstream release-tag build produces `frontend:0.7.0`
+      # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
       # alongside the other four images.
       image:
-        tag: "0.7.2"
+        tag: "0.8.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -218,11 +218,11 @@ spec:
     # The chart seeds a `base` RuntimeEnvironment CR pointing at the base
     # workspace runtime image. Same semver pinning as api/controller/etc —
     # release-tag builds publish `base:0.5.0` alongside the other four.
-    # release-tag builds publish `base:0.7.0` alongside the other four.
+    # release-tag builds publish `base:0.8.0` alongside the other four.
     runtimeEnvironments:
       base:
         image:
-          tag: "0.7.2"
+          tag: "0.8.0"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart
@@ -239,6 +239,36 @@ spec:
     workspace:
       defaultStorageClass: longhorn-2r
 
+    # ── Image Factory (design/0046, v0.8.0) ────────────────────────────────
+    # The image factory lets users create custom workspace images by
+    # selecting extensions from an operator-curated catalog. The API
+    # renders a Dockerfile and dispatches a GitHub Actions build.
+    #
+    # To enable builds: create a Secret with a GitHub PAT (needs repo +
+    # workflow scopes on the LLMSafeSpaces repo) and reference it below.
+    # Without the token, POST /configs returns 503 (graceful degradation —
+    # catalog and settings page still work for browsing).
+    #
+    #   kubectl -n llmsafespaces create secret generic image-factory-gh-token \
+    #     --from-literal=gh-token='ghp_xxx'
+    #
+    # The LLM explainer key is optional — without it, build failures use
+    # a fallback string instead of an LLM-generated explanation.
+    imageFactory:
+      imageRepo: "ghcr.io/lenaxia/llmsafespaces/ws"
+      callbackURL: "/internal/image-factory"
+      ghDispatcher:
+        owner: "lenaxia"
+        repo: "LLMSafeSpaces"
+        workflowId: "image-build.yml"
+        ref: "main"
+        secretKeyRef:
+          name: "image-factory-gh-token"
+          key: "gh-token"
+      llmExplainer:
+        baseUrl: ""
+        model: ""
+
     # ── Inference relay ─────────────────────────────────────────────────────
     # The chart's DEFAULT inferenceRelayURL is `https://relay.safespaces.dev`
     # — that's the chart author's own CF Worker, NOT ours. Override to empty
@@ -251,18 +281,6 @@ spec:
     # backends and free-model inference will 503 (acceptable for the
     # router-only stage — no fleet provisioned yet).
     inferenceRelayURL: ""
-
-    # ── Per-org OIDC SSO plumbing ────────────────────────────────────────────
-    # Required for SSO: the API builds callback URLs as
-    #   {redirectBaseUrl}/api/v1/auth/sso/:orgSlug/callback
-    # Without this the start/callback endpoints return config_error (F11).
-    # The org-level IdP config (discovery URL, client ID/secret) is set per-org
-    # via the API and stored encrypted in the org_sso_configs table.
-    # Authelia is registered as the IdP for the "thekaocloud" org — see the
-    # llmsafespaces OIDC client in networking/authelia/app/helm-release.yaml.
-    oidc:
-      redirectBaseUrl: "https://api.${SECRET_SAFESPACES_DOMAIN}"
-      frontendRedirectUrl: "https://chat.${SECRET_SAFESPACES_DOMAIN}"
 
     # ── Subdomain routing ───────────────────────────────────────────────────
     # Disabled — single-host frontend per design call. If we ever want
