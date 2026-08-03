@@ -32,8 +32,8 @@ spec:
             name: gokore-portal
             image:
               repository: ghcr.io/lenaxia/gokore-portal
-              tag: latest
-              pullPolicy: Always
+              tag: v1.2.0
+              pullPolicy: IfNotPresent
             args:
               - -config
               - /config/config.yaml
