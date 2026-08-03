@@ -1,538 +1,409 @@
 #!/usr/bin/env python3
 """
-match_faces.py — Synology Photos → Immich face name migration
+match_faces.py — Match Synology named persons to Immich people via IoU
 
-For each named person in the Synology synofoto database, this script:
-  1. Finds all photo filenames associated with that person via
-     many_unit_has_many_person → unit (the curated named-person mapping)
-  2. Looks up the corresponding Immich asset IDs by originalFileName,
-     scoped to the correct Immich user
-  3. Counts which Immich person_id appears most across face records
-     for those assets (majority vote)
-  4. If confidence >= threshold: assigns the name via the Immich REST API
-  5. Otherwise: writes to unmatched.csv for manual review
+For each Synology named person:
+1. Get all units assigned to this person
+2. For each unit bridged to an immich asset, get immich's detected faces
+3. Match via bounding-box IoU (syno normalized → immich pixel space)
+4. Majority vote → determine the winning immich personId
+5. Auto-assign name if confident, otherwise flag for review
 
-Darcy (Synology id_user 3 and 7) is merged into one Immich account.
-Duplicate person names across the two accounts are combined before voting.
+Idempotent: ON CONFLICT DO NOTHING on syno_face_id PK.
+Re-runnable: skips already-matched faces.
 
-Usage:
-    python3 match_faces.py --config config.yaml [--dry-run] [--user chuni]
-                           [--confidence 0.5] [--person "Name"]
-
-Requirements:
-    pip install -r requirements.txt
+Env vars:
+  SYNO_DB_HOST, SYNO_DB_NAME, IMMICH_DB_HOST, IMMICH_DB_NAME
+  PGUSER, PGPASSWORD
+  IMMICH_URL          (http://immich-server.media.svc.cluster.local:2283)
+  DRY_RUN             (default: false)
+  IOU_THRESHOLD       (default: 0.3)
+  MIN_VOTES           (default: 5)
+  MARGIN_RATIO        (default: 2.0 — top must have >= ratio × runner-up)
+  TARGET_PERSON       (optional: only process this syno person name)
 """
 
-import argparse
-import csv
+import json
 import logging
+import os
 import sys
-from collections import defaultdict
-from datetime import datetime
-from pathlib import Path
+import time
+from collections import Counter, defaultdict
 
 import psycopg2
 import psycopg2.extras
 import requests
-import yaml
-
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(levelname)-8s %(message)s",
+    format="%(asctime)s %(levelname)-7s %(message)s",
     datefmt="%H:%M:%S",
 )
-log = logging.getLogger(__name__)
+log = logging.getLogger("face-match")
 
 
-# ---------------------------------------------------------------------------
-# Config loading
-# ---------------------------------------------------------------------------
+SYNO_TO_IMMICH = {
+    2: "4bc1e174-e8e7-4f93-9a9f-20422a2383c8",
+    3: "dfe560ec-b20a-46b1-8e72-bd745441b353",
+    5: "3de3d105-f5f0-4156-bbca-91857f21dcc8",
+    7: "dfe560ec-b20a-46b1-8e72-bd745441b353",
+    9: "8609dd3f-e548-4d56-b474-b1431193dc35",
+    12: "3de3d105-f5f0-4156-bbca-91857f21dcc8",
+}
 
 
-def load_config(path: str) -> dict:
-    with open(path) as f:
-        cfg = yaml.safe_load(f)
-
-    required = ["syno_db", "immich_db", "immich_url", "users"]
-    for key in required:
-        if key not in cfg:
-            raise ValueError(f"config.yaml missing required key: {key}")
-
-    for i, u in enumerate(cfg["users"]):
-        for key in [
-            "immich_username",
-            "immich_api_key",
-            "immich_user_id",
-            "syno_user_ids",
-        ]:
-            if key not in u:
-                raise ValueError(f"users[{i}] missing required key: {key}")
-
-    return cfg
-
-
-# ---------------------------------------------------------------------------
-# Database helpers
-# ---------------------------------------------------------------------------
-
-
-def syno_connect(dsn: str):
+def connect(host, dbname, user, password):
+    dsn = f"host={host} dbname={dbname} user={user} password={password}"
     conn = psycopg2.connect(dsn)
-    conn.set_session(readonly=True, autocommit=True)
+    conn.set_session(autocommit=True)
     return conn
 
 
-def immich_connect(dsn: str):
-    conn = psycopg2.connect(dsn)
-    conn.set_session(readonly=True, autocommit=True)
-    return conn
+def parse_syno_bbox(bbox_json):
+    if isinstance(bbox_json, str):
+        bbox_json = json.loads(bbox_json)
+    tl = bbox_json.get("top_left", {})
+    br = bbox_json.get("bottom_right", {})
+    return tl.get("x", 0), tl.get("y", 0), br.get("x", 0), br.get("y", 0)
 
 
-def fetch_named_persons(syno_conn, syno_user_ids: list[int]) -> dict:
-    """
-    Returns a dict: {person_name: [filename, ...]}
-
-    Source: many_unit_has_many_person (curated named-person→photo mapping)
-    joining unit (for filename) and person (for name).
-
-    For merged users (e.g. darcy local + LDAP), filenames from both
-    id_user values are combined under the same person name.
-    """
-    placeholders = ",".join(["%s"] * len(syno_user_ids))
-    sql = f"""
-        SELECT
-            p.name        AS person_name,
-            u.filename    AS filename,
-            m.id_user     AS syno_user_id
-        FROM many_unit_has_many_person m
-        JOIN unit   u ON u.id   = m.id_unit
-        JOIN person p ON p.id   = m.id_person
-        WHERE m.id_user IN ({placeholders})
-          AND p.name IS NOT NULL
-          AND p.name != ''
-        ORDER BY p.name, u.filename
-    """
-    with syno_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(sql, syno_user_ids)
-        rows = cur.fetchall()
-
-    # Group filenames by person name (merging across syno_user_ids)
-    persons: dict[str, list[str]] = defaultdict(list)
-    for row in rows:
-        persons[row["person_name"]].append(row["filename"])
-
-    # Deduplicate filenames within each person (in case same file appears
-    # under both local and LDAP accounts for merged users like darcy)
-    return {name: list(dict.fromkeys(fnames)) for name, fnames in persons.items()}
+def compute_iou(syno_bbox, imm_face):
+    sx1n, sy1n, sx2n, sy2n = parse_syno_bbox(syno_bbox)
+    w = imm_face["imageWidth"]
+    h = imm_face["imageHeight"]
+    if w <= 0 or h <= 0:
+        return 0.0
+    sx1, sy1, sx2, sy2 = sx1n * w, sy1n * h, sx2n * w, sy2n * h
+    ix1, iy1 = imm_face["boundingBoxX1"], imm_face["boundingBoxY1"]
+    ix2, iy2 = imm_face["boundingBoxX2"], imm_face["boundingBoxY2"]
+    xi1, yi1 = max(sx1, ix1), max(sy1, iy1)
+    xi2, yi2 = min(sx2, ix2), min(sy2, iy2)
+    inter = max(0, xi2 - xi1) * max(0, yi2 - yi1)
+    area_s = (sx2 - sx1) * (sy2 - sy1)
+    area_i = (ix2 - ix1) * (iy2 - iy1)
+    union = area_s + area_i - inter
+    return inter / union if union > 0 else 0.0
 
 
-def fetch_immich_asset_ids(
-    immich_conn, immich_user_id: str, filenames: list[str]
-) -> dict[str, str]:
-    """
-    Returns {filename: asset_id} for all filenames that exist in Immich
-    for the given user. Scoped by ownerId to avoid cross-user matches.
-    """
-    if not filenames:
+def get_named_persons(syno_conn, target_name=None):
+    with syno_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        if target_name:
+            cur.execute(
+                """
+                SELECT p.id AS person_id, p.name, p.id_user, m.id_unit
+                FROM person p
+                JOIN many_unit_has_many_person m ON m.id_person = p.id
+                WHERE p.name IS NOT NULL AND p.name <> ''
+                  AND p.id_user = ANY(%s) AND p.name = %s
+                ORDER BY p.id
+            """,
+                (list(SYNO_TO_IMMICH.keys()), target_name),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT p.id AS person_id, p.name, p.id_user, m.id_unit
+                FROM person p
+                JOIN many_unit_has_many_person m ON m.id_person = p.id
+                WHERE p.name IS NOT NULL AND p.name <> ''
+                  AND p.id_user = ANY(%s)
+                ORDER BY p.id
+            """,
+                (list(SYNO_TO_IMMICH.keys()),),
+            )
+        person_units = defaultdict(
+            lambda: {"name": "", "id_user": None, "units": set()}
+        )
+        for row in cur.fetchall():
+            pid = row["person_id"]
+            person_units[pid]["name"] = row["name"]
+            person_units[pid]["id_user"] = row["id_user"]
+            person_units[pid]["units"].add(row["id_unit"])
+        return person_units
+
+
+def get_syno_faces_for_units(syno_conn, unit_ids, person_id):
+    if not unit_ids:
         return {}
-
-    sql = """
-        SELECT "originalFileName", id
-        FROM asset
-        WHERE "ownerId" = %s
-          AND "originalFileName" = ANY(%s)
-          AND "deletedAt" IS NULL
-    """
-    with immich_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(sql, (immich_user_id, filenames))
-        rows = cur.fetchall()
-
-    return {row["originalFileName"]: str(row["id"]) for row in rows}
+    with syno_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute(
+            """
+            SELECT id AS face_id, id_unit, bounding_box
+            FROM face WHERE id_person = %s AND id_unit = ANY(%s)
+        """,
+            (person_id, list(unit_ids)),
+        )
+        return {row["face_id"]: row for row in cur.fetchall()}
 
 
-def fetch_dominant_person(
-    immich_conn, asset_ids: list[str]
-) -> tuple[str | None, int, int]:
-    """
-    Among the Immich face records for the given asset IDs, find the
-    person_id that appears most frequently (majority vote).
-
-    Returns (person_id, vote_count, total_faces_with_person).
-    person_id is None if no faces with a person assignment were found.
-    """
+def get_immich_faces_for_assets(immich_conn, asset_ids):
     if not asset_ids:
-        return None, 0, 0
-
-    sql = """
-        SELECT "personId", COUNT(*) AS cnt
-        FROM face
-        WHERE "assetId" = ANY(%s)
-          AND "personId" IS NOT NULL
-        GROUP BY "personId"
-        ORDER BY cnt DESC
-        LIMIT 1
-    """
-    with immich_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(sql, (asset_ids,))
-        row = cur.fetchone()
-
-    if not row:
-        return None, 0, 0
-
-    # Also get the total count of faces-with-person for confidence calculation
-    sql_total = """
-        SELECT COUNT(*) AS total
-        FROM face
-        WHERE "assetId" = ANY(%s)
-          AND "personId" IS NOT NULL
-    """
-    with immich_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(sql_total, (asset_ids,))
-        total_row = cur.fetchone()
-
-    total = int(total_row["total"]) if total_row else 0
-    return str(row["personId"]), int(row["cnt"]), total
-
-
-# ---------------------------------------------------------------------------
-# Immich API helpers
-# ---------------------------------------------------------------------------
-
-
-def immich_get_person(immich_url: str, api_key: str, person_id: str) -> dict | None:
-    """Fetch a person record from the Immich API."""
-    resp = requests.get(
-        f"{immich_url}/api/people/{person_id}",
-        headers={"x-api-key": api_key},
-        timeout=10,
-    )
-    if resp.status_code == 404:
-        return None
-    resp.raise_for_status()
-    return resp.json()
-
-
-def immich_set_person_name(
-    immich_url: str, api_key: str, person_id: str, name: str, dry_run: bool
-) -> bool:
-    """Assign a name to an Immich person record via the REST API."""
-    if dry_run:
-        log.info("  [DRY-RUN] Would PATCH /api/people/%s name=%r", person_id, name)
-        return True
-
-    resp = requests.put(
-        f"{immich_url}/api/people/{person_id}",
-        headers={"x-api-key": api_key, "Content-Type": "application/json"},
-        json={"name": name},
-        timeout=10,
-    )
-    resp.raise_for_status()
-    return True
-
-
-# ---------------------------------------------------------------------------
-# Core migration logic
-# ---------------------------------------------------------------------------
-
-
-def migrate_user(
-    syno_conn,
-    immich_conn,
-    user_cfg: dict,
-    immich_url: str,
-    confidence_threshold: float,
-    dry_run: bool,
-    filter_person: str | None,
-    matched_writer,
-    unmatched_writer,
-) -> tuple[int, int]:
-    """
-    Migrate face names for one logical Immich user.
-    Returns (matched_count, unmatched_count).
-    """
-    username = user_cfg["immich_username"]
-    immich_user_id = user_cfg["immich_user_id"]
-    api_key = user_cfg["immich_api_key"]
-    syno_user_ids = user_cfg["syno_user_ids"]
-
-    log.info("=== Processing user: %s (syno_ids=%s) ===", username, syno_user_ids)
-
-    # Step 1: Get named persons from Synology
-    persons = fetch_named_persons(syno_conn, syno_user_ids)
-    if not persons:
-        log.info("  No named persons found in Synology for this user — skipping.")
-        return 0, 0
-
-    log.info("  Found %d named persons in Synology.", len(persons))
-
-    if filter_person:
-        if filter_person not in persons:
-            log.warning("  Person %r not found for user %s", filter_person, username)
-            return 0, 0
-        persons = {filter_person: persons[filter_person]}
-        log.info("  Filtered to person: %r", filter_person)
-
-    matched = 0
-    unmatched = 0
-
-    for person_name, filenames in sorted(persons.items()):
-        log.info("  Person: %r  (%d photos in Synology)", person_name, len(filenames))
-
-        # Step 2: Find Immich asset IDs by filename
-        filename_to_asset = fetch_immich_asset_ids(
-            immich_conn, immich_user_id, filenames
+        return defaultdict(list)
+    with immich_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute(
+            """
+            SELECT id, "assetId", "personId",
+                   "boundingBoxX1", "boundingBoxY1",
+                   "boundingBoxX2", "boundingBoxY2",
+                   "imageWidth", "imageHeight"
+            FROM asset_face
+            WHERE "assetId" = ANY(%s) AND "deletedAt" IS NULL
+        """,
+            (list(asset_ids),),
         )
-        asset_ids = list(filename_to_asset.values())
+        faces_by_asset = defaultdict(list)
+        for row in cur.fetchall():
+            faces_by_asset[row["assetId"]].append(row)
+        return faces_by_asset
 
-        if not asset_ids:
-            reason = "no_assets_in_immich"
-            log.warning(
-                "    -> UNMATCHED (%s): none of %d filenames found in Immich",
-                reason,
-                len(filenames),
-            )
-            unmatched_writer.writerow(
-                {
-                    "username": username,
-                    "person_name": person_name,
-                    "syno_photo_count": len(filenames),
-                    "immich_assets_found": 0,
-                    "immich_person_id": "",
-                    "confidence": 0,
-                    "reason": reason,
-                }
-            )
-            unmatched += 1
-            continue
 
-        log.info(
-            "    Matched %d/%d filenames to Immich assets.",
-            len(asset_ids),
-            len(filenames),
+def get_bridged_assets(immich_conn, unit_ids):
+    if not unit_ids:
+        return {}
+    with immich_conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT syno_unit_id, immich_asset_id
+            FROM syno_photo_migration WHERE syno_unit_id = ANY(%s)
+        """,
+            (list(unit_ids),),
         )
+        return {row[0]: row[1] for row in cur.fetchall()}
 
-        # Step 3: Vote on Immich person_id across those assets
-        person_id, vote_count, total_faces = fetch_dominant_person(
-            immich_conn, asset_ids
+
+def get_already_matched(immich_conn):
+    with immich_conn.cursor() as cur:
+        cur.execute("SELECT syno_face_id FROM syno_face_migration")
+        return {row[0] for row in cur.fetchall()}
+
+
+def insert_face_match(immich_conn, rows):
+    if not rows:
+        return 0
+    with immich_conn.cursor() as cur:
+        psycopg2.extras.execute_values(
+            cur,
+            """
+            INSERT INTO syno_face_migration
+                (syno_face_id, immich_face_id, immich_asset_id,
+                 immich_person_id, iou_score, syno_person_id)
+            VALUES %s
+            ON CONFLICT (syno_face_id) DO NOTHING
+            """,
+            rows,
+            page_size=500,
         )
+        return cur.rowcount
 
-        if not person_id:
-            reason = "no_faces_detected_in_immich"
-            log.warning(
-                "    -> UNMATCHED (%s): Immich has no face records for these assets",
-                reason,
-            )
-            unmatched_writer.writerow(
-                {
-                    "username": username,
-                    "person_name": person_name,
-                    "syno_photo_count": len(filenames),
-                    "immich_assets_found": len(asset_ids),
-                    "immich_person_id": "",
-                    "confidence": 0,
-                    "reason": reason,
-                }
-            )
-            unmatched += 1
-            continue
 
-        confidence = vote_count / total_faces if total_faces > 0 else 0
-        log.info(
-            "    Top Immich person: %s  votes=%d/%d  confidence=%.1f%%",
-            person_id,
-            vote_count,
-            total_faces,
-            confidence * 100,
+def assign_person_name(api_key, immich_url, person_id, name):
+    try:
+        resp = requests.get(
+            f"{immich_url}/api/people/{person_id}",
+            headers={"x-api-key": api_key},
+            timeout=10,
         )
-
-        if confidence < confidence_threshold:
-            reason = f"low_confidence_{confidence:.2f}"
-            log.warning(
-                "    -> UNMATCHED (%s): below threshold %.0f%%",
-                reason,
-                confidence_threshold * 100,
-            )
-            unmatched_writer.writerow(
-                {
-                    "username": username,
-                    "person_name": person_name,
-                    "syno_photo_count": len(filenames),
-                    "immich_assets_found": len(asset_ids),
-                    "immich_person_id": person_id,
-                    "confidence": f"{confidence:.2f}",
-                    "reason": reason,
-                }
-            )
-            unmatched += 1
-            continue
-
-        # Step 4: Check if Immich person already has a name
-        existing = immich_get_person(immich_url, api_key, person_id)
-        if existing and existing.get("name") and existing["name"] != "":
-            log.info(
-                "    Immich person already named %r — skipping to avoid overwrite.",
-                existing["name"],
-            )
-            matched_writer.writerow(
-                {
-                    "username": username,
-                    "person_name": person_name,
-                    "immich_person_id": person_id,
-                    "confidence": f"{confidence:.2f}",
-                    "vote_count": vote_count,
-                    "total_faces": total_faces,
-                    "action": "skipped_already_named",
-                    "existing_name": existing["name"],
-                }
-            )
-            matched += 1
-            continue
-
-        # Step 5: Assign the name
-        try:
-            immich_set_person_name(immich_url, api_key, person_id, person_name, dry_run)
-            action = "dry_run" if dry_run else "named"
-            log.info(
-                "    -> MATCHED: assigned name %r to person %s", person_name, person_id
-            )
-        except requests.HTTPError as e:
-            log.error("    -> API ERROR for person %s: %s", person_id, e)
-            action = f"api_error:{e}"
-
-        matched_writer.writerow(
-            {
-                "username": username,
-                "person_name": person_name,
-                "immich_person_id": person_id,
-                "confidence": f"{confidence:.2f}",
-                "vote_count": vote_count,
-                "total_faces": total_faces,
-                "action": action,
-                "existing_name": "",
-            }
+        if resp.status_code != 200:
+            return False, None
+        old_name = resp.json().get("name", "")
+        if old_name and old_name != name:
+            return False, old_name
+        resp = requests.put(
+            f"{immich_url}/api/people/{person_id}",
+            headers={"x-api-key": api_key},
+            json={"name": name},
+            timeout=10,
         )
-        matched += 1
-
-    return matched, unmatched
-
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
+        return resp.status_code == 200, old_name
+    except requests.exceptions.RequestException as e:
+        log.error("  API error: %s", str(e)[:200])
+        return False, None
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Migrate Synology Photos face names into Immich"
+    dry_run = os.environ.get("DRY_RUN", "false").lower() == "true"
+    iou_threshold = float(os.environ.get("IOU_THRESHOLD", "0.3"))
+    min_votes = int(os.environ.get("MIN_VOTES", "5"))
+    margin_ratio = float(os.environ.get("MARGIN_RATIO", "2.0"))
+    target_person = os.environ.get("TARGET_PERSON")
+    user = os.environ["PGUSER"]
+    password = os.environ["PGPASSWORD"]
+    immich_url = os.environ["IMMICH_URL"].rstrip("/")
+    api_key = os.environ.get("ADMIN_API_KEY", "")
+
+    if dry_run:
+        log.info("*** DRY-RUN MODE — no DB writes, no name assignments ***")
+
+    syno_conn = connect(
+        os.environ["SYNO_DB_HOST"], os.environ["SYNO_DB_NAME"], user, password
     )
-    parser.add_argument("--config", required=True, help="Path to config.yaml")
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Print actions without making API calls"
+    immich_conn = connect(
+        os.environ["IMMICH_DB_HOST"], os.environ["IMMICH_DB_NAME"], user, password
     )
-    parser.add_argument(
-        "--user", default=None, help="Process only this Immich username"
-    )
-    parser.add_argument(
-        "--person",
-        default=None,
-        help="Process only this person name (within the filtered user)",
-    )
-    parser.add_argument(
-        "--confidence",
-        type=float,
-        default=0.5,
-        help="Minimum confidence threshold 0.0-1.0 (default: 0.5)",
-    )
-    args = parser.parse_args()
 
-    cfg = load_config(args.config)
+    persons = get_named_persons(syno_conn, target_person)
+    log.info("Loaded %d named Synology persons", len(persons))
 
-    if args.dry_run:
-        log.info("*** DRY-RUN MODE — no changes will be made ***")
+    already_matched = get_already_matched(immich_conn)
+    log.info("  %d faces already matched (will skip)", len(already_matched))
 
-    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-    matched_path = Path(f"matched-{ts}.csv")
-    unmatched_path = Path(f"unmatched-{ts}.csv")
+    stats = {
+        "persons_total": len(persons),
+        "auto_assigned": 0,
+        "flagged": 0,
+        "no_bridge": 0,
+        "no_faces": 0,
+        "faces_matched": 0,
+        "faces_no_match": 0,
+        "names_assigned": 0,
+    }
+    review_rows = []
+    start = time.time()
 
-    matched_fields = [
-        "username",
-        "person_name",
-        "immich_person_id",
-        "confidence",
-        "vote_count",
-        "total_faces",
-        "action",
-        "existing_name",
-    ]
-    unmatched_fields = [
-        "username",
-        "person_name",
-        "syno_photo_count",
-        "immich_assets_found",
-        "immich_person_id",
-        "confidence",
-        "reason",
-    ]
-
-    log.info("Output files: %s  %s", matched_path, unmatched_path)
-
-    syno_conn = syno_connect(cfg["syno_db"])
-    immich_conn = immich_connect(cfg["immich_db"])
-
-    total_matched = 0
-    total_unmatched = 0
-
-    with (
-        open(matched_path, "w", newline="") as mf,
-        open(unmatched_path, "w", newline="") as uf,
-    ):
-        matched_writer = csv.DictWriter(mf, fieldnames=matched_fields)
-        unmatched_writer = csv.DictWriter(uf, fieldnames=unmatched_fields)
-        matched_writer.writeheader()
-        unmatched_writer.writeheader()
-
-        for user_cfg in cfg["users"]:
-            if args.user and user_cfg["immich_username"] != args.user:
-                continue
-
-            m, u = migrate_user(
-                syno_conn=syno_conn,
-                immich_conn=immich_conn,
-                user_cfg=user_cfg,
-                immich_url=cfg["immich_url"].rstrip("/"),
-                confidence_threshold=args.confidence,
-                dry_run=args.dry_run,
-                filter_person=args.person,
-                matched_writer=matched_writer,
-                unmatched_writer=unmatched_writer,
+    for pi, (person_id, info) in enumerate(sorted(persons.items())):
+        name = info["name"]
+        units = info["units"]
+        if (pi + 1) % 10 == 0:
+            log.info(
+                "  Progress: %d/%d — auto=%d flagged=%d no_bridge=%d matched=%d",
+                pi + 1,
+                len(persons),
+                stats["auto_assigned"],
+                stats["flagged"],
+                stats["no_bridge"],
+                stats["faces_matched"],
             )
-            total_matched += m
-            total_unmatched += u
+
+        bridged = get_bridged_assets(immich_conn, units)
+        if not bridged:
+            stats["no_bridge"] += 1
+            continue
+
+        syno_faces = get_syno_faces_for_units(
+            syno_conn, list(bridged.keys()), person_id
+        )
+        if not syno_faces:
+            stats["no_bridge"] += 1
+            continue
+
+        asset_ids = list(set(bridged.values()))
+        immich_faces = get_immich_faces_for_assets(immich_conn, asset_ids)
+
+        match_rows = []
+        votes = Counter()
+
+        for face_id, sface in syno_faces.items():
+            if face_id in already_matched:
+                continue
+            unit_id = sface["id_unit"]
+            asset_id = bridged.get(unit_id)
+            if not asset_id:
+                continue
+            imm_faces = immich_faces.get(asset_id, [])
+            if not imm_faces:
+                continue
+            best_iou = 0.0
+            best_face = None
+            for iface in imm_faces:
+                iou = compute_iou(sface["bounding_box"], iface)
+                if iou > best_iou:
+                    best_iou = iou
+                    best_face = iface
+            if best_face and best_iou >= iou_threshold:
+                match_rows.append(
+                    (
+                        face_id,
+                        best_face["id"],
+                        asset_id,
+                        best_face["personId"],
+                        best_iou,
+                        person_id,
+                    )
+                )
+                stats["faces_matched"] += 1
+                if best_face["personId"]:
+                    votes[best_face["personId"]] += 1
+            else:
+                stats["faces_no_match"] += 1
+
+        if match_rows and not dry_run:
+            insert_face_match(immich_conn, match_rows)
+
+        if not votes:
+            if match_rows:
+                stats["flagged"] += 1
+                review_rows.append(
+                    {
+                        "syno_person": name,
+                        "reason": "matched but no personId in immich",
+                        "matched": len(match_rows),
+                    }
+                )
+            else:
+                stats["no_faces"] += 1
+            continue
+
+        sorted_votes = votes.most_common()
+        top_person, top_count = sorted_votes[0]
+        runner_count = sorted_votes[1][1] if len(sorted_votes) > 1 else 0
+        auto = top_count >= min_votes and top_count >= margin_ratio * runner_count
+
+        if auto:
+            stats["auto_assigned"] += 1
+            log.info(
+                "  AUTO-ASSIGN: '%s' → %s (votes=%d runner=%d faces=%d)",
+                name,
+                top_person,
+                top_count,
+                runner_count,
+                len(match_rows),
+            )
+            if not dry_run and api_key:
+                ok, old = assign_person_name(api_key, immich_url, top_person, name)
+                if ok:
+                    stats["names_assigned"] += 1
+                elif old:
+                    log.warning("    Person %s already named '%s'", top_person, old)
+        else:
+            stats["flagged"] += 1
+            reason = (
+                f"insufficient votes ({top_count}<{min_votes})"
+                if top_count < min_votes
+                else f"low margin ({top_count}<{margin_ratio:.1f}×{runner_count})"
+            )
+            review_rows.append(
+                {
+                    "syno_person": name,
+                    "best_person": str(top_person),
+                    "top_votes": top_count,
+                    "runner_votes": runner_count,
+                    "reason": reason,
+                    "matched": len(match_rows),
+                }
+            )
+
+    elapsed = time.time() - start
+    log.info("")
+    log.info("=" * 60)
+    log.info("=== Face Match Summary ===")
+    log.info("  Persons processed:        %d", stats["persons_total"])
+    log.info("  Auto-assigned:            %d", stats["auto_assigned"])
+    log.info("  Names assigned via API:   %d", stats["names_assigned"])
+    log.info("  Flagged for review:       %d", stats["flagged"])
+    log.info("  No bridge (not uploaded): %d", stats["no_bridge"])
+    log.info("  No faces detected:        %d", stats["no_faces"])
+    log.info("  Faces matched (IoU>=%.1f):%d", iou_threshold, stats["faces_matched"])
+    log.info("  Faces no match:           %d", stats["faces_no_match"])
+    log.info("  Elapsed:                  %.1f min", elapsed / 60)
+    log.info("=" * 60)
+    if review_rows:
+        log.info("")
+        log.info("=== Flagged for Review ===")
+        for r in review_rows:
+            log.info("  %s — %s", r["syno_person"], r["reason"])
 
     syno_conn.close()
     immich_conn.close()
-
-    log.info("")
-    log.info("=== Summary ===")
-    log.info("  Matched (named or skipped):  %d", total_matched)
-    log.info("  Unmatched (needs manual):    %d", total_unmatched)
-    log.info("  matched.csv   → %s", matched_path)
-    log.info("  unmatched.csv → %s", unmatched_path)
-
-    if total_unmatched > 0:
-        log.info("")
-        log.info(
-            "Review %s and assign remaining names manually in Immich UI.",
-            unmatched_path,
-        )
-
-    if args.dry_run:
-        log.info("")
-        log.info("Dry-run complete. Re-run without --dry-run to apply changes.")
 
 
 if __name__ == "__main__":

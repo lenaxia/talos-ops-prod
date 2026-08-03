@@ -1,0 +1,18 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - job.yaml
+configMapGenerator:
+  - name: upload-scripts
+    files:
+      - upload.py
+# API keys are created manually before applying:
+#   kubectl create secret generic upload-api-keys -n databases \
+#     --from-literal=chuni=<key> \
+#     --from-literal=mike=<key> \
+#     --from-literal=serena=<key> \
+#     --from-literal=darcy=<key>
+generatorOptions:
+  disableNameSuffixHash: true
