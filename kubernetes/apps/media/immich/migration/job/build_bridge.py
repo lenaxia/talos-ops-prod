@@ -163,6 +163,22 @@ def load_immich_checksum_index(conn):
     return index
 
 
+def load_immich_filename_index(conn):
+    """
+    Return set of all originalFileName values in Immich.
+
+    Used as a pre-filter: only hash Synology photos whose filename exists in
+    Immich. Cuts NFS reads from ~1.4TB (all photos) to ~50GB (potential matches).
+    """
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT DISTINCT "originalFileName"
+            FROM asset
+            WHERE "deletedAt" IS NULL AND "originalFileName" IS NOT NULL
+        """)
+        return {row[0] for row in cur.fetchall()}
+
+
 def insert_bridge_rows(conn, rows):
     """
     Batch insert into syno_photo_migration. Each row: (syno_unit_id, immich_asset_id, syno_user_id).
@@ -256,6 +272,10 @@ def main():
         sum(len(v) for v in checksum_index.values()),
     )
 
+    log.info("Loading Immich filename index (pre-filter)...")
+    immich_filenames = load_immich_filename_index(immich_conn)
+    log.info("  %d distinct filenames in Immich", len(immich_filenames))
+
     log.info("Loading distinct Synology photos...")
     canonical, hash_to_units = get_distinct_syno_photos(syno_conn)
     log.info("  %d distinct photos (by MD5)", len(canonical))
@@ -271,10 +291,22 @@ def main():
         skipped_no_account,
     )
 
+    # PRE-FILTER: only hash photos whose filename exists in Immich.
+    # This cuts NFS reads from ~1.4TB to ~50GB (only potential matches).
+    before_filter = len(matchable)
+    to_hash = [c for c in matchable if c["filename"] in immich_filenames]
+    filtered_out = before_filter - len(to_hash)
+    log.info(
+        "  FILENAME PRE-FILTER: %d to hash, %d skipped (filename not in Immich) — cuts ~%.0f%% of NFS reads",
+        len(to_hash),
+        filtered_out,
+        100 * filtered_out / before_filter if before_filter else 0,
+    )
+
     # Filter out already-bridged
     to_process = [
         c
-        for c in matchable
+        for c in to_hash
         if not any(uid in bridged for uid, _ in hash_to_units[c["duplicate_hash"]])
     ]
     log.info("  %d to process after removing already-bridged", len(to_process))
