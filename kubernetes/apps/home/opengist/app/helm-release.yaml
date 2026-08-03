@@ -35,7 +35,7 @@ spec:
           main:
             image:
               repository: ghcr.io/thomiceli/opengist
-              tag: "1.14"
+              tag: "1.15"
             env:
               OG_EXTERNAL_URL: https://paste.${SECRET_DEV_DOMAIN}
               OG_LOG_LEVEL: info
