@@ -20,6 +20,8 @@ spec:
     defaultPodOptions:
       imagePullSecrets:
         - name: ghcr-secret
+      securityContext:
+        fsGroup: 65532
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
 
