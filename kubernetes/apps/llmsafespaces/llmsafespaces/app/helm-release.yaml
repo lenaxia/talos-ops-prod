@@ -255,16 +255,17 @@ spec:
     # The LLM explainer key is optional — without it, build failures use
     # a fallback string instead of an LLM-generated explanation.
     imageFactory:
-      imageRepo: "ghcr.io/lenaxia/llmsafespaces/ws"
+      imageRepo: "ghcr.io/lenaxia/llmsafespaces-images/ws"
       callbackURL: "/internal/image-factory"
       ghDispatcher:
         owner: "lenaxia"
         repo: "LLMSafeSpaces"
         workflowId: "image-build.yml"
         ref: "main"
-        secretKeyRef:
-          name: "image-factory-gh-token"
-          key: "gh-token"
+        appCredentials:
+          secretName: "image-factory-app-credentials"
+          appIdKey: "app-id"
+          privateKeyKey: "app-private-key"
       llmExplainer:
         baseUrl: ""
         model: ""
