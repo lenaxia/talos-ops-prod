@@ -29,7 +29,6 @@ spec:
         strategy: Recreate
         containers:
           main:
-            name: gokore
             image:
               repository: ghcr.io/lenaxia/gokore
               tag: v1.2.0
@@ -60,18 +59,24 @@ spec:
             probes:
               liveness:
                 enabled: true
-                httpGet:
-                  path: /healthz
-                  port: 9090
-                initialDelaySeconds: 30
-                periodSeconds: 30
+                custom: true
+                spec:
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  httpGet:
+                    path: /healthz
+                    port: 9090
+                    scheme: HTTP
               readiness:
                 enabled: true
-                httpGet:
-                  path: /readyz
-                  port: 9090
-                initialDelaySeconds: 10
-                periodSeconds: 10
+                custom: true
+                spec:
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  httpGet:
+                    path: /readyz
+                    port: 9090
+                    scheme: HTTP
 
     service:
       main:
@@ -90,8 +95,7 @@ spec:
     persistence:
       data:
         enabled: true
-        type: persistentVolumeClaim
-        name: gokore-config
+        existingClaim: gokore-config
         globalMounts:
           - path: /data
       config:
