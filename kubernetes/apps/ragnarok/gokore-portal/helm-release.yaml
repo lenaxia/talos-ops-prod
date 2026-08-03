@@ -1,0 +1,91 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname gokore-portal
+  namespace: ragnarok
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      interval: 16m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+
+    controllers:
+      main:
+        enabled: true
+        type: deployment
+        replicas: 1
+        strategy: RollingUpdate
+        containers:
+          main:
+            name: gokore-portal
+            image:
+              repository: ghcr.io/lenaxia/gokore-portal
+              tag: v1.2.0
+              pullPolicy: IfNotPresent
+            args:
+              - -config
+              - /config/config.yaml
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+            probes:
+              liveness:
+                enabled: true
+                httpGet:
+                  path: /
+                  port: 8090
+                initialDelaySeconds: 10
+                periodSeconds: 30
+              readiness:
+                enabled: true
+                httpGet:
+                  path: /
+                  port: 8090
+                initialDelaySeconds: 5
+                periodSeconds: 10
+
+    service:
+      main:
+        enabled: true
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 8090
+            enabled: true
+
+    persistence:
+      config:
+        enabled: true
+        type: configMap
+        name: gokore-portal-config
+        globalMounts:
+          - path: /config
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: gokore-portal.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  name: *appname
+                  port: 8090
