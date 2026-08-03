@@ -1,0 +1,84 @@
+---
+# Temporary migration Job — NOT managed by Flux.
+# Apply manually: kubectl apply -k kubernetes/apps/media/immich/migration/job/
+# Delete when done: kubectl delete -k kubernetes/apps/media/immich/migration/job/
+#
+# Mounts Synology NFS shares read-only and runs the bridge script that populates
+# immich.syno_photo_migration by SHA-1 matching. Runs in the databases namespace
+# so it can use the postgres-superuser secret for both CNPG clusters.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: syno-immich-migration
+  namespace: databases
+spec:
+  ttlSecondsAfterFinished: 86400  # auto-clean 24h after completion
+  backoffLimit: 2
+  activeDeadlineSeconds: 21600  # 6h hard kill — NFS walk shouldn't exceed 3h
+  template:
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      containers:
+        - name: migration
+          image: python:3.12-slim
+          workingDir: /scripts
+          command:
+            - sh
+            - -c
+            - |
+              pip install --no-cache-dir psycopg2-binary pyyaml && \
+              python /scripts/build_bridge.py
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 200m
+            limits:
+              memory: 1Gi       # bound memory; checksum index ~50MB, photos stream
+              cpu: 2
+          env:
+            - name: SYNO_DB_HOST
+              value: synofotopg-rw.databases.svc.cluster.local
+            - name: SYNO_DB_NAME
+              value: app
+            - name: IMMICH_DB_HOST
+              value: vectorpg-rw.databases.svc.cluster.local
+            - name: IMMICH_DB_NAME
+              value: immich
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-superuser
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-superuser
+                  key: password
+            - name: DRY_RUN
+              value: "false"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: syno-local
+              mountPath: /import/syno-local
+              readOnly: true
+            - name: syno-ldap
+              mountPath: /import/syno-ldap
+              readOnly: true
+      volumes:
+        - name: scripts
+          configMap:
+            name: migration-scripts
+        - name: syno-local
+          nfs:
+            server: 192.168.0.120
+            path: /volume1/homes
+            readOnly: true
+        - name: syno-ldap
+          nfs:
+            server: 192.168.0.120
+            path: /volume1/homes/@LH-KAO.FAMILY/61
+            readOnly: true
