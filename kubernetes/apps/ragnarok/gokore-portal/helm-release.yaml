@@ -18,6 +18,8 @@ spec:
         namespace: flux-system
   values:
     defaultPodOptions:
+      imagePullSecrets:
+        - name: ghcr-secret
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
 
