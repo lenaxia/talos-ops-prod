@@ -29,7 +29,6 @@ spec:
         strategy: RollingUpdate
         containers:
           main:
-            name: gokore-portal
             image:
               repository: ghcr.io/lenaxia/gokore-portal
               tag: v1.2.0
@@ -43,18 +42,24 @@ spec:
             probes:
               liveness:
                 enabled: true
-                httpGet:
-                  path: /
-                  port: 8090
-                initialDelaySeconds: 10
-                periodSeconds: 30
+                custom: true
+                spec:
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  httpGet:
+                    path: /
+                    port: 8090
+                    scheme: HTTP
               readiness:
                 enabled: true
-                httpGet:
-                  path: /
-                  port: 8090
-                initialDelaySeconds: 5
-                periodSeconds: 10
+                custom: true
+                spec:
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  httpGet:
+                    path: /
+                    port: 8090
+                    scheme: HTTP
 
     service:
       main:
