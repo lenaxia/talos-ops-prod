@@ -37,18 +37,6 @@ spec:
         - name: namespace
           variable:
             jmesPath: "request.object.metadata.namespace"
-        - name: nodeAffinity
-          variable:
-            value:
-              labels:
-                - key: app.kubernetes.io/name
-                  operator: "In"
-                  values:
-                    - "{{ request.object.metadata.labels.\"app.kubernetes.io/name\" }}"
-                - key: app.kubernetes.io/instance
-                  operator: "In"
-                  values:
-                    - "{{ request.object.metadata.labels.\"app.kubernetes.io/instance\" }}"
       generate:
         generateExisting: true
         synchronize: true
@@ -80,6 +68,24 @@ spec:
                   spec:
                     automountServiceAccountToken: false
                     restartPolicy: OnFailure
+                    # Co-locate with the app pod that owns the PVC.  The backup
+                    # mounts the live RWO volume, which is already attached to
+                    # the app's node — without this affinity the job lands on a
+                    # random node and fails with "Multi-Attach error".
+                    affinity:
+                      podAffinity:
+                        requiredDuringSchedulingIgnoredDuringExecution:
+                          - labelSelector:
+                              matchExpressions:
+                                - key: app.kubernetes.io/name
+                                  operator: In
+                                  values:
+                                    - "{{ request.object.metadata.labels.\"app.kubernetes.io/name\" }}"
+                                - key: app.kubernetes.io/instance
+                                  operator: In
+                                  values:
+                                    - "{{ request.object.metadata.labels.\"app.kubernetes.io/instance\" }}"
+                            topologyKey: kubernetes.io/hostname
                     # Stagger jobs to run randomly within X seconds to avoid bringing down all apps at once
                     containers:
                       - name: snapshot
