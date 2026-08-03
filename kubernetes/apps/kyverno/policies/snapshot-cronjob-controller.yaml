@@ -76,6 +76,7 @@ spec:
               spec:
                 # Keep at least one job in completed state in accordance to the schedule
                 ttlSecondsAfterFinished: 86400
+                activeDeadlineSeconds: 7200
                 template:
                   spec:
                     automountServiceAccountToken: false
