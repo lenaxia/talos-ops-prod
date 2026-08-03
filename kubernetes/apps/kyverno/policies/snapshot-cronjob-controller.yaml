@@ -14,7 +14,7 @@ metadata:
 spec:
   mutateExistingOnPolicyUpdate: true
   rules:
-    - name: create-snapshot-cronjob2
+    - name: create-snapshot-cronjob3
       match:
         any:
           - resources:
