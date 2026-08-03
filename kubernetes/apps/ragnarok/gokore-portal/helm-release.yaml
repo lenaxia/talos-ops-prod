@@ -75,6 +75,11 @@ spec:
             enabled: true
 
     persistence:
+      data:
+        enabled: true
+        existingClaim: gokore-portal-data
+        globalMounts:
+          - path: /data
       config:
         enabled: true
         type: configMap
