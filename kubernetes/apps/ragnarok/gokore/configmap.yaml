@@ -67,7 +67,7 @@ data:
         enabled: true
         allowlist: [501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 512, 515, 705, 909, 914, 949]
         blocklist: []
-        max_weight: 0
+        max_weight: 90
         max_items: 0
 
       behaviors:
@@ -82,8 +82,8 @@ data:
           destination_min_distance: 20
 
       navigation:
-        stuck_escape_item_id: 601
-        enable_npc_warp: false
+        stuck_escape_item_id: 602
+        enable_npc_warp: true
         lock_map: "izlude"
         lock_map_x: 128
         lock_map_y: 146
