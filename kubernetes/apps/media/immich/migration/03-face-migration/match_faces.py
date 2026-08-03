@@ -147,7 +147,7 @@ def get_immich_faces_for_assets(immich_conn, asset_ids):
                    "boundingBoxX2", "boundingBoxY2",
                    "imageWidth", "imageHeight"
             FROM asset_face
-            WHERE "assetId" = ANY(%s) AND "deletedAt" IS NULL
+            WHERE "assetId" = ANY(%s::uuid[]) AND "deletedAt" IS NULL
         """,
             (list(asset_ids),),
         )
