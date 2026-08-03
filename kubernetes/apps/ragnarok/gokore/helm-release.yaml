@@ -52,6 +52,11 @@ spec:
                   secretKeyRef:
                     name: gokore
                     key: OPENAI_API_KEY
+              - name: OPENAI_API_BASE
+                valueFrom:
+                  secretKeyRef:
+                    name: gokore
+                    key: OPENAI_API_BASE
             probes:
               liveness:
                 enabled: true

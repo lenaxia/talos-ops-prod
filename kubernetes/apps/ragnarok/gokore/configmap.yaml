@@ -52,7 +52,7 @@ data:
       fsm_max_chunks_soft_limit: 12
 
     llm:
-      base_url: "https://ai.thekao.cloud/v1"
+      base_url: "${OPENAI_API_BASE}"
       models:
         strong: "glm-5.2"
         medium: "classifier"
