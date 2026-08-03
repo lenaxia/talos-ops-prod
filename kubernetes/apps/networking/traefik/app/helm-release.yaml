@@ -32,19 +32,16 @@ spec:
       # kube-version annotation. Pin matches chart's max supported version.
       tag: v3.7.10
     deployment:
-      kind: Deployment
-      replicas: 4
+      # DaemonSet: guarantees a Traefik pod on every worker node, so the Cilium
+      # L2 leader election for the LoadBalancer VIP always has a local backend.
+      # With externalTrafficPolicy: Local this preserves real client source IPs
+      # (needed for kiosk trusted_networks) without the "announced on a node
+      # with no local pod -> connection refused" failure seen on worker-02.
+      # ACME is not supported as DaemonSet; certs come from cert-manager.
+      kind: DaemonSet
 
     nodeSelector:
       node-role.kubernetes.io/worker: "true"
-
-    topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
-        labelSelector:
-          matchLabels:
-            app.kubernetes.io/name: traefik
 
     service:
       enabled: true
