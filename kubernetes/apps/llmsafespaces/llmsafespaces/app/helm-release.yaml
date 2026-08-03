@@ -256,7 +256,7 @@ spec:
     # a fallback string instead of an LLM-generated explanation.
     imageFactory:
       imageRepo: "ghcr.io/lenaxia/llmsafespaces-images/ws"
-      callbackURL: "/internal/image-factory"
+      callbackURL: "https://api.safespaces.dev/internal/image-factory"
       ghDispatcher:
         owner: "lenaxia"
         repo: "LLMSafeSpaces"
