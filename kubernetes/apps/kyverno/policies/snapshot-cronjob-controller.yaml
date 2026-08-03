@@ -21,10 +21,15 @@ spec:
               kinds:
                 - PersistentVolumeClaim
               selector:
-                matchLabels:
-                  app.kubernetes.io/name: "*"
-                  app.kubernetes.io/instance: "*"
-                  snapshot.home.arpa/enabled: "true"
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: Exists
+                  - key: app.kubernetes.io/instance
+                    operator: Exists
+                  - key: snapshot.home.arpa/enabled
+                    operator: In
+                    values:
+                      - "true"
       context:
         - name: appName
           variable:
