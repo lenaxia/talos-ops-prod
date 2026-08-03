@@ -133,8 +133,8 @@ data:
       mapping: "/ko-app/configs/community/v1-20260728-4253c740-mapping.json"
 
     llm:
-      base_url: "${OPENAI_API_BASE}"
-      api_key: "${OPENAI_API_KEY}"
+      base_url: "$${OPENAI_API_BASE}"
+      api_key: "$${OPENAI_API_KEY}"
       models:
         strong: "classifier"
         medium: "classifier"
