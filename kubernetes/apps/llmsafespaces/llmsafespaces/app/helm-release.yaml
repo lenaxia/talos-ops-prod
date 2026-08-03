@@ -254,6 +254,10 @@ spec:
     #
     # The LLM explainer key is optional — without it, build failures use
     # a fallback string instead of an LLM-generated explanation.
+    #
+    # NOTE: secretKeyRef.name is left EMPTY until the Secret is created.
+    # If set without the Secret existing, kubelet fails with
+    # CreateContainerError → rollout stalls → Helm rolls back.
     imageFactory:
       imageRepo: "ghcr.io/lenaxia/llmsafespaces/ws"
       callbackURL: "/internal/image-factory"
@@ -263,7 +267,7 @@ spec:
         workflowId: "image-build.yml"
         ref: "main"
         secretKeyRef:
-          name: "image-factory-gh-token"
+          name: ""
           key: "gh-token"
       llmExplainer:
         baseUrl: ""
