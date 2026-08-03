@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gokore-portal-config
+  namespace: ragnarok
+data:
+  config.yaml: |
+    server:
+      port: 8090
+      dev: false
+
+    gokore:
+      # gRPC endpoint for the gokore bot manager
+      grpc_addr: "gokore.ragnarok.svc.cluster.local:50051"
+
+    community:
+      # Path to the community snapshot (embedded in the portal image)
+      path: "/app/kodata/community"

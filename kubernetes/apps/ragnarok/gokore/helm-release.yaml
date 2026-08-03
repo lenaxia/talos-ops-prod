@@ -1,0 +1,98 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname gokore
+  namespace: ragnarok
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      interval: 16m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+
+    controllers:
+      main:
+        enabled: true
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        containers:
+          main:
+            name: gokore
+            image:
+              repository: ghcr.io/lenaxia/gokore
+              tag: v1.2.0
+              pullPolicy: IfNotPresent
+            args:
+              - -config-dir
+              - /config
+              - -log-level
+              - info
+            envFrom:
+              - secretRef:
+                  name: gokore
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              - name: RATHENA_DB_PATH
+                value: /data/db
+              - name: OPENAI_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: gokore
+                    key: OPENAI_API_KEY
+            probes:
+              liveness:
+                enabled: true
+                httpGet:
+                  path: /healthz
+                  port: 9090
+                initialDelaySeconds: 30
+                periodSeconds: 30
+              readiness:
+                enabled: true
+                httpGet:
+                  path: /readyz
+                  port: 9090
+                initialDelaySeconds: 10
+                periodSeconds: 10
+
+    service:
+      main:
+        enabled: true
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 9090
+            enabled: true
+          grpc:
+            port: 50051
+            enabled: true
+
+    persistence:
+      config:
+        enabled: true
+        type: persistentVolumeClaim
+        name: gokore-config
+        globalMounts:
+          - path: /config
+      data:
+        enabled: true
+        type: configMap
+        name: gokore-config-files
+        defaultMode: 0755
+        globalMounts:
+          - path: /data
