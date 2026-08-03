@@ -76,7 +76,7 @@ spec:
                   initialDelaySeconds: 10
                   periodSeconds: 10
                   httpGet:
-                    path: /readyz
+                    path: /healthz
                     port: 9090
                     scheme: HTTP
 
