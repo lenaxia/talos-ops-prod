@@ -51,3 +51,4 @@ data:
     instances:
       - id: gokore-community-run
         addr: gokore.ragnarok.svc.cluster.local:50051
+        insecure: true
