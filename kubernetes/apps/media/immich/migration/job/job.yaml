@@ -32,10 +32,10 @@ spec:
               python /scripts/build_bridge.py
           resources:
             requests:
-              memory: 256Mi
+              memory: 512Mi
               cpu: 200m
             limits:
-              memory: 1Gi       # bound memory; checksum index ~50MB, photos stream
+              memory: 2Gi        # generous headroom; usage ~700Mi, verification adds ~100Mi
               cpu: 2
           env:
             - name: SYNO_DB_HOST
