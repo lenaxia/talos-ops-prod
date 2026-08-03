@@ -112,9 +112,18 @@ def get_distinct_syno_photos(conn):
     """
     Return list of dicts with one representative unit per distinct duplicate_hash.
 
-    SELECT DISTINCT ON (duplicate_hash) picks one canonical unit per photo.
-    We also fetch ALL units sharing that hash so we can map them all to the
-    same immich asset(s) after the SHA-1 match.
+    SELECT DISTINCT ON (duplicate_hash) picks one canonical unit per photo to
+    drive the walk. We also fetch ALL units sharing that hash (with their own
+    folder, needed to build per-sibling NFS paths) so each can be hashed and
+    matched individually.
+
+    IMPORTANT: duplicate_hash is NOT a content hash. Synology assigns the same
+    duplicate_hash to units that share metadata (e.g. iPhone live-photo videos
+    with identical duration) even when their file bytes differ. Verified
+    empirically: 36/36 wrong bridge rows in the 2026-08-03 run came from
+    siblings sharing a duplicate_hash but differing in SHA-1. Therefore each
+    sibling MUST be hashed and matched on its own content, not blindly mapped
+    to the canonical unit's match.
     """
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         cur.execute("""
@@ -130,15 +139,22 @@ def get_distinct_syno_photos(conn):
         canonical = cur.fetchall()
 
         cur.execute("""
-            SELECT duplicate_hash, id AS unit_id, id_user
-            FROM unit
-            WHERE duplicate_hash IS NOT NULL AND duplicate_hash <> ''
-            ORDER BY duplicate_hash
+            SELECT u.duplicate_hash, u.id AS unit_id, u.id_user, u.filename,
+                   f.name AS folder_name
+            FROM unit u
+            JOIN folder f ON f.id = u.id_folder
+            WHERE u.duplicate_hash IS NOT NULL AND u.duplicate_hash <> ''
+            ORDER BY u.duplicate_hash, u.id
         """)
         hash_to_units = {}
         for row in cur.fetchall():
             hash_to_units.setdefault(row["duplicate_hash"], []).append(
-                (row["unit_id"], row["id_user"])
+                {
+                    "unit_id": row["unit_id"],
+                    "id_user": row["id_user"],
+                    "filename": row["filename"],
+                    "folder_name": row["folder_name"],
+                }
             )
 
     return canonical, hash_to_units
@@ -307,7 +323,9 @@ def main():
     to_process = [
         c
         for c in to_hash
-        if not any(uid in bridged for uid, _ in hash_to_units[c["duplicate_hash"]])
+        if not any(
+            sib["unit_id"] in bridged for sib in hash_to_units[c["duplicate_hash"]]
+        )
     ]
     log.info("  %d to process after removing already-bridged", len(to_process))
 
@@ -318,7 +336,7 @@ def main():
         # Build set of duplicate_hashes that contain any target unit
         target_hashes = set()
         for h, units in hash_to_units.items():
-            if any(uid in target_ids for uid, _ in units):
+            if any(sib["unit_id"] in target_ids for sib in units):
                 target_hashes.add(h)
         to_process = [c for c in to_process if c["duplicate_hash"] in target_hashes]
         log.info(
@@ -373,11 +391,11 @@ def main():
         sha1 = compute_sha1(path)
         if sha1 is None:
             stats["file_error"] += 1
-            for uid, suid in hash_to_units[photo["duplicate_hash"]]:
+            for sib in hash_to_units[photo["duplicate_hash"]]:
                 unmatched_rows.append(
                     {
-                        "syno_unit_id": uid,
-                        "syno_user_id": suid,
+                        "syno_unit_id": sib["unit_id"],
+                        "syno_user_id": sib["id_user"],
                         "reason": "file_read_error",
                         "path": path,
                     }
@@ -388,31 +406,63 @@ def main():
         immich_matches = checksum_index.get(sha1, [])
         if not immich_matches:
             stats["not_in_immich"] += 1
-            for uid, suid in hash_to_units[photo["duplicate_hash"]]:
+            for sib in hash_to_units[photo["duplicate_hash"]]:
                 unmatched_rows.append(
                     {
-                        "syno_unit_id": uid,
-                        "syno_user_id": suid,
+                        "syno_unit_id": sib["unit_id"],
+                        "syno_user_id": sib["id_user"],
                         "reason": "not_uploaded_to_immich",
                         "path": path,
                     }
                 )
             continue
 
-        # Map each Synology unit sharing this hash to the correct Immich asset
-        # (by matching syno_user_id → immich ownerId)
+        # Map each Synology unit sharing this duplicate_hash to the correct
+        # Immich asset. duplicate_hash is NOT a content hash — siblings may have
+        # different file bytes (verified: 36 wrong rows in the 2026-08-03 run).
+        # For multi-unit groups we hash each sibling individually and match it
+        # against the immich checksum index by its own SHA-1. Single-unit groups
+        # (the common case) skip the redundant re-hash.
+        siblings = hash_to_units[photo["duplicate_hash"]]
         stats["matched"] += 1
-        for uid, suid in hash_to_units[photo["duplicate_hash"]]:
+
+        if len(siblings) == 1:
+            # Fast path: canonical is the only unit, its SHA-1 already computed.
+            sib = siblings[0]
+            suid = sib["id_user"]
             owner_id = SYNO_TO_IMMICH.get(suid, {}).get("immich_id")
-            if not owner_id:
-                continue  # user not in Immich — skip their units
-            asset_id = next(
-                (aid for aid, oid in immich_matches if oid == owner_id), None
-            )
-            if asset_id:
-                batch.append((uid, asset_id, suid))
-                stats["units_bridged"] += 1
-                user_tally[suid] = user_tally.get(suid, 0) + 1
+            if owner_id:
+                asset_id = next(
+                    (aid for aid, oid in immich_matches if oid == owner_id), None
+                )
+                if asset_id:
+                    batch.append((sib["unit_id"], asset_id, suid))
+                    stats["units_bridged"] += 1
+                    user_tally[suid] = user_tally.get(suid, 0) + 1
+        else:
+            # Multi-unit group: hash each sibling on its own and match
+            # independently. Skips siblings whose user has no immich account.
+            for sib in siblings:
+                suid = sib["id_user"]
+                owner_id = SYNO_TO_IMMICH.get(suid, {}).get("immich_id")
+                if not owner_id:
+                    continue  # user not in Immich — skip their units
+                sib_path = nfs_path(suid, sib["folder_name"], sib["filename"])
+                if sib_path is None:
+                    continue
+                sib_sha1 = compute_sha1(sib_path)
+                if sib_sha1 is None:
+                    continue
+                sib_matches = checksum_index.get(sib_sha1, [])
+                if not sib_matches:
+                    continue
+                asset_id = next(
+                    (aid for aid, oid in sib_matches if oid == owner_id), None
+                )
+                if asset_id:
+                    batch.append((sib["unit_id"], asset_id, suid))
+                    stats["units_bridged"] += 1
+                    user_tally[suid] = user_tally.get(suid, 0) + 1
 
         if len(batch) >= BATCH_SIZE:
             if not dry_run:
