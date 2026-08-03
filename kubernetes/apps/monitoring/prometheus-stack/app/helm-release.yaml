@@ -236,6 +236,12 @@ spec:
         replicas: 3
         shards: 1
         retention: 15d
+        # Pin to worker nodes: storage uses openebs-hostpath (node-local) and
+        # Longhorn CSI only runs on workers.  Without this the scheduler can
+        # place replicas on control-planes where neither storage backend is
+        # available, leaving pods stuck in Init forever.
+        nodeSelector:
+          node-role.kubernetes.io/worker: "true"
         podMonitorSelectorNilUsesHelmValues: false
         probeSelectorNilUsesHelmValues: false
         ruleSelectorNilUsesHelmValues: false
