@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: gokore-portal.${SECRET_DEV_DOMAIN}
+    - host: gokore.${SECRET_DEV_DOMAIN}
       http:
         paths:
           - path: /
@@ -21,5 +21,5 @@ spec:
                   number: 8090
   tls:
     - hosts:
-        - gokore-portal.${SECRET_DEV_DOMAIN}
-      secretName: gokore-portal-tls
+        - gokore.${SECRET_DEV_DOMAIN}
+      secretName: gokore.${SECRET_DEV_DOMAIN}

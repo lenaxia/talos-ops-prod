@@ -88,16 +88,16 @@ spec:
             enabled: true
 
     persistence:
-      config:
+      data:
         enabled: true
         type: persistentVolumeClaim
         name: gokore-config
         globalMounts:
-          - path: /config
-      data:
+          - path: /data
+      config:
         enabled: true
         type: configMap
         name: gokore-config-files
         defaultMode: 0755
         globalMounts:
-          - path: /data
+          - path: /config

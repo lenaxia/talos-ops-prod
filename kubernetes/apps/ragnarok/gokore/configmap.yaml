@@ -6,40 +6,88 @@ metadata:
   namespace: ragnarok
 data:
   config.yaml: |
+    # 100-bot community run against rathena-renewal (192.168.5.145).
+    # Community: v1-20260728-4253c740 (100 chars, seed: gokore-100p-20260728)
+    # Accounts:  gk_4253c740_0000 .. gk_4253c740_0099 (account_ids 2000000-2000099)
+
     network:
       packet_ver: 20200401
       region: "kRO"
-      server_address: "rathena-renewal.ragnarok.svc.cluster.local:6900"
+      server_address: "192.168.5.145:6900"
+      server_port: 6900
+      enable_encryption: false
+      enable_padded_packets: false
       connection_timeout: 30
       retry_count: 3
       retry_delay: 1000
 
     bot_manager:
       enabled: true
-      bot_count: 50
+      bot_count: 100
       spawn_delay: 3000
 
     auth:
-      username_template: "botijo{1}"
+      username_template: "gk_4253c740_{0000}"
       password: "Melon.77"
       character:
         select_mode: "auto"
         index: 0
+      client_version: 28
+      client_type: 0
+
+    plugin:
+      enabled: false
+      directory: "/tmp/plugins"
 
     log:
       level: "info"
       format: "text"
+      packet_level: "info"
+      position_log_interval_seconds: 30
+
+    bot:
+      auto_login:
+        enabled: true
+        delay: 3
+        retry_count: 5
+        retry_delay: 5
+      disconnect:
+        auto_reconnect: true
+        max_reconnect_attempts: 100
+        reconnect_delay: 10
 
     ai:
       enabled: true
+
+      targeting:
+        max_distance: 15
+        aggressive_priority: true
+
+      loot:
+        enabled: true
+        allowlist: [501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 512, 515, 705, 909, 914, 949]
+        blocklist: []
+        max_weight: 0
+        max_items: 0
+
       behaviors:
+        item_pickup:
+          enabled: true
+          pickup_delay: 500
+        follow:
+          enabled: false
         random_walk:
           enabled: true
           destination_max_distance: 50
           destination_min_distance: 20
 
-    community:
-      snapshot_path: "/config/community.json"
+      navigation:
+        stuck_escape_item_id: 601
+        enable_npc_warp: false
+        lock_map: "izlude"
+        lock_map_x: 128
+        lock_map_y: 146
+        lock_radius: 50
 
     cognitive:
       enabled: true
@@ -47,21 +95,50 @@ data:
       reactive_mode: true
       strategic_mode: true
       strategy_interval: 90
-      fleet_slots: 60
-      fsm_end_conversation_coercion: 0.4
-      fsm_max_chunks_soft_limit: 12
+      fleet_slots: 120
+
+      thresholds:
+        party_accept: 0.6
+        party_decline: 0.3
+        earshot_distance: 10
+        target_score_ignore: 0.4
+        close_proximity: 3
+        far_proximity: 8
+
+      jitter:
+        canned_min: 500ms
+        canned_max: 2000ms
+        llm_min: 1000ms
+        llm_max: 3000ms
+
+      memory:
+        max_conversation_messages: 10
+        max_conversation_history: 10
+        max_recent_events: 20
+        conversation_timeout: 3m
+
+      event_queue_size: 100
+
+      generation:
+        alignment_weights:
+          good: 0.45
+          neutral: 0.45
+          evil: 0.10
+        sociability_min: 0.3
+        greed_range: [0.2, 0.7]
+
+    community:
+      snapshot_path: "/data/communities/snapshot"
+      hash: "v1-20260728-4253c740"
+      mapping: "/ko-app/configs/community/v1-20260728-4253c740-mapping.json"
 
     llm:
       base_url: "${OPENAI_API_BASE}"
+      api_key: "${OPENAI_API_KEY}"
       models:
-        strong: "glm-5.2"
+        strong: "classifier"
         medium: "classifier"
         weak: "classifier"
-      reactive_workers: 12
-      strategic_workers: 6
+      reactive_workers: 50
+      strategic_workers: 25
       disable_thinking: true
-      max_retries: 2
-      retry_base_delay: 2s
-      retry_max_delay: 15s
-      breaker_threshold: 10
-      breaker_reset_timeout: 60s
