@@ -259,7 +259,7 @@ spec:
       callbackURL: "https://api.safespaces.dev/internal/image-factory"
       ghDispatcher:
         owner: "lenaxia"
-        repo: "LLMSafeSpaces"
+        repo: "llmsafespaces-images"
         workflowId: "image-build.yml"
         ref: "main"
         appCredentials:
