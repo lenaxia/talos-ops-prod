@@ -358,48 +358,74 @@ def main():
         )
         upload_start = time.time()
 
-        for i, u in enumerate(to_upload):
-            if (i + 1) % 100 == 0:
-                elapsed = time.time() - upload_start
-                done = i + 1
-                rate = done / elapsed if elapsed > 0 else 0
-                remaining = (len(to_upload) - done) / rate if rate > 0 else 0
-                log.info(
-                    "    uploaded %d/%d (%.1f%%) | ok=%d err=%d | rate=%.1f/s ETA=%.0fmin",
-                    done,
-                    len(to_upload),
-                    100 * done / len(to_upload),
-                    grand_stats["uploaded"],
-                    grand_stats["upload_error"],
-                    rate,
-                    remaining / 60,
+        import threading
+
+        stats_lock = threading.Lock()
+
+        def do_upload(u):
+            """Upload one file, return (status, detail). Robust wrapper."""
+            try:
+                path = nfs_path(u["id_user"], u["folder_name"], u["filename"])
+                if path is None:
+                    return ("skip", "no_path")
+                return upload_file(
+                    api_key,
+                    immich_url,
+                    u["unit_id"],
+                    path,
+                    u["filesize"],
+                    u["takentime"],
+                    u["mtime"],
+                    u["id_user"],
                 )
+            except Exception as e:
+                return ("exception", f"{type(e).__name__}: {str(e)[:150]}")
 
-            path = nfs_path(u["id_user"], u["folder_name"], u["filename"])
-            status, detail = upload_file(
-                api_key,
-                immich_url,
-                u["unit_id"],
-                path,
-                u["filesize"],
-                u["takentime"],
-                u["mtime"],
-                u["id_user"],
-            )
-
-            if status in ("created", "replaced"):
-                grand_stats["uploaded"] += 1
-            elif status == "duplicate":
-                grand_stats["skipped_existing"] += 1
-            else:
-                grand_stats["upload_error"] += 1
-                if grand_stats["upload_error"] <= 10:
-                    log.warning(
-                        "    UPLOAD ERROR unit=%d status=%s detail=%s",
-                        u["unit_id"],
-                        status,
-                        detail,
+        done_count = 0
+        with ThreadPoolExecutor(max_workers=concurrency) as pool:
+            futures = {pool.submit(do_upload, u): u for u in to_upload}
+            for future in as_completed(futures):
+                u = futures[future]
+                try:
+                    status, detail = future.result()
+                except Exception as e:
+                    status, detail = (
+                        "exception",
+                        f"future: {type(e).__name__}: {str(e)[:150]}",
                     )
+
+                with stats_lock:
+                    done_count += 1
+                    if status in ("created", "replaced"):
+                        grand_stats["uploaded"] += 1
+                    elif status in ("duplicate", "skip"):
+                        grand_stats["skipped_existing"] += 1
+                    else:
+                        grand_stats["upload_error"] += 1
+                        if grand_stats["upload_error"] <= 20:
+                            log.warning(
+                                "    UPLOAD ERROR unit=%d status=%s detail=%s",
+                                u["unit_id"],
+                                status,
+                                detail,
+                            )
+
+                    if done_count % 200 == 0:
+                        elapsed = time.time() - upload_start
+                        rate = done_count / elapsed if elapsed > 0 else 0
+                        remaining = (
+                            (len(to_upload) - done_count) / rate if rate > 0 else 0
+                        )
+                        log.info(
+                            "    uploaded %d/%d (%.1f%%) | ok=%d err=%d | rate=%.1f/s ETA=%.0fmin",
+                            done_count,
+                            len(to_upload),
+                            100 * done_count / len(to_upload),
+                            grand_stats["uploaded"],
+                            grand_stats["upload_error"],
+                            rate,
+                            remaining / 60,
+                        )
 
         elapsed = time.time() - upload_start
         log.info(
