@@ -134,7 +134,7 @@ data:
       api_key: "$${OPENAI_API_KEY}"
       models:
         strong: "default"
-        medium: "default"
+        medium: "classifier"
         weak: "classifier"
       reactive_workers: 50
       strategic_workers: 25
