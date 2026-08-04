@@ -277,6 +277,7 @@ spec:
                 url: http://hass-mcp.home.svc.cluster.local:8000/mcp
                 transport: http
                 description: Home Assistant control via voska/hass-mcp
+                allow_all_keys: true
               opengist:
                 url: http://opengist-mcp.home.svc.cluster.local:8000/mcp
                 transport: http
