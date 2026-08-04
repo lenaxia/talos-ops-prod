@@ -72,7 +72,6 @@ spec:
               - "8000"
               - --outputTransport
               - streamableHttp
-              - --stateful
               - --healthEndpoint
               - /healthz
               - --logLevel
