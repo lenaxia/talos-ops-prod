@@ -66,6 +66,8 @@ spec:
               value: "chuni"
             - name: CONCURRENCY
               value: "8"
+            - name: CHECKPOINT_DIR
+              value: "/checkpoint"
             - name: DRY_RUN
               value: "false"
             - name: CHUNI_API_KEY
@@ -92,6 +94,8 @@ spec:
             - name: scripts
               mountPath: /scripts
               readOnly: true
+            - name: checkpoint
+              mountPath: /checkpoint
             - name: syno-local
               mountPath: /import/syno-local
               readOnly: true
@@ -102,6 +106,9 @@ spec:
         - name: scripts
           configMap:
             name: upload-scripts
+        - name: checkpoint
+          persistentVolumeClaim:
+            claimName: upload-checkpoint
         - name: syno-local
           nfs:
             server: 192.168.0.120

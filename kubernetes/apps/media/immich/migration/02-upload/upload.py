@@ -293,57 +293,112 @@ def main():
         grand_stats["total_units"] += len(units)
 
         # Phase 1: hash all files, dedup locally, skip existing
-        log.info("  Phase 1: hashing + dedup...")
-        to_upload = []
-        seen_hashes = set()
-        hash_errors = 0
-        start = time.time()
+        # Check for a checkpoint from a prior run (avoids 3.5h re-hash on restart)
+        checkpoint_dir = os.environ.get("CHECKPOINT_DIR", "/checkpoint")
+        checkpoint_path = f"{checkpoint_dir}/to_upload_{owner_id}.json"
 
-        for i, u in enumerate(units):
-            if (i + 1) % 2000 == 0:
-                elapsed = time.time() - start
-                rate = (i + 1) / elapsed
-                log.info(
-                    "    hashed %d/%d (%.0f%%) — to_upload=%d dup=%d exist=%d err=%d | rate=%.0f/s",
-                    i + 1,
-                    len(units),
-                    100 * (i + 1) / len(units),
-                    len(to_upload),
-                    grand_stats["skipped_dedup"] - 0,
-                    grand_stats["skipped_existing"],
-                    hash_errors,
-                    rate,
+        to_upload = []
+        if os.path.exists(checkpoint_path):
+            log.info("  Phase 1: loading checkpoint %s", checkpoint_path)
+            import json as _json
+
+            with open(checkpoint_path) as cf:
+                checkpointed = _json.load(cf)
+            log.info("  Checkpoint has %d files hashed", len(checkpointed))
+
+            # Re-filter against current immich state (some may have been
+            # uploaded since the checkpoint was written)
+            still_pending = []
+            for entry in checkpointed:
+                if entry["sha1_hex"] in {h.hex() for h in existing}:
+                    grand_stats["skipped_existing"] += 1
+                else:
+                    still_pending.append(entry)
+            log.info(
+                "  After re-filtering against immich: %d still pending (%d already uploaded since checkpoint)",
+                len(still_pending),
+                len(checkpointed) - len(still_pending),
+            )
+            # Convert back to unit-dict-like objects
+            to_upload = still_pending
+            hash_errors = 0
+        else:
+            log.info("  Phase 1: hashing + dedup (no checkpoint found)...")
+            seen_hashes = set()
+            hash_errors = 0
+            start = time.time()
+            checkpoint_entries = []
+
+            for i, u in enumerate(units):
+                if (i + 1) % 2000 == 0:
+                    elapsed = time.time() - start
+                    rate = (i + 1) / elapsed
+                    log.info(
+                        "    hashed %d/%d (%.0f%%) — to_upload=%d dup=%d exist=%d err=%d | rate=%.0f/s",
+                        i + 1,
+                        len(units),
+                        100 * (i + 1) / len(units),
+                        len(to_upload),
+                        grand_stats["skipped_dedup"],
+                        grand_stats["skipped_existing"],
+                        hash_errors,
+                        rate,
+                    )
+
+                path = nfs_path(u["id_user"], u["folder_name"], u["filename"])
+                if path is None:
+                    continue
+
+                sha1 = compute_sha1(path)
+                if sha1 is None:
+                    hash_errors += 1
+                    continue
+
+                if sha1 in seen_hashes:
+                    grand_stats["skipped_dedup"] += 1
+                    continue
+                seen_hashes.add(sha1)
+
+                if sha1 in existing:
+                    grand_stats["skipped_existing"] += 1
+                    continue
+
+                to_upload.append(u)
+                checkpoint_entries.append(
+                    {
+                        "unit_id": u["unit_id"],
+                        "id_user": u["id_user"],
+                        "filename": u["filename"],
+                        "folder_name": u["folder_name"],
+                        "filesize": u["filesize"],
+                        "takentime": u["takentime"],
+                        "mtime": u["mtime"],
+                        "sha1_hex": sha1.hex(),
+                    }
                 )
 
-            path = nfs_path(u["id_user"], u["folder_name"], u["filename"])
-            if path is None:
-                continue
+            # Write checkpoint so a restart skips re-hashing
+            try:
+                os.makedirs(checkpoint_dir, exist_ok=True)
+                import json as _json
 
-            sha1 = compute_sha1(path)
-            if sha1 is None:
-                hash_errors += 1
-                continue
+                with open(checkpoint_path, "w") as cf:
+                    _json.dump(checkpoint_entries, cf)
+                log.info(
+                    "  Checkpoint written: %s (%d entries)",
+                    checkpoint_path,
+                    len(checkpoint_entries),
+                )
+            except OSError as e:
+                log.warning("  Could not write checkpoint: %s", e)
 
-            # Dedup locally (multiple units may be the same file)
-            if sha1 in seen_hashes:
-                grand_stats["skipped_dedup"] += 1
-                continue
-            seen_hashes.add(sha1)
-
-            # Skip if already in immich
-            if sha1 in existing:
-                grand_stats["skipped_existing"] += 1
-                continue
-
-            to_upload.append(u)
-
-        log.info(
-            "  Phase 1 done: %d to upload, %d local dupes skipped, %d already in immich, %d hash errors",
-            len(to_upload),
-            grand_stats["skipped_dedup"],
-            grand_stats["skipped_existing"],
-            hash_errors,
-        )
+            log.info(
+                "  Phase 1 done: %d to upload, %d local dupes skipped, %d already in immich, %d hash errors",
+                len(to_upload),
+                grand_stats["skipped_dedup"],
+                grand_stats["skipped_existing"],
+                hash_errors,
+            )
 
         if dry_run or not to_upload:
             if not to_upload:
