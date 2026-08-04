@@ -17,7 +17,7 @@ metadata:
   namespace: databases
 spec:
   ttlSecondsAfterFinished: 86400
-  backoffLimit: 1
+  backoffLimit: 6
   activeDeadlineSeconds: 604800  # 7d — chuni has 125K+ photos
   template:
     spec:
