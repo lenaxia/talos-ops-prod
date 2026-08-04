@@ -36,10 +36,10 @@ spec:
               python /scripts/upload.py
           resources:
             requests:
-              memory: 1Gi
+              memory: 2Gi
               cpu: 500m
             limits:
-              memory: 4Gi
+              memory: 8Gi
               cpu: 4
           env:
             - name: SYNO_DB_HOST
