@@ -70,7 +70,8 @@ spec:
               - uvx hass-mcp
               - --port
               - "8000"
-              - --http
+              - --outputTransport
+              - streamableHttp
               - --healthEndpoint
               - /healthz
               - --logLevel
