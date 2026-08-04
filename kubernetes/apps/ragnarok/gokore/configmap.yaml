@@ -133,7 +133,7 @@ data:
       base_url: "$${OPENAI_API_BASE}"
       api_key: "$${OPENAI_API_KEY}"
       models:
-        strong: "default"
+        strong: "classifier"
         medium: "classifier"
         weak: "classifier"
       reactive_workers: 50
