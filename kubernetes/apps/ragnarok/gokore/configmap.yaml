@@ -84,10 +84,7 @@ data:
       navigation:
         stuck_escape_item_id: 602
         enable_npc_warp: true
-        lock_map: "izlude"
-        lock_map_x: 128
-        lock_map_y: 146
-        lock_radius: 50
+        lock_map: ""
 
     cognitive:
       enabled: true
@@ -136,8 +133,8 @@ data:
       base_url: "$${OPENAI_API_BASE}"
       api_key: "$${OPENAI_API_KEY}"
       models:
-        strong: "classifier"
-        medium: "classifier"
+        strong: "default"
+        medium: "default"
         weak: "classifier"
       reactive_workers: 50
       strategic_workers: 25
