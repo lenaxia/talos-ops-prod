@@ -17,7 +17,7 @@ metadata:
   namespace: databases
 spec:
   ttlSecondsAfterFinished: 86400
-  backoffLimit: 1
+  backoffLimit: 0
   activeDeadlineSeconds: 604800  # 7d — chuni has 125K+ photos
   template:
     spec:
@@ -65,7 +65,7 @@ spec:
             - name: UPLOAD_USERS
               value: "chuni"
             - name: CONCURRENCY
-              value: "4"
+              value: "8"
             - name: DRY_RUN
               value: "false"
             - name: CHUNI_API_KEY
