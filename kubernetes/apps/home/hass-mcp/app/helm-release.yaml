@@ -26,16 +26,21 @@ spec:
     keepHistory: false
   values:
     # ──────────────────────────────────────────────────────────────────────
-    # hass-mcp wrapped by supergateway
+    # hass-mcp (native streamable-http, no supergateway)
     # ──────────────────────────────────────────────────────────────────────
-    # supergateway (Node) listens on :8000 for HTTP/MCP (streamable-http)
-    # and spawns `uvx hass-mcp` (Python) as a stdio child. uvx fetches
-    # Python 3.13 and the hass-mcp PyPI package on first start, caching to
-    # /home/app (emptyDir).
+    # hass-mcp serves MCP streamable-http directly via its --http flag
+    # (uvicorn + the MCP Python SDK's streamable_http transport). uvx
+    # fetches Python 3.13 and the hass-mcp PyPI package on first start,
+    # caching to /home/app (emptyDir).
+    #
+    # supergateway was removed: its streamable-http stateful mode tripped a
+    # race with LiteLLM's mcp client (400 on tools/list), and its stateless
+    # mode spawned a fresh stdio child per POST so tools/list hit an
+    # uninitialized child. The native SDK transport handles both cases
+    # correctly.
     #
     # Network exposure: ClusterIP only. Reachable as
     #   http://hass-mcp.home.svc.cluster.local:8000/mcp
-    # Security note: supergateway has no inbound auth (verified via --help).
     # In-cluster access is the only protection. LiteLLM consumes this and
     # is the documented client; LiteLLM itself is Authelia-protected.
     # ──────────────────────────────────────────────────────────────────────
@@ -60,22 +65,20 @@ spec:
               repository: supercorp/supergateway
               # Pinned to digest of supercorp/supergateway:3.4.3-uvx
               # verified 2026-05-15 from Docker Hub.
+              # NOTE: used only for its bundled uv/uvx runtime, NOT for
+              # supergateway itself (we run hass-mcp --http directly).
               tag: 
                 3.4.3-uvx@sha256:2ffee900c18d8375096b392c8be15cd344535a05b753a5b182da227ab6306a15
               pullPolicy: IfNotPresent
             command:
-              - supergateway
+              - uvx
             args:
-              - --stdio
-              - uvx hass-mcp
+              - hass-mcp
+              - --http
+              - --host
+              - 0.0.0.0
               - --port
               - "8000"
-              - --outputTransport
-              - streamableHttp
-              - --healthEndpoint
-              - /healthz
-              - --logLevel
-              - info
             env:
               # Required by hass-mcp; HA_TOKEN is loaded from secret below.
               HA_URL: http://home-assistant.home.svc.cluster.local:8123
@@ -98,8 +101,7 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /healthz
+                  tcpSocket:
                     port: 8000
                   # First start: uv must download Python 3.13 (~25 MiB)
                   # and resolve hass-mcp's deps. Allow generous startup.
@@ -111,8 +113,7 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /healthz
+                  tcpSocket:
                     port: 8000
                   initialDelaySeconds: 15
                   periodSeconds: 10
@@ -127,7 +128,7 @@ spec:
         type: emptyDir
         globalMounts:
           - path: /home/app
-      # supergateway writes session/transient state under /tmp.
+      # hass-mcp (uvicorn) writes transient state under /tmp.
       tmp:
         type: emptyDir
         globalMounts:
