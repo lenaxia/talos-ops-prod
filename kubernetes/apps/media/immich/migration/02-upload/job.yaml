@@ -21,7 +21,7 @@ spec:
   activeDeadlineSeconds: 604800  # 7d — chuni has 125K+ photos
   template:
     spec:
-      restartPolicy: OnFailure
+      restartPolicy: Never
       nodeSelector:
         node-role.kubernetes.io/worker: "true"
       containers:

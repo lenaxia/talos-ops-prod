@@ -350,25 +350,32 @@ def main():
                 log.info("  Nothing to upload for %s", owner_name)
             continue
 
-        # Phase 2: upload new files
-        log.info(
-            "  Phase 2: uploading %d files (concurrency=%d)...",
-            len(to_upload),
-            concurrency,
-        )
+        # Phase 2: upload new files (sequential — proven stable)
+        log.info("  Phase 2: uploading %d files (sequential)...", len(to_upload))
         upload_start = time.time()
 
-        import threading
+        for i, u in enumerate(to_upload):
+            if (i + 1) % 100 == 0:
+                elapsed = time.time() - upload_start
+                done = i + 1
+                rate = done / elapsed if elapsed > 0 else 0
+                remaining = (len(to_upload) - done) / rate if rate > 0 else 0
+                log.info(
+                    "    uploaded %d/%d (%.1f%%) | ok=%d err=%d | rate=%.1f/s ETA=%.0fmin",
+                    done,
+                    len(to_upload),
+                    100 * done / len(to_upload),
+                    grand_stats["uploaded"],
+                    grand_stats["upload_error"],
+                    rate,
+                    remaining / 60,
+                )
 
-        stats_lock = threading.Lock()
-
-        def do_upload(u):
-            """Upload one file, return (status, detail). Robust wrapper."""
             try:
                 path = nfs_path(u["id_user"], u["folder_name"], u["filename"])
                 if path is None:
-                    return ("skip", "no_path")
-                return upload_file(
+                    continue
+                status, detail = upload_file(
                     api_key,
                     immich_url,
                     u["unit_id"],
@@ -379,53 +386,26 @@ def main():
                     u["id_user"],
                 )
             except Exception as e:
-                return ("exception", f"{type(e).__name__}: {str(e)[:150]}")
+                status = "exception"
+                detail = f"{type(e).__name__}: {str(e)[:150]}"
 
-        done_count = 0
-        with ThreadPoolExecutor(max_workers=concurrency) as pool:
-            futures = {pool.submit(do_upload, u): u for u in to_upload}
-            for future in as_completed(futures):
-                u = futures[future]
-                try:
-                    status, detail = future.result()
-                except Exception as e:
-                    status, detail = (
-                        "exception",
-                        f"future: {type(e).__name__}: {str(e)[:150]}",
+            if status in ("created", "replaced"):
+                grand_stats["uploaded"] += 1
+            elif status in ("duplicate", "skip"):
+                grand_stats["skipped_existing"] += 1
+            else:
+                grand_stats["upload_error"] += 1
+                if grand_stats["upload_error"] <= 20:
+                    log.warning(
+                        "    UPLOAD ERROR unit=%d status=%s detail=%s",
+                        u["unit_id"],
+                        status,
+                        detail,
                     )
-
-                with stats_lock:
-                    done_count += 1
-                    if status in ("created", "replaced"):
-                        grand_stats["uploaded"] += 1
-                    elif status in ("duplicate", "skip"):
-                        grand_stats["skipped_existing"] += 1
-                    else:
-                        grand_stats["upload_error"] += 1
-                        if grand_stats["upload_error"] <= 20:
-                            log.warning(
-                                "    UPLOAD ERROR unit=%d status=%s detail=%s",
-                                u["unit_id"],
-                                status,
-                                detail,
-                            )
-
-                    if done_count % 200 == 0:
-                        elapsed = time.time() - upload_start
-                        rate = done_count / elapsed if elapsed > 0 else 0
-                        remaining = (
-                            (len(to_upload) - done_count) / rate if rate > 0 else 0
-                        )
-                        log.info(
-                            "    uploaded %d/%d (%.1f%%) | ok=%d err=%d | rate=%.1f/s ETA=%.0fmin",
-                            done_count,
-                            len(to_upload),
-                            100 * done_count / len(to_upload),
-                            grand_stats["uploaded"],
-                            grand_stats["upload_error"],
-                            rate,
-                            remaining / 60,
-                        )
+                # On the 20th error, flush and exit to preserve logs
+                if grand_stats["upload_error"] == 20:
+                    log.error("    Too many errors, aborting to preserve logs")
+                    break
 
         elapsed = time.time() - upload_start
         log.info(
@@ -452,4 +432,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import traceback
+
+    try:
+        main()
+    except Exception:
+        log.error("FATAL EXCEPTION — full traceback:")
+        log.error(traceback.format_exc())
+        sys.stderr.flush()
+        raise
