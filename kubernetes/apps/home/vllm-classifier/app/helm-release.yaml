@@ -55,7 +55,7 @@ spec:
                     --tensor-parallel-size 1 \
                     --trust-remote-code \
                     --enable-auto-tool-choice \
-                    --tool-call-parser qwen3_coder \
+                    --tool-call-parser hermes \
                     --host 0.0.0.0 \
                     --port 8000 \
                     --dtype auto \
