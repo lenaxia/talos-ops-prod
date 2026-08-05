@@ -32,14 +32,14 @@ spec:
             - sh
             - -c
             - |
-              pip install --no-cache-dir psycopg2-binary requests && \
+              pip install --no-cache-dir psycopg2-binary requests requests-toolbelt && \
               python /scripts/upload.py
           resources:
             requests:
               memory: 2Gi
               cpu: 500m
             limits:
-              memory: 16Gi
+              memory: 24Gi
               cpu: 4
           env:
             - name: SYNO_DB_HOST
