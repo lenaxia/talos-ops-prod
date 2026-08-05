@@ -169,9 +169,14 @@ def upload_file(
 ):
     """Upload a single file via Immich REST API. Returns (status, detail).
 
+    Uses requests_toolbelt.MultipartEncoder for streaming uploads — avoids
+    loading entire file into memory (critical for multi-GB video files).
+
     Retries up to 3 times with exponential backoff (30s, 60s, 120s) to handle
     transient immich-server restarts under upload load.
     """
+    from requests_toolbelt import MultipartEncoder
+
     info = SYNO_TO_IMMICH[id_user]
     filename = os.path.basename(path)
     file_ext = os.path.splitext(filename)[1]
@@ -180,22 +185,26 @@ def upload_file(
     for attempt in range(max_retries + 1):
         try:
             with open(path, "rb") as f:
-                files = {"assetData": (filename, f)}
-                data = {
-                    "deviceAssetId": f"syno-{unit_id}",
-                    "deviceId": "synology-migration",
-                    "fileCreatedAt": epoch_to_iso(takentime),
-                    "fileModifiedAt": epoch_to_iso(mtime),
-                    "isFavorite": "false",
-                    "fileExtension": file_ext,
-                    "duration": "0",
-                }
+                m = MultipartEncoder(
+                    fields={
+                        "deviceAssetId": f"syno-{unit_id}",
+                        "deviceId": "synology-migration",
+                        "fileCreatedAt": epoch_to_iso(takentime),
+                        "fileModifiedAt": epoch_to_iso(mtime),
+                        "isFavorite": "false",
+                        "fileExtension": file_ext,
+                        "duration": "0",
+                        "assetData": (filename, f, "application/octet-stream"),
+                    }
+                )
                 resp = requests.post(
                     f"{immich_url}/api/assets",
-                    headers={"x-api-key": api_key},
-                    files=files,
-                    data=data,
-                    timeout=300,
+                    headers={
+                        "x-api-key": api_key,
+                        "Content-Type": m.content_type,
+                    },
+                    data=m,
+                    timeout=600,
                 )
         except requests.exceptions.RequestException as e:
             if attempt < max_retries:
