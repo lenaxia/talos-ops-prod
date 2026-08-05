@@ -93,7 +93,7 @@ esp32:
 
 wifi:
   id: wifi_id
-  fast_connect: $${hidden_ssid}
+  fast_connect: ${hidden_ssid}
   on_connect:
     - lambda: id(improv_ble_in_progress) = false;
     - script.execute: control_leds
