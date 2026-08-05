@@ -167,42 +167,71 @@ def load_immich_checksums(conn, owner_id):
 def upload_file(
     api_key, immich_url, unit_id, path, filesize, takentime, mtime, id_user
 ):
-    """Upload a single file via Immich REST API. Returns (status, detail)."""
+    """Upload a single file via Immich REST API. Returns (status, detail).
+
+    Retries up to 3 times with exponential backoff (30s, 60s, 120s) to handle
+    transient immich-server restarts under upload load.
+    """
     info = SYNO_TO_IMMICH[id_user]
     filename = os.path.basename(path)
     file_ext = os.path.splitext(filename)[1]
 
-    try:
-        with open(path, "rb") as f:
-            files = {"assetData": (filename, f)}
-            data = {
-                "deviceAssetId": f"syno-{unit_id}",
-                "deviceId": "synology-migration",
-                "fileCreatedAt": epoch_to_iso(takentime),
-                "fileModifiedAt": epoch_to_iso(mtime),
-                "isFavorite": "false",
-                "fileExtension": file_ext,
-                "duration": "0",
-            }
-            resp = requests.post(
-                f"{immich_url}/api/assets",
-                headers={"x-api-key": api_key},
-                files=files,
-                data=data,
-                timeout=300,
-            )
-    except requests.exceptions.RequestException as e:
-        return ("error", str(e)[:200])
+    max_retries = 3
+    for attempt in range(max_retries + 1):
+        try:
+            with open(path, "rb") as f:
+                files = {"assetData": (filename, f)}
+                data = {
+                    "deviceAssetId": f"syno-{unit_id}",
+                    "deviceId": "synology-migration",
+                    "fileCreatedAt": epoch_to_iso(takentime),
+                    "fileModifiedAt": epoch_to_iso(mtime),
+                    "isFavorite": "false",
+                    "fileExtension": file_ext,
+                    "duration": "0",
+                }
+                resp = requests.post(
+                    f"{immich_url}/api/assets",
+                    headers={"x-api-key": api_key},
+                    files=files,
+                    data=data,
+                    timeout=300,
+                )
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries:
+                backoff = 30 * (2**attempt)
+                log.warning(
+                    "    retry %d/%d unit=%d after %ds (%s)",
+                    attempt + 1,
+                    max_retries,
+                    unit_id,
+                    backoff,
+                    str(e)[:100],
+                )
+                time.sleep(backoff)
+                continue
+            return ("error", str(e)[:200])
 
-    if resp.status_code in (200, 201):
-        body = resp.json()
-        status = body.get("status", "unknown")
-        return (status, body.get("id", ""))
-    else:
-        return (
-            f"http_{resp.status_code}",
-            resp.text[:200],
-        )
+        if resp.status_code in (200, 201):
+            body = resp.json()
+            status = body.get("status", "unknown")
+            return (status, body.get("id", ""))
+        elif resp.status_code >= 500 and attempt < max_retries:
+            backoff = 30 * (2**attempt)
+            log.warning(
+                "    retry %d/%d unit=%d after %ds (HTTP %d)",
+                attempt + 1,
+                max_retries,
+                unit_id,
+                backoff,
+                resp.status_code,
+            )
+            time.sleep(backoff)
+            continue
+        else:
+            return (f"http_{resp.status_code}", resp.text[:200])
+
+    return ("error", "max retries exceeded")
 
 
 # ---------------------------------------------------------------------------
