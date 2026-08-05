@@ -63,7 +63,7 @@ spec:
             - name: IMMICH_URL
               value: http://immich-server.media.svc.cluster.local:2283
             - name: UPLOAD_USERS
-              value: "chuni"
+              value: "all"
             - name: CONCURRENCY
               value: "8"
             - name: CHECKPOINT_DIR
