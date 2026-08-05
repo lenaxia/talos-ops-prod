@@ -39,7 +39,7 @@ spec:
               memory: 2Gi
               cpu: 500m
             limits:
-              memory: 8Gi
+              memory: 16Gi
               cpu: 4
           env:
             - name: SYNO_DB_HOST
