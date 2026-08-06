@@ -150,10 +150,26 @@ spec:
           - path: /dev/shm
     service:
       app:
-        controller: a
-        ports:
-          http:
-            port: 8000
-        primary: true
-        type: LoadBalancer
-        loadBalancerIP: ${SVC_VLLM_CLASSIFIER_IP}
+        enabled: false
+    rawResources:
+      shared-svc:
+        enabled: true
+        forceRename: vllm-classifier
+        manifest: |
+          apiVersion: v1
+          kind: Service
+          metadata:
+            labels:
+              app.kubernetes.io/name: vllm-classifier
+              app.kubernetes.io/instance: vllm-classifier
+          spec:
+            type: LoadBalancer
+            loadBalancerIP: ${SVC_VLLM_CLASSIFIER_IP}
+            selector:
+              app.kubernetes.io/name: vllm-classifier
+              app.kubernetes.io/instance: vllm-classifier
+            ports:
+              - name: http
+                port: 8000
+                targetPort: 8000
+                protocol: TCP
