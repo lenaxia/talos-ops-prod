@@ -14,7 +14,7 @@ metadata:
 spec:
   ttlSecondsAfterFinished: 86400  # auto-clean 24h after completion
   backoffLimit: 2
-  activeDeadlineSeconds: 21600  # 6h hard kill — NFS walk shouldn't exceed 3h
+  activeDeadlineSeconds: 43200  # 12h hard kill — NFS SHA-1 walk over ~197K photos can exceed 6h (observed 2026-08-06)
   template:
     spec:
       restartPolicy: OnFailure
