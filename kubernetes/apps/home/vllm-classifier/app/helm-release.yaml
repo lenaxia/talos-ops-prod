@@ -64,6 +64,8 @@ spec:
             env:
               - name: TZ
                 value: ${TIMEZONE}
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337,GPU-6726851a-d64e-09c8-a938-1537593e3106,GPU-755d8528-c8c7-5fd4-f441-f061368f4547" # 3x 3090s (FE, Zotac, #3)
               - name: VLLM_USE_MODELSCOPE
                 value: "false"
             envFrom:
