@@ -33,26 +33,19 @@ spec:
           value: "special"
           effect: "NoSchedule"
     controllers:
-      app:
-        type: statefulset
-        replicas: 2
+      a:
+        type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
           app:
             image:
               repository: vllm/vllm-openai
-              tag: 
+              tag:
                 v0.26.0@sha256:ffb2d59b1c059a5bd8d781320c9f5189de8293693b7d95da54befddaa54abf52
             command: ["/bin/sh", "-c"]
             args:
               - |
-                ORDINAL=$(echo $POD_NAME | rev | cut -d- -f1 | rev)
-                case "$ORDINAL" in
-                  0) export NVIDIA_VISIBLE_DEVICES="GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337";; # 3090 FE
-                  1) export NVIDIA_VISIBLE_DEVICES="GPU-6726851a-d64e-09c8-a938-1537593e3106";; # 3090 Zotac
-                esac
-                echo "Pod $POD_NAME (ordinal $ORDINAL) assigned GPU: $NVIDIA_VISIBLE_DEVICES"
                 vllm serve \
                     cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
                     --served-model-name classifier \
@@ -70,10 +63,8 @@ spec:
             env:
               - name: TZ
                 value: ${TIMEZONE}
-              - name: POD_NAME
-                valueFrom:
-                  fieldRef:
-                    fieldPath: metadata.name
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337" # 3090 FE
               - name: VLLM_USE_MODELSCOPE
                 value: "false"
             envFrom:
@@ -93,13 +84,54 @@ spec:
                   failureThreshold: 5
                   timeoutSeconds: 10
               readiness: *probe
-            resources:
+            resources: &resources
               requests:
                 nvidia.com/gpu: "1"
                 memory: "16Gi"
               limits:
                 nvidia.com/gpu: "1"
                 memory: "22Gi"
+      b:
+        type: deployment
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          app:
+            image:
+              repository: vllm/vllm-openai
+              tag:
+                v0.26.0@sha256:ffb2d59b1c059a5bd8d781320c9f5189de8293693b7d95da54befddaa54abf52
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                vllm serve \
+                    cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
+                    --served-model-name classifier \
+                    --max-model-len 6000 \
+                    --max-num-seqs 20 \
+                    --gpu-memory-utilization 0.95 \
+                    --tensor-parallel-size 1 \
+                    --trust-remote-code \
+                    --enable-auto-tool-choice \
+                    --tool-call-parser hermes \
+                    --host 0.0.0.0 \
+                    --port 8000 \
+                    --dtype auto \
+                    --enable-log-requests
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-6726851a-d64e-09c8-a938-1537593e3106" # 3090 Zotac
+              - name: VLLM_USE_MODELSCOPE
+                value: "false"
+            envFrom:
+              - secretRef:
+                  name: *appname
+            probes:
+              liveness: *probe
+              readiness: *probe
+            resources: *resources
 
     persistence:
       data:
