@@ -70,8 +70,6 @@ spec:
             env:
               - name: TZ
                 value: ${TIMEZONE}
-              - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090
               - name: VLLM_USE_FLASHINFER_SAMPLER
                 value: "1"
               - name: PYTORCH_CUDA_ALLOC_CONF
@@ -106,9 +104,9 @@ spec:
                   timeoutSeconds: 10
             resources:
               requests:
-                nvidia.com/gpu: "1"
+                nvidia.com/rtx4090: "1"
               limits:
-                nvidia.com/gpu: "1"
+                nvidia.com/rtx4090: "1"
 
     persistence:
       data:
