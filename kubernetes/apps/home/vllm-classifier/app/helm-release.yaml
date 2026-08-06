@@ -150,6 +150,7 @@ spec:
           - path: /dev/shm
     service:
       app:
+        controller: a
         ports:
           http:
             port: 8000
