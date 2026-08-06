@@ -35,6 +35,7 @@ spec:
     controllers:
       app:
         type: deployment
+        replicas: 2
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
@@ -63,8 +64,6 @@ spec:
             env:
               - name: TZ
                 value: ${TIMEZONE}
-              - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337" # 3090
               - name: VLLM_USE_MODELSCOPE
                 value: "false"
             envFrom:
