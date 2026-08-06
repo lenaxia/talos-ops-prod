@@ -62,8 +62,8 @@ kubectl apply -k kubernetes/apps/media/immich/migration/job/
 kubectl get pods -n databases -l job-name=syno-immich-migration -w
 ```
 
-The Job has `activeDeadlineSeconds: 21600` (6h hard kill) and resource limits
-(memory 1Gi, cpu 2). It runs to completion and self-cleans after 24h.
+The Job has `activeDeadlineSeconds: 43200` (12h hard kill) and resource limits
+(memory 2Gi, cpu 2). It runs to completion and self-cleans after 24h.
 
 ---
 
@@ -110,7 +110,7 @@ watch -n 30 '
 - NFS mount disappears → pod fails to read files, script crashes on OSError
 - DB connection drops and doesn't recover → psycopg2 raises
 - Pod hits memory limit → OOMKilled, Job retries (backoffLimit: 2)
-- Job exceeds 6h → killed by `activeDeadlineSeconds`
+- Job exceeds 12h → killed by `activeDeadlineSeconds`
 
 **Soft failures (Job completes but with bad data):**
 - Match rate is 0% → script ran but nothing matched (path bug, NFS stale)
