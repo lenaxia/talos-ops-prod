@@ -107,6 +107,11 @@ spec:
         globalMounts:
           - path: /config/ldap-auth
         defaultMode: 0777
+      heatpump-package:
+        type: configMap
+        name: heatpump-package
+        globalMounts:
+          - path: /config/packages
       logs:
         type: emptyDir
         globalMounts:

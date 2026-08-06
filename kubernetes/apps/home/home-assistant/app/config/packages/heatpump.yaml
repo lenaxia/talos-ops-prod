@@ -1,0 +1,1014 @@
+# =============================================================================
+# Heat Pump control package
+# =============================================================================
+# Single-stage HP + future dual-fuel furnace, controlled via ZEN16 relays.
+#
+# Architecture:
+#
+#   Template Climate entity (thermostat card)
+#     ↓ reads/writes
+#   input_number.hp_cool_target / hp_heat_target
+#   input_select.hp_mode (off/cool/heat), hp_preset (none/eco/comfort/boost)
+#     ↓ effective target computed (preset + presence offset)
+#   Hysteresis regulation automation (60s time-pattern)
+#     ↓ toggles
+#   switch.hp_cool_demand / hp_heat_demand
+#     ↓ routed by
+#   Dual-fuel coordinator (outdoor-temp switchover)
+#     ↓ drives
+#   switch.hp_y_call  (lockout-gated) → garage_controller_1 (Y compressor)
+#   switch.hp_aux_call (future ZEN17) → furnace W
+#   switch.hp_o_call  → garage_controller_2 (O reversing valve)
+#   switch.hp_g_call  → garage_controller_3 (G indoor blower)
+#
+# Safety layer wraps everything:
+#   - E-STOP, master watchdog, sensor fail-safe
+#   - Compressor min-on/min-off lockouts
+#   - Environmental lockouts (outdoor too cold for cool, indoor freeze guard)
+#   - HP+furnace interlock (never simultaneous)
+# =============================================================================
+
+heatpump:
+
+  # ---------------------------------------------------------------------------
+  # INPUT BOOLEAN
+  # ---------------------------------------------------------------------------
+  input_boolean:
+    hp_enabled:
+      name: Heat Pump Master Arm
+      icon: mdi:power-cycle
+    hp_estop:
+      name: Heat Pump E-STOP
+      icon: mdi:alert-octagon
+    hp_first_commission:
+      name: HP First-Commission Crankcase Warmup
+      icon: mdi:clock-start
+    hp_aux_relay_installed:
+      name: HP Furnace Aux Relay Installed
+      icon: mdi:radiator
+      initial: false
+    hp_defrost_active:
+      name: HP Defrost Active (external signal)
+      icon: mdi:snowflake-melt
+      initial: false
+    hp_simulation_mode:
+      name: HP Simulation Mode (use virtual sensors)
+      icon: mdi:flask
+      initial: false
+    hp_presence_occupied:
+      name: HP Presence (occupied)
+      icon: mdi:account-check
+      initial: true
+    hp_heat_demand_internal:
+      name: HP Heat Demand Internal State
+    hp_cool_demand_internal:
+      name: HP Cool Demand Internal State
+    hp_aux_relay:
+      name: HP Furnace Aux Relay Placeholder (ZEN17 TBD)
+      icon: mdi:radiator-disabled
+
+  # ---------------------------------------------------------------------------
+  # INPUT NUMBER
+  # ---------------------------------------------------------------------------
+  input_number:
+    hp_sim_indoor_temp:
+      name: Simulated Indoor Temp (F)
+      min: 0
+      max: 120
+      step: 0.1
+      initial: 72
+      unit_of_measurement: "F"
+      icon: mdi:thermometer
+    hp_sim_outdoor_temp:
+      name: Simulated Outdoor Temp (F)
+      min: -20
+      max: 130
+      step: 0.1
+      initial: 75
+      unit_of_measurement: "F"
+      icon: mdi:thermometer-lines
+    hp_cool_target:
+      name: Cooling Setpoint
+      min: 60
+      max: 82
+      step: 1
+      initial: 74
+      unit_of_measurement: "F"
+      icon: mdi:thermostat
+    hp_heat_target:
+      name: Heating Setpoint
+      min: 40
+      max: 85
+      step: 1
+      initial: 68
+      unit_of_measurement: "F"
+      icon: mdi:thermostat
+    hp_deadband:
+      name: Hysteresis Deadband (F)
+      min: 1
+      max: 5
+      step: 0.5
+      initial: 2
+      unit_of_measurement: "F"
+    hp_presence_offset:
+      name: Presence Away Offset (F)
+      min: 0
+      max: 10
+      step: 1
+      initial: 4
+      unit_of_measurement: "F"
+    hp_min_off_time:
+      name: Compressor Min Off (s)
+      min: 60
+      max: 900
+      step: 15
+      initial: 300
+      unit_of_measurement: "s"
+    hp_min_on_time:
+      name: Compressor Min On (s)
+      min: 60
+      max: 900
+      step: 15
+      initial: 360
+      unit_of_measurement: "s"
+    hp_fan_off_delay:
+      name: Fan Off-Delay (s)
+      min: 0
+      max: 300
+      step: 15
+      initial: 90
+      unit_of_measurement: "s"
+    hp_cool_outdoor_low_lockout:
+      name: Cool Outdoor Low Lockout (F)
+      min: 30
+      max: 80
+      step: 1
+      initial: 60
+      unit_of_measurement: "F"
+    hp_indoor_low_lockout:
+      name: Indoor Freeze Guard (F)
+      min: 40
+      max: 70
+      step: 1
+      initial: 60
+      unit_of_measurement: "F"
+    hp_compressor_lockout:
+      name: HP Compressor Lockout Balance Point (F)
+      min: 0
+      max: 80
+      step: 1
+      initial: 35
+      unit_of_measurement: "F"
+      icon: mdi:thermostat-cog
+    hp_aux_lockout:
+      name: Furnace Aux Lockout (F)
+      min: 10
+      max: 80
+      step: 1
+      initial: 40
+      unit_of_measurement: "F"
+      icon: mdi:thermostat-cog
+
+  # ---------------------------------------------------------------------------
+  # INPUT DATETIME
+  # ---------------------------------------------------------------------------
+  input_datetime:
+    hp_y_on_at:
+      name: HP Y Last Energized
+      has_date: true
+      has_time: true
+    hp_y_off_at:
+      name: HP Y Last De-energized
+      has_date: true
+      has_time: true
+    hp_aux_on_at:
+      name: HP Aux Last Energized
+      has_date: true
+      has_time: true
+    hp_aux_off_at:
+      name: HP Aux Last De-energized
+      has_date: true
+      has_time: true
+
+  # ---------------------------------------------------------------------------
+  # INPUT SELECT
+  # ---------------------------------------------------------------------------
+  input_select:
+    hp_mode:
+      name: Heat Pump System Mode
+      options: ["off", "cool", "heat"]
+      icon: mdi:hvac
+    hp_heat_source:
+      name: Active Heat Source
+      options: ["none", "heat_pump", "furnace", "defrost_fallback"]
+      icon: mdi:radiator
+    hp_preset:
+      name: HP Preset
+      options: ["none", "eco", "comfort", "boost"]
+      initial: "none"
+      icon: mdi:tune
+
+  # ---------------------------------------------------------------------------
+  # GROUP
+  # ---------------------------------------------------------------------------
+  group:
+    hp_door_window_sensors:
+      name: HP Door/Window Lockout Sensors
+      entities:
+        - binary_sensor.front_door_intrusion
+        - binary_sensor.garage_entry_intrusion
+
+  # ---------------------------------------------------------------------------
+  # CLIMATE (custom component - thermostat card face)
+  # ---------------------------------------------------------------------------
+  climate:
+    - platform: hp_climate
+
+  # ---------------------------------------------------------------------------
+  # TEMPLATE ENTITIES
+  # ---------------------------------------------------------------------------
+  # SCRIPT (regulation logic, called from 60s tick + debounced input trigger)
+  # ---------------------------------------------------------------------------
+  script:
+    hp_evaluate:
+      mode: single
+      sequence:
+        # Guard: skip evaluation if estop active or master arm off
+        - condition: template
+          value_template: >-
+            {{ is_state('input_boolean.hp_enabled','on') and
+               not is_state('input_boolean.hp_estop','on') }}
+        - choose:
+            # --- COOL MODE ---
+            - conditions:
+                - condition: state
+                  entity_id: input_select.hp_mode
+                  state: "cool"
+              sequence:
+                - choose:
+                    # Only turn ON if currently off AND above upper threshold
+                    - conditions:
+                        - condition: template
+                          value_template: >-
+                            {{ is_state('switch.hp_cool_demand','off') and
+                               (states('sensor.hp_indoor_temperature_averaged') | float(999)) >=
+                               (states('sensor.hp_effective_cool_target') | float(74)) +
+                               (states('input_number.hp_deadband') | float(2)) / 2 }}
+                      sequence:
+                        - service: switch.turn_on
+                          target: { entity_id: switch.hp_cool_demand }
+                    # Only turn OFF if currently on AND below lower threshold
+                    - conditions:
+                        - condition: template
+                          value_template: >-
+                            {{ is_state('switch.hp_cool_demand','on') and
+                               (states('sensor.hp_indoor_temperature_averaged') | float(999)) <=
+                               (states('sensor.hp_effective_cool_target') | float(74)) -
+                               (states('input_number.hp_deadband') | float(2)) / 2 }}
+                      sequence:
+                        - service: switch.turn_off
+                          target: { entity_id: switch.hp_cool_demand }
+
+            # --- HEAT MODE ---
+            - conditions:
+                - condition: state
+                  entity_id: input_select.hp_mode
+                  state: "heat"
+              sequence:
+                - choose:
+                    - conditions:
+                        - condition: template
+                          value_template: >-
+                            {{ is_state('switch.hp_heat_demand','off') and
+                               (states('sensor.hp_indoor_temperature_averaged') | float(999)) <=
+                               (states('sensor.hp_effective_heat_target') | float(68)) -
+                               (states('input_number.hp_deadband') | float(2)) / 2 }}
+                      sequence:
+                        - service: switch.turn_on
+                          target: { entity_id: switch.hp_heat_demand }
+                    - conditions:
+                        - condition: template
+                          value_template: >-
+                            {{ is_state('switch.hp_heat_demand','on') and
+                               (states('sensor.hp_indoor_temperature_averaged') | float(999)) >=
+                               (states('sensor.hp_effective_heat_target') | float(68)) +
+                               (states('input_number.hp_deadband') | float(2)) / 2 }}
+                      sequence:
+                        - service: switch.turn_off
+                          target: { entity_id: switch.hp_heat_demand }
+
+            # --- OFF MODE ---
+            - conditions:
+                - condition: state
+                  entity_id: input_select.hp_mode
+                  state: "off"
+              sequence:
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_cool_demand }
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_heat_demand }
+
+  # ---------------------------------------------------------------------------
+  template:
+    # --- SENSORS ---
+    - sensor:
+        - name: "HP Indoor Temperature Averaged"
+          unique_id: hp_indoor_temperature_averaged
+          unit_of_measurement: "F"
+          state: >-
+            {% if is_state('input_boolean.hp_simulation_mode','on') %}
+              {{ states('input_number.hp_sim_indoor_temp') | float(72) }}
+            {% else %}
+              {% set cands = [
+                'sensor.gw3000b_indoor_temperature',
+                'sensor.firefly_kitchen_kitchen_sensor_temperature',
+                'sensor.fireflylivingroom_living_room_sensor_temperature',
+                'sensor.firefly_livingroom_living_room_sensor_temperature',
+                'sensor.water_valve_actuator_air_temperature'
+              ] %}
+              {% set vs = cands | map('states') | select('is_number') | list %}
+              {% if vs | length > 0 %}
+                {{ (vs | map('float') | average) | round(1) }}
+              {% else %}{{ none }}{% endif %}
+            {% endif %}
+
+        - name: "HP Outdoor Temperature"
+          unique_id: hp_outdoor_temperature
+          unit_of_measurement: "F"
+          state: >-
+            {% if is_state('input_boolean.hp_simulation_mode','on') %}
+              {{ states('input_number.hp_sim_outdoor_temp') | float(75) }}
+            {% else %}
+              {{ states('sensor.gw3000b_outdoor_temperature') }}
+            {% endif %}
+
+        - name: "HP Effective Cool Target"
+          unique_id: hp_effective_cool_target
+          unit_of_measurement: "F"
+          state: >-
+            {% set base = states('input_number.hp_cool_target') | float(74) %}
+            {% set preset = states('input_select.hp_preset') %}
+            {% set away = states('input_number.hp_presence_offset') | float(0) if is_state('input_boolean.hp_presence_occupied','off') else 0 %}
+            {% set po = 3 if preset == 'eco' else (-3 if preset == 'boost' else 0) %}
+            {{ (base + po + away) | round(1) }}
+
+        - name: "HP Effective Heat Target"
+          unique_id: hp_effective_heat_target
+          unit_of_measurement: "F"
+          state: >-
+            {% set base = states('input_number.hp_heat_target') | float(68) %}
+            {% set preset = states('input_select.hp_preset') %}
+            {% set away = (-1 * states('input_number.hp_presence_offset') | float(0)) if is_state('input_boolean.hp_presence_occupied','off') else 0 %}
+            {% set po = -3 if preset == 'eco' else (3 if preset == 'boost' else 0) %}
+            {{ (base + po + away) | round(1) }}
+
+        - name: "HP Y Off-Lockout Remaining"
+          unique_id: hp_y_lockout_remaining
+          unit_of_measurement: "s"
+          state: >-
+            {% set ts = states('input_datetime.hp_y_off_at') %}
+            {% if ts in ['unknown','unavailable','none'] %}0
+            {% else %}
+              {% set e = now().timestamp() - (ts | as_timestamp(0)) %}
+              {% set m = states('input_number.hp_min_off_time') | int(300) %}
+              {{ [m - e, 0] | max | int }}
+            {% endif %}
+
+        - name: "HP Y On-Lockout Remaining"
+          unique_id: hp_y_min_on_remaining
+          unit_of_measurement: "s"
+          state: >-
+            {% set ts = states('input_datetime.hp_y_on_at') %}
+            {% if ts in ['unknown','unavailable','none'] %}0
+            {% else %}
+              {% set e = now().timestamp() - (ts | as_timestamp(0)) %}
+              {% set m = states('input_number.hp_min_on_time') | int(360) %}
+              {{ [m - e, 0] | max | int }}
+            {% endif %}
+
+        - name: "HP Aux Off-Lockout Remaining"
+          unique_id: hp_aux_lockout_remaining
+          unit_of_measurement: "s"
+          state: >-
+            {% set ts = states('input_datetime.hp_aux_off_at') %}
+            {% if ts in ['unknown','unavailable','none'] %}0
+            {% else %}
+              {% set e = now().timestamp() - (ts | as_timestamp(0)) %}
+              {% set m = states('input_number.hp_min_off_time') | int(300) %}
+              {{ [m - e, 0] | max | int }}
+            {% endif %}
+
+    # --- BINARY SENSORS ---
+    - binary_sensor:
+        - name: "HP Sensors Healthy"
+          unique_id: hp_sensors_healthy
+          device_class: problem
+          state: >-
+            {{ states('sensor.hp_indoor_temperature_averaged') | is_number and
+               states('sensor.hp_outdoor_temperature') | is_number }}
+
+        - name: "HP Door Window Open"
+          unique_id: hp_door_window_open
+          device_class: opening
+          state: >-
+            {{ expand('group.hp_door_window_sensors')
+              | selectattr('state','eq','on') | list | length > 0 }}
+
+        - name: "HP Y Call Allowed"
+          unique_id: hp_y_call_allowed
+          state: >-
+            {{ is_state('input_boolean.hp_enabled','on') and
+               not is_state('input_boolean.hp_estop','on') and
+               not is_state('input_boolean.hp_first_commission','on') and
+               is_state('binary_sensor.hp_sensors_healthy','on') and
+               not is_state('binary_sensor.hp_door_window_open','on') and
+               (is_state('switch.hp_y_call','on') or
+                (states('sensor.hp_y_lockout_remaining') | int(0)) == 0) and
+               (states('sensor.hp_outdoor_temperature') | float(999)) >=
+                 (states('input_number.hp_cool_outdoor_low_lockout') | float(60)) and
+               (states('sensor.hp_indoor_temperature_averaged') | float(999)) >=
+                 (states('input_number.hp_indoor_low_lockout') | float(60)) }}
+
+        - name: "HP Heat-Pump Mode Allowed"
+          unique_id: hp_heat_pump_allowed
+          state: >-
+            {{ (states('sensor.hp_outdoor_temperature') | float(999)) >=
+                 (states('input_number.hp_compressor_lockout') | float(35)) }}
+
+        - name: "HP Furnace Mode Allowed"
+          unique_id: hp_furnace_allowed
+          state: >-
+            {{ is_state('input_boolean.hp_aux_relay_installed','on') and
+               (states('sensor.hp_outdoor_temperature') | float(999)) <=
+                 (states('input_number.hp_aux_lockout') | float(40)) }}
+
+        - name: "HP Defrost Fallback Allowed"
+          unique_id: hp_defrost_fallback_allowed
+          state: >-
+            {{ is_state('input_boolean.hp_aux_relay_installed','on') and
+               is_state('input_boolean.hp_defrost_active','on') }}
+
+    # --- SWITCHES ---
+    - switch:
+        - name: "HP Heat Demand"
+          unique_id: hp_heat_demand
+          icon: mdi:fire
+          state: "{{ is_state('input_boolean.hp_heat_demand_internal','on') }}"
+          turn_on:
+            service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hp_heat_demand_internal
+          turn_off:
+            service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.hp_heat_demand_internal
+
+        - name: "HP Cool Demand"
+          unique_id: hp_cool_demand
+          icon: mdi:snowflake
+          state: "{{ is_state('input_boolean.hp_cool_demand_internal','on') }}"
+          turn_on:
+            service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hp_cool_demand_internal
+          turn_off:
+            service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.hp_cool_demand_internal
+
+        - name: "HP Reversing Valve O"
+          unique_id: hp_o_call
+          state: "{{ is_state('switch.garage_controller_2','on') }}"
+          turn_on:
+            service: switch.turn_on
+            target:
+              entity_id: switch.garage_controller_2
+          turn_off:
+            service: switch.turn_off
+            target:
+              entity_id: switch.garage_controller_2
+
+        - name: "HP Indoor Blower G"
+          unique_id: hp_g_call
+          state: "{{ is_state('switch.garage_controller_3','on') }}"
+          turn_on:
+            service: switch.turn_on
+            target:
+              entity_id: switch.garage_controller_3
+          turn_off:
+            service: switch.turn_off
+            target:
+              entity_id: switch.garage_controller_3
+
+        - name: "HP Compressor Call Y"
+          unique_id: hp_y_call
+          state: "{{ is_state('switch.garage_controller_1','on') }}"
+          turn_on:
+            - condition: template
+              value_template: "{{ is_state('binary_sensor.hp_y_call_allowed','on') }}"
+            - service: switch.turn_on
+              target:
+                entity_id: switch.garage_controller_1
+            - service: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.hp_y_on_at
+              data:
+                datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          turn_off:
+            - condition: template
+              value_template: >-
+                {{ (states('sensor.hp_y_min_on_remaining') | int(0)) == 0
+                   or is_state('input_boolean.hp_estop','on')
+                   or not is_state('binary_sensor.hp_sensors_healthy','on')
+                   or is_state('binary_sensor.hp_door_window_open','on')
+                   or is_state('input_select.hp_heat_source','furnace')
+                   or is_state('input_select.hp_heat_source','defrost_fallback') }}
+            - service: switch.turn_off
+              target:
+                entity_id: switch.garage_controller_1
+            - service: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.hp_y_off_at
+              data:
+                datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+        - name: "HP Furnace Aux Call W"
+          unique_id: hp_aux_call
+          state: "{{ is_state('input_boolean.hp_aux_relay','on') }}"
+          turn_on:
+            - condition: template
+              value_template: "{{ is_state('input_boolean.hp_aux_relay_installed','on') }}"
+            - condition: template
+              value_template: "{{ is_state('binary_sensor.hp_furnace_allowed','on') or is_state('binary_sensor.hp_defrost_fallback_allowed','on') }}"
+            - condition: template
+              value_template: "{{ not is_state('switch.garage_controller_1','on') }}"
+            - condition: template
+              value_template: "{{ (states('sensor.hp_aux_lockout_remaining') | int(0)) == 0 }}"
+            - service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.hp_aux_relay
+            - service: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.hp_aux_on_at
+              data:
+                datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          turn_off:
+            - condition: template
+              value_template: >-
+                {{ (states('sensor.hp_y_lockout_remaining') | int(0)) == 0
+                   or is_state('input_boolean.hp_estop','on')
+                   or not is_state('binary_sensor.hp_sensors_healthy','on') }}
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.hp_aux_relay
+            - service: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.hp_aux_off_at
+              data:
+                datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+  # ---------------------------------------------------------------------------
+  # AUTOMATIONS
+  # ---------------------------------------------------------------------------
+  automation:
+    # ====================================================================
+    # REGULATION (60s environmental tick)
+    # ====================================================================
+    - id: hp_regulate_tick
+      alias: "HP Regulation tick (60s)"
+      trigger:
+        - platform: time_pattern
+          minutes: "/1"
+      condition:
+        - condition: state
+          entity_id: input_boolean.hp_enabled
+          state: "on"
+      action:
+        - service: script.hp_evaluate
+
+    # ====================================================================
+    # REGULATION (debounced input changes — 5s after last user input)
+    # ====================================================================
+    - id: hp_regulate_on_change
+      alias: "HP Regulation on input change (5s debounce)"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: input_number.hp_cool_target
+        - platform: state
+          entity_id: input_number.hp_heat_target
+        - platform: state
+          entity_id: input_select.hp_mode
+        - platform: state
+          entity_id: input_select.hp_preset
+        - platform: state
+          entity_id: input_boolean.hp_presence_occupied
+      condition:
+        - condition: state
+          entity_id: input_boolean.hp_enabled
+          state: "on"
+      action:
+        - delay: "00:00:05"
+        - service: script.hp_evaluate
+
+    # ====================================================================
+    # HARDWARE SAFETY
+    # ====================================================================
+    # NOTE: ZEN16 master switch (switch.garage_controller) auto-toggles as a
+    # zwave aggregate. We DO NOT touch it — interacting with it kills all child
+    # relays. Individual relays (garage_controller_1/2/3) are controlled directly.
+    - id: hp_estop_kill_all
+      alias: "HP E-STOP kills all relays immediately"
+      trigger:
+        - platform: state
+          entity_id: input_boolean.hp_estop
+          to: "on"
+      action:
+        - service: switch.turn_off
+          target:
+            entity_id: switch.hp_cool_demand
+        - service: switch.turn_off
+          target:
+            entity_id: switch.hp_heat_demand
+        - service: switch.turn_off
+          target:
+            entity_id: switch.hp_o_call
+        - service: switch.turn_off
+          target:
+            entity_id: switch.hp_g_call
+        - service: switch.turn_off
+          target:
+            entity_id: switch.garage_controller_1
+        - service: switch.turn_off
+          target:
+            entity_id: switch.garage_controller_2
+        - service: switch.turn_off
+          target:
+            entity_id: switch.garage_controller_3
+        - service: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.hp_aux_relay
+        - service: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.hp_y_off_at
+          data:
+            datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        - service: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.hp_aux_off_at
+          data:
+            datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        - service: persistent_notification.create
+          data:
+            title: "HP E-STOP ACTIVATED"
+            message: "All HP relays forced off. Clear input_boolean.hp_estop to resume."
+
+    - id: hp_sensor_fail_safe
+      alias: "HP Sensor-fail safe: drop all if sensors unhealthy"
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.hp_sensors_healthy
+          to: "off"
+          for: "00:00:30"
+      action:
+        - service: switch.turn_off
+          target:
+            entity_id: switch.hp_cool_demand
+        - service: switch.turn_off
+          target:
+            entity_id: switch.hp_heat_demand
+
+    # ====================================================================
+    # DUAL-FUEL COORDINATOR
+    # Routes heat demand to HP (Y) or furnace (W) based on outdoor temp.
+    # Priority: defrost_fallback > furnace > heat_pump > none
+    # ====================================================================
+    - id: hp_dual_fuel_route_heat_demand
+      alias: "HP Dual-fuel: route heat demand to Y or Aux"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.hp_heat_pump_allowed
+        - platform: state
+          entity_id: binary_sensor.hp_furnace_allowed
+        - platform: state
+          entity_id: binary_sensor.hp_defrost_fallback_allowed
+        - platform: state
+          entity_id: switch.hp_heat_demand
+          to: "on"
+        - platform: state
+          entity_id: switch.hp_heat_demand
+          to: "off"
+      action:
+        - choose:
+            # --- DEFROST FALLBACK (highest priority) ---
+            - conditions:
+                - condition: state
+                  entity_id: binary_sensor.hp_defrost_fallback_allowed
+                  state: "on"
+                - condition: state
+                  entity_id: switch.hp_heat_demand
+                  state: "on"
+              sequence:
+                - service: input_select.select_option
+                  target: { entity_id: input_select.hp_heat_source }
+                  data: { option: "defrost_fallback" }
+                - delay: "00:00:02"
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_y_call }
+                - wait_template: "{{ is_state('switch.hp_y_call','off') }}"
+                  timeout: "00:10:00"
+                - condition: template
+                  value_template: "{{ is_state('switch.hp_heat_demand','on') }}"
+                - service: switch.turn_on
+                  target: { entity_id: switch.hp_aux_call }
+
+            # --- HEAT DEMAND OFF ---
+            - conditions:
+                - condition: state
+                  entity_id: switch.hp_heat_demand
+                  state: "off"
+              sequence:
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_y_call }
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_aux_call }
+                - service: input_select.select_option
+                  target: { entity_id: input_select.hp_heat_source }
+                  data: { option: "none" }
+
+            # --- FURNACE (outdoor below aux lockout) ---
+            - conditions:
+                - condition: state
+                  entity_id: binary_sensor.hp_furnace_allowed
+                  state: "on"
+                - condition: state
+                  entity_id: switch.hp_heat_demand
+                  state: "on"
+              sequence:
+                - service: input_select.select_option
+                  target: { entity_id: input_select.hp_heat_source }
+                  data: { option: "furnace" }
+                - delay: "00:00:02"
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_y_call }
+                - wait_template: "{{ is_state('switch.hp_y_call','off') }}"
+                  timeout: "00:10:00"
+                - condition: template
+                  value_template: "{{ is_state('switch.hp_heat_demand','on') }}"
+                - service: switch.turn_on
+                  target: { entity_id: switch.hp_aux_call }
+
+            # --- HEAT PUMP (outdoor above compressor lockout) ---
+            - conditions:
+                - condition: state
+                  entity_id: binary_sensor.hp_heat_pump_allowed
+                  state: "on"
+                - condition: state
+                  entity_id: switch.hp_heat_demand
+                  state: "on"
+              sequence:
+                - service: input_select.select_option
+                  target: { entity_id: input_select.hp_heat_source }
+                  data: { option: "heat_pump" }
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_aux_call }
+                - delay: "00:00:30"
+                - condition: template
+                  value_template: "{{ is_state('switch.hp_heat_demand','on') }}"
+                - service: switch.turn_on
+                  target: { entity_id: switch.hp_y_call }
+
+            # --- NO SOURCE AVAILABLE ---
+          default:
+            - service: input_select.select_option
+              target: { entity_id: input_select.hp_heat_source }
+              data: { option: "none" }
+            - condition: state
+              entity_id: switch.hp_heat_demand
+              state: "on"
+            - service: persistent_notification.create
+              data:
+                title: "HP Heat Demand Unmet"
+                message: >-
+                  Heat demand ON but no source available.
+                  Outdoor={{ states('sensor.hp_outdoor_temperature') }}F,
+                  compressor_lockout={{ states('input_number.hp_compressor_lockout') }}F,
+                  aux_lockout={{ states('input_number.hp_aux_lockout') }}F.
+
+    # ====================================================================
+    # COOLING ORCHESTRATION (O + G + Y sequencing)
+    # ====================================================================
+    - id: hp_orchestrate_cool_start
+      alias: "HP Cool start: O then G"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: switch.hp_cool_demand
+          to: "on"
+      condition:
+        - condition: state
+          entity_id: switch.hp_cool_demand
+          state: "on"
+      action:
+        - service: switch.turn_on
+          target: { entity_id: switch.hp_o_call }
+        - delay: "00:01:00"
+        - condition: state
+          entity_id: switch.hp_cool_demand
+          state: "on"
+        - service: switch.turn_on
+          target: { entity_id: switch.hp_g_call }
+
+    - id: hp_orchestrate_y_engage
+      alias: "HP Y engage (after lockout clears, cool or heat-pump)"
+      mode: single
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.hp_y_call_allowed
+          to: "on"
+        - platform: state
+          entity_id: switch.hp_g_call
+          to: "on"
+      condition:
+        # Y needs to be called for either cooling OR heat-pump heat
+        - condition: template
+          value_template: >-
+            {{ is_state('switch.hp_cool_demand','on') or
+               (is_state('switch.hp_heat_demand','on') and
+                is_state('input_select.hp_heat_source','heat_pump')) }}
+        - condition: state
+          entity_id: switch.hp_y_call
+          state: "off"
+        - condition: state
+          entity_id: binary_sensor.hp_y_call_allowed
+          state: "on"
+      action:
+        - service: switch.turn_on
+          target: { entity_id: switch.hp_y_call }
+
+    - id: hp_orchestrate_cool_stop
+      alias: "HP Cool stop: Y off then fan delay then O off"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: switch.hp_cool_demand
+          to: "off"
+      action:
+        # Wait for min_on to expire before turning Y off
+        - wait_template: >-
+            {{ (states('sensor.hp_y_min_on_remaining') | int(0)) == 0 }}
+          timeout: "00:10:00"
+        - condition: state
+          entity_id: switch.hp_cool_demand
+          state: "off"
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_y_call }
+        - delay:
+            seconds: "{{ states('input_number.hp_fan_off_delay') | int(90) }}"
+        - condition: template
+          value_template: "{{ is_state('switch.hp_cool_demand','off') }}"
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_g_call }
+        - delay: "00:00:10"
+        - condition: template
+          value_template: "{{ is_state('switch.hp_cool_demand','off') }}"
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_o_call }
+
+    # ====================================================================
+    # HEAT PUMP HEAT ORCHESTRATION (G + Y, O off)
+    # ====================================================================
+    - id: hp_orchestrate_heat_pump_start
+      alias: "HP Heat-pump start: G then Y (O off)"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: input_select.hp_heat_source
+          to: "heat_pump"
+      action:
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_o_call }
+        - delay: "00:00:10"
+        - service: switch.turn_on
+          target: { entity_id: switch.hp_g_call }
+        - delay: "00:00:05"
+        - service: switch.turn_on
+          target: { entity_id: switch.hp_y_call }
+
+    - id: hp_orchestrate_heat_pump_stop
+      alias: "HP Heat-pump stop: Y off then fan delay"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: input_select.hp_heat_source
+          from: "heat_pump"
+      action:
+        - wait_template: >-
+            {{ (states('sensor.hp_y_min_on_remaining') | int(0)) == 0 }}
+          timeout: "00:10:00"
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_y_call }
+        - delay:
+            seconds: "{{ states('input_number.hp_fan_off_delay') | int(90) }}"
+        - condition: template
+          value_template: "{{ is_state('input_select.hp_heat_source','none') or is_state('input_select.hp_heat_source','furnace') }}"
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_g_call }
+
+    # ====================================================================
+    # FURNACE ORCHESTRATION (G + W, Y off)
+    # ====================================================================
+    - id: hp_orchestrate_furnace_start
+      alias: "HP Furnace start: G then W"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: input_select.hp_heat_source
+          to: "furnace"
+      action:
+        - service: switch.turn_on
+          target: { entity_id: switch.hp_g_call }
+        - delay: "00:00:05"
+        - service: switch.turn_on
+          target: { entity_id: switch.hp_aux_call }
+
+    - id: hp_orchestrate_furnace_stop
+      alias: "HP Furnace stop: W off then fan delay"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: input_select.hp_heat_source
+          from: "furnace"
+      action:
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_aux_call }
+        - delay:
+            seconds: "{{ states('input_number.hp_fan_off_delay') | int(90) }}"
+        - condition: template
+          value_template: "{{ is_state('input_select.hp_heat_source','none') or is_state('input_select.hp_heat_source','heat_pump') }}"
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_g_call }
+
+    # ====================================================================
+    # DEFROST FALLBACK ORCHESTRATION
+    # ====================================================================
+    - id: hp_orchestrate_defrost_fallback_start
+      alias: "HP Defrost fallback start: Y off then W on"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: input_select.hp_heat_source
+          to: "defrost_fallback"
+      action:
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_y_call }
+        - delay: "00:00:30"
+        - service: switch.turn_on
+          target: { entity_id: switch.hp_aux_call }
+
+    - id: hp_orchestrate_defrost_fallback_stop
+      alias: "HP Defrost fallback stop: W off"
+      mode: restart
+      trigger:
+        - platform: state
+          entity_id: input_select.hp_heat_source
+          from: "defrost_fallback"
+      action:
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_aux_call }
+
+    # ====================================================================
+    # DOOR/WINDOW LOCKOUT
+    # ====================================================================
+    - id: hp_door_window_lockout_engage
+      alias: "HP Door/Window lockout engages on open"
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.hp_door_window_open
+          to: "on"
+      action:
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_cool_demand }
+        - service: switch.turn_off
+          target: { entity_id: switch.hp_heat_demand }
+
+    # ====================================================================
+    # MODE SYNC (climate entity ↔ input_select)
+    # ====================================================================
+    - id: hp_mode_to_select
+      alias: "HP Sync: mode changes update input_select"
+      trigger:
+        - platform: state
+          entity_id: input_select.hp_mode
+      action:
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.hp_mode
+                  state: "off"
+              sequence:
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_cool_demand }
+                - service: switch.turn_off
+                  target: { entity_id: switch.hp_heat_demand }
