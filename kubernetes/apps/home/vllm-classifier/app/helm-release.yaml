@@ -47,11 +47,12 @@ spec:
             command: ["/bin/sh", "-c"]
             args:
               - |
-                case "$${POD_NAME##*-}" in
+                ORDINAL=$(echo $POD_NAME | rev | cut -d- -f1 | rev)
+                case "$ORDINAL" in
                   0) export NVIDIA_VISIBLE_DEVICES="GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337";; # 3090 FE
                   1) export NVIDIA_VISIBLE_DEVICES="GPU-6726851a-d64e-09c8-a938-1537593e3106";; # 3090 Zotac
                 esac
-                echo "Pod $${POD_NAME} assigned GPU: $${NVIDIA_VISIBLE_DEVICES}"
+                echo "Pod $POD_NAME (ordinal $ORDINAL) assigned GPU: $NVIDIA_VISIBLE_DEVICES"
                 vllm serve \
                     cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
                     --served-model-name classifier \
