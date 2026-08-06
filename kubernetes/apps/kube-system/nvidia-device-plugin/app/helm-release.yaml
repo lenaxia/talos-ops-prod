@@ -29,6 +29,21 @@ spec:
   # https://github.com/NVIDIA/k8s-device-plugin/blob/main/deployments/helm/nvidia-device-plugin/values.yaml
   values:
     runtimeClassName: nvidia
+    config:
+      map:
+        default: |-
+          version: v1
+          flags:
+            migStrategy: none
+          resources:
+            gpus:
+            - pattern: "*RTX 3090*"
+              name: nvidia.com/rtx3090
+            - pattern: "*RTX 4090*"
+              name: nvidia.com/rtx4090
+            - pattern: "*"
+              name: nvidia.com/gpu
+      default: default
     devicePlugin:
       enabled: true
 
