@@ -14,7 +14,7 @@ metadata:
 spec:
   ttlSecondsAfterFinished: 86400  # auto-clean 24h after completion
   backoffLimit: 2
-  activeDeadlineSeconds: 21600  # 6h hard kill — NFS walk shouldn't exceed 3h
+  activeDeadlineSeconds: 172800  # 48h — full bridge of 183K photos needs ~22h
   template:
     spec:
       restartPolicy: OnFailure
