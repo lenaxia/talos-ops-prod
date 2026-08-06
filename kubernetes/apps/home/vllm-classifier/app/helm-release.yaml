@@ -155,7 +155,7 @@ spec:
       shared-svc:
         enabled: true
         forceRename: vllm-classifier
-        manifest: |
+        manifest:
           apiVersion: v1
           kind: Service
           metadata:
