@@ -26,6 +26,14 @@ spec:
           reloader.stakater.com/auto: "true"
         pod:
           runtimeClassName: nvidia
+          tolerations:
+            - key: "dedicated"
+              operator: "Equal"
+              value: "special"
+              effect: "NoSchedule"
+            - key: "node.kubernetes.io/disk-pressure"
+              operator: "Exists"
+              effect: "NoSchedule"
         containers:
           app:
             image:
