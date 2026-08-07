@@ -11,11 +11,13 @@ resources:
   - ./imaizumi-timer.yaml
   # Generic violetscans triggers — one directory per series.
   - ./violetscans
-  - ./job-scraper-stripe.yaml
-  - ./job-scraper-stripe-timer.yaml
-  - ./job-scraper-vanta.yaml
-  - ./job-scraper-vanta-timer.yaml
-  - ./job-scraper-crowdstrike.yaml
-  - ./job-scraper-crowdstrike-timer.yaml
-  - ./job-scraper-snowflake.yaml
-  - ./job-scraper-snowflake-timer.yaml
+  # Disabled 2026-08-07: corresponding functions are broken (404 fetching
+  # package / missing env). See ../functions/kustomization.yaml.
+  # - ./job-scraper-stripe.yaml
+  # - ./job-scraper-stripe-timer.yaml
+  # - ./job-scraper-vanta.yaml
+  # - ./job-scraper-vanta-timer.yaml
+  # - ./job-scraper-crowdstrike.yaml
+  # - ./job-scraper-crowdstrike-timer.yaml
+  # - ./job-scraper-snowflake.yaml
+  # - ./job-scraper-snowflake-timer.yaml

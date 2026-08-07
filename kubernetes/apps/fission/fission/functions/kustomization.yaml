@@ -12,11 +12,15 @@ resources:
   # Generic violetscans Package + per-series Function CRs.
   # See ./violetscans/README.md for how to add a new series.
   - ./violetscans
-  - ./job-scraper-stripe.yaml
+  # Disabled 2026-08-07: broken. crowdstrike/stripe/vanta return 404 fetching
+  # package from github.com/lenaxia/functions/releases; snowflake references the
+  # non-existent `python3-playwright` environment. Secrets kept below so
+  # re-enabling is trivial once upstream packages/env are restored.
   - ./secret-job-scraper-stripe.sops.yaml
-  - ./job-scraper-vanta.yaml
   - ./secret-job-scraper-vanta.sops.yaml
-  - ./job-scraper-crowdstrike.yaml
   - ./secret-job-scraper-crowdstrike.sops.yaml
-  - ./job-scraper-snowflake.yaml
   - ./secret-job-scraper-snowflake.sops.yaml
+  # - ./job-scraper-stripe.yaml
+  # - ./job-scraper-vanta.yaml
+  # - ./job-scraper-crowdstrike.yaml
+  # - ./job-scraper-snowflake.yaml
