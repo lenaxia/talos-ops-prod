@@ -49,10 +49,11 @@ spec:
     # Init Containers Resources (for chart's built-in init containers)
     initContainers:
       resources:
-        limits: {}
+        limits:
+          memory: 512Mi
         requests:
           cpu: 100m
-          memory: 128Mi
+          memory: 512Mi
 
     # Resources
     resources:
