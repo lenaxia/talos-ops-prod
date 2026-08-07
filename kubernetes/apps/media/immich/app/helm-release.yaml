@@ -110,9 +110,10 @@ spec:
             resources:
               requests:
                 cpu: 100m
-                memory: 512Mi
+                memory: 10Gi
                 gpu.intel.com/i915: "1"
               limits:
+                memory: 10Gi
                 gpu.intel.com/i915: "1"
             probes:
               liveness:
@@ -156,9 +157,10 @@ spec:
             resources:
               requests:
                 cpu: 100m
-                memory: 512Mi
+                memory: 14Gi
                 gpu.intel.com/i915: "1"
               limits:
+                memory: 14Gi
                 gpu.intel.com/i915: "1"
 
     service:
