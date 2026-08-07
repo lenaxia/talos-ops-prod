@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/kustomization_v1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 # ----------------------------------------------------------------------------
 # Stage 1 — DB role + secret. Runs BEFORE the chart's HelmRelease so the
 # pre-install Helm-hook migration Job can connect on the first reconcile.
@@ -33,7 +33,7 @@ spec:
   retryInterval: 1m
   timeout: 5m
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/kustomization_v1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 # ----------------------------------------------------------------------------
 # Stage 2 — the chart itself. Waits for db-init + valkey + cert-manager.
 # ----------------------------------------------------------------------------

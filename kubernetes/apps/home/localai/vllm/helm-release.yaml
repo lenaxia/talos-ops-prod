@@ -106,8 +106,11 @@ spec:
                   timeoutSeconds: 10
             resources:
               requests:
+                cpu: 100m
+                memory: 24Gi
                 nvidia.com/gpu: "1"
               limits:
+                memory: 24Gi
                 nvidia.com/gpu: "1"
 
     persistence:
