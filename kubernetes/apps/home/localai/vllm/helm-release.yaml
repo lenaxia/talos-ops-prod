@@ -107,8 +107,16 @@ spec:
             resources:
               requests:
                 nvidia.com/gpu: "1"
+                # Prevent node-level ephemeral-storage eviction (exit 137).
+                # Pod was BestEffort (only GPU requested) and was evicted for
+                # ephemeral-storage pressure despite only using ~469MiB. A
+                # request >= observed usage ranks it below eviction targets.
+                ephemeral-storage: 2Gi
               limits:
                 nvidia.com/gpu: "1"
+                # Cap container filesystem growth (compiled Triton/torch
+                # kernel caches) so unbounded writes can't destabilize node.
+                ephemeral-storage: 4Gi
 
     persistence:
       data:
