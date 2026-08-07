@@ -1,0 +1,9 @@
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: home-gpu-critical
+value: 1000000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Critical GPU-serving workloads that must preempt transient/best-effort GPU consumers."

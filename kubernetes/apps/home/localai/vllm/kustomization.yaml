@@ -6,6 +6,7 @@ commonLabels:
   app.kubernetes.io/instance: *app
 resources:
   - helm-release.yaml
+  - priority-class.yaml
   - secret.sops.yaml
     #configMapGenerator:
     #  - name: vllm-license-py

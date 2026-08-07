@@ -27,6 +27,7 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+      priorityClassName: home-gpu-critical
       tolerations:
         - key: "dedicated"
           operator: "Equal"
