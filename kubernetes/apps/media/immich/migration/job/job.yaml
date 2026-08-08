@@ -22,7 +22,7 @@ spec:
         node-role.kubernetes.io/worker: "true"
       containers:
         - name: migration
-          image: python:3.12-slim
+          image: python:3.14-slim
           workingDir: /scripts
           command:
             - sh
