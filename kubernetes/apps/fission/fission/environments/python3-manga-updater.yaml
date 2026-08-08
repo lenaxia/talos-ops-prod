@@ -20,6 +20,11 @@ spec:
           volumeMounts:
             - name: scratch
               mountPath: /mnt/scratch
+          resources:
+            requests:
+              memory: 256Mi
+            limits:
+              memory: 1Gi
   builder:
     image: fission/python-builder:latest
     command: build
