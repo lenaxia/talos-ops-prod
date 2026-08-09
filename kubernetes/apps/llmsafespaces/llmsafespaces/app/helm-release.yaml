@@ -102,7 +102,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.11.0"
+        tag: "0.12.0"
       config:
         security:
           allowedOrigins:
@@ -113,7 +113,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.11.0"
+        tag: "0.12.0"
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -132,7 +132,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.11.0"
+            tag: "0.12.0"
       freeModelsRefresher:
         enabled: false
 
@@ -203,7 +203,7 @@ spec:
       # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
       # alongside the other four images.
       image:
-        tag: "0.11.0"
+        tag: "0.12.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -222,7 +222,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: "0.11.0"
+          tag: "0.12.0"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart
