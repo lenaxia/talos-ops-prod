@@ -17,6 +17,12 @@ spec:
             readOnly: false
       containers:
         - name: python3-manga-updater
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
           volumeMounts:
             - name: scratch
               mountPath: /mnt/scratch
