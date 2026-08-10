@@ -120,7 +120,23 @@ spec:
                   failureThreshold: 30
                   timeoutSeconds: 5
               startup:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 8000
+                  # uvx cold start: the cache lives on an emptyDir that is
+                  # wiped on every pod restart (node reboot / Talos update /
+                  # Recreate rollout / Reloader secret rotation), so uv must
+                  # re-fetch Python 3.13 (~25 MiB) and resolve hass-mcp's
+                  # deps from PyPI before port 8000 opens. Give that init a
+                  # dedicated window (~5 min) and gate the liveness probe so
+                  # the pod is not killed mid-startup, which previously left
+                  # the Deployment at 0/1 ready (MinimumReplicasUnavailable).
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 5
     persistence:
       # Writable HOME for uv cache + downloaded interpreter.
       # emptyDir is fine: cache is rebuilt from PyPI/python.org on pod start.
