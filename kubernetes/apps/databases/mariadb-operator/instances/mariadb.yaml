@@ -73,6 +73,12 @@ spec:
     initialDelaySeconds: 20
     periodSeconds: 10
     timeoutSeconds: 5
+
+  startupProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30  # ~5m window for InnoDB recovery on cold start (Longhorn)
   
   metrics:
     enabled: false
