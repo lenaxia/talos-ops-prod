@@ -56,7 +56,7 @@ spec:
           sidecar-log-watcher:
             image:
               repository: curlimages/curl
-              tag: latest
+              tag: 8.21.0
             command: [/bin/sh, -c]
             args:
               - |
