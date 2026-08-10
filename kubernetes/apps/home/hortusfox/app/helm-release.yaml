@@ -37,7 +37,7 @@ spec:
           main:
             image:
               repository: ghcr.io/danielbrendel/hortusfox-web
-              tag: v5.9
+              tag: v5.8
             env:
               APP_TIMEZONE: ${TIMEZONE}
               DB_CHARSET: utf8mb4
