@@ -6,11 +6,13 @@ metadata:
   namespace: networking
 spec:
   headers:
-    accessControlAllowMethods:
-      - GET
-      - OPTIONS
-      - PUT
-    accessControlMaxAge: 100
+    # CORS fields removed (2026-07-20). Setting ANY accessControl* field
+    # activates Traefik's CORS code path, which short-circuits browser
+    # preflight at the edge. Without a matching accessControlAllowOriginList
+    # here, every cross-origin app's preflight failed — that was the root
+    # cause of the bespoke per-app CORS middlewares (e.g. llmsafespaces-api-cors).
+    # Apps that need CORS now own their full config via a dedicated Middleware
+    # bound on their ingress. Apps that don't need CORS are unaffected.
     hostsProxyHeaders:
       - "X-Forwarded-Host"
     stsSeconds: 63072000
@@ -18,16 +20,13 @@ spec:
     stsPreload: true
     frameDeny: true
     forceSTSHeader: true
-    # frameDeny: true #overwritten by customFrameOptionsValue
-    customFrameOptionsValue: "allow-from https:${SECRET_DEV_DOMAIN}" #CSP takes care of this but may be needed for organizr.
     contentTypeNosniff: true
     browserXssFilter: true
-    referrerPolicy: "origin-when-cross-origin"
-      #referrerPolicy: "same-origin"
-    # Setting contentSecurityPolicy is more secure but it can break things. Proper auth will reduce the risk.
-    # the below line also breaks some apps due to 'none' - sonarr, radarr, etc.
-    # contentSecurityPolicy: "frame-ancestors '*.example.com:*';object-src 'none';script-src 'none';"
-    permissionsPolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
+    # strict-origin-when-cross-origin is the modern default (drops the
+    # origin when crossing to a less-secure destination). Pre-fix was
+    # "origin-when-cross-origin" which always leaked the origin.
+    referrerPolicy: "strict-origin-when-cross-origin"
+    permissionsPolicy: "camera=(), geolocation=(), microphone=(), payment=(), usb=(), interest-cohort=()"
     customResponseHeaders:
       X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex,"
 ---

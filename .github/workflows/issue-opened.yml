@@ -1,0 +1,30 @@
+# Issue Opened — thin caller delegating to the reusable workflow in
+# lenaxia/ai-workflows. The reusable workflow runs the issue-responder AI,
+# posts the command footer, and configures git identity.
+#
+# Note: this workflow has contents: read + persist-credentials: false in the
+# reusable workflow — it is for commenting, not pushing code. Code changes go
+# through /implement or /fix via ai-comment.yml. See ai-workflows README
+# Lessons Learned #6.
+#
+# The `uses:` ref MUST be a hardcoded tag (no vars context — see ai-workflows
+# README Lessons Learned #1).
+name: Issue Opened
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  respond:
+    uses: lenaxia/ai-workflows/.github/workflows/issue-opened.yml@v0.2.7
+    secrets: inherit
+    with:
+      version: v0.2.0
+      project_name: talos-ops-prod

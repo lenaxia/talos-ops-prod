@@ -6,4 +6,6 @@ commonLabels:
   app.kubernetes.io/instance: *app
 resources:
   - helm-release.yaml
+  - pvc-checkpoints.yaml
+  - pvc-references.yaml
   - secret.sops.yaml

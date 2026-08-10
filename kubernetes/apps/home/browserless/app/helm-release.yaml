@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -30,7 +30,7 @@ spec:
           main:
             image:
               repository: ghcr.io/browserless/chromium
-              tag: v2.42.0
+              tag: v2.55.3
     service:
       main:
         type: ClusterIP

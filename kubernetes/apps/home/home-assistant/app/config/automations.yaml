@@ -1,0 +1,57 @@
+# ReSpeaker -> Sonos TTS redirect automation.
+#
+# This file is reference/config-of-record. Home Assistant writes to
+# automations.yaml when you edit via the UI, so mounting this read-only via
+# ConfigMap would break UI editing. Two deployment options:
+#
+#   Option A (simple): Paste this YAML into HA via
+#     Settings -> Automations -> Edit in YAML.
+#     The state lives on the HA PVC and is not in git, but the source of
+#     truth is documented here.
+#
+#   Option B (GitOps): Add a ConfigMap mount in home-assistant/app/helm-release.yaml:
+#       persistence:
+#         automations:
+#           type: configMap
+#           name: home-assistant-automations
+#           globalMounts:
+#             - path: /config/automations.yaml
+#               subPath: automations.yaml
+#     This makes automations.yaml read-only from HA's perspective, breaking
+#     UI editing. Use only if you commit to editing in git only.
+#
+# Before deploying, replace these placeholders:
+#   03eff58ab24c18db7ddb45320e7770a7  -> ReSpeaker device_id
+#     (Developer Tools -> Events -> listen for esphome.tts_uri)
+#   media_player.dining_room_dining_room  -> your Sonos entity
+#
+# Prerequisites:
+#   1. The ReSpeaker satellite must be flashed with the MP3 supported_formats
+#      change (see kubernetes/apps/home/esphome/app/config/common/) so the
+#      tts_uri URLs end in .mp3 instead of .flac. Sonos's announce API
+#      silently rejects FLAC; MP3 works.
+#   2. switch.respeaker_kitchen_speaker_mute must be ON (otherwise TTS plays
+#      from both the satellite's onboard amp and the Sonos).
+#   3. The Assist pipeline assigned to the satellite must use Wyoming Piper.
+---
+- id: respeaker_kitchen_sonos_tts_redirect
+  alias: "ReSpeaker Kitchen -> Sonos TTS"
+  description: >-
+    Play assistant TTS responses on the dining room Sonos instead of the
+    satellite's onboard speaker. Uses announce: true so Sonos ducks music,
+    plays TTS, then restores previous playback state.
+  mode: single
+  trigger:
+    - platform: event
+      event_type: esphome.tts_uri
+      event_data:
+        device_id: 03eff58ab24c18db7ddb45320e7770a7
+  condition: []
+  action:
+    - action: media_player.play_media
+      data:
+        announce: true
+        media_content_type: music
+        media_content_id: "{{ trigger.event.data.uri }}"
+      target:
+        entity_id: media_player.dining_room_dining_room

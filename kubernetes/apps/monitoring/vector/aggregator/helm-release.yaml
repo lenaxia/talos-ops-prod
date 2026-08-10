@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2beta1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -44,7 +44,7 @@ spec:
           main:
             image:
               repository: docker.io/timberio/vector
-              tag: 0.53.0-debian
+              tag: 0.57.0-debian
             args: [--config, /etc/vector/vector.yaml]
     service:
       main:

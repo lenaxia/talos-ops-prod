@@ -5,5 +5,7 @@ resources:
   - ./namespace.yaml
   - ./rathena/ks.yaml
   - ./roskills/ks.yaml
-    #- ./openkore/ks.yaml
+  #- ./openkore/ks.yaml
   - ./robrowserlegacy/ks.yaml
+  - ./gokore/ks.yaml
+  - ./gokore-portal/ks.yaml

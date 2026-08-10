@@ -1,0 +1,40 @@
+---
+# Standard Ingress for the Selkies-GStreamer browser WebRTC endpoint.
+#
+# Using a standard networking.k8s.io/v1 Ingress (not IngressRoute CRD) so
+# cert-manager auto-creates and manages the TLS Certificate via the
+# letsencrypt-production cluster-issuer annotation.
+#
+# Routes https://kicad.${SECRET_DEV_DOMAIN}/ → kicad-selkies:8080 (NGINX).
+# Behind Authelia forward-auth (chain-authelia middleware).
+#
+# WebRTC media (UDP) does NOT go through Traefik — only the signalling
+# WebSocket. For same-LAN, the browser's ICE host candidates suffice.
+# For remote users, configure a TURN relay in the Selkies config.
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kicad-selkies
+  namespace: home
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: kicad.${SECRET_DEV_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kicad-selkies
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - kicad.${SECRET_DEV_DOMAIN}
+      secretName: kicad.${SECRET_DEV_DOMAIN}

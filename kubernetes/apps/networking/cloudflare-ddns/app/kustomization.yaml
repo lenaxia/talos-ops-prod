@@ -11,3 +11,10 @@ configMapGenerator:
       - ./scripts/cloudflare-ddns.sh
 generatorOptions:
   disableNameSuffixHash: true
+  # The shell script in this ConfigMap contains bash array expansions
+  # (${ARR[@]}, ${#ARR[@]}) that Flux's envsubst cannot parse and which
+  # cause a "missing closing brace" error during postBuild substitution.
+  # The script reads all of its inputs from environment variables, so it
+  # has no need for Flux variable substitution -- disable it here.
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled

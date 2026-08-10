@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -42,35 +42,36 @@ spec:
             image:
               repository: vllm/vllm-openai
               # renovate: depName=vllm/vllm-openai
-              tag: v0.19.1-cu130-ubuntu2404@sha256:f35754668e5f7b82809f080da5491224fce37869fce6b6d4174b2675c4ab16c1
+              # renovate: ignore
+              tag:
+                v0.20.0-cu130-ubuntu2404@sha256:aff65d7198dd284c37dd0a18a606544cc5e92bfb0d5eb608b77e8b8f1c6b8b0d
             command: ["/bin/sh", "-c"]
             args:
-               - |
-                  vllm serve \
-                      Lorbus/Qwen3.6-27B-int4-AutoRound \
-                      --served-model-name qwen3 \
-                      --dtype half \
-                      --max-model-len 262144 \
-                      --gpu-memory-utilization 0.90 \
-                      --tensor-parallel-size 1 \
-                      --max-num-seqs 3 \
-                      --trust-remote-code \
-                      --host 0.0.0.0 \
-                      --enable-chunked-prefill \
-                      --enable-prefix-caching \
-                      --kv-cache-dtype fp8 \
-                      --enable-auto-tool-choice \
-                      --tool-call-parser hermes \
-                      --reasoning-parser qwen3 \
-                      --compilation-config.cudagraph_mode none \
-                      --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
-                      --default-chat-template-kwargs '{"enable_thinking":false}' \
-                      --port 8000
+              - |
+                vllm serve \
+                    QuantTrio/Qwen3.6-27B-AWQ \
+                    --served-model-name qwen3 \
+                    --dtype half \
+                    --max-model-len 262144 \
+                    --gpu-memory-utilization 0.97 \
+                    --tensor-parallel-size 1 \
+                    --max-num-seqs 3 \
+                    --trust-remote-code \
+                    --host 0.0.0.0 \
+                    --enable-chunked-prefill \
+                    --enable-prefix-caching \
+                    --kv-cache-dtype fp8 \
+                    --enable-auto-tool-choice \
+                    --tool-call-parser qwen3_coder \
+                    --reasoning-parser qwen3 \
+                    --speculative-config '{"method":"qwen3_next_mtp","num_speculative_tokens":3}' \
+                    --default-chat-template-kwargs '{"enable_thinking":false}' \
+                    --port 8000
             env:
               - name: TZ
                 value: ${TIMEZONE}
               - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090
+                value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090 48GB
               - name: VLLM_USE_FLASHINFER_SAMPLER
                 value: "1"
               - name: PYTORCH_CUDA_ALLOC_CONF
@@ -105,8 +106,11 @@ spec:
                   timeoutSeconds: 10
             resources:
               requests:
+                cpu: 100m
+                memory: 24Gi
                 nvidia.com/gpu: "1"
               limits:
+                memory: 24Gi
                 nvidia.com/gpu: "1"
 
     persistence:

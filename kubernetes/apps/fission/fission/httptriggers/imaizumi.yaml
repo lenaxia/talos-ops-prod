@@ -1,0 +1,14 @@
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: imaizumi
+  namespace: fission
+spec:
+  functionref:
+    name: imaizumi
+    type: name
+  relativeurl: /imaizumi
+  methods:
+    - GET
+    - POST

@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: traefik
-      version: 39.0.5
+      version: 41.2.0
       sourceRef:
         kind: HelmRepository
         name: traefik
@@ -28,40 +28,71 @@ spec:
   values:
     image:
       repository: traefik
-      tag: v3.6.10
+      # chart 40.3.0 only supports proxy up to v3.7.4 — see chart Chart.yaml
+      # kube-version annotation. Pin matches chart's max supported version.
+      tag: v3.7.10
     deployment:
-      kind: Deployment
-      replicas: 4
+      # DaemonSet: guarantees a Traefik pod on every worker node, so the Cilium
+      # L2 leader election for the LoadBalancer VIP always has a local backend.
+      # With externalTrafficPolicy: Local this preserves real client source IPs
+      # (needed for kiosk trusted_networks) without the "announced on a node
+      # with no local pod -> connection refused" failure seen on worker-02.
+      # ACME is not supported as DaemonSet; certs come from cert-manager.
+      kind: DaemonSet
 
     nodeSelector:
       node-role.kubernetes.io/worker: "true"
 
-    topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
-        labelSelector:
-          matchLabels:
-            app.kubernetes.io/name: traefik
-
     service:
       enabled: true
-      type: LoadBalancer
       spec:
+        type: LoadBalancer
         loadBalancerIP: "${SVC_TRAEFIK_ADDR}"
-        externalTrafficPolicy: Cluster
+        externalTrafficPolicy: Local
       annotations:
         external-dns.home.arpa/enabled: "true"
         external-dns.alpha.kubernetes.io/hostname: "${SECRET_DEV_DOMAIN}"
       labels:
         cilium.io/l2-ip-pool: reserved
-    logs:
-      general:
-        format: json
-        level: INFO
-      access:
-        enabled: true
-        format: json
+    log:
+      format: json
+      # TEMPORARY DEBUG: bumped from INFO for diagnosing Conduit/Authelia/OpenWebUI
+      # auth flow (issue cogwheel0/conduit#407). Revert to INFO once diagnosed.
+      level: DEBUG
+    accessLog:
+      enabled: true
+      format: json
+      # TEMPORARY DEBUG: capture auth-relevant request and response headers in
+      # access logs so we can see Authelia injecting Remote-Email/Remote-Name
+      # on chat.${SECRET_DEV_DOMAIN} and confirm whether OpenWebUI's auto-signin
+      # via WEBUI_AUTH_TRUSTED_EMAIL_HEADER actually receives them. The default
+      # for headers is "drop"; we opt specific ones in as "keep" / "redact".
+      # Revert this whole `fields:` block once diagnosed.
+      fields:
+        defaultMode: keep
+        headers:
+          defaultMode: drop
+          names:
+            # Authelia forwardAuth response headers (injected onto request to backend)
+            Remote-User: keep
+            Remote-Name: keep
+            Remote-Email: keep
+            Remote-Groups: keep
+            # Request context — useful for correlating WebView page loads
+            User-Agent: keep
+            Referer: keep
+            Host: keep
+            X-Forwarded-For: keep
+            X-Forwarded-Host: keep
+            X-Forwarded-Uri: keep
+            X-Forwarded-Method: keep
+            # Auth state — REDACT so we see presence/absence without leaking values
+            # TEMPORARY: Cookie kept (not redacted) to diagnose what cookie names
+            # the Dart Conduit client is actually sending. Authorization stays
+            # redacted (it's a real JWT). REVERT once diagnosed.
+            Authorization: redact
+            Cookie: keep
+            Set-Cookie: redact
 
     experimental:
       plugins: 

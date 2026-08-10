@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       interval: 16m
       sourceRef:
         kind: HelmRepository
@@ -36,7 +36,7 @@ spec:
               # Must be the public URL so the embedded asset/WS server generates correct URLs
               CLIENT_PUBLIC_URL: "https://ro.${SECRET_DEV_DOMAIN}"
               # Allow the WS proxy to forward to the rAthena server (non-host-network deployment).
-              # Uses MetalLB IP (not ClusterIP DNS) because rAthena runs with hostNetwork: true,
+              # Uses the LoadBalancer IP (not ClusterIP DNS) because rAthena runs with hostNetwork: true,
               # which makes ClusterIP routing non-functional.
               WS_ALLOWED_TARGETS: "192.168.5.145:6900,192.168.5.145:6121,192.168.5.145:5121"
             resources:
@@ -61,7 +61,8 @@ spec:
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares: 
+            networking-chain-authelia@kubernetescrd
           hajimari.io/enable: "true"
           hajimari.io/icon: gamepad-variant
           hajimari.io/info: *appname

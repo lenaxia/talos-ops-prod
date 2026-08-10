@@ -5,3 +5,22 @@ namespace: fission
 resources:
   - ./matriarch.yaml
   - ./secret.sops.yaml
+  - ./matriarch-vy.yaml
+  - ./secret-matriarch-vy.sops.yaml
+  - ./imaizumi.yaml
+  - ./secret-imaizumi.sops.yaml
+  # Generic violetscans Package + per-series Function CRs.
+  # See ./violetscans/README.md for how to add a new series.
+  - ./violetscans
+  # Disabled 2026-08-07: broken. crowdstrike/stripe/vanta return 404 fetching
+  # package from github.com/lenaxia/functions/releases; snowflake references the
+  # non-existent `python3-playwright` environment. Secrets kept below so
+  # re-enabling is trivial once upstream packages/env are restored.
+  - ./secret-job-scraper-stripe.sops.yaml
+  - ./secret-job-scraper-vanta.sops.yaml
+  - ./secret-job-scraper-crowdstrike.sops.yaml
+  - ./secret-job-scraper-snowflake.sops.yaml
+  # - ./job-scraper-stripe.yaml
+  # - ./job-scraper-vanta.yaml
+  # - ./job-scraper-crowdstrike.yaml
+  # - ./job-scraper-snowflake.yaml

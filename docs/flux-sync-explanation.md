@@ -107,6 +107,4 @@ The upgrade script needs to be run again to complete the process.
 
 ## Reference
 
-- Full status report: [`docs/app-template-v4-upgrade-status.md`](./app-template-v4-upgrade-status.md)
-- Upgrade script: [`scripts/complete-app-template-v4-upgrade.sh`](../scripts/complete-app-template-v4-upgrade.sh)
 - Sync script: [`scripts/force-flux-sync.sh`](../scripts/force-flux-sync.sh)

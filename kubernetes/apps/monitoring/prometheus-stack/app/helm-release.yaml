@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: kube-prometheus-stack
-      version: 82.4.3
+      version: 88.2.0
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
@@ -236,6 +236,12 @@ spec:
         replicas: 3
         shards: 1
         retention: 15d
+        # Pin to worker nodes: storage uses openebs-hostpath (node-local) and
+        # Longhorn CSI only runs on workers.  Without this the scheduler can
+        # place replicas on control-planes where neither storage backend is
+        # available, leaving pods stuck in Init forever.
+        nodeSelector:
+          node-role.kubernetes.io/worker: "true"
         podMonitorSelectorNilUsesHelmValues: false
         probeSelectorNilUsesHelmValues: false
         ruleSelectorNilUsesHelmValues: false
@@ -245,6 +251,16 @@ spec:
         walCompression: true
         enableFeatures:
           - memory-snapshot-on-shutdown
+        # Data redundancy comes from prometheusSpec.replicas: 3 (each replica
+        # scrapes and stores a full copy), so node-local storage is fine and
+        # avoids Longhorn's write amplification on a write-heavy TSDB.
+        # On node loss the stuck PVC must be deleted so the StatefulSet replica
+        # can reschedule onto a healthy node and re-ingest — handled by the
+        # pvc-reaper CronJob in this namespace. The retention policy below
+        # ensures PVCs are also reclaimed on Prometheus CR deletion / scale-down.
+        persistentVolumeClaimRetentionPolicy:
+          whenDeleted: Delete
+          whenScaled: Retain
         storageSpec:
           volumeClaimTemplate:
             spec:

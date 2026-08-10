@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       interval: 16m
       sourceRef:
         kind: HelmRepository
@@ -22,16 +22,55 @@ spec:
       secret.reloader.stakater.com/reload: *appname
     controllers:
       main:
+        strategy: Recreate
         containers:
           main:
             image:
               repository: httpd
-              tag: 2.4.66
-#            envFrom:
-#              - secretRef:
-#                  name: *appname 
+              tag: 2.4.68
             env:
               TZ: ${TIMEZONE}
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 80
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 80
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 80
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
     service:
       main:
         ports:

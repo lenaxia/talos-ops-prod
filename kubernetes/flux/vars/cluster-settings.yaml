@@ -30,10 +30,17 @@ data:
   SVC_JELLYFIN_ADDR: "192.168.5.105"
   SVC_SYSLOG_ADDR: "192.168.5.111"
 
+  # KiCad streaming workstation.
+  # Sunshine LoadBalancer — L4 TCP+UDP for Moonlight clients.
+  SVC_KICAD_SUNSHINE_ADDR: "192.168.5.18"
+  # TURN LoadBalancer — coturn signalling (3478) + relay ports for WebRTC
+  # media traversal. Browser WebRTC uses TURN to relay UDP through NAT.
+  SVC_KICAD_TURN_ADDR: "192.168.5.19"
+
   SVC_MARIADB_PRIMARY_ADDR: "192.168.5.15"
   SVC_MARIADB_SECONDARY_ADDR: "192.168.5.16"
   SVC_REDIS_ADDR: "192.168.5.17"
-  SVC_REDIS: "redis-lb.databases.svc.cluster.local"
+  SVC_REDIS: "redis-primary.databases.svc.cluster.local"
   SVC_POSTGRES: "defaultpg-rw.databases.svc.cluster.local"
   SVC_POSTGRES_VER: "14.5"
 
@@ -58,7 +65,7 @@ data:
   NFS_FRIGATE: "/volume3/k8s-nfs/frigate"
   NFS_MINIO: "/volume3/minio"
   NFS_KOPIA: "/volume1/backups/kopia"
-  NFS_PAPERLESS: "/volume3/paperless"
+  NFS_PAPERLESS: "/volume1/paperless"
   NFS_IMMICH: "/volume1/immich"
   NFS_VAULTWARDEN: "/volume1/backups/vaultwarden"
   NFS_READARR: "/volume1/backups/readarr"
@@ -68,3 +75,4 @@ data:
   NFS_ARR: "/volume1/backups/arr"
   NFS_METUBE: "/volume2/downloads/[Plex Temp Library]/YouTube"
   NFS_NZBGET: "/volume3/k8s-nfs/nzbget"
+  NFS_KOMGA_MEDIA: "/volume1/omoikane/[Manga]"

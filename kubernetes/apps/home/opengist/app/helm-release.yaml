@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app opengist
+  namespace: home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+      interval: 15m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+
+    controllers:
+      main:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/thomiceli/opengist
+              tag: "1.15"
+            env:
+              OG_EXTERNAL_URL: https://paste.${SECRET_DEV_DOMAIN}
+              OG_LOG_LEVEL: info
+              OG_HTTP_HOST: 0.0.0.0
+              OG_HTTP_PORT: "6157"
+              OG_SSH_GIT_ENABLED: "disabled"
+              OG_OIDC_PROVIDER_NAME: Authelia
+              OG_OIDC_CLIENT_KEY: opengist
+              OG_OIDC_DISCOVERY_URL: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
+              OG_OIDC_GROUP_CLAIM_NAME: groups
+              OG_OIDC_ADMIN_GROUP: administrators
+            envFrom:
+              - secretRef:
+                  name: *app
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+
+    service:
+      main:
+        primary: true
+        ports:
+          http:
+            port: 6157
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares:
+            networking-chain-no-auth@kubernetescrd
+          hajimari.io/enable: "true"
+          hajimari.io/icon: text-box-edit
+          hajimari.io/group: Home
+        hosts:
+          - host: &uri paste.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+
+    persistence:
+      data:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        storageClass: longhorn
+        retain: true
+        globalMounts:
+          - path: /opengist

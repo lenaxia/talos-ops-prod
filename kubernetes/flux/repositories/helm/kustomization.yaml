@@ -36,9 +36,9 @@ resources:
   - kubereboot.yaml
   - kyverno-charts.yaml
   - longhorn-charts.yaml
-  - metallb-charts.yaml
   - metrics-server-charts.yaml
   - minio-charts.yaml
+  - mongodb-charts.yaml
   - nextcloud-charts.yaml
   - nfs-subdir-external-provisioner-charts.yaml
   - nginx.yaml

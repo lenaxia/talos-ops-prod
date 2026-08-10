@@ -4,4 +4,8 @@ resources:
   - defaultpg.yaml
   - vectorpg.yaml
   - synofotopg.yaml
+  - synofotopg-lb.yaml
+  - vectorpg-lb.yaml
+  - llmsafespacespg.yaml
+  - dawarich-postgis.yaml
   #- backup.yaml

@@ -20,7 +20,7 @@ jobs:
       options: --user root
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Test Arch dependencies
         shell: bash
@@ -36,11 +36,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Homebrew
         id: setup-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
 
       - name: Setup Workflow Tools
         shell: bash
@@ -61,21 +61,21 @@ jobs:
           - talos
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Homebrew
         id: setup-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         id: setup-python
         with:
           python-version: "3.14"
 
       - name: Cache homebrew packages
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: cache-homebrew-packages
         with:
           key: homebrew-${{ runner.os }}-${{ steps.setup-homebrew.outputs.gems-hash }}-${{ hashFiles('.taskfiles/workstation/Brewfile') }}
@@ -83,7 +83,7 @@ jobs:
 
       - name: Cache venv
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements.txt', 'requirements.yaml') }}
           path: .venv
@@ -92,6 +92,22 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && steps.cache-homebrew-packages.outputs.cache-hit != 'true' }}
         shell: bash
         run: brew install go-task
+
+      # Homebrew 6.0+ enforces HOMEBREW_REQUIRE_TAP_TRUST — third-party taps
+      # must be explicitly trusted before their formulae can be loaded, even
+      # from a Brewfile. `brew tap` alone is not sufficient (the tap is
+      # cloned but not trusted). See:
+      #   https://github.com/orgs/Homebrew/discussions/6898
+      #   https://github.com/homebrew/brew/issues/22551
+      # We trust every non-core tap referenced by the Brewfile so
+      # `brew bundle` can complete non-interactively. Idempotent.
+      - name: Trust third-party Homebrew taps
+        if: ${{ github.event_name == 'pull_request' && steps.cache-homebrew-packages.outputs.cache-hit != 'true' }}
+        shell: bash
+        run: |
+          brew trust fluxcd/tap
+          brew trust go-task/tap
+          brew trust siderolabs/tap
 
       - name: Run Workstation Brew tasks
         if: ${{ github.event_name == 'pull_request' && steps.cache-homebrew-packages.outputs.cache-hit != 'true' }}

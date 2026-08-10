@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -29,11 +29,14 @@ spec:
         node-role.kubernetes.io/worker: 'true'
     controllers:
       main:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
         containers:
           main:
             image:
               repository: ghcr.io/dani-garcia/vaultwarden
-              tag: 1.35.4
+              tag: 1.37.1
 
     # -- environment variables.
             envFrom:
@@ -47,8 +50,6 @@ spec:
 
     service:
       main:
-        annotations:
-          metallb.universe.tf/address-pool: dev-infra
         type: LoadBalancer
         externalTrafficPolicy: Cluster
 
@@ -76,14 +77,17 @@ spec:
               - path: /
                 pathType: Prefix
                 service:
+                  identifier: main
                   port: http
               - path: /notifications/hub/negotiate
                 pathType: Prefix
                 service:
+                  identifier: main
                   port: http
               - path: /notifications/hub
                 pathType: Prefix
                 service:
+                  identifier: main
                   port: websocket
         tls:
           - hosts:
@@ -96,12 +100,4 @@ spec:
         enabled: true
         existingClaim: vaultwarden-config-volume
         type: persistentVolumeClaim
-    strategy:
-      type: Recreate
-
-    mariadb:
-      enabled: false
-
-    postgresql:
-      enabled: false
 

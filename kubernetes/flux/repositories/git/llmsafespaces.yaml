@@ -1,0 +1,25 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: llmsafespaces
+  namespace: flux-system
+spec:
+  interval: 30m
+  url: https://github.com/lenaxia/LLMSafeSpaces.git
+  # Pinned to a semver release tag so upgrades are deliberate. Prior state
+  # tracked `branch: main`, which combined with `reconcileStrategy: Revision`
+  # on the HelmRelease meant every push to main immediately reached
+  # production. Semver pinning matches the pattern established when the
+  # upstream project started cutting real releases at v0.2.0 (2026-07-06).
+  # To upgrade, bump this ref + the five `image.tag: 0.x.y` overrides in
+  # kubernetes/apps/llmsafespaces/llmsafespaces/app/helm-release.yaml
+  # together in one PR.
+  ref:
+    tag: v0.13.1
+  ignore: |
+    # exclude everything
+    /*
+    # include only the helm chart
+    # Chart dir renamed from charts/llmsafespaces -> helm in v0.5.0 (worklog 0614)
+    !/helm

@@ -17,7 +17,7 @@ This is a homelab/personal cluster serving:
 - Self-hosted services (Forgejo, Vaultwarden, Nextcloud, Outline, etc.)
 - Ragnarok Online game servers (rAthena, Hercules, OpenKore)
 - AI/ML services (vLLM, LocalAI, LiteLLM, Open-WebUI)
-- Infrastructure (Traefik, cert-manager, Cilium, MetalLB, OpenEBS, monitoring)
+- Infrastructure (Traefik, cert-manager, Cilium, OpenEBS, Longhorn, monitoring)
 
 **Domain:** `${SECRET_DEV_DOMAIN}` — resolved from SOPS-encrypted secrets. In cluster files this appears as a variable substitution.
 
@@ -108,16 +108,20 @@ flux check --pre               # check Flux prerequisites
 talos-ops-prod/
     kubernetes/
         apps/                  per-namespace application manifests
+            actions-runner-system/  self-hosted GitHub Actions runners
             cert-manager/
             databases/         postgres (cnpg), mariadb, redis, influxdb, telegraf
             default/           shadow/canary testing deployments
+            fission/           Fission serverless
             flux-system/       flux monitoring + alerts
             home/              home automation + AI apps + misc
-            kube-system/       cilium, coredns, multus, GPU plugins, reloader
+            jobhunt/           jobhunt tooling
+            kube-system/       cilium, coredns, GPU plugins, multus (manifests present but not enabled), reloader, spegel
             kyverno/           policy engine
+            llmsafespaces/     LLM safe-spaces platform
             media/             plex, sonarr, radarr, jellyfin, etc.
             monitoring/        prometheus-stack, grafana, loki, vector
-            networking/        traefik, authelia, external-dns, cloudflared
+            networking/        traefik, authelia, external-dns, cloudflared, cloudflare-ddns, webfinger
             openebs-system/    storage provisioner
             ragnarok/          rathena, hercules, openkore game servers
             storage/           minio, longhorn, volsync, kopia, paperless
@@ -245,13 +249,15 @@ spec:
 | `192.168.5.11` | Authelia (LoadBalancer) |
 | `192.168.5.12` | Traefik (LoadBalancer, primary ingress) |
 | `192.168.5.13` | Forgejo SSH |
-| `192.168.5.1–5.67` | MetalLB devinfra pool |
-| `192.168.5.68–5.255` | MetalLB default pool |
+| `192.168.5.0/25` | Cilium `l2-pool-reserved` (opt-in via `cilium.io/l2-ip-pool: reserved`) |
+| `192.168.5.128/25` | Cilium `l2-pool` (default pool for all other LoadBalancer services) |
 | `192.168.0.120` | NAS (Synology) |
 | `192.168.0.5` | AdGuard Home (DNS) |
 | `192.168.5.15` | MariaDB primary |
 | `192.168.5.16` | MariaDB secondary |
 | `192.168.5.17` | Redis |
+
+**LoadBalancer IPAM is handled by Cilium, not MetalLB.** MetalLB is NOT deployed. Cilium performs LoadBalancer IPAM via `CiliumLoadBalancerIPPool` (config in `kubernetes/apps/kube-system/cilium/config/cilium-l2.yaml`) and L2 announcements via `CiliumL2AnnouncementPolicy`. To pin a specific IP use `spec.loadBalancerIP`. To select the reserved pool use the label `cilium.io/l2-ip-pool: reserved` on the service. To share an IP across services (e.g. TCP+UDP DNS on the same VIP) use the `lbipam.cilium.io/sharing-key` annotation, NOT `metallb.universe.tf/allow-shared-ip`.
 
 ### Ingress Flow
 
@@ -351,9 +357,9 @@ NFS paths are defined as `NFS_*` variables in `cluster-settings.yaml`.
 
 | Component | Namespace | Version | Purpose |
 |---|---|---|---|
-| Traefik | networking | v3.6.10 (chart 39.0.5) | Ingress controller |
-| Authelia | networking | 4.39.13 | Authentication gateway |
-| Cilium | kube-system | — | CNI + L2 announcements (MetalLB-like) |
+| Traefik | networking | chart 40.3.0 (proxy v3.7.4-compatible) | Ingress controller |
+| Authelia | networking | chart 0.11.6, image 4.39.20 | Authentication gateway |
+| Cilium | kube-system | — | CNI + native LoadBalancer IPAM + L2 announcements |
 | cert-manager | cert-manager | — | TLS certificate management (Let's Encrypt) |
 | external-dns | networking | — | DNS record management (split-horizon) |
 | cloudflared | networking | — | Cloudflare Tunnel for external access |
@@ -502,6 +508,65 @@ For Authelia specifically — the chart (`version`) and image (`tag`) are versio
 
 ---
 
+## Known CI limitations
+
+### Flux Diff (kubernetes, helmrelease) false positives
+
+The `Flux Diff (kubernetes, helmrelease)` check has multiple known false-positive failure modes rooted in `flux-local`'s architecture: it runs in a stock Docker image with no cluster context, cannot decrypt SOPS by design, and cannot install cluster CRDs before rendering helm templates. Charts that assume either substituted secrets or pre-installed CRDs will hard-fail `helm template` in CI even though they work fine in production.
+
+The workflow (`.github/workflows/flux-diff.yaml`) maintains an `EXCLUDED_APPS` list that removes known-incompatible apps from the `helmrelease` matrix leg only. The `kustomization` matrix leg still runs on those apps and produces the actionable per-resource diff for reviewers.
+
+**Currently excluded apps and why:**
+
+#### Authelia (`networking/authelia`) — OIDC `client_secret` validation
+
+```
+Error: execution error at (authelia/templates/validations.configMap.check.yaml:99:3):
+The value 'secret.value' for the 'configMap.identity_providers.oidc.clients'
+must have a hash prefix.
+```
+
+1. The Authelia HelmRelease has an `identity_providers.oidc.clients` list where each entry's `client_secret` is a Flux variable placeholder like `${SECRET_TAILSCALE_OAUTH_CLIENT_SECRET_HASHED}`.
+2. In production, Flux substitutes these from the SOPS-encrypted `cluster-secrets` Secret at reconcile time. The real values are already-hashed strings (e.g. `$argon2id$v=19$...`) that pass Authelia chart's built-in validator.
+3. In CI, `flux-local diff helmrelease` runs from a Docker image against the checked-out repo. `flux-local` **cannot decrypt SOPS** by design (documented behavior — no access to the age private key). So it substitutes the placeholders with **empty strings**.
+4. `flux-local` then runs `helm template` on the Authelia chart with empty-string `client_secret` values. Authelia's chart validator sees no `$argon2id$` / `$plaintext$` prefix and hard-fails the template step.
+
+#### Traefik (`networking/traefik`) — ServiceMonitor CRD not installed
+
+```
+Error: execution error at (traefik/templates/servicemonitor.yaml:5:10):
+ERROR: You have to deploy monitoring.coreos.com/v1 first
+```
+
+The Traefik chart renders a `ServiceMonitor` resource which requires the Prometheus Operator's `monitoring.coreos.com/v1` CRD. `flux-local`'s helm-template environment has no cluster CRDs installed, so the render aborts. Added to the exclusion list in the same PR that bumped Traefik to chart 41.0.2.
+
+**Adjacent checks that still work correctly for excluded apps:**
+- `Flux Diff (kubernetes, kustomization)` passes and its auto-comment on the PR shows the exact final resource diff that will be applied to the cluster
+- `Kubeconform` passes (validates YAML shape against Kubernetes schemas)
+- `workstation (archlinux|generic-linux)` pass (e2e validation of workspace bootstrap)
+
+**Historical context:**
+- Commit `e2dc2f2c` ("fix(authelia): revert helm-release values changes to unblock Flux Diff CI") is a partial workaround: it reverts non-essential Authelia edits so `flux-local` sees "no change" and skips re-templating Authelia. Only works for PRs that don't intentionally touch Authelia's values. Superseded by the exclusion list.
+- `flux-local` itself is deprecated (see the workflow's warning banner). Upstream recommends migrating to [`flate`](https://github.com/home-operations/flate) / [`konflate`](https://github.com/home-operations/konflate), which may or may not have the same limitation — not investigated yet.
+
+**Proper fixes (none applied yet — the exclusion list is the pragmatic patch):**
+1. **Wire real SOPS decryption + CRD installation into CI.** Store the age key as a `SOPS_AGE_KEY` GitHub Actions repo secret. Add a pre-`flux-local` step that runs `sops -d` in-place, and install the Prometheus Operator CRDs into the runner. Same trust model as production Flux; decrypted files and CRDs live only on the ephemeral runner.
+2. **Throwaway age keypair + dummy hashed secrets.** Create a separate age keypair used only for CI. Encrypt a stripped-down `cluster-secrets` file with placeholder hashed values. Store the throwaway key as a GitHub Actions secret. Never touches real cluster secrets. Doesn't help the CRD case.
+3. **Migrate off `flux-local` to `flate`/`konflate`.** Larger scope. Might handle both cases better; needs investigation.
+
+**Adding a new app to the exclusion list:**
+
+1. Confirm the failure is a false positive, not a real chart error. Look at the log — if it's a value-substitution or CRD-missing error, likely false positive. If it's a genuine templating error (typo in values, missing required field, etc.), fix the manifest instead.
+2. Edit `.github/workflows/flux-diff.yaml`, add the app's `namespace/app-name` path to the `EXCLUDED_APPS` list env var in the "Strip helmrelease-diff-incompatible apps" step.
+3. Add a subsection to this README-LLM section explaining which chart and why.
+
+**When reviewing a PR:**
+
+If `Flux Diff (kubernetes, helmrelease)` is the *only* failing check and the PR touches an app in `EXCLUDED_APPS`, it is almost certainly the known false positive. Verify by reading the workflow log for the specific error message. If any other check is also failing, it is a real issue and must be investigated.
+
+---
+
+
 ## SOPS / Secrets Reference
 
 Secrets in `secret.sops.yaml` files are mounted into pods as Kubernetes Secrets. Flux decrypts them during reconciliation using the age key.
@@ -603,14 +668,14 @@ Variable substitution happens at the `apps` Kustomization level, injecting all `
 
 ### Version in this cluster
 
-The cluster currently uses **app-template `4.3.0`** (some older apps may still be on `3.x`). The chart is fetched from the `bjw-s` HelmRepository (Helm repo at `https://bjw-s-labs.github.io/helm-charts`).
+The cluster currently uses **app-template `5.0.1`** for the vast majority of apps (some older apps may still be on `4.x`, and one on `3.1.0`). The chart is fetched from the `bjw-s` HelmRepository (Helm repo at `https://bjw-s-labs.github.io/helm-charts`).
 
 ```yaml
 # How to reference it in a HelmRelease
 chart:
   spec:
     chart: app-template
-    version: 4.3.0
+    version: 5.0.1
     sourceRef:
       kind: HelmRepository
       name: bjw-s
@@ -1093,7 +1158,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s

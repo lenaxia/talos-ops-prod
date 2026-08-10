@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gokore-portal
+  namespace: ragnarok
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: gokore.${SECRET_DEV_DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gokore-portal
+                port:
+                  number: 8090
+  tls:
+    - hosts:
+        - gokore.${SECRET_DEV_DOMAIN}
+      secretName: gokore.${SECRET_DEV_DOMAIN}

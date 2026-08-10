@@ -38,3 +38,71 @@ spec:
   wait: false
   interval: 30m
   timeout: 10m
+---
+# Fission Environment CRs (python3-manga-updater, python3-playwright).
+# These must reconcile before any Function that references them.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app fission-environments
+  namespace: flux-system
+spec:
+  targetNamespace: fission
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  path: ./kubernetes/apps/fission/fission/environments
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  dependsOn:
+    - name: fission
+  wait: true
+  interval: 30m
+  timeout: 5m
+---
+# Fission Package, Function, and per-function Secret CRs.
+# Depends on environments because every Function references one.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app fission-functions
+  namespace: flux-system
+spec:
+  targetNamespace: fission
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  path: ./kubernetes/apps/fission/fission/functions
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  dependsOn:
+    - name: fission-environments
+  wait: false
+  interval: 30m
+  timeout: 5m
+---
+# HTTPTriggers and TimeTriggers. Depend on functions existing first.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app fission-triggers
+  namespace: flux-system
+spec:
+  targetNamespace: fission
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  path: ./kubernetes/apps/fission/fission/httptriggers
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  dependsOn:
+    - name: fission-functions
+  wait: false
+  interval: 30m
+  timeout: 5m

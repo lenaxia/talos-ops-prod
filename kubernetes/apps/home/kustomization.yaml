@@ -15,8 +15,9 @@ resources:
   - ./redlib/ks.yaml
   - ./dawarich/ks.yaml
   - ./localai/ks.yaml
-    #- ./stablediffusion/ks.yaml
+  - ./stablediffusion/ks.yaml
   - ./home-assistant/ks.yaml
+  - ./hass-mcp/ks.yaml
   - ./esphome/ks.yaml
   #- ./magicmirror/ks.yaml
   - ./frigate/ks.yaml
@@ -25,8 +26,13 @@ resources:
   #- ./linkwarden/ks.yaml
   - ./vscode/ks.yaml
   - ./vllm-classifier/ks.yaml
-  - ./kokoro/ks.yaml
+    #- ./kokoro/ks.yaml
   - ./watersmart-scraper/ks.yaml
   - ./f1replaytiming/ks.yaml
   - ./msedge/ks.yaml
   - ./oncall-sim/ks.yaml
+  - ./hortusfox/ks.yaml
+  - ./hortusfox-mcp/ks.yaml
+  - ./librechat/ks.yaml
+  - ./kicad/ks.yaml
+  - ./opengist/ks.yaml

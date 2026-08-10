@@ -1,0 +1,133 @@
+---
+# Default KiBot config for the kicad-kibot Job.
+#
+# This ConfigMap is mounted read-only at /etc/kibot-default/config.kibot.yaml
+# inside the Job container. The Job's entrypoint prefers a config.kibot.yaml
+# that already exists in the project directory; if absent, copy this one in
+# before triggering.
+#
+# To customise per-project, commit a project-specific config.kibot.yaml at
+# the project root. kibot's auto-discovery picks up the first *.kibot.yaml
+# in CWD.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kicad-kibot-default
+  namespace: home
+data:
+  config.kibot.yaml: |
+    # KiBot config — JLCPCB fab bundle + Interactive HTML BOM.
+    # See https://inti-cmnb.github.io/kibot/ for the full output-type reference.
+    kibot:
+      version: 1
+
+    globals:
+      # Schematic field that holds the LCSC part number (e.g. C123456).
+      # Set this field on each JLC-assembled component in eeschema.
+      field_lcsc_part: LCSC
+      output: '%f-%i.%x'
+
+    preflight:
+      # ERC + DRC. Both fail the run on violations (exit code != 0).
+      erc: true
+      drc: true
+      check_zone_fills: true
+      # Don't fail on unconnected copper — surface as a warning instead.
+      drc_unconnected: warn
+
+    filters:
+      - name: only_jlc_parts
+        comment: 'Only parts with a JLC/LCSC code'
+        type: generic
+        include_only:
+          - column: _field_lcsc_part
+            regex: '^C\d+'
+
+    outputs:
+      # ── JLCPCB manufacturing bundle ──────────────────────────────────────
+      - name: gerbers
+        comment: 'Gerbers - KiCad standard naming'
+        type: gerber
+        dir: fab
+        options:
+          create_gerber_job_file: true
+          use_gerber_x2_attributes: true
+          gerber_precision: 4.5
+          exclude_edge_layer: false
+          plot_sheet_reference: false
+          plot_footprint_refs: true
+          plot_footprint_values: true
+          tent_vias: true
+          line_width: 0.1
+          subtract_mask_from_silk: true
+        layers: 'all'
+
+      - name: excellon_drill
+        comment: 'Excellon drill files (PTH + NPTH separate)'
+        type: excellon
+        dir: fab
+        options:
+          metric_units: true
+          pth_and_npth_single_file: false
+          use_aux_axis_as_origin: false
+
+      - name: bom_jlc
+        comment: 'BOM CSV for JLCPCB'
+        type: bom
+        dir: fab
+        options:
+          output: '%f_bom_jlc.%x'
+          exclude_filter: only_jlc_parts
+          ref_separator: ','
+          columns:
+            - field: Value
+              name: Comment
+            - field: References
+              name: Designator
+            - Footprint
+            - field: _field_lcsc_part
+              name: 'LCSC Part #'
+          csv:
+            hide_pcb_info: true
+            hide_stats_info: true
+            quote_all: true
+
+      - name: position_jlc
+        comment: 'Pick & Place CSV for JLCPCB'
+        type: position
+        dir: fab
+        options:
+          # Built-in JLC rotation correction for ~60 common footprints.
+          pre_transform: _rot_footprint_jlcpcb
+          output: '%f_cpl_jlc.%x'
+          format: CSV
+          units: millimeters
+          separate_files_for_front_and_back: false
+          only_smd: true
+          columns:
+            - id: Ref
+              name: Designator
+            - Val
+            - Package
+            - id: PosX
+              name: 'Mid X'
+            - id: PosY
+              name: 'Mid Y'
+            - id: Rot
+              name: Rotation
+            - id: Side
+              name: Layer
+
+      # ── Interactive HTML BOM (openscopeproject) ──────────────────────────
+      - name: ibom
+        comment: 'Interactive HTML BOM'
+        type: ibom
+        dir: fab
+        options:
+          output: '%f_ibom.%x'
+          # Show all layers by default; the user toggles in the browser.
+          layer_view: F&B
+          # Highlighting behaviour for hand-assembly.
+          highlight_pin1: true
+          extra_fields: 'LCSC,_field_lcsc_part'

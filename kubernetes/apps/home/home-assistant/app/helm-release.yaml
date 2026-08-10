@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helmrelease_v2beta1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -61,7 +61,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/home-assistant
-              tag: 2026.3.2
+              tag: 2026.8.1
             envFrom:
               - secretRef:
                   name: home-assistant-secret
@@ -72,7 +72,9 @@ spec:
             resources:
               requests:
                 cpu: 10m
-                memory: 100Mi
+                memory: 1Gi
+              limits:
+                memory: 1Gi
             probes:
               liveness:
                 enabled: false
@@ -84,12 +86,15 @@ spec:
             image:
               repository: ghcr.io/coder/code-server
               tag: 
-                4.109.2@sha256:1b84cd817fe8eb1159323ae9d2f29b3c70c6ccd44958d651a94900cf7f0ff9c4
+                4.131.0@sha256:3623e6362abdec6258472882b06fdeec9d6ce2ad3fda316b3c5d7ed092b89add
             args: ["--auth", "none", "--user-data-dir", "/config/.vscode", "--extensions-dir",
               "/config/.vscode", "--port", "12321", "/config"]
             resources:
               requests:
                 cpu: 10m
+                memory: 256Mi
+              limits:
+                memory: 256Mi
         statefulset:
           volumeClaimTemplates:
             - name: config
@@ -107,6 +112,11 @@ spec:
         globalMounts:
           - path: /config/ldap-auth
         defaultMode: 0777
+      heatpump-package:
+        type: configMap
+        name: heatpump-package
+        globalMounts:
+          - path: /config/packages
       logs:
         type: emptyDir
         globalMounts:
@@ -123,7 +133,7 @@ spec:
       main:
         type: LoadBalancer
           #externalIPs: ["${SVC_HOME_ASSISTANT_ADDR}"]
-          #externalTrafficPolicy: Cluster
+        externalTrafficPolicy: Cluster
         ports:
           http:
             port: 8123
@@ -177,5 +187,3 @@ spec:
           - hosts:
               - *host2
             secretName: *host2
-    podAnnotations:
-      k8s.v1.cni.cncf.io/networks: macvlan-static-iot-hass

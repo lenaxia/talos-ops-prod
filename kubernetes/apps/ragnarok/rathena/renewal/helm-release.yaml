@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       interval: 16m
       sourceRef:
         kind: HelmRepository
@@ -24,14 +24,12 @@ spec:
         type: deployment
         replicas: 1
         strategy: Recreate
-        pod:
-          hostNetwork: true
         containers:
           server:
             image:
-              repository: 
-                ghcr.io/lenaxia/docker-rathena
-              tag: packetver20200401-renewal-20251220@sha256:a939f99894337b4de631f20c252d101fa88c792b514a00946159088ccd58c8ce
+              repository: ghcr.io/lenaxia/docker-rathena
+              tag: 
+                packetver20200401-renewal-20260727@sha256:6e69d8892f0da6da3831da973bfe30a0d24956813a8a51eaa70d698127e93aa6
             envFrom:
               - secretRef:
                   name: rathena-renewal
@@ -69,11 +67,18 @@ spec:
               - name: ADD_SUBNET_MAP1
                 value: "255.255.255.255:10.96.255.255"
               - name: SET_CHAR_PUBLIC_IP
-                value: "192.168.5.145"
+                value: ${SVC_RATHENA_RENEWAL_ADDR}
               - name: SET_MAP_PUBLIC_IP
-                value: "192.168.5.145"
+                value: ${SVC_RATHENA_RENEWAL_ADDR}
               - name: SET_MAP_TO_CHAR_IP
-                value: "192.168.5.145"
+                value: ${SVC_RATHENA_RENEWAL_ADDR}
+              # Internal char->login handshake stays on loopback. Both processes
+              # run in the same pod (same netns), so 127.0.0.1 is always
+              # reachable and immune to interface-autodetect regressions that
+              # previously grabbed a link-local 169.254.x/32 host route when
+              # hostNetwork: true was in use.
+              - name: SET_CHAR_TO_LOGIN_IP
+                value: "127.0.0.1"
               - name: MYSQL_ACCOUNTSANDCHARS
                 value: "1"
               - name: RENEWAL
@@ -81,7 +86,15 @@ spec:
     service:
       main:
         enabled: true
+        primary: true
+        controller: main
         type: LoadBalancer
+        # Pin the VIP so removing hostNetwork doesn't reshuffle it.
+        loadBalancerIP: ${SVC_RATHENA_RENEWAL_ADDR}
+        # Preserve client source IP for rAthena's IP-ban / login-log features.
+        # Cilium L2 announcements route traffic only to nodes with a Ready
+        # endpoint pod, so `Local` is safe with our single-replica deployment.
+        externalTrafficPolicy: Local
         labels:
           app: rathena
         ports:
@@ -94,7 +107,6 @@ spec:
           map:
             port: 5121
             enabled: true
-        primary: true
     persistence:
       entrypoint-sh:
         enabled: true

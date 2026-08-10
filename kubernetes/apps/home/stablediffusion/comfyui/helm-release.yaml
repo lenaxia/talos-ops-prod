@@ -26,14 +26,22 @@ spec:
           reloader.stakater.com/auto: "true"
         pod:
           runtimeClassName: nvidia
+          tolerations:
+            - key: "dedicated"
+              operator: "Equal"
+              value: "special"
+              effect: "NoSchedule"
+            - key: "node.kubernetes.io/disk-pressure"
+              operator: "Exists"
+              effect: "NoSchedule"
         containers:
           app:
             image:
               repository: ghcr.io/lenaxia/comfyui-boot
               tag: cu124-slim-20251127@sha256:0ce1e0c5ed53888e94ba1e551516fa7e60f0bed701e39af0d96393a33e987dc8
             env:
-              #- name: NVIDIA_VISIBLE_DEVICES
-              #  value: "GPU-6726851a-d64e-09c8-a938-1537593e3106"
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547" # 3090 #3 (spare)
               - name: PORT
                 value: "8188"
               - name: CLI_ARGS
@@ -43,14 +51,15 @@ spec:
               - name: LD_LIBRARY_PATH
                 value: "/usr/local/lib64/python3.12/site-packages/torch/lib:/usr/local/lib/python3.12/site-packages/nvidia/cublas/lib:/usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib"
             securityContext:
-              runAsUser: 0  # Runs as root as per Dockerfile
-              privileged: false  # Not needed despite root
+              runAsUser: 0
+              privileged: false
             resources:
               requests:
                 nvidia.com/gpu: 1
-                cpu: 2000m  # Higher CPU needed for compilation
+                cpu: 2000m
                 memory: 4Gi
               limits:
+                memory: 4Gi
                 nvidia.com/gpu: 1
     service:
       app:
@@ -83,18 +92,35 @@ spec:
             secretName: *uri
     persistence:
       models:
-        enabled: true
-        existingClaim: comfyui-output
+        type: nfs
+        server: ${NAS_ADDR}
+        path: /volume2/downloads/stablediffusion/models
         globalMounts:
           - path: /root/ComfyUI/models
-            subPath: models
-          - path: /root/ComfyUI/custom_nodes
-            subPath: custom_nodes
-          - path: /root/ComfyUI/input
-            subPath: input
+      output:
+        type: nfs
+        server: ${NAS_ADDR}
+        path: /volume2/downloads/stablediffusion/output
+        globalMounts:
           - path: /root/ComfyUI/output
-            subPath: output
-          - path: /root/ComfyUI/user
-            subPath: user
-          - path: /mnt
-
+      custom-nodes:
+        type: nfs
+        server: ${NAS_ADDR}
+        path: /volume2/downloads/stablediffusion/custom_nodes
+        globalMounts:
+          - path: /root/ComfyUI/custom_nodes
+      input:
+        type: nfs
+        server: ${NAS_ADDR}
+        path: /volume2/downloads/stablediffusion/input
+        globalMounts:
+          - path: /root/ComfyUI/input
+      config:
+        type: configMap
+        name: comfyui-configmap
+        advancedMounts:
+          comfyui:
+            app:
+              - path: /root/ComfyUI/custom_nodes/ComfyUI-Manager/config.ini
+                subPath: config.ini
+                readOnly: true

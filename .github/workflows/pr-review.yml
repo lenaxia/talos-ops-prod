@@ -1,0 +1,29 @@
+# PR Review — thin caller delegating to the reusable workflow in
+# lenaxia/ai-workflows. The reusable workflow runs the formal blocking review
+# (APPROVE / REQUEST_CHANGES via gh pr review, with the reviewed commit SHA
+# injected into the prompt), posts the command footer, and collapses runs to a
+# per-PR concurrency group.
+#
+# The `uses:` ref MUST be a hardcoded tag (no vars context — see ai-workflows
+# README Lessons Learned #1). The renovate[bot] skip must stay in the caller (#4).
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  review:
+    # Skip renovate[bot] PRs — handled by renovate-analysis.yml
+    if: github.event.pull_request.user.login != 'renovate[bot]'
+    uses: lenaxia/ai-workflows/.github/workflows/pr-review.yml@v0.2.7
+    secrets: inherit
+    with:
+      version: v0.2.0
+      project_name: talos-ops-prod

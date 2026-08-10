@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gokore-portal-config
+  namespace: ragnarok
+data:
+  config.yaml: |
+    server:
+      http_addr: ":8090"
+    auth:
+      mode: dev
+      user_header: X-Forwarded-User
+      email_header: X-Forwarded-Email
+      groups_header: X-Forwarded-Groups
+    db:
+      path: /data/portal.db
+    discovery:
+      type: static
+      static:
+        file: /config/instances.yaml
+    polling:
+      list_bots_interval: 10s
+      list_diagnostics_interval: 5s
+      instance_health_interval: 15s
+    grpc:
+      read_timeout: 30s
+      control_timeout: 30s
+    community:
+      spec_path: /configs/community/default.yaml
+    git_publisher:
+      mode: dry-run
+      base_branch: main
+    watchdog:
+      enabled: true
+      eval_interval: 10s
+      default_cooldown: 5m
+      rules:
+        - name: stuck_packet
+          condition: stuck_packet
+          threshold: 10m
+          action: alert
+        - name: stuck_loop
+          condition: stuck_loop
+          threshold: 15s
+          action: alert
+        - name: dead_not_respawn
+          condition: dead_not_respawn
+          action: alert
+  instances.yaml: |
+    instances:
+      - id: gokore-community-run
+        addr: gokore.ragnarok.svc.cluster.local:50051
+        insecure: true

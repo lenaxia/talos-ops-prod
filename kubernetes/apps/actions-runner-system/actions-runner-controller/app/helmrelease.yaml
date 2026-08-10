@@ -12,3 +12,7 @@ spec:
     namespace: actions-runner-system
   values:
     fullnameOverride: *name
+    metrics:
+      controllerManagerAddr: ":8080"
+      listenerAddr: ":8080"
+      listenerEndpoint: "/metrics"

@@ -1,0 +1,11 @@
+---
+apiVersion: fission.io/v1
+kind: TimeTrigger
+metadata:
+  name: job-scraper-snowflake-hourly
+  namespace: fission
+spec:
+  cron: "45 * * * *"
+  functionref:
+    name: job-scraper-snowflake
+    type: name

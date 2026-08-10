@@ -20,3 +20,4 @@ spec:
         selector:
           dnsZones:
             - ${SECRET_DEV_DOMAIN}
+            - ${SECRET_SAFESPACES_DOMAIN}
