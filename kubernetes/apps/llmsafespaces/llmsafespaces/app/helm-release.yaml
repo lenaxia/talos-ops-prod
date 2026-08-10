@@ -195,7 +195,13 @@ spec:
     # annotations consistently with every other app in the repo.
     frontend:
       enabled: true
-      replicaCount: 1
+      # Two replicas: a single-replica Deployment under the chart's default
+      # RollingUpdate (maxUnavailable 25%) lets maxUnavailable round up to 1,
+      # which permits zero available pods during a rollout and trips the
+      # Deployment's Available=False (MinimumReplicasUnavailable) condition.
+      # This is a stateless nginx static-asset host, so horizontal scaling is
+      # safe and keeps >=1 pod available across rollouts/restarts.
+      replicaCount: 2
       # Pinned to the same semver as api/controller/relay-router/base — the
       # platform rolls atomically because kind/slug wire format, CRD field
       # `workspace.status.userCredsPresent`, and DB migrations must all be
