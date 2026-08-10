@@ -22,6 +22,25 @@ spec:
   upgrade:
     remediation:
       retries: 3
+  # The hajimari chart hardcodes TCP probes with timeoutSeconds=1s. On this
+  # CPU-limit-overcommitted node that 1s timeout is too tight and causes the
+  # readiness probe to flap (3 consecutive failures => pod NotReady => 0/1
+  # available), which is exactly the observed critical finding. Relax the
+  # readiness/liveness probe timeouts post-render so transient kubelet probe
+  # latency no longer trips the single-replica deployment.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: hajimari
+            patch: |
+              - op: replace
+                path: /spec/template/spec/containers/0/readinessProbe/timeoutSeconds
+                value: 3
+              - op: replace
+                path: /spec/template/spec/containers/0/livenessProbe/timeoutSeconds
+                value: 3
   values:
     podLabels:
       app: *app
