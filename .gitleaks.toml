@@ -1,0 +1,17 @@
+# Gitleaks configuration
+# https://github.com/getsops/gitleaks
+
+[extend]
+# Extend the default ruleset
+useDefault = true
+
+[allowlist]
+description = "Global allowlist"
+regexTarget = "line"
+regexes = [
+    # SOPS-encrypted values are safe — they start with ENC[AES256_GCM
+    '''ENC\[AES256_GCM''',
+    # AGE encrypted file headers/footers
+    '''-----BEGIN AGE ENCRYPTED FILE-----''',
+    '''-----END AGE ENCRYPTED FILE-----''',
+]

@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: grafana
-      version: 11.2.2
+      version: 12.10.4
       sourceRef:
         kind: HelmRepository
         name: grafana-charts
@@ -182,6 +182,7 @@ spec:
       dashboards:
         enabled: true
         searchNamespace: ALL
+        resource: configmap
         # folderAnnotation: grafana_folder
         # provider:
         #   foldersFromFilesStructure: true

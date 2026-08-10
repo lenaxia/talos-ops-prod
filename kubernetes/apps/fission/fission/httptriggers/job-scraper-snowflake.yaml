@@ -1,0 +1,14 @@
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: job-scraper-snowflake
+  namespace: fission
+spec:
+  functionref:
+    name: job-scraper-snowflake
+    type: name
+  relativeurl: /job-scraper-snowflake
+  methods:
+    - GET
+    - POST

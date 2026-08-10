@@ -1,9 +1,18 @@
 ---
+# The PV and PVC are both named `paperless-nfs`. The NFS path is sourced from
+# the `${NFS_PAPERLESS}` variable (currently `/volume1/paperless` on the NAS).
+#
+# Historical note: a previous version renamed the PV to `paperless-nfs-v1` to
+# work around the fact that `spec.nfs.path` is immutable on an existing PV and
+# the live PV was stuck on the old `/volume3/paperless` path. That workaround
+# broke Flux reconciliation: the bound PVC's `spec.volumeName` is immutable, so
+# Flux could never apply the manifest. The live PV `paperless-nfs` has since
+# been recreated with the correct `/volume1/paperless` path, so the rename is no
+# longer needed. Do NOT change `volumeName` here — it must match the bound claim.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: paperless-nfs
-  namespace: storage
 spec:
   capacity:
     storage: 1Mi
@@ -19,6 +28,9 @@ spec:
     - nconnect=8
     - hard
     - noatime
+  claimRef:
+    namespace: storage
+    name: paperless-nfs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -29,6 +41,7 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: paperless-nfs
+  volumeName: paperless-nfs
   resources:
     requests:
       storage: 1Mi

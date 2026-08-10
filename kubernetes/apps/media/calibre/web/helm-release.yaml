@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       interval: 15m
       sourceRef:
         kind: HelmRepository
@@ -49,7 +49,9 @@ spec:
             resources:
               requests:
                 cpu: 50m
-                memory: 249M
+                memory: 512Mi
+              limits:
+                memory: 512Mi
     service:
       main:
         ports:

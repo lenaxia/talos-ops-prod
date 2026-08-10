@@ -11,6 +11,9 @@ configMapGenerator:
   - name: ldap-auth-py
     files:
       - config/ldap-auth.py
+  - name: heatpump-package
+    files:
+      - config/packages/heatpump.yaml
   - name: openai-conversation-overrides
     files:
       - ./openai/__init__.py

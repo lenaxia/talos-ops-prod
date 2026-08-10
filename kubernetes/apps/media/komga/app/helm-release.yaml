@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -37,7 +37,7 @@ spec:
             image:
               repository: gotson/komga
               tag: 
-                1.24.1@sha256:a84a0424e2f8235ba9373ed10b9b903e0feecdbb500a1b4aebac01f08e9e57db
+                1.25.0@sha256:c4f9885fc077e2e9cd684dc95e8f6cfa5e33b100b46712b2de7f5cc2ff59e6fb
             env:
               TZ: "${TIMEZONE}"
               SERVER_PORT: &port 8080
@@ -77,15 +77,20 @@ spec:
             secretName: *uri
         className: traefik
     persistence:
-      media:
+      config:
         enabled: true
-        existingClaim: komga-media-volume
+        existingClaim: komga-config-volume
         globalMounts:
           - path: /config
-            subPath: config
+      media:
+        enabled: true
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: ${NFS_KOMGA_MEDIA}
+        globalMounts:
           - path: /mnt/media
-            subPath: media
-          - path: /mnt/komga-media-volume
       secret:
         enabled: true
         type: secret

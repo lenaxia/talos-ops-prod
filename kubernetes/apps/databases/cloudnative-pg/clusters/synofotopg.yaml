@@ -16,7 +16,7 @@ metadata:
   name: synofotopg
   namespace: databases
 spec:
-  instances: 1
+  instances: 2
   imageName: ghcr.io/cloudnative-pg/postgresql:16.8
   primaryUpdateStrategy: unsupervised
   storage:
@@ -42,7 +42,7 @@ spec:
         maxParallel: 8
       destinationPath: "s3://${S3_CNPG}/synofotopg16"
       endpointURL: http://minio.storage.svc.cluster.local:9000
-      serverName: synofotopg-backup-v01
+      serverName: synofotopg-backup-v02
       s3Credentials:
         accessKeyId:
           name: postgres-minio
@@ -53,5 +53,22 @@ spec:
         region:
           name: postgres-minio
           key: MINIO_REGION
+  externalClusters:
+    - name: synofotopg-backup
+      barmanObjectStore:
+        destinationPath: "s3://${S3_CNPG}/synofotopg16"
+        endpointURL: http://minio.storage.svc.cluster.local:9000
+        serverName: synofotopg-backup-v01
+        s3Credentials:
+          accessKeyId:
+            name: postgres-minio
+            key: MINIO_ACCESS_KEY
+          secretAccessKey:
+            name: postgres-minio
+            key: MINIO_SECRET_KEY
+          region:
+            name: postgres-minio
+            key: MINIO_REGION
   bootstrap:
-    initdb: {}
+    recovery:
+      source: synofotopg-backup

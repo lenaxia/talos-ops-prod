@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -52,7 +52,7 @@ spec:
           main:
             image:
               repository: ghcr.io/open-webui/open-webui
-              tag: v0.8.10
+              tag: v0.11.0
             env:
               GLOBAL_LOG_LEVEL: DEBUG
               TZ: ${TIMEZONE}
@@ -88,7 +88,8 @@ spec:
               OPENAI_API_BASE_URL: https://ai.${SECRET_DEV_DOMAIN}/v1
               # TTS - Fish Speech via LiteLLM
               AUDIO_TTS_ENGINE: openai
-              AUDIO_TTS_OPENAI_API_BASE_URL: http://litellm.home.svc.cluster.local:4000/v1
+              AUDIO_TTS_OPENAI_API_BASE_URL: 
+                http://litellm.home.svc.cluster.local:4000/v1
               AUDIO_TTS_OPENAI_API_KEY:
                 valueFrom:
                   secretKeyRef:
@@ -103,7 +104,9 @@ spec:
             resources:
               requests:
                 cpu: 15m
-                memory: 94M
+                memory: 1Gi
+              limits:
+                memory: 1Gi
     persistence:
       data:
         enabled: true

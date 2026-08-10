@@ -1,0 +1,11 @@
+---
+apiVersion: fission.io/v1
+kind: TimeTrigger
+metadata:
+  name: job-scraper-crowdstrike-hourly
+  namespace: fission
+spec:
+  cron: "30 * * * *"
+  functionref:
+    name: job-scraper-crowdstrike
+    type: name

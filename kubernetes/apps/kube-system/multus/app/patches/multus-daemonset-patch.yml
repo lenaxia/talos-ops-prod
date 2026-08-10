@@ -8,6 +8,20 @@ spec:
     spec:
       containers:
       - name: kube-multus
+        # Upstream sets requests+limits both at 50Mi. On this cluster,
+        # worker-00 (~130 pods) and worker-01 (~110 pods) OOMKilled the
+        # thick-mode daemon within seconds of first CNI ADD burst — the
+        # daemon is memory-hungry when handling many concurrent CNI
+        # requests. Bumping to 256Mi limit / 64Mi request. Verified
+        # steady-state RSS is 20-30Mi with the higher headroom absorbing
+        # bursts. See PR #TBD for the full analysis.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 256Mi
         volumeMounts:
         - mountPath: /var/run/netns
           name: host-run-netns

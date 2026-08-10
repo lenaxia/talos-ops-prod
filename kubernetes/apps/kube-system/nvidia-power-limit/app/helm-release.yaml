@@ -1,0 +1,80 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-5.0.1/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: nvidia-power-limit
+  namespace: kube-system
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        feature.node.kubernetes.io/pci-10de.present: "true"
+    controllers:
+      main:
+        type: daemonset
+        strategy: RollingUpdate
+        containers:
+          main:
+            image:
+              repository: nvidia/cuda
+              tag: 13.3.1-runtime-ubuntu22.04
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                set -eu
+                echo "[$(date)] nvidia-power-limit daemon starting"
+                nvidia-smi -pm 1
+                while true; do
+                  for i in $$(nvidia-smi --query-gpu=index --format=csv,noheader); do
+                    GPU_NAME=$$(nvidia-smi --query-gpu=name --format=csv,noheader -i $$i | tr -d '\r')
+                    case "$$GPU_NAME" in
+                      *"RTX 3090"*) POWER_LIMIT=275 ;;
+                      *"RTX 4090"*) POWER_LIMIT=325 ;;
+                      *) POWER_LIMIT=250 ;;
+                    esac
+                    CURRENT=$$(nvidia-smi --query-gpu=power.limit --format=csv,noheader,nounits -i $$i | tr -d '\r')
+                    if [ "$$CURRENT" != "$$POWER_LIMIT" ]; then
+                      if nvidia-smi -i $$i -pl $$POWER_LIMIT; then
+                        echo "[$(date)] GPU $$i ($$GPU_NAME): $${CURRENT}W -> $${POWER_LIMIT}W"
+                      else
+                        echo "[$(date)] GPU $$i ($$GPU_NAME): FAILED to set $${POWER_LIMIT}W"
+                      fi
+                    fi
+                  done
+                  sleep 300
+                done
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 64Mi
+            securityContext:
+              privileged: true
+            probes:
+              liveness:
+                enabled: false
+              readiness:
+                enabled: false
+              startup:
+                enabled: false

@@ -99,7 +99,7 @@ The deployment happens in two phases via Flux:
 
 ## Migration from Bitnami MariaDB
 
-See the [Migration Plan](../../../docs/mariadb-operator-migration-plan.md) for detailed migration steps.
+> Migration complete. The steps below are retained for historical reference.
 
 ### Quick Migration Steps
 
@@ -222,4 +222,3 @@ kubectl get endpoints -n databases
 
 - [MariaDB Operator Documentation](https://github.com/mariadb-operator/mariadb-operator)
 - [Galera Cluster Documentation](https://galeracluster.com/library/documentation/)
-- [Migration Plan](../../../docs/mariadb-operator-migration-plan.md)

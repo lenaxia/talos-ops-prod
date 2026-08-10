@@ -1,6 +1,12 @@
 # Trash
 .DS_Store
 Thumbs.db
+# Binaries / generated artifacts (never belong in a GitOps repo)
+__pycache__/
+*.pyc
+*.sqlite
+*.sqlite3
+*.tar
 # k8s
 kubeconfig
 talosconfig
@@ -9,6 +15,12 @@ talosconfig
 *.agekey
 *.pub
 *.key
+# Talos generated cluster config (contains unencrypted bootstrap tokens,
+# etcd secretbox encryption secret, machine certs, and CA keys). NEVER commit.
+kubernetes/bootstrap/talos/clusterconfig/
+kubernetes/bootstrap/talos/clusterconfig-backup-*/
+kubernetes/bootstrap/talos/talsecret.yaml
+kubernetes/bootstrap/talos/temp.yaml
 # Private
 .private
 .bin

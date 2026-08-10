@@ -1,0 +1,90 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname gokore-portal
+  namespace: ragnarok
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      interval: 16m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    defaultPodOptions:
+      imagePullSecrets:
+        - name: ghcr-secret
+      securityContext:
+        fsGroup: 65532
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+
+    controllers:
+      main:
+        enabled: true
+        type: deployment
+        replicas: 1
+        strategy: RollingUpdate
+        containers:
+          main:
+            image:
+              repository: ghcr.io/lenaxia/gokore-portal
+              tag: v1.2.0
+              pullPolicy: IfNotPresent
+            args:
+              - -config
+              - /config/config.yaml
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  httpGet:
+                    path: /
+                    port: 8090
+                    scheme: HTTP
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  httpGet:
+                    path: /
+                    port: 8090
+                    scheme: HTTP
+
+    service:
+      main:
+        enabled: true
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 8090
+            enabled: true
+
+    persistence:
+      data:
+        enabled: true
+        existingClaim: gokore-portal-data
+        globalMounts:
+          - path: /data
+      config:
+        enabled: true
+        type: configMap
+        name: gokore-portal-config
+        globalMounts:
+          - path: /config

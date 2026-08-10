@@ -16,9 +16,10 @@ metadata:
   name: vectorpg
   namespace: databases
 spec:
-  instances: 1
-  # CNPG standard image — includes pgvector, PGAudit, Postgres Failover Slots
-  imageName: ghcr.io/cloudnative-pg/postgresql:16.8-standard-bookworm
+  instances: 3
+  # Plain CNPG image — ships pgvector + barman-cloud (standard-bookworm is
+  # missing barman-cloud binaries, which broke all backups for 136 days).
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.8
   primaryUpdateStrategy: unsupervised
   storage:
     size: 20Gi
@@ -55,4 +56,7 @@ spec:
           name: postgres-minio
           key: MINIO_REGION
   bootstrap:
-    initdb: {}
+    initdb:
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector CASCADE;
+        - ALTER USER immich WITH SUPERUSER;

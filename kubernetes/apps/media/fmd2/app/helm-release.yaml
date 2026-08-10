@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -80,9 +80,10 @@ spec:
           - path: /app/FMD2/userdata
       media:
         enabled: true
-          #existingClaim: fmd2-test-volume
-        existingClaim: komga-media-volume
+        type: custom
+        volumeSpec:
+          nfs:
+            server: ${NAS_ADDR}
+            path: ${NFS_KOMGA_MEDIA}
         globalMounts:
           - path: /downloads
-            subPath: media
-          - path: /mnt/komga-media-volume

@@ -89,6 +89,13 @@ sinks:
     out_of_order_action: accept
     remove_label_fields: true
     remove_timestamp: true
+    # Vector 0.57.0 enforces template confinement on {{ }} sink templates
+    # and rejects label templates with no literal prefix at startup. These are
+    # low-cardinality, operator-controlled Loki labels (host/custom_app_name/
+    # namespace/node), so opt out to preserve pre-0.57 label values verbatim.
+    # Prefixing the values (e.g. 'host-{{ host }}') would corrupt label values
+    # and break existing Grafana queries/dashboards/alerts.
+    dangerously_allow_unconfined_template_resolution: true
   kubernetes:
     type: loki
     batch:
@@ -105,6 +112,7 @@ sinks:
     out_of_order_action: accept
     remove_label_fields: true
     remove_timestamp: true
+    dangerously_allow_unconfined_template_resolution: true
 #  opnsense:
 #    type: loki
 #    batch:

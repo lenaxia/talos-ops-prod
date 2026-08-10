@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -29,9 +29,14 @@ spec:
     controllers:
       app:
         type: deployment
+        replicas: 2
+        strategy: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 1
+          maxSurge: 1
         annotations:
           reloader.stakater.com/auto: 'true'
-          litellm-force-restart: "2026-01-31"
+          litellm-force-restart: "2026-07-31"
         initContainers:
           init-db:
             env:
@@ -45,37 +50,48 @@ spec:
                   secretKeyRef:
                     name: postgres-superuser
                     key: host
-            envFrom:
-              - secretRef:
-                  name: *appname
+              - name: INIT_POSTGRES_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_USER
+              - name: INIT_POSTGRES_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_PASS
+              - name: INIT_POSTGRES_DBNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_DBNAME
             image:
               repository: ghcr.io/onedr0p/postgres-init
               tag: '17.4'
-          
+
           # Database migration initContainer
           migrate:
             image:
               repository: ghcr.io/berriai/litellm
-              tag: v1.83.7-stable
+              tag: v1.83.14-stable
             command:
               - sh
               - -c
               - |
                 set -e
                 echo "Starting database migration..."
-                echo "Database URL: postgresql://${INIT_POSTGRES_USER}:****@${INIT_POSTGRES_HOST}:5432/${INIT_POSTGRES_DBNAME}"
-                
+
                 # Check if schema directory exists
                 if [ ! -d "/app/litellm-proxy-extras" ]; then
                   echo "ERROR: litellm-proxy-extras directory not found"
                   exit 1
                 fi
-                
+
                 # Run Prisma migration
                 cd /app
                 echo "Running: prisma migrate deploy"
                 prisma migrate deploy --schema=/app/litellm-proxy-extras/litellm_proxy_extras/schema.prisma
-                
+
                 echo "✓ Migration completed successfully!"
             env:
               - name: INIT_POSTGRES_HOST
@@ -83,13 +99,28 @@ spec:
                   secretKeyRef:
                     name: postgres-superuser
                     key: host
+              - name: INIT_POSTGRES_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_USER
+              - name: INIT_POSTGRES_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_PASS
+              - name: INIT_POSTGRES_DBNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: INIT_POSTGRES_DBNAME
               - name: DATABASE_URL
-                value: "postgresql://$(INIT_POSTGRES_USER):$(INIT_POSTGRES_PASS)@$(INIT_POSTGRES_HOST):5432/$(INIT_POSTGRES_DBNAME)"
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DATABASE_URL
               - name: USE_PRISMA_MIGRATE
                 value: "True"
-            envFrom:
-              - secretRef:
-                  name: *appname
             resources:
               requests:
                 cpu: 50m
@@ -101,7 +132,7 @@ spec:
           app:
             image:
               repository: ghcr.io/berriai/litellm
-              tag: v1.83.7-stable
+              tag: v1.83.14-stable
             args:
               - "--config"
               - "/app/proxy_server_config.yaml"
@@ -116,6 +147,12 @@ spec:
                 value: "PRODUCTION"
               - name: LITELLM_LOG
                 value: "ERROR"
+              # Route openai/* models through /chat/completions (not /responses)
+              # when called via the Anthropic /v1/messages endpoint, so that
+              # OpenAI-compatible backends without a /responses API (e.g. Z.AI
+              # GLM) work as Claude Code targets.
+              - name: LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES
+                value: "true"
               # Database Migration Settings - CRITICAL: Prevent pods from running migrations
               - name: DISABLE_SCHEMA_UPDATE
                 value: "true"
@@ -127,7 +164,10 @@ spec:
                     name: postgres-superuser
                     key: host
               - name: DATABASE_URL
-                value: "postgresql://$(INIT_POSTGRES_USER):$(INIT_POSTGRES_PASS)@$(INIT_POSTGRES_HOST):5432/$(INIT_POSTGRES_DBNAME)"
+                valueFrom:
+                  secretKeyRef:
+                    name: *appname
+                    key: DATABASE_URL
               # SSO / OIDC
               - name: PROXY_BASE_URL
                 value: "https://ai.thekao.cloud"
@@ -196,7 +236,9 @@ spec:
             resources:
               requests:
                 cpu: 15m
-                memory: 94M
+                memory: 2Gi
+              limits:
+                memory: 2Gi
 
     configMaps:
       config-yaml:
@@ -223,159 +265,249 @@ spec:
               disable_spend_logs: True # turn off writing each transaction to the db for better performance
               disable_error_logs: True # turn off writing LLM Exceptions to DB
 
+            # MCP Gateway: register hass-mcp (running as a sibling pod with
+            # supergateway exposing SSE). LiteLLM reads tools from this server
+            # and re-exposes them via its own /mcp endpoint and via the
+            # `tools: [{type: mcp, server_url: litellm_proxy}]` flow on
+            # /v1/chat/completions and /v1/responses.
+            #
+            # supergateway has no inbound auth (verified) so no auth_type/value.
+            # Security model: in-cluster ClusterIP only, LiteLLM is the only
+            # documented client.
+            mcp_servers:
+              hass:
+                url: http://hass-mcp.home.svc.cluster.local:8000/mcp
+                transport: http
+                description: Home Assistant control via voska/hass-mcp
+                allow_all_keys: true
+              opengist:
+                url: http://opengist-mcp.home.svc.cluster.local:8000/mcp
+                transport: http
+                description: Opengist CRUD via lenaxia/opengist-mcp
+                allow_all_keys: true
 
-            model_list: 
-              ## LocalAI
-              #- model_name: localai-llama3.1-q8-functioncall
-              #  litellm_params:
-              #    model: openai/meta-llama-3.1-8b-instruct:Q8_grammar-functioncall
-              #    api_base: http://localai.home.svc.cluster.local:8080
-              #    api_key: doesnotmatter
 
-              # Tabby API 
-              #- model_name: default
-              #  litellm_params:
-              #    model: openai/Qwen2.5-72B-Instruct-exl2-4_25
-              #    api_base: http://tabbyapi.home.svc.cluster.local:5000/v1
-              #    api_key: doesnotmatter
-              #  model_info:
-              #    input_cost_per_token: 0.00001
-              #    output_cost_per_token: 0.00001
-              #    max_tokens: 40960
-              #- model_name: exl2-qwen2.5-72b-instruct_4_25
-              #  litellm_params:
-              #    model: openai/Qwen2.5-72B-Instruct-exl2-4_25
-              #    api_base: http://tabbyapi.default.svc.cluster.local:5000/v1
-              #    api_key: doesnotmatter
-              #  model_info:
-              #    input_cost_per_token: 0.00001
-              #    output_cost_per_token: 0.00001
-              #    max_tokens: 40960
+            model_list:
+            - model_name: default
+              litellm_params:
+                model: openai/qwen3
+                api_base: http://vllm.home.svc.cluster.local:8000/v1
+                api_key: doesnotmatter
+              model_info:
+                input_cost_per_token: 0.00001
+                output_cost_per_token: 0.00001
+                max_input_tokens: 32768
+                max_tokens: 32768
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
 
-              # vLLM
-              #- model_name: default
-              #  litellm_params:
-              #    model: hosted_vllm/default
-              #    api_base: http://vllm.home.svc.cluster.local:8000/v1
-              #    api_key: doesnotmatter
-              #  model_info:
-              #    input_cost_per_token: 0.00001
-              #    output_cost_per_token: 0.00001
-              #    max_tokens: 40960
-              #- model_name: qwen3-30a3b-test
-              #  litellm_params:
-              #    model: openai/cognitivecomputations/Qwen3-30B-A3B-AWQ
-              #    api_base: http://vllm.home.svc.cluster.local:8000/v1
-              #    api_key: doesnotmatter
-              #  model_info:
-              #    input_cost_per_token: 0.00001
-              #    output_cost_per_token: 0.00001
-              #    max_tokens: 40960
-              - model_name: default
-                litellm_params:
-                  model: openai/qwen3
-                  api_base: http://vllm.home.svc.cluster.local:8000/v1
-                  api_key: doesnotmatter
-                model_info:
-                  input_cost_per_token: 0.00001
-                  output_cost_per_token: 0.00001
-                  max_tokens: 262144
-                  supports_tool_choice: true
-              - model_name: classifier
-                litellm_params:
-                  model: openai/classifier
-                  api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
-                  api_key: doesnotmatter
-                model_info:
-                  input_cost_per_token: 0.00001
-                  output_cost_per_token: 0.00001
-                  max_tokens: 1000
+            # ha-assistant: same backend as `default`, exposed under a
+            # distinct alias so Open-WebUI can pin a HA-specific system prompt
+            # and pre-attach the `hass` MCP server's tools (configured in the
+            # OWU model row, since LiteLLM has no per-model auto-tool-attach
+            # of MCP servers in v1.83.x). External clients calling LiteLLM
+            # directly with model=ha-assistant get the same backend, but
+            # without the OWU-side prompt/tool attachment unless they opt
+            # in via tools=[{type: "mcp", server_url: "litellm_proxy"}].
+            - model_name: ha-assistant
+              litellm_params:
+                model: openai/qwen3
+                api_base: http://vllm.home.svc.cluster.local:8000/v1
+                api_key: doesnotmatter
+              model_info:
+                input_cost_per_token: 0.00001
+                output_cost_per_token: 0.00001
+                max_input_tokens: 32768
+                max_tokens: 32768
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            - model_name: classifier
+              litellm_params:
+                model: openai/classifier
+                api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
+                api_key: doesnotmatter
+              model_info:
+                input_cost_per_token: 0.00001
+                output_cost_per_token: 0.00001
+                max_input_tokens: 5000
+                max_tokens: 5000
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
+            # Note: deepseek-chat and deepseek-reasoner aliases were deprecated
+            # 2026-07-24 and now map to deepseek-v4-flash (284B, 13B active).
+            # No versioned V3/R1 endpoint is available on DeepSeek's API.
+            - model_name: deepseek-v4-flash
+              litellm_params:
+                model: deepseek/deepseek-v4-flash
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 384000
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            - model_name: deepseek-v4-flash-reasoning
+              litellm_params:
+                model: deepseek/deepseek-v4-flash
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 384000
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            - model_name: deepseek-v4-pro
+              litellm_params:
+                model: deepseek/deepseek-v4-pro
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 384000
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
 
-              # Deepseek
-              - model_name: deepseek-v3-chat
-                litellm_params:
-                  model: deepseek/deepseek-chat
-                model_info:
-                  supports_tool_choice: true
-              - model_name: deepseek-r1-reasoning
-                litellm_params:
-                  model: deepseek/deepseek-reasoner
+            # Z.AI GLM models
+            # Context: 200K, Max output: 131072 (source: docs.z.ai)
+            # Text-only: GLM-4.x/5.x are text-in/text-out (no vision)
+            - model_name: glm-4-plus
+              litellm_params:
+                model: openai/glm-4-plus
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_input_tokens: 128000
+                max_tokens: 4096
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            - model_name: glm-4.7
+              litellm_params:
+                model: openai/glm-4.7
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_input_tokens: 200000
+                max_tokens: 131072
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            - model_name: glm-4.6
+              litellm_params:
+                model: openai/glm-4.6
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_input_tokens: 200000
+                max_tokens: 131072
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            - model_name: glm-5.1
+              litellm_params:
+                model: openai/glm-5.1
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_input_tokens: 200000
+                max_tokens: 131072
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            # GLM-5.2: 1M token context window (source: docs.z.ai)
+            # Uses the native zai provider (not openai/) so that Anthropic
+            # /v1/messages requests with thinking do NOT get bridged to the
+            # OpenAI /responses API (which Z.AI doesn't expose); the zai
+            # provider routes to /chat/completions instead.
+            - model_name: glm-5.2
+              litellm_params:
+                model: zai/glm-5.2
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 131072
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+            # Claude Code bait: exposes "claude-opus-4-5" as a model_name so that
+            # claude code selects it, but the actual backend is Z.AI glm-5.2.
+            # Uses the native zai provider for the same reasons as glm-5.2 above.
+            - model_name: claude-opus-4-5
+              litellm_params:
+                model: zai/glm-5.2
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 131072
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
 
-              - model_name: glm-4.7
-                litellm_params:
-                  model: openai/glm-4.7
-                  api_base: https://api.z.ai/api/coding/paas/v4
-                  api_key: os.environ/ZAI_API_KEY
-              - model_name: glm-4.6
-                litellm_params:
-                  model: openai/glm-4.6
-                  api_base: https://api.z.ai/api/coding/paas/v4
-                  api_key: os.environ/ZAI_API_KEY
-              - model_name: glm-5
-                litellm_params:
-                  model: openai/glm-5
-                  api_base: https://api.z.ai/api/coding/paas/v4
-                  api_key: os.environ/ZAI_API_KEY
-            
+            # OpenAI
+            # Context windows and max output from developers.openai.com/api/docs/models
+            - model_name: gpt-5.5
+              litellm_params:
+                model: openai/gpt-5.5
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 128000
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
+            - model_name: gpt-5.4-mini
+              litellm_params:
+                model: openai/gpt-5.4-mini
+              model_info:
+                max_input_tokens: 400000
+                max_tokens: 128000
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
+            # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
+            - model_name: kokoro
+              litellm_params:
+                model: openai/kokoro
+                api_base: http://kokoro.home.svc.cluster.local:8880/v1
+                api_key: placeholder
+              model_info:
+                supports_tool_choice: false
+                supports_function_calling: false
+                supports_response_schema: false
+                supports_vision: false
 
-              # OpenAI
-              - model_name: o3-mini-reasoning
-                litellm_params:
-                  model: openai/o3-mini
-              - model_name: gpt-4o
-                litellm_params:
-                  model: openai/gpt-4o
-              - model_name: gpt-4o-mini
-                litellm_params:
-                  model: openai/gpt-4o-mini
-              - model_name: dalle3
-                litellm_params:
-                  model: openai/dall-e-3
-
-              # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
-              - model_name: kokoro
-                litellm_params:
-                  model: openai/kokoro
-                  api_base: http://kokoro.home.svc.cluster.local:8880/v1
-                  api_key: placeholder
-
-              # TTS - Fish Speech (via OpenAI-compat shim)
-              - model_name: fish-speech
-                litellm_params:
-                  model: openai/fish-speech
-                  api_base: http://fish-speech.home.svc.cluster.local:8081/v1
-                  api_key: placeholder
-
-              # Bedrock
-              - model_name: bedrock-claude-sonnet-4.5
-                litellm_params:
-                  model: bedrock/global.anthropic.claude-sonnet-4-5-20250929-v1:0
-                  aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
-                  aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
-                  aws_region_name: os.environ/AWS_REGION_NAME
-                  additional_drop_params: ["parent_id"]
-                model_info:
-                  supported_openai_params: ["max_tokens", "max_completion_tokens", "stream", "stream_options", "stop", "temperature", "top_p", "extra_headers", "response_format", "requestMetadata", "service_tier", "tools", "tool_choice", "thinking", "reasoning_effort"]
-              #- model_name: bedrock-claude-v2-haiku
-              #  litellm_params:
-              #    model: bedrock/anthropic.claude-3-haiku-20240307-v1:0
-              #    aws_region_name: us-west-2
-              #- model_name: bedrock-claude-v2-opus
-              #  litellm_params:
-              #    model: bedrock/anthropic.claude-3-opus-20240229-v1:0
-              #    aws_region_name: us-west-2
-              #- model_name: bedrock-mixtral-8x7b
-              #  litellm_params:
-              #    model: bedrock/mistral.mixtral-8x7b-instruct-v0:1
-              #    aws_region_name: us-west-2
-              #- model_name: bedrock-llama3-70b
-              #  litellm_params:
-              #    model: bedrock/meta.llama3-70b-instruct-v1:0
-              #    aws_region_name: us-west-2
-              #- model_name: bedrock-command-r-plus
-              #  litellm_params:
-              #    model: bedrock/cohere.command-r-plus-v1:0
-              #    aws_region_name: us-west-2
+            # Bedrock
+            # Context: 1M, Max output: 64K (source: docs.anthropic.com)
+            - model_name: bedrock-claude-sonnet-4.6
+              litellm_params:
+                model: bedrock/global.anthropic.claude-sonnet-4-6
+                aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+                aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+                aws_region_name: os.environ/AWS_REGION_NAME
+                additional_drop_params: ["parent_id"]
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 64000
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
+                supported_openai_params: ["max_tokens", "max_completion_tokens", "stream", "stream_options", "stop", "temperature", "top_p", "extra_headers", "response_format", "requestMetadata", "service_tier", "tools", "tool_choice", "thinking", "reasoning_effort"]
     persistence:
       config-yaml:
         enabled: true

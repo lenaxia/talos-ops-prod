@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 # yamllint disable rule:line-length
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 4.3.0
+      version: 5.0.1
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -39,7 +39,7 @@ spec:
           main:
             image:
               repository: ghcr.io/paperless-ngx/paperless-ngx
-              tag: 2.20.8
+              tag: 3.0.5
 
             envFrom:
               - secretRef:
@@ -88,18 +88,18 @@ spec:
           redis:
             image:
               repository: public.ecr.aws/docker/library/redis
-              tag: 8.6.1
+              tag: 8.10.0
           gotenburg:
             image:
               repository: thecodingmachine/gotenberg
-              tag: 8.27.0
+              tag: 8.30.1
             env:
               - name: DISABLE_GOOGLE_CHROME
                 value: '1'
           tika:
             image:
               repository: docker.io/apache/tika
-              tag: 3.2.3.0
+              tag: 3.3.1.0
     service:
       main:
         type: LoadBalancer
