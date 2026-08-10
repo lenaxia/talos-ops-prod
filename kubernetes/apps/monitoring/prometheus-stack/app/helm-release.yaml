@@ -301,6 +301,15 @@ spec:
               targetLabel: kubernetes_node
     kube-state-metrics:
       fullnameOverride: kube-state-metrics
+      # Was BestEffort (no resources) -> first pod evicted under node memory
+      # pressure, leaving Deployment 0/1 ready. request escapes BestEffort;
+      # limit caps the in-memory cache (~400 pods, pods=[*] allowlist).
+      resources:
+        requests:
+          cpu: 10m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
       metricLabelsAllowlist:
         - pods=[*]
         - deployments=[*]
