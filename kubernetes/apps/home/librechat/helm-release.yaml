@@ -131,7 +131,16 @@ spec:
                   initialDelaySeconds: 10
                   periodSeconds: 10
                   timeoutSeconds: 5
-                  failureThreshold: 3
+                  # Single-replica Deployment with no failover target: dropping
+                  # the only ready pod from the Service endpoints guarantees a
+                  # 100% outage (Traefik returns 503), which is worse than
+                  # continuing to serve during a brief /health blip. A more
+                  # lenient failureThreshold tolerates sub-minute transient
+                  # blips (e.g. Node event-loop/GC stalls, short Mongo latency)
+                  # so the deployment stops flapping to 0/1 ready on noise.
+                  # Still well below the liveness threshold so a genuinely
+                  # unhealthy pod is restarted, not masked indefinitely.
+                  failureThreshold: 6
               startup:
                 enabled: true
                 custom: true
