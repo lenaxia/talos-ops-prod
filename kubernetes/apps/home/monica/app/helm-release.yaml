@@ -118,27 +118,11 @@ spec:
                 memory: 750Mi
             probes:
               liveness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /
-                    port: 80
-                  initialDelaySeconds: 60
-                  periodSeconds: 10
-                  timeoutSeconds: 5
-                  failureThreshold: 3
+                enabled: false
               readiness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /
-                    port: 80
-                  initialDelaySeconds: 30
-                  periodSeconds: 10
-                  timeoutSeconds: 5
-                  failureThreshold: 3
+                enabled: false
+              startup:
+                enabled: false
           #meilisearch:
           #  image:
           #    repository: getmeili/meilisearch
