@@ -63,7 +63,13 @@ spec:
                 "Exec", "exec_cmd": "chmod 0664", "when": "after_move"}, {"key": "FFmpegEmbedSubtitle",
                 "already_have_subtitle": false}, {"key": "FFmpegMetadata", "add_metadata":
                 true, "add_chapters": true}, { "key": "EmbedThumbnail", "already_have_thumbnail":
-                true}]}'
+                 true}]}'
+            resources:
+              requests:
+                cpu: 100m
+                memory: 1Gi
+              limits:
+                memory: 1Gi
     service:
       main:
         type: ClusterIP
