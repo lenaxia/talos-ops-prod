@@ -91,6 +91,11 @@ spec:
                                   values:
                                     - "{{ request.object.metadata.labels.\"app.kubernetes.io/instance\" }}"
                             topologyKey: kubernetes.io/hostname
+                    tolerations:
+                      - key: immich-repel
+                        operator: Equal
+                        value: "true"
+                        effect: NoSchedule
                     # Stagger jobs to run randomly within X seconds to avoid bringing down all apps at once
                     containers:
                       - name: snapshot
