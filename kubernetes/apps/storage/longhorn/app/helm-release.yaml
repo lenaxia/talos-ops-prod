@@ -65,6 +65,22 @@ spec:
       concurrentAutomaticEngineUpgradePerNodeLimit: 1
       defaultEngineImage: docker.io/longhornio/longhorn-engine:v1.12.0
       systemManagedComponentsNodeSelector: "node-role.kubernetes.io/worker: true"
+      # Allow detached volumes to rebuild replicas in the background.
+      # Without this, volumes that detach during a node disruption stay
+      # degraded until their pod reattaches — blocking self-recovery.
+      offlineReplicaRebuilding: true
+
+    # Resource requests for Longhorn Manager so it gets guaranteed CPU
+    # via the longhorn-critical PriorityClass, preventing starvation under
+    # node CPU pressure (root cause of the 2026-08-10 volume cascade).
+    longhornManager:
+      resources:
+        requests:
+          cpu: 500m
+          memory: 512Mi
+        limits:
+          cpu: 2000m
+          memory: 1Gi
 
     # Global node selector and tolerations for all Longhorn components
     global:
@@ -77,3 +93,30 @@ spec:
         - key: "node-role.kubernetes.io/control-plane"
           operator: "Exists"
           effect: "NoSchedule"
+
+  # Post-renderer patches applied after Helm renders the chart.
+  postRenderers:
+    - kustomize:
+        patches:
+          # The Longhorn chart hardcodes the manager readiness probe with
+          # no timeoutSeconds (k8s default: 1s). Under CPU pressure the
+          # manager's /v1/healthz takes longer than 1s to respond, causing
+          # the pod to be marked NotReady — which cascades into engine
+          # disconnections and replica failures. Bump to 5s.
+          - target:
+              version: v1
+              kind: DaemonSet
+              name: longhorn-manager
+            patch: |
+              apiVersion: apps/v1
+              kind: DaemonSet
+              metadata:
+                name: longhorn-manager
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: longhorn-manager
+                        readinessProbe:
+                          timeoutSeconds: 5
+                          failureThreshold: 5

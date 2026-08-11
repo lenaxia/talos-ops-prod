@@ -1,0 +1,80 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: enforce-default-resource-limits
+  namespace: kyverno
+  annotations:
+    policies.kyverno.io/title: Enforce Default Resource Limits
+    policies.kyverno.io/category: Multi-Tenancy
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      This policy injects default CPU limits on containers that do not specify
+      one. Without CPU limits, a single runaway container can consume all node
+      CPU via CFS, starving system-critical components like Longhorn instance
+      managers and causing replica engine timeouts that cascade into volume
+      degradation. Excludes system namespaces where components manage their
+      own resource reservations.
+spec:
+  mutateExistingOnPolicyUpdate: true
+  rules:
+    - name: add-default-cpu-limit-containers
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - longhorn-system
+                - kyverno
+                - flux-system
+                - cert-manager
+                - openebs-system
+      preconditions:
+        all:
+          - key: "{{ request.operation || 'BACKGROUND' }}"
+            operator: AnyIn
+            value: ["CREATE", "UPDATE", "BACKGROUND"]
+      mutate:
+        foreach:
+          - list: "request.object.spec.containers[?!resources.limits.cpu]"
+            patchStrategicMerge:
+              spec:
+                containers:
+                  - name: "{{ element.name }}"
+                    resources:
+                      limits:
+                        cpu: "4000m"
+    - name: add-default-cpu-limit-initcontainers
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - longhorn-system
+                - kyverno
+                - flux-system
+                - cert-manager
+                - openebs-system
+      preconditions:
+        all:
+          - key: "{{ request.operation || 'BACKGROUND' }}"
+            operator: AnyIn
+            value: ["CREATE", "UPDATE", "BACKGROUND"]
+      mutate:
+        foreach:
+          - list: "request.object.spec.initContainers[?!resources.limits.cpu]"
+            patchStrategicMerge:
+              spec:
+                initContainers:
+                  - name: "{{ element.name }}"
+                    resources:
+                      limits:
+                        cpu: "2000m"
