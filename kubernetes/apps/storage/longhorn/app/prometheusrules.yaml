@@ -20,3 +20,55 @@ spec:
       labels:
         issue: Longhorn volume {{$labels.volume}} usage on {{$labels.node}} is critical.
         severity: critical
+    - alert: LonghornVolumeDegraded
+      annotations:
+        description: Longhorn volume {{$labels.volume}} (PVC {{$labels.pvc}}) in namespace
+          {{$labels.pvc_namespace}} has been degraded for more than 10 minutes. Check
+          Longhorn for failed replicas.
+        summary: Longhorn volume {{$labels.volume}} is degraded.
+      expr: longhorn_volume_robustness{state="degraded"} == 1
+      for: 10m
+      labels:
+        issue: Longhorn volume {{$labels.volume}} is degraded.
+        severity: warning
+    - alert: LonghornVolumeFaulted
+      annotations:
+        description: Longhorn volume {{$labels.volume}} (PVC {{$labels.pvc}}) in namespace
+          {{$labels.pvc_namespace}} is in a faulted state. No healthy replicas remain.
+        summary: Longhorn volume {{$labels.volume}} is faulted.
+      expr: longhorn_volume_robustness{state="faulted"} == 1
+      for: 1m
+      labels:
+        issue: Longhorn volume {{$labels.volume}} is faulted.
+        severity: critical
+    - alert: LonghornNodeCPUPressure
+      annotations:
+        description: Longhorn node {{$labels.node}} CPU usage is at {{$value}}%, risking
+          replica engine timeouts and volume degradation. Investigate CPU-heavy pods.
+        summary: Longhorn node {{$labels.node}} under CPU pressure.
+      expr: 100 * (longhorn_node_cpu_usage_millicpu / longhorn_node_cpu_capacity_millicpu) > 90
+      for: 5m
+      labels:
+        issue: Longhorn node {{$labels.node}} CPU usage is critical.
+        severity: warning
+    - alert: LonghornInstanceManagerCPUPressure
+      annotations:
+        description: Longhorn instance manager on {{$labels.node}} is consuming {{$value}}m
+          CPU, which may indicate replica rebuild storms or engine instability.
+        summary: Longhorn instance manager on {{$labels.node}} under high CPU load.
+      expr: longhorn_instance_manager_cpu_usage_millicpu > 2000
+      for: 5m
+      labels:
+        issue: Longhorn instance manager on {{$labels.node}} under CPU pressure.
+        severity: warning
+    - alert: LonghornNodeStorageSchedulingFailure
+      annotations:
+        description: Longhorn node {{$labels.node}} has less scheduling headroom than
+          nominal replica sizes require. New replicas cannot be placed.
+        summary: Longhorn node {{$labels.node}} storage scheduling space low.
+      expr: (longhorn_node_storage_capacity_bytes - longhorn_node_storage_scheduled_bytes)
+        < 53687091200
+      for: 10m
+      labels:
+        issue: Longhorn node {{$labels.node}} has insufficient storage for scheduling.
+        severity: warning
