@@ -76,3 +76,8 @@ data:
   NFS_METUBE: "/volume2/downloads/[Plex Temp Library]/YouTube"
   NFS_NZBGET: "/volume3/k8s-nfs/nzbget"
   NFS_KOMGA_MEDIA: "/volume1/omoikane/[Manga]"
+
+  # Longhorn: minimum free scheduling headroom (bytes) per node before the
+  # LonghornNodeStorageSchedulingFailure alert fires. 50 GiB accommodates
+  # the largest default-class volume nominal size with rebuild overhead.
+  LONGHORN_MIN_STORAGE_HEADROOM_BYTES: "53687091200"

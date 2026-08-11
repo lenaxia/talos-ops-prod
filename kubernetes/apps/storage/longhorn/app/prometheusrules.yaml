@@ -67,7 +67,7 @@ spec:
           nominal replica sizes require. New replicas cannot be placed.
         summary: Longhorn node {{$labels.node}} storage scheduling space low.
       expr: (longhorn_node_storage_capacity_bytes - longhorn_node_storage_scheduled_bytes)
-        < 53687091200
+        < ${LONGHORN_MIN_STORAGE_HEADROOM_BYTES}
       for: 10m
       labels:
         issue: Longhorn node {{$labels.node}} has insufficient storage for scheduling.
