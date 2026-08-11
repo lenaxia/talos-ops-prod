@@ -91,6 +91,17 @@ spec:
                                   values:
                                     - "{{ request.object.metadata.labels.\"app.kubernetes.io/instance\" }}"
                             topologyKey: kubernetes.io/hostname
+                    # The snapshot pod is pinned to the app's node by the affinity
+                    # above. If that node carries a NoSchedule taint the snapshot
+                    # pod must tolerate it too, or it can never schedule. worker-01
+                    # carries the out-of-band `immich-repel` taint (vaultwarden is
+                    # grandfathered there), which blocks the vaultwarden snapshot
+                    # job. Affinity-gated, so inert for apps on untainted nodes.
+                    tolerations:
+                      - key: immich-repel
+                        operator: Equal
+                        value: "true"
+                        effect: NoSchedule
                     # Stagger jobs to run randomly within X seconds to avoid bringing down all apps at once
                     containers:
                       - name: snapshot
