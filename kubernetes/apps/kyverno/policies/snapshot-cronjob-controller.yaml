@@ -63,12 +63,16 @@ spec:
             schedule: "0 12 * * *"
             suspend: false
             concurrencyPolicy: Forbid
-            successfulJobsHistoryLimit: 1
-            failedJobsHistoryLimit: 2
+            successfulJobsHistoryLimit: 0
+            failedJobsHistoryLimit: 1
             jobTemplate:
               spec:
-                # Keep at least one job in completed state in accordance to the schedule
-                ttlSecondsAfterFinished: 86400
+                # Clean up completed jobs quickly (10 min). Snapshot jobs mount
+                # live RWO PVCs — completed pods hold volume attachment refs that
+                # block Longhorn detach/rebuild operations. The snapshot data is
+                # already in kopia's repository; we only need the pod long enough
+                # to finish and inspect logs on failure.
+                ttlSecondsAfterFinished: 600
                 template:
                   spec:
                     automountServiceAccountToken: false
