@@ -91,6 +91,17 @@ spec:
                                   values:
                                     - "{{ request.object.metadata.labels.\"app.kubernetes.io/instance\" }}"
                             topologyKey: kubernetes.io/hostname
+                    # The app pod backing this PVC may run on a node carrying a
+                    # custom repel taint (e.g. "immich-repel" on worker-01) that
+                    # it was scheduled onto before the taint existed.  Since the
+                    # snapshot must co-locate with the app to mount the live RWO
+                    # volume, tolerate that taint so the affinity above can be
+                    # satisfied — otherwise the pod stays Pending/Unschedulable.
+                    tolerations:
+                      - key: immich-repel
+                        operator: Equal
+                        value: "true"
+                        effect: NoSchedule
                     # Stagger jobs to run randomly within X seconds to avoid bringing down all apps at once
                     containers:
                       - name: snapshot
