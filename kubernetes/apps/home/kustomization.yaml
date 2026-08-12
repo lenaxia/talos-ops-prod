@@ -36,3 +36,4 @@ resources:
   - ./librechat/ks.yaml
   - ./kicad/ks.yaml
   - ./opengist/ks.yaml
+  - ./aiornot/ks.yaml

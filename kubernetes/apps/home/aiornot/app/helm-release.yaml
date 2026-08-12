@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app aiornot
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+    controllers:
+      aiornot:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/lenaxia/ai-or-not
+              tag: v0.6.1@sha256:d3283b12ef2d8a1f7a192cdaa841c0d75dfff37d8fb8a42cdf596d5adfdc835e
+              pullPolicy: IfNotPresent
+            envFrom:
+              - secretRef:
+                  name: *app
+            env:
+              ROA_DB_URL: file:/app/data/ai-or-not.db
+              ROA_IMAGES_DIR: /app/images
+              ROA_S3_BUCKET: ai-or-not
+              ROA_S3_ENDPOINT: https://s3.thekao.cloud
+              ROA_S3_REGION: local
+              ROA_S3_PREFIX_AI: ai/
+              ROA_S3_PREFIX_REAL: real/
+              ROA_S3_FORCE_PATH_STYLE: "true"
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/leaderboard
+                    port: &port 3000
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+    service:
+      app:
+        ports:
+          http:
+            port: *port
+    ingress:
+      app:
+        enabled: true
+        className: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-no-auth@kubernetescrd
+          hajimari.io/enable: "true"
+          hajimari.io/icon: robot-outline
+          hajimari.io/appName: AI or Not
+          hajimari.io/group: Home
+        hosts:
+          - host: &uri aiornot.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: app
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+    persistence:
+      data:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        storageClass: longhorn
+        retain: true
+        globalMounts:
+          - path: /app/data
