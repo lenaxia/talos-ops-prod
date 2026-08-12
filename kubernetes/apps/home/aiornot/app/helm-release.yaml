@@ -40,7 +40,7 @@ spec:
           app:
             image:
               repository: ghcr.io/lenaxia/ai-or-not
-              tag: latest@sha256:9d892d73d7509cad77240ecdcea6870b11dfe5f2a8af428377d5fe148163aaa4
+              tag: 0.6.2@sha256:dce28ad65ce427ef73ab1f50ea819fa0e09bb0f3c9d4652826c71185c61b292d
               pullPolicy: IfNotPresent
             envFrom:
               - secretRef:
