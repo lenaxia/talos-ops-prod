@@ -95,6 +95,18 @@ spec:
                                   values:
                                     - "{{ request.object.metadata.labels.\"app.kubernetes.io/instance\" }}"
                             topologyKey: kubernetes.io/hostname
+                    # The required podAffinity above pins this job to the app
+                    # pod's node so it can mount the live RWO volume. That node
+                    # may carry a NoSchedule taint (e.g. the out-of-band
+                    # `immich-repel` taint on worker-01); without matching
+                    # tolerations the affinity can never be satisfied and the
+                    # job stays Pending. Mirror the worker taints the apps run
+                    # under so the backup can always co-locate.
+                    tolerations:
+                      - key: immich-repel
+                        operator: Equal
+                        value: "true"
+                        effect: NoSchedule
                     # Stagger jobs to run randomly within X seconds to avoid bringing down all apps at once
                     containers:
                       - name: snapshot
