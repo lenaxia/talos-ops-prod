@@ -95,6 +95,15 @@ spec:
                                   values:
                                     - "{{ request.object.metadata.labels.\"app.kubernetes.io/instance\" }}"
                             topologyKey: kubernetes.io/hostname
+                    # podAffinity above pins the job to the app pod's node, which
+                    # may carry operational NoSchedule taints (e.g. the cluster's
+                    # `immich-repel` taint). Without matching tolerations the job
+                    # is permanently Unschedulable whenever its app runs on a
+                    # tainted node.
+                    tolerations:
+                      - key: immich-repel
+                        operator: Exists
+                        effect: NoSchedule
                     # Stagger jobs to run randomly within X seconds to avoid bringing down all apps at once
                     containers:
                       - name: snapshot
