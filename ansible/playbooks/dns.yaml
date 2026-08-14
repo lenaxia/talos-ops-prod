@@ -1,0 +1,10 @@
+---
+- name: Configure DNS nodes base + DNS
+  hosts: dns
+  gather_facts: true
+  become: true
+  roles:
+    - role: base
+      tags: [base]
+    - role: dns
+      tags: [dns]

@@ -1,0 +1,43 @@
+---
+# Blocky defaults
+blocky_version: "0.24"
+blocky_binary_url: "https://github.com/0xERR0R/blocky/releases/download/v{{ blocky_version }}/blocky_v{{ blocky_version }}_Linux_ARM64.tar.gz"
+blocky_install_dir: /usr/local/bin/blocky
+blocky_config_dir: /etc/blocky
+blocky_config_file: "{{ blocky_config_dir }}/config.yml"
+blocky_port: 53
+blocky_http_port: 4000
+
+# AdGuard defaults
+adguard_install_dir: /home/pi/AdGuardHome
+adguard_config_file: "{{ adguard_install_dir }}/AdGuardHome.yaml"
+
+# DNS upstreams
+dns_upstreams:
+  - https://security.cloudflare-dns.com/dns-query
+  - https://dns10.quad9.net/dns-query
+  - https://dns.cloudflare.com/dns-query
+
+dns_bootstrap:
+  - 9.9.9.10
+  - 149.112.112.10
+  - 2620:fe::10
+  - 2620:fe::fe:10
+
+# DNS rewrites / custom mappings
+dns_rewrites:
+  - { domain: adguard.lan, answer: 192.168.0.5 }
+  - { domain: mqtt.lan, answer: 192.168.5.6 }
+  - { domain: sonoff.lan, answer: 192.168.0.7 }
+  - { domain: lumiere.mikegoes.online, answer: 192.168.3.7 }
+
+# Split-horizon DNS: resolve public domains to internal LB VIP
+# Prevents hairpin NAT and preserves real client IPs in Authelia/Traefik
+dns_split_horizon:
+  - { domain: "*.thekao.cloud", answer: 192.168.5.12 }
+
+# Blocklists
+dns_blocklists:
+  - https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
+  - https://adaway.org/hosts.txt
+  - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts

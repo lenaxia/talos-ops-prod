@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ansible-runner
+  namespace: home
+data:
+  ansible.cfg: |
+    [defaults]
+    host_key_checking = False
+    retry_files_enabled = False
+    interpreter_python = auto_silent
+    forks = 10
+    timeout = 30
+    stdout_callback = yaml
+
+  entrypoint.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    PLAYBOOK="${PLAYBOOK:-site.yaml}"
+    REPO_URL="${REPO_URL:-https://github.com/lenaxia/talos-ops-prod.git}"
+    REPO_BRANCH="${REPO_BRANCH:-main}"
+
+    echo "=== Ansible Fleet Runner ==="
+    echo "Playbook: ${PLAYBOOK}"
+    echo "Revision: ${ANSIBLE_REVISION:-unknown}"
+    echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+    # Install dependencies
+    echo "=== Installing dependencies ==="
+    apt-get update -qq && apt-get install -y -qq openssh-client git sshpass >/dev/null 2>&1
+    pip install --no-cache-dir ansible-core >/dev/null 2>&1
+
+    # Set up SSH key
+    cp /secret/SSH_PRIVATE_KEY /tmp/id_ed25519
+    chmod 600 /tmp/id_ed25519
+    export ANSIBLE_PRIVATE_KEY_FILE=/tmp/id_ed25519
+
+    # Clone repo
+    echo "=== Cloning repo ==="
+    git clone --depth 1 --branch "${REPO_BRANCH}" "${REPO_URL}" /workspace
+
+    # Run ansible
+    echo "=== Running ansible ==="
+    cd /workspace/ansible
+    ansible-playbook "playbooks/${PLAYBOOK}" -i inventory/hosts.yaml --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
+
+    echo "=== Done ==="
+
+  update-entrypoint.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    echo "=== Ansible Fleet Monthly Update ==="
+    echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+    apt-get update -qq && apt-get install -y -qq openssh-client git sshpass >/dev/null 2>&1
+    pip install --no-cache-dir ansible-core >/dev/null 2>&1
+
+    cp /secret/SSH_PRIVATE_KEY /tmp/id_ed25519
+    chmod 600 /tmp/id_ed25519
+    export ANSIBLE_PRIVATE_KEY_FILE=/tmp/id_ed25519
+
+    REPO_URL="https://github.com/lenaxia/talos-ops-prod.git"
+    git clone --depth 1 --branch main "${REPO_URL}" /workspace
+
+    cd /workspace/ansible
+    ansible-playbook playbooks/update.yaml -i inventory/hosts.yaml --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
+
+    echo "=== Update complete ==="

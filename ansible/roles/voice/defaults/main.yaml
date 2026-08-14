@@ -1,0 +1,24 @@
+---
+# Wyoming voice satellite
+voice_satellite_repo: https://github.com/rhasspy/wyoming-satellite.git
+voice_satellite_dir: "/home/{{ ansible_user }}/wyoming-satellite"
+voice_satellite_name: "{{ ansible_hostname }}"
+voice_satellite_uri: "tcp://0.0.0.0:10700"
+voice_wake_uri: "tcp://127.0.0.1:10400"
+voice_event_uri: "tcp://127.0.0.1:10500"
+voice_wake_word_name: cortahna
+
+# Custom wake word model
+voice_custom_wake_model: cortahna_v0.1.tflite
+
+# openWakeWord
+voice_openwakeword_repo: https://github.com/rhasspy/wyoming-openwakeword.git
+voice_openwakeword_dir: "/home/{{ ansible_user }}/wyoming-openwakeword"
+voice_openwakeword_uri: "tcp://127.0.0.1:10400"
+
+# Audio hardware
+voice_mic_command: "arecord -D plughw:CARD=seeed2micvoicec,DEV=0 -r 16000 -c 1 -f S16_LE -t raw"
+voice_snd_command: "aplay -D plughw:CARD=seeed2micvoicec,DEV=0 -r 16000 -c 1 -f S16_LE -t raw"
+voice_mic_auto_gain: 5
+voice_mic_noise_suppression: 2
+voice_snd_volume_multiplier: 0.1

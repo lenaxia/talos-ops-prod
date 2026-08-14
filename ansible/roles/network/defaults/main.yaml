@@ -1,0 +1,26 @@
+---
+# Static network configuration for Raspberry Pi fleet
+# All Pis run Trixie with NetworkManager (netplan renderer)
+# We use nmcli directly since netplan regen wipes static files
+
+# network_mode: ethernet | wifi | both
+network_mode: ethernet
+
+network_ethernet_interface: eth0
+network_wifi_interface: wlan0
+# Alias used by templates/handlers — resolves to the active interface by mode
+network_interface: "{{ network_ethernet_interface }}"
+
+# Ethernet addressing
+network_ip: "{{ ansible_host }}"
+network_cidr: 16
+network_gateway: 192.168.0.1
+
+# WiFi addressing (for wifi/both modes)
+network_wifi_ip: "{{ ansible_host }}"
+network_wifi_ssid: ""
+network_wifi_psk: ""
+
+network_dns_servers:
+  - 192.168.0.5
+  - 192.168.0.6

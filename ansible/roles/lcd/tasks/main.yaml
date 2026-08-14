@@ -1,0 +1,47 @@
+---
+- name: Install build dependencies
+  ansible.builtin.package:
+    name:
+      - gcc
+      - make
+      - libi2c-dev
+      - i2c-tools
+    state: present
+
+- name: Enable I2C interface
+  ansible.builtin.lineinfile:
+    path: /boot/config.txt
+    regexp: "^dtparam=i2c_arm="
+    line: "dtparam=i2c_arm=on"
+  notify: Reboot
+
+- name: Ensure I2C dev module is loaded
+  community.general.modprobe:
+    name: i2c_dev
+    state: present
+
+- name: Clone UCTRONICS display repo
+  ansible.builtin.git:
+    repo: "{{ lcd_repo }}"
+    dest: "{{ lcd_install_dir }}"
+    depth: 1
+
+- name: Deploy templated config header
+  ansible.builtin.template:
+    src: ssd1306_i2c.h.j2
+    dest: "{{ lcd_install_dir }}/C/ssd1306_i2c.h"
+    mode: "0644"
+  notify: Rebuild lcd
+
+- name: Install systemd service
+  ansible.builtin.template:
+    src: uctronics-display.service.j2
+    dest: "/etc/systemd/system/{{ lcd_service_name }}.service"
+    mode: "0644"
+  notify: Restart lcd
+
+- name: Enable and start display service
+  ansible.builtin.service:
+    name: "{{ lcd_service_name }}"
+    state: started
+    enabled: true

@@ -1,0 +1,48 @@
+---
+# ZeroTier exit node — NAT ZT clients to LAN via eth0
+# Requires the ZeroTier controller to have a managed route:
+#   - 192.168.0.0/16 (or 0.0.0.0/0 for full exit) → via this node
+
+- name: Install iptables
+  ansible.builtin.package:
+    name: iptables
+    state: present
+
+- name: Enable IP forwarding
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: true
+    state: present
+    reload: true
+
+- name: Allow forwarding from ZeroTier to LAN
+  ansible.builtin.iptables:
+    chain: FORWARD
+    in_interface: "{{ item }}"
+    out_interface: "{{ zerotier_lan_interface }}"
+    jump: ACCEPT
+    comment: "ZT exit: {{ item }} -> {{ zerotier_lan_interface }}"
+  loop: "{{ zerotier_advertised_routes }}"
+  when: vpn_allow_forwarding
+
+- name: Allow forwarding from LAN to ZeroTier (return traffic)
+  ansible.builtin.iptables:
+    chain: FORWARD
+    in_interface: "{{ zerotier_lan_interface }}"
+    out_interface: "{{ item }}"
+    jump: ACCEPT
+    comment: "ZT exit return: {{ zerotier_lan_interface }} -> {{ item }}"
+  loop: "{{ zerotier_advertised_routes }}"
+  when: vpn_allow_forwarding
+
+- name: MASQUERADE ZeroTier traffic to LAN
+  ansible.builtin.iptables:
+    table: nat
+    chain: POSTROUTING
+    source: "{{ item }}"
+    out_interface: "{{ zerotier_lan_interface }}"
+    jump: MASQUERADE
+    comment: "ZT exit NAT: {{ item }} -> {{ zerotier_lan_interface }}"
+  loop: "{{ zerotier_advertised_routes }}"
+  when: vpn_enable_nat

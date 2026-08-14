@@ -1,0 +1,9 @@
+---
+# Common settings shared across fleet
+timezone: America/Los_Angeles
+
+# VPN settings
+zerotier_network_id: a84ac5c10a2829e4
+tailscale_exit_node: false
+tailscale_advertise_routes:
+  - 192.168.0.0/16

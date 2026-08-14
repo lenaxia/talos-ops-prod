@@ -1,0 +1,14 @@
+[Unit]
+Description=Wyoming openWakeWord
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart={{ voice_openwakeword_dir }}/script/run --uri '{{ voice_openwakeword_uri }}' --wakeword-model '{{ voice_openwakeword_dir }}/wyoming_openwakeword/models/{{ voice_custom_wake_model }}'
+WorkingDirectory={{ voice_openwakeword_dir }}
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=default.target

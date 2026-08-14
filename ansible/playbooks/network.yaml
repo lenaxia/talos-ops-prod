@@ -1,0 +1,9 @@
+---
+- name: Configure fleet networking
+  hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: network
+      tags: [network]
+  tags: [network]

@@ -1,0 +1,57 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+vars:
+  ANSIBLE_DIR: '{{.ROOT_DIR}}/ansible'
+  RUNNER_DIR: '{{.KUBERNETES_DIR}}/apps/home/ansible-runner/app'
+  RUNNER_NS: home
+
+tasks:
+
+  bump:
+    desc: Update ansible revision hash to trigger Flux Job re-creation
+    cmds:
+      - "{{.SCRIPTS_DIR}}/ansible-bump.sh {{.ANSIBLE_DIR}} {{.RUNNER_DIR}}/job.yaml"
+    preconditions:
+      - test -f {{.SCRIPTS_DIR}}/ansible-hash.sh
+
+  apply:
+    desc: Manually trigger a one-shot ansible config run
+    cmd: >
+      kubectl -n {{.RUNNER_NS}} create job --from=job/ansible-runner
+      "ansible-manual-$(date +%s)"
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which kubectl
+
+  update:
+    desc: Manually trigger a one-shot fleet apt-update run
+    cmd: >
+      kubectl -n {{.RUNNER_NS}} create job --from=cronjob/ansible-update
+      "ansible-update-$(date +%s)"
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which kubectl
+
+  logs:
+    desc: Tail logs from the latest ansible-runner Job
+    cmd: >
+      kubectl -n {{.RUNNER_NS}} logs job/$(kubectl -n {{.RUNNER_NS}}
+      get jobs -o jsonpath='{.items[-1].metadata.name}' --field-selector=status.successful=0
+      2>/dev/null || kubectl -n {{.RUNNER_NS}} get jobs --no-headers
+      -o custom-columns=NAME:.metadata.name,CREATED:.metadata.creationTimestamp
+      | sort -k2 | tail -1 | awk '{print $1}') -f
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which kubectl
+
+  status:
+    desc: Show last ansible-runner Job status
+    cmd: >
+      kubectl -n {{.RUNNER_NS}} get jobs
+      --sort-by=.metadata.creationTimestamp
+      -o custom-columns=NAME:.metadata.name,STATUS:.status.conditions[0].type,REASON:.status.conditions[0].reason,AGE:.metadata.creationTimestamp
+    preconditions:
+      - test -f {{.KUBECONFIG}}
+      - which kubectl

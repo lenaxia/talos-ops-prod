@@ -1,0 +1,11 @@
+---
+# Enable IP forwarding for VPN routing/bridging
+# Required for: ZeroTier LAN bridge, Tailscale subnet routing/exit node
+
+- name: Enable IPv4 forwarding
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: true
+    state: present
+    reload: true

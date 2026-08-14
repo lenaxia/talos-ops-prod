@@ -1,0 +1,10 @@
+---
+# dnslb02: Tailscale exit node + subnet router for 192.168.0.0/20
+tailscale_install: true
+tailscale_advertise_exit_node: true
+tailscale_advertise_routes:
+  - 192.168.0.0/20
+vpn_enable_forwarding: true
+vpn_forwarding_rules:
+  - { in: tailscale0, out: eth0 }
+  - { in: eth0, out: tailscale0 }

@@ -1,0 +1,8 @@
+---
+# Remove legacy HAProxy + Keepalived (replaced by Talos built-in VIP at 192.168.3.30)
+lb_remove_services:
+  - haproxy
+  - keepalived
+lb_remove_packages:
+  - haproxy
+  - keepalived

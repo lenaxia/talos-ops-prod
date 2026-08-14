@@ -1,0 +1,16 @@
+---
+# FRR/BGP — peers with Cilium on Talos nodes to advertise LoadBalancer CIDR
+frr_asn: 64513
+frr_cilium_asn: 64512
+frr_router_id: "{{ ansible_host }}"
+frr_advertised_network: 192.168.5.0/25
+
+# Talos nodes that run Cilium with BGP peering
+frr_peers:
+  - 192.168.3.10   # cp-00
+  - 192.168.3.11   # cp-01
+  - 192.168.3.12   # cp-02
+  - 192.168.3.20   # worker-00
+  - 192.168.3.21   # worker-01
+  - 192.168.3.22   # worker-02
+  - 192.168.3.24   # worker-04

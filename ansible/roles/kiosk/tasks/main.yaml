@@ -1,0 +1,64 @@
+---
+- name: Install kiosk packages
+  ansible.builtin.apt:
+    name: "{{ kiosk_packages }}"
+    state: present
+    update_cache: true
+
+- name: Create getty autologin override directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/getty@tty1.service.d
+    state: directory
+    mode: "0755"
+
+- name: Configure auto-login to console
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/getty@tty1.service.d/override.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/sbin/agetty --autologin {{ kiosk_user }} --noclear %I $TERM
+    mode: "0644"
+  notify: Restart getty
+
+- name: Configure Wayland session autostart in bash_profile
+  ansible.builtin.copy:
+    dest: "/home/{{ kiosk_user }}/.bash_profile"
+    content: |
+      [[ -z $DISPLAY && $XDG_VTNR == 1 ]] && exec /home/{{ kiosk_user }}/.config/wayfire/kiosk-session.sh
+    owner: "{{ kiosk_user }}"
+    mode: "0644"
+
+- name: Create wayfire config directories
+  ansible.builtin.file:
+    path: "/home/{{ kiosk_user }}/.config/wayfire"
+    state: directory
+    owner: "{{ kiosk_user }}"
+    mode: "0755"
+
+- name: Deploy Wayfire kiosk config
+  ansible.builtin.template:
+    src: wayfire.ini.j2
+    dest: "/home/{{ kiosk_user }}/.config/wayfire.ini"
+    owner: "{{ kiosk_user }}"
+    mode: "0644"
+
+- name: Deploy kiosk launcher script
+  ansible.builtin.template:
+    src: kiosk-launch.sh.j2
+    dest: "/home/{{ kiosk_user }}/.config/wayfire/kiosk-launch.sh"
+    owner: "{{ kiosk_user }}"
+    mode: "0755"
+
+- name: Deploy kiosk session script
+  ansible.builtin.template:
+    src: kiosk-session.sh.j2
+    dest: "/home/{{ kiosk_user }}/.config/wayfire/kiosk-session.sh"
+    owner: "{{ kiosk_user }}"
+    mode: "0755"
+
+- name: Ensure user is in video group
+  ansible.builtin.user:
+    name: "{{ kiosk_user }}"
+    groups: video
+    append: true

@@ -1,0 +1,29 @@
+#!/bin/sh
+# Home Assistant kiosk session (Ansible managed)
+# Starts wayfire in background, then launches chromium once the compositor is ready
+
+export XDG_RUNTIME_DIR=/run/user/{{ kiosk_uid | default(1000) }}
+
+# Start the Wayland compositor
+wayfire -c /home/{{ kiosk_user }}/.config/wayfire.ini &
+
+# Wait for the wayland socket to appear
+for i in $(seq 1 30); do
+  [ -S "${XDG_RUNTIME_DIR}/wayland-1" ] && break
+  sleep 1
+done
+
+# Give the compositor a moment to be ready
+sleep 3
+
+# Launch the kiosk browser
+export WAYLAND_DISPLAY=wayland-1
+exec chromium --ozone-platform=wayland \
+  --noerrdialogs \
+  --disable-infobars \
+  --kiosk \
+  --no-first-run \
+  --disable-translate \
+  --disable-features=TranslateUI \
+  --autoplay-policy=no-user-gesture-required \
+  '{{ kiosk_url }}'
