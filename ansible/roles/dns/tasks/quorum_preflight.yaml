@@ -5,7 +5,7 @@
 # while the other one is provably healthy.
 - name: List sibling DNS nodes for this batch
   ansible.builtin.set_fact:
-    dns_siblings: "{{ groups['dns'] | difference(play_hosts) | list }}"
+    dns_siblings: "{{ groups['dns'] | difference(ansible_play_batch) | list }}"
 
 - name: Initialize sibling health results
   ansible.builtin.set_fact:

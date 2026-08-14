@@ -59,9 +59,20 @@ data:
       fi
     fi
     cd /workspace/ansible
+    set +e
     ansible-playbook "playbooks/$${PLAYBOOK}" -i inventory/hosts.yaml $${CF_ARGS} --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
-
-    echo "=== Done ==="
+    RC=$?
+    set -e
+    # RC 4 = run completed but some hosts were unreachable (Pis powered
+    # off). That is expected fleet state — treat as success.
+    if [ "$RC" -eq 4 ]; then
+      echo "=== Done (warning: some hosts unreachable) rc=$RC ==="
+    elif [ "$RC" -ne 0 ]; then
+      echo "=== ansible-playbook failed rc=$RC ==="
+      exit "$RC"
+    else
+      echo "=== Done ==="
+    fi
 
   update-entrypoint.sh: |
     #!/bin/bash
@@ -83,6 +94,16 @@ data:
     ansible-galaxy collection install -r /workspace/ansible/requirements.yml
 
     cd /workspace/ansible
+    set +e
     ansible-playbook playbooks/update.yaml -i inventory/hosts.yaml --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
-
-    echo "=== Update complete ==="
+    RC=$?
+    set -e
+    # RC 4 = some hosts unreachable (expected: Pis powered off)
+    if [ "$RC" -eq 4 ]; then
+      echo "=== Update complete (warning: some hosts unreachable) rc=$RC ==="
+    elif [ "$RC" -ne 0 ]; then
+      echo "=== Update failed rc=$RC ==="
+      exit "$RC"
+    else
+      echo "=== Update complete ==="
+    fi
