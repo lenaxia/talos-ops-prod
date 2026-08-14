@@ -17,14 +17,15 @@ data:
   entrypoint.sh: |
     #!/bin/bash
     set -euo pipefail
+    # NOTE: bash vars are escaped as $${VAR} so Flux envsubst leaves them alone
 
-    PLAYBOOK="${PLAYBOOK:-site.yaml}"
-    REPO_URL="${REPO_URL:-https://github.com/lenaxia/talos-ops-prod.git}"
-    REPO_BRANCH="${REPO_BRANCH:-main}"
+    PLAYBOOK="$${PLAYBOOK:-site.yaml}"
+    REPO_URL="$${REPO_URL:-https://github.com/lenaxia/talos-ops-prod.git}"
+    REPO_BRANCH="$${REPO_BRANCH:-main}"
 
     echo "=== Ansible Fleet Runner ==="
-    echo "Playbook: ${PLAYBOOK}"
-    echo "Revision: ${ANSIBLE_REVISION:-unknown}"
+    echo "Playbook: $${PLAYBOOK}"
+    echo "Revision: $${ANSIBLE_REVISION:-unknown}"
     echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
     # Install dependencies
@@ -39,12 +40,12 @@ data:
 
     # Clone repo
     echo "=== Cloning repo ==="
-    git clone --depth 1 --branch "${REPO_BRANCH}" "${REPO_URL}" /workspace
+    git clone --depth 1 --branch "$${REPO_BRANCH}" "$${REPO_URL}" /workspace
 
     # Run ansible
     echo "=== Running ansible ==="
     cd /workspace/ansible
-    ansible-playbook "playbooks/${PLAYBOOK}" -i inventory/hosts.yaml --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
+    ansible-playbook "playbooks/$${PLAYBOOK}" -i inventory/hosts.yaml --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
 
     echo "=== Done ==="
 
@@ -63,7 +64,7 @@ data:
     export ANSIBLE_PRIVATE_KEY_FILE=/tmp/id_ed25519
 
     REPO_URL="https://github.com/lenaxia/talos-ops-prod.git"
-    git clone --depth 1 --branch main "${REPO_URL}" /workspace
+    git clone --depth 1 --branch main "$${REPO_URL}" /workspace
 
     cd /workspace/ansible
     ansible-playbook playbooks/update.yaml -i inventory/hosts.yaml --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
