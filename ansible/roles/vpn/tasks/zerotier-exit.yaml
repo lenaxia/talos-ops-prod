@@ -17,7 +17,7 @@
     reload: true
 
 - name: Allow forwarding from ZeroTier to LAN
-  ansible.builtin.iptables:
+  community.general.iptables:
     chain: FORWARD
     in_interface: "{{ item }}"
     out_interface: "{{ zerotier_lan_interface }}"
@@ -27,7 +27,7 @@
   when: vpn_allow_forwarding
 
 - name: Allow forwarding from LAN to ZeroTier (return traffic)
-  ansible.builtin.iptables:
+  community.general.iptables:
     chain: FORWARD
     in_interface: "{{ zerotier_lan_interface }}"
     out_interface: "{{ item }}"
@@ -37,7 +37,7 @@
   when: vpn_allow_forwarding
 
 - name: MASQUERADE ZeroTier traffic to LAN
-  ansible.builtin.iptables:
+  community.general.iptables:
     table: nat
     chain: POSTROUTING
     source: "{{ item }}"

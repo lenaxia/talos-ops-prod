@@ -31,7 +31,7 @@
   changed_when: false
 
 - name: Clean up keepalived VRRP iptables rules
-  ansible.builtin.iptables:
+  community.general.iptables:
     chain: INPUT
     protocol: vrrp
     jump: ACCEPT
