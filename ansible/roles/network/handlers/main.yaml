@@ -1,0 +1,10 @@
+---
+- name: Restart dhcpcd
+  ansible.builtin.service:
+    name: dhcpcd
+    state: restarted
+
+- name: Reload NetworkManager
+  ansible.builtin.shell:
+    cmd: "nmcli connection reload && nmcli connection up ansible-{{ network_interface }}"
+  failed_when: false

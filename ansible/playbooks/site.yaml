@@ -1,0 +1,18 @@
+---
+- name: Apply full fleet configuration
+  hosts: all
+  gather_facts: true
+  roles:
+    - role: base
+      tags: [base]
+    - role: dns
+      tags: [dns]
+      when: "'dns' in group_names"
+    - role: vpn
+      tags: [vpn]
+    - role: loadbalancer
+      tags: [loadbalancer]
+      when: "'dns' in group_names"
+    - role: kiosk
+      tags: [kiosk]
+      when: "'kiosk' in group_names"

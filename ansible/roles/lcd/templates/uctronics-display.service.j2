@@ -1,0 +1,14 @@
+[Unit]
+Description=UCTRONICS SSD1306 Rack Display
+After=multi-user.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory={{ lcd_install_dir }}/C
+ExecStart={{ lcd_install_dir }}/C/display
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

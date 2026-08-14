@@ -1,0 +1,8 @@
+---
+- name: Configure ZeroTier exit nodes
+  hosts: dns
+  gather_facts: true
+  become: true
+  roles:
+    - role: vpn
+      tags: [vpn]

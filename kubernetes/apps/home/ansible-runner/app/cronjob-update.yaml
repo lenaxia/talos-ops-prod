@@ -1,0 +1,44 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ansible-update
+  namespace: home
+spec:
+  schedule: "0 3 1 * *"
+  suspend: true
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          activeDeadlineSeconds: 900
+          containers:
+            - name: ansible
+              image: python:3.12-slim
+              command: ["/bin/bash", "/scripts/update-entrypoint.sh"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: secret
+                  mountPath: /secret
+                  readOnly: true
+                - name: workspace
+                  mountPath: /workspace
+          volumes:
+            - name: scripts
+              configMap:
+                name: ansible-runner
+                defaultMode: 0755
+                items:
+                  - key: update-entrypoint.sh
+                    path: update-entrypoint.sh
+            - name: secret
+              secret:
+                secretName: ansible-runner
+            - name: workspace
+              emptyDir: {}

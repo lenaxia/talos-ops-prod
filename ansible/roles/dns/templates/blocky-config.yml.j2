@@ -1,0 +1,47 @@
+upstream:
+  default:
+{% for upstream in dns_upstreams %}
+    - {{ upstream }}
+{% endfor %}
+bootstrapDns:
+{% for dns in dns_bootstrap %}
+  - {{ dns }}
+{% endfor %}
+
+blocking:
+  blackLists:
+    ads:
+{% for list in dns_blocklists %}
+      - {{ list }}
+{% endfor %}
+  clientGroupsBlock:
+    default:
+      - ads
+
+port: {{ blocky_port }}
+httpPort: {{ blocky_http_port }}
+
+customDNS:
+  customTTL: 1h
+  filterUnmappedTypes: true
+  mapping:
+    # DNS resolvers
+    dns01: 192.168.0.5
+    dns02: 192.168.0.6
+    # Kubernetes VIP (Talos control plane)
+    kube-vip: 192.168.3.30
+    # Kubernetes - Prod CP
+    cp-00.local: 192.168.3.10
+    cp-01.local: 192.168.3.11
+    cp-02.local: 192.168.3.12
+    # Kubernetes - Prod Workers
+    worker-00.local: 192.168.3.20
+    worker-01.local: 192.168.3.21
+    worker-02.local: 192.168.3.22
+    worker-04.local: 192.168.3.24
+    # Admin
+    lumiere.local: 192.168.3.1
+    # Split-horizon: public domains resolved internally to avoid hairpin NAT
+{% for entry in dns_split_horizon | default([]) %}
+    "{{ entry.domain }}": {{ entry.answer }}
+{% endfor %}

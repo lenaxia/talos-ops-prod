@@ -1,0 +1,14 @@
+#!/bin/sh
+# Home Assistant kiosk launcher (Ansible managed)
+export XDG_RUNTIME_DIR=/run/user/{{ kiosk_uid | default(1000) }}
+export WAYLAND_DISPLAY=wayland-1
+sleep 5
+exec chromium --ozone-platform=wayland \
+  --noerrdialogs \
+  --disable-infobars \
+  --kiosk \
+  --no-first-run \
+  --disable-translate \
+  --disable-features=TranslateUI \
+  --autoplay-policy=no-user-gesture-required \
+  '{{ kiosk_url }}'

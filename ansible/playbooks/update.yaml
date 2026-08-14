@@ -1,0 +1,7 @@
+---
+- name: Update all packages across the fleet
+  hosts: all
+  gather_facts: true
+  roles:
+    - role: updates
+      tags: [updates]

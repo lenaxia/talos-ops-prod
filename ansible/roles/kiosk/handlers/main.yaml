@@ -1,0 +1,6 @@
+---
+- name: Restart getty
+  ansible.builtin.systemd:
+    name: getty@tty1
+    state: restarted
+    daemon_reload: true

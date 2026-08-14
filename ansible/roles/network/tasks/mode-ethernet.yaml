@@ -1,0 +1,25 @@
+---
+- name: Set static IP on ethernet interface
+  ansible.builtin.command:
+    cmd: >-
+      nmcli connection modify {{ network_ethernet_interface }}
+      ipv4.method manual
+      ipv4.addresses {{ network_ip }}/{{ network_cidr }}
+      ipv4.gateway {{ network_gateway }}
+      ipv4.dns {{ network_dns_servers | join(',') }}
+      ipv4.dns-search ""
+  register: nm_modify
+  changed_when: nm_modify.rc == 0
+
+- name: Apply ethernet changes
+  ansible.builtin.command:
+    cmd: "nmcli connection up {{ network_ethernet_interface }}"
+  changed_when: false
+  failed_when: false
+
+- name: Disable WiFi radio
+  ansible.builtin.command:
+    cmd: "nmcli radio wifi off"
+  async: 10
+  poll: 0
+  changed_when: false

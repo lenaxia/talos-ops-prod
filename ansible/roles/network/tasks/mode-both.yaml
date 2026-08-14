@@ -1,0 +1,34 @@
+---
+- name: Set static IP on ethernet interface
+  ansible.builtin.command:
+    cmd: >-
+      nmcli connection modify {{ network_ethernet_interface }}
+      ipv4.method manual
+      ipv4.addresses {{ network_ip }}/{{ network_cidr }}
+      ipv4.gateway {{ network_gateway }}
+      ipv4.dns {{ network_dns_servers | join(',') }}
+      ipv4.dns-search ""
+  changed_when: false
+
+- name: Configure WiFi connection profile
+  ansible.builtin.command:
+    cmd: >-
+      nmcli connection modify "{{ network_wifi_ssid }}"
+      ipv4.method manual
+      ipv4.addresses {{ network_wifi_ip }}/{{ network_cidr }}
+      ipv4.gateway {{ network_gateway }}
+      ipv4.dns {{ network_dns_servers | join(',') }}
+      ipv4.dns-search ""
+  changed_when: false
+  failed_when: false
+
+- name: Ensure WiFi radio is enabled
+  ansible.builtin.command:
+    cmd: "nmcli radio wifi on"
+  changed_when: false
+
+- name: Apply ethernet changes
+  ansible.builtin.command:
+    cmd: "nmcli connection up {{ network_ethernet_interface }}"
+  changed_when: false
+  failed_when: false

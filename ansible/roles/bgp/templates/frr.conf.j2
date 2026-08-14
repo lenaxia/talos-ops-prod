@@ -1,0 +1,20 @@
+frr version 8.1
+frr defaults traditional
+hostname {{ ansible_hostname }}
+log syslog informational
+no ipv6 forwarding
+service integrated-vtysh-config
+!
+router bgp {{ frr_asn }}
+ bgp router-id {{ frr_router_id }}
+ neighbor cilium_peers peer-group
+ neighbor cilium_peers remote-as {{ frr_cilium_asn }}
+{% for peer in frr_peers %}
+ neighbor {{ peer }} peer-group cilium_peers
+{% endfor %}
+ !
+ address-family ipv4 unicast
+  neighbor cilium_peers activate
+  network {{ frr_advertised_network }}
+ exit-address-family
+!

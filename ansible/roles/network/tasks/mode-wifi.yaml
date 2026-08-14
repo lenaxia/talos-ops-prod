@@ -1,0 +1,31 @@
+---
+- name: Configure WiFi connection profile
+  ansible.builtin.command:
+    cmd: >-
+      nmcli connection modify "{{ network_wifi_ssid }}"
+      ipv4.method manual
+      ipv4.addresses {{ network_wifi_ip }}/{{ network_cidr }}
+      ipv4.gateway {{ network_gateway }}
+      ipv4.dns {{ network_dns_servers | join(',') }}
+      ipv4.dns-search ""
+  register: nm_wifi_modify
+  changed_when: nm_wifi_modify.rc == 0
+  failed_when: false
+
+- name: Ensure WiFi radio is enabled
+  ansible.builtin.command:
+    cmd: "nmcli radio wifi on"
+  changed_when: false
+
+- name: Connect to WiFi network
+  ansible.builtin.command:
+    cmd: >-
+      nmcli connection up "{{ network_wifi_ssid }}"
+  changed_when: false
+  failed_when: false
+
+- name: Disable ethernet interface
+  ansible.builtin.command:
+    cmd: "nmcli device disconnect {{ network_ethernet_interface }}"
+  changed_when: false
+  failed_when: false

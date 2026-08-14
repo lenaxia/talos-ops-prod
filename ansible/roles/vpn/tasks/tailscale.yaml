@@ -1,0 +1,53 @@
+---
+- name: Ensure Tailscale GPG key is present (Debian/Ubuntu)
+  ansible.builtin.get_url:
+    url: https://pkgs.tailscale.com/stable/{{ ansible_distribution | lower }}/{{ ansible_distribution_release | lower }}/no-pkg-check-repo.tailscale-keyring.gpg
+    dest: /usr/share/keyrings/tailscale.gpg
+    mode: "0644"
+  when: ansible_os_family == "Debian"
+
+- name: Add Tailscale APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/tailscale.gpg] https://pkgs.tailscale.com/stable/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main"
+    state: present
+    filename: tailscale
+  when: ansible_os_family == "Debian"
+
+- name: Install Tailscale
+  ansible.builtin.package:
+    name: tailscale
+    state: present
+
+- name: Ensure Tailscale service is enabled and running
+  ansible.builtin.service:
+    name: tailscaled
+    state: started
+    enabled: true
+
+- name: Configure Tailscale with advertised routes
+  ansible.builtin.command:
+    cmd: >
+      tailscale up
+      {% if tailscale_advertise_exit_node %}--advertise-exit-node{% endif %}
+      {% if tailscale_advertise_routes | length > 0 %}--advertise-routes={{ tailscale_advertise_routes | join(',') }}{% endif %}
+      --accept-routes
+      --accept-dns=false
+  register: ts_up
+  changed_when: "'Success' in ts_up.stdout or ts_up.rc == 0"
+  failed_when: false
+
+- name: Enable auto-update
+  ansible.builtin.command:
+    cmd: tailscale set --auto-update
+  changed_when: false
+  failed_when: false
+
+- name: Display Tailscale status
+  ansible.builtin.command:
+    cmd: tailscale status
+  changed_when: false
+  register: ts_status
+
+- name: Show Tailscale status
+  ansible.builtin.debug:
+    var: ts_status.stdout_lines

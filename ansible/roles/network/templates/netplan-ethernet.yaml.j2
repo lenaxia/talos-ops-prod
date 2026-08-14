@@ -1,0 +1,12 @@
+network:
+  version: 2
+  ethernets:
+    {{ network_interface }}:
+      addresses:
+        - {{ network_ip }}/{{ network_cidr }}
+      routes:
+        - to: default
+          via: {{ network_gateway }}
+      nameservers:
+        addresses: [{{ network_dns_servers | join(', ') }}]
+      dhcp4: false

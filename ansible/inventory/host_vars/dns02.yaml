@@ -1,0 +1,11 @@
+---
+# dns02: ZeroTier exit node — NATs ZT clients to 192.168.0.0/16
+zerotier_install: true
+zerotier_network_id: a84ac5c10a2829e4
+zerotier_exit_node: true
+zerotier_advertised_routes:
+  - 192.168.0.0/16
+zerotier_lan_interface: eth0
+vpn_enable_forwarding: true
+vpn_allow_forwarding: true
+vpn_enable_nat: true

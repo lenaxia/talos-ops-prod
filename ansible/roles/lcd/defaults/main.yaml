@@ -1,0 +1,11 @@
+---
+# UCTRONICS U6143 SSD1306 128x32 OLED rack display
+lcd_repo: https://github.com/UCTRONICS/U6143_ssd1306.git
+lcd_install_dir: /opt/uctronics-lcd
+lcd_service_name: uctronics-display
+
+# Display config (maps to ssd1306_i2c.h defines)
+lcd_temperature_unit: fahrenheit   # fahrenheit or celsius
+lcd_ip_interface: eth0             # eth0 or wlan0
+lcd_show_ip: true                  # show IP or custom text
+lcd_custom_text: "UCTRONICS"       # shown when lcd_show_ip is false

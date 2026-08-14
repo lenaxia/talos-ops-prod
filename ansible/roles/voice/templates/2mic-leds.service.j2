@@ -1,0 +1,13 @@
+[Unit]
+Description=2Mic LEDs
+After=wyoming-satellite.service
+
+[Service]
+Type=simple
+ExecStart={{ voice_satellite_dir }}/examples/.venv/bin/python3 2mic_service.py --uri '{{ voice_event_uri }}'
+WorkingDirectory={{ voice_satellite_dir }}/examples
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=default.target

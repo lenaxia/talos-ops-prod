@@ -1,0 +1,7 @@
+---
+base_packages:
+  - curl
+  - git
+  - htop
+  - vim
+  - rpi-update

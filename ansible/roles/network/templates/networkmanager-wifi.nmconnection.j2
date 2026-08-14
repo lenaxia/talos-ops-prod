@@ -1,0 +1,21 @@
+[connection]
+id=ansible-wifi
+type=wifi
+interface-name={{ network_interface }}
+autoconnect=true
+
+[wifi]
+mode=infrastructure
+ssid={{ network_wifi_ssid }}
+
+[wifi-security]
+key-mgmt=wpa-psk
+psk={{ network_wifi_psk }}
+
+[ipv4]
+method=manual
+addresses={{ network_ip }}/{{ network_cidr }}
+gateway={{ network_gateway }}
+
+[ipv6]
+method=disabled

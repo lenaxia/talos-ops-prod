@@ -1,0 +1,16 @@
+---
+- name: Rebuild lcd
+  ansible.builtin.shell:
+    cmd: "make clean && make"
+    chdir: "{{ lcd_install_dir }}/C"
+  notify: Restart lcd
+
+- name: Restart lcd
+  ansible.builtin.service:
+    name: "{{ lcd_service_name }}"
+    state: restarted
+    daemon_reload: true
+
+- name: Reboot
+  ansible.builtin.reboot:
+    reboot_timeout: 120

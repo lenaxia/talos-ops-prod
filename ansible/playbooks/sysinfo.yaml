@@ -1,0 +1,15 @@
+---
+- name: Gather fleet system information
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Display system info
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ ansible_hostname }}"
+          - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - "Model: {{ ansible_facts['board_type'] | default('N/A') }}"
+          - "IP: {{ ansible_default_ipv4['address'] }}"
+          - "MAC: {{ ansible_default_ipv4['macaddress'] }}"
+          - "Memory: {{ ansible_memory_mb['real']['total'] }} MB"
+          - "Disk: {{ ansible_mounts[0]['size_total'] | default('N/A') }}"

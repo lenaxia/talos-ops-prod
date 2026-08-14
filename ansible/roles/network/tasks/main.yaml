@@ -1,0 +1,28 @@
+---
+- name: Remove stale VIPs from keepalived era
+  ansible.builtin.command:
+    cmd: "ip addr del {{ item }}/32 dev {{ network_ethernet_interface }}"
+  loop:
+    - 192.168.4.10
+    - 192.168.4.11
+  failed_when: false
+  changed_when: false
+  when: remove_stale_vips | default(false)
+
+- name: Configure network mode - ethernet
+  ansible.builtin.include_tasks: mode-ethernet.yaml
+  when: network_mode == 'ethernet'
+
+- name: Configure network mode - wifi
+  ansible.builtin.include_tasks: mode-wifi.yaml
+  when: network_mode == 'wifi'
+
+- name: Configure network mode - both
+  ansible.builtin.include_tasks: mode-both.yaml
+  when: network_mode == 'both'
+
+- name: Ensure NetworkManager is enabled and running
+  ansible.builtin.service:
+    name: NetworkManager
+    state: started
+    enabled: true

@@ -1,0 +1,8 @@
+---
+# adguard: ZeroTier LAN bridge — routes ZT clients to 192.168.0.0/16
+zerotier_install: true
+zerotier_network_id: a84ac5c10a2829e4
+vpn_enable_forwarding: true
+vpn_forwarding_rules:
+  - { in: ztnfao32ho, out: eth0 }
+  - { in: eth0, out: ztnfao32ho }

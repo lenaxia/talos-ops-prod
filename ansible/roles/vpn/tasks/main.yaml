@@ -1,0 +1,16 @@
+---
+- name: Enable IP forwarding for VPN routing
+  ansible.builtin.include_tasks: forwarding.yaml
+  when: vpn_enable_forwarding
+
+- name: Configure ZeroTier One
+  ansible.builtin.include_tasks: zerotier.yaml
+  when: zerotier_install and zerotier_network_id | length > 0
+
+- name: Configure ZeroTier exit node
+  ansible.builtin.include_tasks: zerotier-exit.yaml
+  when: zerotier_install and zerotier_exit_node
+
+- name: Configure Tailscale
+  ansible.builtin.include_tasks: tailscale.yaml
+  when: tailscale_install

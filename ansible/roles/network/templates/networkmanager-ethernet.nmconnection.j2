@@ -1,0 +1,19 @@
+[connection]
+id=ansible-{{ network_interface }}
+type=ethernet
+interface-name={{ network_interface }}
+autoconnect=true
+{% if network_vlan_id is defined %}
+
+[vlan]
+id={{ network_vlan_id }}
+parent=ansible-{{ network_interface }}
+{% endif %}
+
+[ipv4]
+method=manual
+addresses={{ network_ip }}/{{ network_cidr }}
+gateway={{ network_gateway }}
+
+[ipv6]
+method=disabled

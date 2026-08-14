@@ -1,0 +1,11 @@
+---
+# kiosk_packages (Trixie / Wayfire Wayland)
+kiosk_packages:
+  - chromium
+  - wayfire
+  - wf-shell
+  - xwayland
+  - xserver-xorg-core
+  - xinit
+  - unclutter
+  - matchbox-keyboard
