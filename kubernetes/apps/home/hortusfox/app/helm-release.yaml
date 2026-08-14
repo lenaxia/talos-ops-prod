@@ -112,8 +112,8 @@ spec:
               - |
                 BASE="http://hortusfox.home.svc.cluster.local"
                 for ep in tasks/overdue tasks/tomorrow tasks/recurring calendar/reminder; do
-                  echo "Triggering cronjob: ${ep}"
-                  curl -sf -X POST "${BASE}/cronjob/${ep}" -d "cronpw=${CRONPW}" || echo "WARN: cronjob ${ep} failed"
+                  echo "Triggering cronjob: $${ep}"
+                  curl -sf -X POST "$${BASE}/cronjob/$${ep}" -d "cronpw=$${CRONPW}" || echo "WARN: cronjob $${ep} failed"
                 done
             resources:
               requests:
@@ -146,7 +146,7 @@ spec:
               - |
                 BASE="http://hortusfox.home.svc.cluster.local"
                 echo "Triggering auto backup cronjob"
-                curl -sf -X POST "${BASE}/cronjob/backup/auto" -d "cronpw=${CRONPW}" || echo "WARN: backup cronjob failed"
+                curl -sf -X POST "$${BASE}/cronjob/backup/auto" -d "cronpw=$${CRONPW}" || echo "WARN: backup cronjob failed"
             resources:
               requests:
                 cpu: 10m
