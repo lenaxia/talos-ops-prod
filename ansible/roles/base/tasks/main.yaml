@@ -38,7 +38,7 @@
   when: ansible_user != 'pi'
 
 - name: Disable IPv6
-  ansible.builtin.sysctl:
+  ansible.posix.sysctl:
     name: "{{ item }}"
     value: "1"
     state: present
