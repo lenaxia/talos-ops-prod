@@ -52,7 +52,10 @@ data:
     echo "=== Running ansible ==="
     CF_ARGS=""
     if [ -n "$${CLOUDFLARE_API_TOKEN:-}" ]; then
-      CF_ARGS="--extra-vars cf_api_token=$${CLOUDFLARE_API_TOKEN} cf_account_id=$${CLOUDFLARE_ACCOUNT_ID:-}"
+      CF_ARGS="--extra-vars cf_api_token=$${CLOUDFLARE_API_TOKEN}"
+      if [ -n "$${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+        CF_ARGS="$CF_ARGS --extra-vars cf_account_id=$${CLOUDFLARE_ACCOUNT_ID}"
+      fi
     fi
     cd /workspace/ansible
     ansible-playbook "playbooks/$${PLAYBOOK}" -i inventory/hosts.yaml $${CF_ARGS} --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
