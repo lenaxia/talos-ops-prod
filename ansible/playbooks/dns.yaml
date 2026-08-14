@@ -1,8 +1,11 @@
 ---
+# One node at a time: each node must be healthy after its changes
+# (roles/dns/tasks/verify.yaml) before the next node is modified.
 - name: Configure DNS nodes base + DNS
   hosts: dns
   gather_facts: true
   become: true
+  serial: 1
   roles:
     - role: base
       tags: [base]

@@ -1,18 +1,30 @@
 ---
-- name: Apply full fleet configuration
+- name: Apply base fleet configuration
   hosts: all
   gather_facts: true
   roles:
     - role: base
       tags: [base]
+
+# DNS nodes are configured one at a time: a node must pass its post-apply
+# health check (roles/dns/tasks/verify.yaml) before the next node is
+# touched. The role also refuses to start if a sibling resolver is down.
+- name: Apply DNS configuration (one node at a time)
+  hosts: dns
+  gather_facts: true
+  serial: 1
+  roles:
     - role: dns
       tags: [dns]
-      when: "'dns' in group_names"
-    - role: vpn
-      tags: [vpn]
     - role: loadbalancer
       tags: [loadbalancer]
-      when: "'dns' in group_names"
+
+- name: Apply remaining fleet roles
+  hosts: all
+  gather_facts: true
+  roles:
+    - role: vpn
+      tags: [vpn]
     - role: kiosk
       tags: [kiosk]
       when: "'kiosk' in group_names"
@@ -23,4 +35,3 @@
   gather_facts: false
   roles:
     - role: cloudflare
-      tags: [cloudflare]

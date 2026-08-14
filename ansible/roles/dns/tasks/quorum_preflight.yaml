@@ -1,0 +1,37 @@
+---
+# Safety gate: never start changes on a DNS node while a sibling resolver
+# is already down. Combined with serial: 1 in the playbooks this guarantees
+# at most one resolver is being modified/restarted at any time AND only
+# while the other one is provably healthy.
+- name: List sibling DNS nodes for this batch
+  ansible.builtin.set_fact:
+    dns_siblings: "{{ groups['dns'] | difference(play_hosts) | list }}"
+
+- name: Initialize sibling health results
+  ansible.builtin.set_fact:
+    dns_sibling_health: {}
+
+- name: Check health of each sibling resolver
+  ansible.builtin.include_tasks: quorum_check_sibling.yaml
+  loop: "{{ dns_siblings }}"
+  loop_control:
+    loop_var: sibling
+
+- name: Refuse to proceed if any sibling resolver is unhealthy
+  ansible.builtin.fail:
+    msg: >-
+      Refusing to modify {{ inventory_hostname }}: sibling DNS node(s)
+      {{ dns_sibling_health | dict2items | selectattr('value', 'equalto', false) | map(attribute='key') | list }}
+      are not answering queries. Applying changes now could take down all
+      resolvers at once. Fix the unhealthy node(s) and re-run.
+  when: dns_sibling_health.values() | reject('equalto', true) | list | length > 0
+
+- name: Quorum OK
+  ansible.builtin.debug:
+    msg: >-
+      {% if dns_siblings | length > 0 %}
+      Sibling resolver(s) {{ dns_siblings | join(', ') }} healthy — safe to
+      proceed with {{ inventory_hostname }}.
+      {% else %}
+      No sibling resolvers in the dns group — proceeding with {{ inventory_hostname }}.
+      {% endif %}

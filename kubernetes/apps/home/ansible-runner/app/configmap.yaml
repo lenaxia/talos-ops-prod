@@ -13,6 +13,7 @@ data:
     forks = 10
     timeout = 30
     stdout_callback = ansible.builtin.default
+    ignore_unreachable = True
 
     [callback_default]
     result_format = yaml
@@ -34,7 +35,7 @@ data:
     # Install dependencies
     echo "=== Installing dependencies ==="
     apt-get update -qq && apt-get install -y -qq openssh-client git sshpass >/dev/null 2>&1
-    pip install --no-cache-dir ansible-core >/dev/null 2>&1
+    pip install --no-cache-dir ansible-core dnspython >/dev/null 2>&1
 
     # Set up SSH key
     cp /secret/SSH_PRIVATE_KEY /tmp/id_ed25519
@@ -70,7 +71,7 @@ data:
     echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
     apt-get update -qq && apt-get install -y -qq openssh-client git sshpass >/dev/null 2>&1
-    pip install --no-cache-dir ansible-core >/dev/null 2>&1
+    pip install --no-cache-dir ansible-core dnspython >/dev/null 2>&1
 
     cp /secret/SSH_PRIVATE_KEY /tmp/id_ed25519
     chmod 600 /tmp/id_ed25519

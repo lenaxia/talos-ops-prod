@@ -1,4 +1,7 @@
 ---
+- name: Verify DNS quorum before touching this node
+  ansible.builtin.include_tasks: quorum_preflight.yaml
+
 - name: Apply blocky DNS config
   ansible.builtin.include_tasks: blocky.yaml
   when: dns_backend == 'blocky'
@@ -6,3 +9,9 @@
 - name: Apply AdGuard Home DNS config
   ansible.builtin.include_tasks: adguard.yaml
   when: dns_backend == 'adguard'
+
+- name: Flush handlers so restarts happen before verification
+  ansible.builtin.meta: flush_handlers
+
+- name: Verify this resolver is healthy after changes
+  ansible.builtin.include_tasks: verify.yaml
