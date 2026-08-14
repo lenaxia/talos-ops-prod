@@ -1,0 +1,27 @@
+---
+# Post-apply health gate for the node just modified. Runs after handlers
+# (flushed by main.yaml) so the service has actually restarted.
+# A failure here halts the serial play before any remaining DNS node is
+# touched — one node may end up degraded, but never both.
+- name: Wait for resolver to accept connections on TCP/53
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host | default(network_ip) }}"
+    port: 53
+    timeout: 30
+  delegate_to: localhost
+
+- name: Resolve test query through this resolver
+  ansible.builtin.set_fact:
+    dns_verify_answer: "{{ lookup('dig', dns_health_check_name, '@' ~ (ansible_host | default(network_ip))) }}"
+
+- name: Fail if the resolver is not answering
+  ansible.builtin.fail:
+    msg: >-
+      {{ inventory_hostname }} did not resolve {{ dns_health_check_name }}
+      after configuration changes (answer: '{{ dns_verify_answer }}').
+      Halting — remaining DNS nodes were NOT modified.
+  when: dns_verify_answer in ['NXDOMAIN', 'SERVFAIL', 'TIMEOUT', '']
+
+- name: Resolver healthy after changes
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} resolved {{ dns_health_check_name }} -> {{ dns_verify_answer }}"

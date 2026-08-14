@@ -1,0 +1,25 @@
+---
+# Runs once per sibling DNS node (loop_var: sibling).
+# A sibling is healthy when TCP/53 accepts connections AND a test name
+# resolves through it. Checks run from the controller (delegate_to
+# localhost) so they exercise the same path a real client would.
+- name: "Sibling {{ sibling }}: TCP/53 reachable"
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[sibling].ansible_host | default(hostvars[sibling].network_ip) }}"
+    port: 53
+    timeout: "{{ dns_health_timeout | default(5) }}"
+  delegate_to: localhost
+  register: sibling_tcp
+  ignore_errors: true
+
+- name: "Sibling {{ sibling }}: resolve test query"
+  ansible.builtin.set_fact:
+    dns_sibling_health: >-
+      {{ dns_sibling_health | combine({
+           sibling: (
+             sibling_tcp is not failed and
+             (lookup('dig', dns_health_check_name,
+                     '@' ~ (hostvars[sibling].ansible_host | default(hostvars[sibling].network_ip)))
+              not in ['NXDOMAIN', 'SERVFAIL', 'TIMEOUT', ''])
+           )
+         }) }}
