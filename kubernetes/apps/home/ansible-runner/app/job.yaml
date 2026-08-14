@@ -5,12 +5,12 @@ metadata:
   name: ansible-runner
   namespace: home
   annotations:
-    ansible.talos-ops/revision: "9410a69f"
+    ansible.talos-ops/revision: "f818212b"
 spec:
   template:
     metadata:
       annotations:
-        ansible.talos-ops/revision: "9410a69f"
+        ansible.talos-ops/revision: "f818212b"
     spec:
       restartPolicy: Never
       activeDeadlineSeconds: 600
