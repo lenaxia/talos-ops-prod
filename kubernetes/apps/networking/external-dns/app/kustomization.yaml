@@ -4,4 +4,5 @@ commonLabels:
   app.kubernetes.io/name: &app external-dns
   app.kubernetes.io/instance: *app
 resources:
+  - secret.sops.yaml
   - helm-release.yaml
