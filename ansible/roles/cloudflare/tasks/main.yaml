@@ -1,0 +1,137 @@
+---
+# Deploy the uptime-monitor Cloudflare Worker via REST API.
+# Runs on localhost (connection: local) — no fleet host required.
+#
+# Skips with a message when cf_api_token/cf_account_id are not provided,
+# so the ansible-runner stays green until the secret keys are populated.
+
+- name: Check Cloudflare credentials are configured
+  ansible.builtin.set_fact:
+    cf_configured: "{{ (cf_api_token | default('UNSET') not in ('', 'UNSET')) and (cf_account_id | default('UNSET') not in ('', 'UNSET')) | ternary('true', 'false') }}"
+
+- name: Skip Cloudflare worker deployment (no credentials)
+  ansible.builtin.debug:
+    msg: >-
+      cf_api_token/cf_account_id not set — populate CLOUDFLARE_API_TOKEN and
+      CLOUDFLARE_ACCOUNT_ID in the home/ansible-runner secret to enable.
+  when: not cf_configured | bool
+
+- name: Verify Cloudflare API credentials
+  ansible.builtin.uri:
+    url: "{{ cf_api_base }}/user/tokens/verify"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ cf_api_token }}"
+    status_code: 200
+  register: cf_verify
+  when: cf_configured | bool
+  changed_when: false
+
+- name: Find existing KV namespace
+  ansible.builtin.uri:
+    url: "{{ cf_api_base }}/accounts/{{ cf_account_id }}/storage/kv/namespaces?per_page=100"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ cf_api_token }}"
+    status_code: 200
+  register: cf_kv_list
+  when: cf_configured | bool
+  changed_when: false
+
+- name: Set KV namespace ID if it exists
+  ansible.builtin.set_fact:
+    cf_kv_id: "{{ (cf_kv_list.json.result | selectattr('title', 'equalto', cf_worker_kv_title) | map(attribute='id') | first) | default('') }}"
+  when: cf_configured | bool
+
+- name: Create KV namespace
+  ansible.builtin.uri:
+    url: "{{ cf_api_base }}/accounts/{{ cf_account_id }}/storage/kv/namespaces"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ cf_api_token }}"
+    body_format: json
+    body:
+      title: "{{ cf_worker_kv_title }}"
+    status_code: 200
+  register: cf_kv_create
+  when:
+    - cf_configured | bool
+    - cf_kv_id | length == 0
+
+- name: Set KV namespace ID after creation
+  ansible.builtin.set_fact:
+    cf_kv_id: "{{ cf_kv_create.json.result.id }}"
+  when:
+    - cf_configured | bool
+    - cf_kv_id | length == 0
+
+- name: Build worker metadata (bindings)
+  ansible.builtin.set_fact:
+    cf_worker_metadata:
+      main_module: "{{ cf_worker_script }}"
+      compatibility_date: "{{ cf_worker_compat_date }}"
+      workers_dev: false
+      bindings:
+        - type: kv_namespace
+          name: UPTIME_KV
+          namespace_id: "{{ cf_kv_id }}"
+        - type: plain_text
+          name: UPTIME_ENDPOINTS
+          text: "{{ cf_worker_endpoints | join(',') }}"
+        - type: plain_text
+          name: ALERTMANAGER_URL
+          text: "{{ cf_worker_alertmanager_url }}"
+        - type: plain_text
+          name: ALERTMANAGER_ALERTNAME
+          text: "{{ cf_worker_alertname }}"
+  when: cf_configured | bool
+
+- name: Stage metadata and script for upload
+  ansible.builtin.copy:
+    content: "{{ cf_worker_metadata | to_nice_json }}"
+    dest: /tmp/cf-worker-metadata.json
+    mode: "0600"
+  when: cf_configured | bool
+  changed_when: false
+
+- name: Upload worker script (multipart metadata + module)
+  # curl is used because the metadata part requires an explicit
+  # application/json content type alongside the module file part
+  ansible.builtin.command:
+    argv:
+      - curl
+      - -sS
+      - -f
+      - -X
+      - PUT
+      - -H
+      - "Authorization: Bearer {{ cf_api_token }}"
+      - -F
+      - metadata=@/tmp/cf-worker-metadata.json;type=application/json
+      - -F
+      - "module=@{{ role_path }}/files/{{ cf_worker_script }};type=application/javascript+module"
+      - "{{ cf_api_base }}/accounts/{{ cf_account_id }}/workers/scripts/{{ cf_worker_name }}"
+  register: cf_upload
+  when: cf_configured | bool
+  changed_when: cf_upload.rc == 0
+  no_log: true
+
+- name: Set cron trigger schedule
+  ansible.builtin.uri:
+    url: "{{ cf_api_base }}/accounts/{{ cf_account_id }}/workers/scripts/{{ cf_worker_name }}/schedules"
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ cf_api_token }}"
+    body_format: json
+    body:
+      - cron: "{{ cf_worker_cron }}"
+    status_code: 200
+  when: cf_configured | bool
+  changed_when: false
+
+- name: Clean up staged metadata
+  ansible.builtin.file:
+    path: /tmp/cf-worker-metadata.json
+    state: absent
+  when: cf_configured | bool
+  changed_when: false

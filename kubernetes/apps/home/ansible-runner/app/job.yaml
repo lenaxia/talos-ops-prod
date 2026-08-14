@@ -5,12 +5,12 @@ metadata:
   name: ansible-runner
   namespace: home
   annotations:
-    ansible.talos-ops/revision: "2850eef7"
+    ansible.talos-ops/revision: "73c48deb"
 spec:
   template:
     metadata:
       annotations:
-        ansible.talos-ops/revision: "2850eef7"
+        ansible.talos-ops/revision: "73c48deb"
     spec:
       restartPolicy: Never
       activeDeadlineSeconds: 600
@@ -19,6 +19,19 @@ spec:
           image: python:3.12-slim
           workingDir: /workspace
           command: ["/bin/bash", "/scripts/entrypoint.sh"]
+          env:
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ansible-runner
+                  key: CLOUDFLARE_API_TOKEN
+                  optional: true
+            - name: CLOUDFLARE_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ansible-runner
+                  key: CLOUDFLARE_ACCOUNT_ID
+                  optional: true
           volumeMounts:
             - name: scripts
               mountPath: /scripts
