@@ -33,8 +33,11 @@ dns_rewrites:
 
 # Split-horizon DNS: resolve public domains to internal LB VIP
 # Prevents hairpin NAT and preserves real client IPs in Authelia/Traefik
+# NOTE: blocky customDNS automatically covers all subdomains of a mapped
+# domain (wildcards like *.domain are NOT supported here — the key is the
+# parent domain itself)
 dns_split_horizon:
-  - { domain: "*.thekao.cloud", answer: 192.168.5.12 }
+  - { domain: "thekao.cloud", answer: 192.168.5.12 }
 
 # Blocklists
 dns_blocklists:
