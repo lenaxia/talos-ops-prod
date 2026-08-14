@@ -1,0 +1,39 @@
+---
+- name: Stop and disable legacy LB services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop: "{{ lb_remove_services }}"
+  failed_when: false
+
+- name: Remove legacy LB packages
+  ansible.builtin.package:
+    name: "{{ lb_remove_packages }}"
+    state: absent
+    purge: true
+
+- name: Remove legacy LB config directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/haproxy
+    - /etc/keepalived
+
+- name: Remove legacy VIPs from network interfaces
+  ansible.builtin.command:
+    cmd: "ip addr del {{ item }}/32 dev eth0"
+  loop:
+    - 192.168.4.10
+    - 192.168.4.11
+  failed_when: false
+  changed_when: false
+
+- name: Clean up keepalived VRRP iptables rules
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: vrrp
+    jump: ACCEPT
+    state: absent
+  failed_when: false

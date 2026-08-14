@@ -1,0 +1,88 @@
+---
+- name: Install audio packages
+  ansible.builtin.package:
+    name:
+      - alsa-utils
+      - portaudio19-dev
+      - ffmpeg
+      - python3-venv
+      - python3-dev
+    state: present
+
+- name: Clone wyoming-satellite
+  ansible.builtin.git:
+    repo: "{{ voice_satellite_repo }}"
+    dest: "{{ voice_satellite_dir }}"
+    depth: 1
+
+- name: Clone wyoming-openwakeword
+  ansible.builtin.git:
+    repo: "{{ voice_openwakeword_repo }}"
+    dest: "{{ voice_openwakeword_dir }}"
+    depth: 1
+
+- name: Deploy custom wake word model
+  ansible.builtin.copy:
+    src: "{{ voice_custom_wake_model }}"
+    dest: "{{ voice_openwakeword_dir }}/wyoming_openwakeword/models/{{ voice_custom_wake_model }}"
+    mode: "0644"
+
+- name: Create satellite venv and install
+  ansible.builtin.shell:
+    cmd: "python3 -m venv .venv && .venv/bin/pip install -e ."
+    chdir: "{{ voice_satellite_dir }}"
+    creates: "{{ voice_satellite_dir }}/.venv/bin/activate"
+
+- name: Create openwakeword venv and install
+  ansible.builtin.shell:
+    cmd: "python3 -m venv .venv && .venv/bin/pip install -e ."
+    chdir: "{{ voice_openwakeword_dir }}"
+    creates: "{{ voice_openwakeword_dir }}/.venv/bin/activate"
+
+- name: Create LED venv if examples exist
+  ansible.builtin.shell:
+    cmd: "python3 -m venv .venv && .venv/bin/pip install -e ."
+    chdir: "{{ voice_satellite_dir }}/examples"
+    creates: "{{ voice_satellite_dir }}/examples/.venv/bin/activate"
+  when: voice_leds_enabled | default(false)
+
+- name: Install openWakeWord service
+  ansible.builtin.template:
+    src: wyoming-openwakeword.service.j2
+    dest: /etc/systemd/system/wyoming-openwakeword.service
+    mode: "0644"
+  notify: Restart voice services
+
+- name: Install satellite service
+  ansible.builtin.template:
+    src: wyoming-satellite.service.j2
+    dest: /etc/systemd/system/wyoming-satellite.service
+    mode: "0644"
+  notify: Restart voice services
+
+- name: Install LED service if enabled
+  ansible.builtin.template:
+    src: 2mic-leds.service.j2
+    dest: /etc/systemd/system/2mic_leds.service
+    mode: "0644"
+  when: voice_leds_enabled | default(false)
+  notify: Restart voice services
+
+- name: Enable and start openWakeWord
+  ansible.builtin.service:
+    name: wyoming-openwakeword
+    state: started
+    enabled: true
+
+- name: Enable and start satellite
+  ansible.builtin.service:
+    name: wyoming-satellite
+    state: started
+    enabled: true
+
+- name: Enable and start LEDs if enabled
+  ansible.builtin.service:
+    name: 2mic_leds
+    state: started
+    enabled: true
+  when: voice_leds_enabled | default(false)

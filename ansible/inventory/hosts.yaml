@@ -1,0 +1,48 @@
+---
+all:
+  children:
+    dns:
+      hosts:
+        dns01:
+          ansible_host: 192.168.0.5
+          ansible_user: yin
+          dns_backend: blocky
+          network_mode: ethernet
+          network_ip: 192.168.0.5
+        dns02:
+          ansible_host: 192.168.0.6
+          ansible_user: yin
+          dns_backend: blocky
+          network_mode: ethernet
+          network_ip: 192.168.0.6
+    kiosk:
+      hosts:
+        kiosk01:
+          ansible_host: 192.168.236.244
+          ansible_user: yin
+          network_mode: wifi
+          network_wifi_ip: 192.168.236.244
+    voice:
+      hosts:
+        voice01:
+          ansible_host: 192.168.0.187
+          ansible_user: yin
+          network_mode: wifi
+          network_wifi_ip: 192.168.0.187
+    rack:
+      hosts:
+        dns01:
+        dns02:
+    spare:
+      hosts:
+        spare01:
+          ansible_host: 192.168.0.224
+          ansible_user: yin
+          network_mode: ethernet
+          network_ip: 192.168.0.224
+    pikvm:
+      hosts:
+        pikvm01:
+          ansible_host: 192.168.0.208
+          ansible_user: root
+          network_mode: ethernet

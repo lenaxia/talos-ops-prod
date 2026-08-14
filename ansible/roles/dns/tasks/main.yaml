@@ -1,0 +1,8 @@
+---
+- name: Apply blocky DNS config
+  ansible.builtin.include_tasks: blocky.yaml
+  when: dns_backend == 'blocky'
+
+- name: Apply AdGuard Home DNS config
+  ansible.builtin.include_tasks: adguard.yaml
+  when: dns_backend == 'adguard'

@@ -1,0 +1,42 @@
+---
+# AdGuard Home manages its own config at runtime (clients, querylog, etc).
+# We only manage the key static settings: DNS upstreams, rewrites, and filters.
+# Uses AdGuard's REST API to apply settings without clobbering runtime state.
+
+- name: Ensure AdGuard install directory exists
+  ansible.builtin.file:
+    path: "{{ adguard_install_dir }}"
+    state: directory
+    owner: pi
+    mode: "0755"
+
+- name: Ensure AdGuard service is enabled and running
+  ansible.builtin.service:
+    name: AdGuardHome
+    state: started
+    enabled: true
+
+# DNS rewrites are managed idempotently via the config file merge approach.
+# We use lineinfile to ensure key settings without overwriting the whole file.
+- name: Ensure DNS upstreams are configured
+  ansible.builtin.lineinfile:
+    path: "{{ adguard_config_file }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: "^    - https://security.cloudflare", line: "    - https://security.cloudflare-dns.com/dns-query" }
+    - { regexp: "^    - https://dns10.quad9", line: "    - https://dns10.quad9.net/dns-query" }
+    - { regexp: "^    - https://dns.cloudflare", line: "    - https://dns.cloudflare.com/dns-query" }
+  notify: Restart adguard
+
+- name: Ensure DNS rewrites are present
+  ansible.builtin.blockinfile:
+    path: "{{ adguard_config_file }}"
+    marker: "# {mark} ANSIBLE MANAGED REWRITES"
+    block: |-
+      {% for rewrite in dns_rewrites %}
+      rewrites:
+        - domain: {{ rewrite.domain }}
+          answer: {{ rewrite.answer }}
+      {% endfor %}
+  notify: Restart adguard

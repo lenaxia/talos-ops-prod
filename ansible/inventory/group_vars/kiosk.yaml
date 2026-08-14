@@ -1,0 +1,4 @@
+---
+# kiosk01: HA dashboard kiosk
+kiosk_url: http://192.168.5.131:8123/daily-life/0
+kiosk_user: yin

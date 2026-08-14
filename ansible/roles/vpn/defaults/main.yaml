@@ -1,0 +1,27 @@
+---
+# ZeroTier
+zerotier_network_id: ""
+zerotier_install: false
+# If true, this node routes ZT clients to the LAN (managed route /0 or LAN subnet)
+zerotier_exit_node: false
+# Subnets this node advertises via ZeroTier (e.g. LAN ranges for exit routing)
+zerotier_advertised_routes:
+  - 192.168.0.0/16
+# LAN interface to forward to (eth0 for ethernet Pis)
+zerotier_lan_interface: eth0
+
+# Tailscale
+tailscale_install: false
+tailscale_state: up
+tailscale_exit_node: false
+tailscale_advertise_routes: []
+tailscale_advertise_exit_node: false
+
+# Enable IP forwarding for VPN bridge/routing
+vpn_enable_forwarding: false
+
+# Enable iptables FORWARD rules for exit node
+vpn_allow_forwarding: false
+
+# Enable iptables MASQUERADE (NAT) for exit node
+vpn_enable_nat: false

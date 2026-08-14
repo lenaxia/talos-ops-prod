@@ -1,0 +1,46 @@
+---
+# ZeroTier One — install and join network
+
+- name: Install ZeroTier GPG key
+  ansible.builtin.copy:
+    src: zerotier-debian-package-key.gpg
+    dest: /usr/share/keyrings/zerotier.gpg
+    mode: "0644"
+  when: ansible_os_family == "Debian"
+
+- name: Add ZeroTier APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/zerotier.gpg] http://download.zerotier.com/debian/{{ ansible_distribution_release }} {{ ansible_distribution_release }} main"
+    state: present
+    filename: zerotier
+  when: ansible_os_family == "Debian"
+
+- name: Install ZeroTier One
+  ansible.builtin.package:
+    name: zerotier-one
+    state: present
+
+- name: Ensure ZeroTier service is enabled and running
+  ansible.builtin.service:
+    name: zerotier-one
+    state: started
+    enabled: true
+
+- name: Join ZeroTier network
+  ansible.builtin.command:
+    cmd: "zerotier-cli join {{ zerotier_network_id }}"
+  register: zt_join
+  changed_when: "'already' not in zt_join.stdout.lower()"
+  failed_when: false
+
+- name: Wait for ZeroTier interface to come up
+  ansible.builtin.shell:
+    cmd: "sleep 5; zerotier-cli listnetworks | grep -E 'OK|REQUESTING_CONFIGURATION' || true"
+  changed_when: false
+  register: zt_net
+  when: zerotier_exit_node
+
+- name: Display ZeroTier network status
+  ansible.builtin.debug:
+    msg: "{{ zt_net.stdout }}"
+  when: zt_net.stdout is defined and zt_net.stdout | length > 0
