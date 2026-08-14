@@ -1,0 +1,35 @@
+---
+# Cloudflare Workers deployed via REST API (no wrangler/node needed).
+#
+# Required vars (supply via the CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID
+# keys in the home/ansible-runner secret — "UNSET" placeholders ship by
+# default and the role skips gracefully until they are filled in):
+#   cf_api_token:  API token with Workers Scripts:Edit + Workers KV Storage:Edit
+#   cf_account_id: Cloudflare account ID
+
+cf_api_token: UNSET
+cf_account_id: UNSET
+
+cf_worker_name: uptime-monitor
+cf_worker_script: uptime-monitor.js
+cf_worker_compat_date: "2026-08-01"
+cf_worker_cron: "*/5 * * * *"
+
+cf_worker_kv_title: uptime-monitor-state
+
+# Endpoints probed from the Cloudflare edge (external path only — this is
+# what split-horizon DNS hides from internal monitoring)
+cf_worker_endpoints:
+  - https://authelia.thekao.cloud
+  - https://s3.thekao.cloud
+  - https://alerts.thekao.cloud
+  - https://grafana.thekao.cloud
+  - https://git.thekao.cloud
+  - https://photos.thekao.cloud
+
+# Alertmanager push endpoint (no-auth ingress); alerts route to pushover
+# via severity=critical
+cf_worker_alertmanager_url: https://alerts.thekao.cloud
+cf_worker_alertname: ExternalEndpointDown
+
+cf_api_base: https://api.cloudflare.com/client/v4
