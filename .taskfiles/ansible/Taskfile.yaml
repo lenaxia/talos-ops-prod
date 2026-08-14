@@ -9,6 +9,28 @@ vars:
 
 tasks:
 
+  cf-activate:
+    desc: Fill Cloudflare creds in the ansible-runner secret + bump revision
+    summary: |
+      Patches CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID into the
+      sops-encrypted ansible-runner secret and bumps the runner revision,
+      leaving the tree ready to commit. Flux re-creates the Job on push,
+      which deploys the uptime-monitor worker.
+    vars:
+      CF_ACCOUNT: '{{.CF_ACCOUNT | default "988c7181f2b9ca0d3b2997fe8739b381"}}'
+    env:
+      SECRET: '{{.RUNNER_DIR}}/secret.sops.yaml'
+      CF_TOKEN: '{{.CF_TOKEN}}'
+      CF_ACCOUNT: '{{.CF_ACCOUNT}}'
+    preconditions:
+      - sh: test -n "{{.CF_TOKEN}}"
+        msg: "Usage: task ansible:cf-activate CF_TOKEN=<workers-api-token> [CF_ACCOUNT=<id>]"
+      - sh: which sops
+        msg: "sops not found"
+    cmds:
+      - bash {{.SCRIPTS_DIR}}/cf-activate.sh
+      - task: bump
+
   bump:
     desc: Update ansible revision hash to trigger Flux Job re-creation
     cmds:
