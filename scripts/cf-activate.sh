@@ -17,7 +17,9 @@ CF_ACCOUNT="${CF_ACCOUNT:?CF_ACCOUNT=<cloudflare account id> required}"
 command -v sops >/dev/null || { echo "ERROR: sops not found"; exit 1; }
 [ -f "$SECRET" ] || { echo "ERROR: $SECRET not found"; exit 1; }
 
-TMP="$(mktemp /tmp/cf-activate.XXXXXX)"
+# Temp lives next to the secret so its path matches the repo .sops.yaml
+# creation rules (sops -e resolves rules from the INPUT path)
+TMP="$(mktemp "$(dirname "$SECRET")/.cf-activate.XXXXXX.sops.yaml")"
 trap 'rm -f "$TMP"' EXIT
 
 sops -d "$SECRET" > "$TMP"
@@ -37,8 +39,9 @@ for key, value in (("CLOUDFLARE_API_TOKEN", token), ("CLOUDFLARE_ACCOUNT_ID", ac
 open(path, "w").write(src)
 PY
 
-cp "$TMP" "$SECRET"
-sops -e -i "$SECRET"
+# Encrypt from temp into the secret — the original is only replaced with
+# already-encrypted bytes, so a failure never leaves plaintext in the tree
+sops -e "$TMP" > "$SECRET"
 
 # Verify the roundtrip before declaring success
 if sops -d "$SECRET" | grep -Fq "CLOUDFLARE_API_TOKEN: $CF_TOKEN" && \
