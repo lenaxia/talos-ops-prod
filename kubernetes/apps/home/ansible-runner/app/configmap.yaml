@@ -12,7 +12,10 @@ data:
     interpreter_python = auto_silent
     forks = 10
     timeout = 30
-    stdout_callback = yaml
+    stdout_callback = ansible.builtin.default
+
+    [callback_default]
+    result_format = yaml
 
   entrypoint.sh: |
     #!/bin/bash
