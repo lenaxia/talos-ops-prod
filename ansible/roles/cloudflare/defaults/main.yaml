@@ -1,0 +1,42 @@
+---
+# Cloudflare Workers deployed via REST API (no wrangler/node needed).
+#
+# Required vars (supply via the CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID
+# keys in the home/ansible-runner secret — "UNSET" placeholders ship by
+# default and the role skips gracefully until they are filled in):
+#   cf_api_token:  API token with Workers Scripts:Edit + Workers KV Storage:Edit
+#   cf_account_id: Cloudflare account ID
+
+cf_api_token: UNSET
+cf_account_id: UNSET
+
+cf_worker_name: uptime-monitor
+cf_worker_script: uptime-monitor.js
+cf_worker_compat_date: "2026-08-01"
+cf_worker_cron: "*/5 * * * *"
+
+cf_worker_kv_title: uptime-monitor-state
+
+# Base domain for monitored endpoints. Kept as a single variable because
+# Flux postBuild substitution (${VAR}) only applies to manifests under
+# kubernetes/ — ansible files are never processed by envsubst, so a literal
+# ${SECRET_DEV_DOMAIN} here would be pushed to Cloudflare unresolved.
+# Keep this in sync with the cluster-settings SECRET_DEV_DOMAIN equivalent.
+cf_worker_domain: thekao.cloud
+
+# Endpoints probed from the Cloudflare edge (external path only — this is
+# what split-horizon DNS hides from internal monitoring)
+cf_worker_endpoints:
+  - "https://authelia.{{ cf_worker_domain }}"
+  - "https://s3.{{ cf_worker_domain }}"
+  - "https://alerts.{{ cf_worker_domain }}"
+  - "https://grafana.{{ cf_worker_domain }}"
+  - "https://git.{{ cf_worker_domain }}"
+  - "https://photos.{{ cf_worker_domain }}"
+
+# Alertmanager push endpoint (no-auth ingress); alerts route to pushover
+# via severity=critical
+cf_worker_alertmanager_url: "https://alerts.{{ cf_worker_domain }}"
+cf_worker_alertname: ExternalEndpointDown
+
+cf_api_base: https://api.cloudflare.com/client/v4

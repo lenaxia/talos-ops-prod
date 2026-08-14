@@ -48,10 +48,14 @@ data:
     # Install collections from repo requirements
     ansible-galaxy collection install -r /workspace/ansible/requirements.yml
 
-    # Run ansible
+    # Run ansible (pass Cloudflare creds through when present)
     echo "=== Running ansible ==="
+    CF_ARGS=""
+    if [ -n "$${CLOUDFLARE_API_TOKEN:-}" ]; then
+      CF_ARGS="--extra-vars cf_api_token=$${CLOUDFLARE_API_TOKEN} cf_account_id=$${CLOUDFLARE_ACCOUNT_ID:-}"
+    fi
     cd /workspace/ansible
-    ansible-playbook "playbooks/$${PLAYBOOK}" -i inventory/hosts.yaml --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
+    ansible-playbook "playbooks/$${PLAYBOOK}" -i inventory/hosts.yaml $${CF_ARGS} --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
 
     echo "=== Done ==="
 

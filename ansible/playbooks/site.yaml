@@ -16,3 +16,11 @@
     - role: kiosk
       tags: [kiosk]
       when: "'kiosk' in group_names"
+
+- name: Deploy Cloudflare workers (uptime monitor)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - role: cloudflare
+      tags: [cloudflare]
