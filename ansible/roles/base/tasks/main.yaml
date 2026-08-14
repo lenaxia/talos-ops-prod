@@ -1,6 +1,6 @@
 ---
 - name: Set timezone
-  ansible.builtin.timezone:
+  community.general.timezone:
     name: "{{ timezone }}"
 
 - name: Install base packages
