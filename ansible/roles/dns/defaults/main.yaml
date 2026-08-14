@@ -36,8 +36,11 @@ dns_rewrites:
 # NOTE: blocky customDNS automatically covers all subdomains of a mapped
 # domain (wildcards like *.domain are NOT supported here — the key is the
 # parent domain itself)
-dns_split_horizon:
-  - { domain: "thekao.cloud", answer: 192.168.5.12 }
+# REMOVED 2026-08-14: thekao.cloud -> 192.168.5.12 broke LLMSafeSpaces
+# workspace pods — the k8s egress NetworkPolicy blocks RFC1918, so pods
+# resolving thekaocloud's API to the LAN IP could not connect at all
+# (hanging sessions). Re-add only with a pod-compatible path.
+dns_split_horizon: []
 
 # Blocklists
 dns_blocklists:
