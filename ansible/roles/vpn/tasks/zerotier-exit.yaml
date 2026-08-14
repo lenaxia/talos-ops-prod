@@ -1,7 +1,11 @@
 ---
-# ZeroTier exit node — NAT ZT clients to LAN via eth0
+# ZeroTier exit node — NAT ZT clients to LAN via the LAN interface
 # Requires the ZeroTier controller to have a managed route:
 #   - 192.168.0.0/16 (or 0.0.0.0/0 for full exit) → via this node
+#
+# Note: the community.general.iptables module was removed upstream
+# (unmaintained), so rules are applied via iptables CLI with
+# check-then-add for idempotency.
 
 - name: Install iptables
   ansible.builtin.package:
@@ -16,33 +20,44 @@
     state: present
     reload: true
 
-- name: Allow forwarding from ZeroTier to LAN
-  community.general.iptables:
-    chain: FORWARD
-    in_interface: "{{ item }}"
-    out_interface: "{{ zerotier_lan_interface }}"
-    jump: ACCEPT
-    comment: "ZT exit: {{ item }} -> {{ zerotier_lan_interface }}"
-  loop: "{{ zerotier_advertised_routes }}"
-  when: vpn_allow_forwarding
+- name: Detect ZeroTier interface
+  ansible.builtin.shell:
+    cmd: "ip -o link show | awk -F': ' '$2 ~ /^zt/ {print $2}' | head -1"
+  register: zt_if_detect
+  changed_when: false
 
-- name: Allow forwarding from LAN to ZeroTier (return traffic)
-  community.general.iptables:
-    chain: FORWARD
-    in_interface: "{{ zerotier_lan_interface }}"
-    out_interface: "{{ item }}"
-    jump: ACCEPT
-    comment: "ZT exit return: {{ zerotier_lan_interface }} -> {{ item }}"
-  loop: "{{ zerotier_advertised_routes }}"
-  when: vpn_allow_forwarding
+- name: Set ZeroTier interface fact
+  ansible.builtin.set_fact:
+    zerotier_interface: "{{ zt_if_detect.stdout | trim }}"
+
+- name: Allow forwarding ZeroTier <-> LAN
+  ansible.builtin.shell:
+    cmd: |
+      if iptables -C FORWARD -i {{ item.a }} -o {{ item.b }} -j ACCEPT 2>/dev/null; then
+        echo ok
+      else
+        iptables -I FORWARD 1 -i {{ item.a }} -o {{ item.b }} -j ACCEPT && echo changed
+      fi
+  loop:
+    - { a: "{{ zerotier_interface }}", b: "{{ zerotier_lan_interface }}" }
+    - { a: "{{ zerotier_lan_interface }}", b: "{{ zerotier_interface }}" }
+  loop_control:
+    label: "{{ item.a }} -> {{ item.b }}"
+  register: fwd_rules
+  changed_when: "'changed' in fwd_rules.stdout"
+  when:
+    - vpn_allow_forwarding
+    - zerotier_interface | length > 0
 
 - name: MASQUERADE ZeroTier traffic to LAN
-  community.general.iptables:
-    table: nat
-    chain: POSTROUTING
-    source: "{{ item }}"
-    out_interface: "{{ zerotier_lan_interface }}"
-    jump: MASQUERADE
-    comment: "ZT exit NAT: {{ item }} -> {{ zerotier_lan_interface }}"
+  ansible.builtin.shell:
+    cmd: |
+      if iptables -t nat -C POSTROUTING -s {{ item }} -o {{ zerotier_lan_interface }} -j MASQUERADE 2>/dev/null; then
+        echo ok
+      else
+        iptables -t nat -A POSTROUTING -s {{ item }} -o {{ zerotier_lan_interface }} -j MASQUERADE && echo changed
+      fi
   loop: "{{ zerotier_advertised_routes }}"
+  register: nat_rules
+  changed_when: "'changed' in nat_rules.stdout"
   when: vpn_enable_nat
