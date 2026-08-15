@@ -42,16 +42,15 @@ spec:
             image:
               repository: vllm/vllm-openai
               # renovate: depName=vllm/vllm-openai
-              # renovate: ignore
               tag:
-                v0.20.0-cu130-ubuntu2404@sha256:aff65d7198dd284c37dd0a18a606544cc5e92bfb0d5eb608b77e8b8f1c6b8b0d
+                v0.27.1-cu129-ubuntu2404@sha256:0e1ee52750c67718a596ba63176034aa18b439c4a69896ac5a0a8393919aa4df
             command: ["/bin/sh", "-c"]
             args:
               - |
                 vllm serve \
-                    QuantTrio/Qwen3.6-27B-AWQ \
+                    Qwen/Qwen3.8-27B-FP8 \
                     --served-model-name qwen3 \
-                    --dtype half \
+                    --dtype auto \
                     --max-model-len 262144 \
                     --gpu-memory-utilization 0.97 \
                     --tensor-parallel-size 1 \
@@ -64,7 +63,7 @@ spec:
                     --enable-auto-tool-choice \
                     --tool-call-parser qwen3_coder \
                     --reasoning-parser qwen3 \
-                    --speculative-config '{"method":"qwen3_next_mtp","num_speculative_tokens":3}' \
+                    --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
                     --default-chat-template-kwargs '{"enable_thinking":false}' \
                     --port 8000
             env:
