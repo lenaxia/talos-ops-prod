@@ -112,15 +112,14 @@ cameras:
           max_area: 100000
           threshold: 0.7
 
-  reolink_e1_pro:
-    ffmpeg:
-      inputs:
-        - path: rtsp://admin:{FRIGATE_REOLINK_E1_PRO_PASSWORRD}@192.168.0.72:554/h264Preview_01_sub
-          roles:
-            #- detect
-            - rtmp
-              #    detect:
-              #      width: 640
-              #      height: 352
-              #      fps: 7
-              #
+
+  # 2026-08-15 LAN scan: this camera DHCP-drifted from 192.168.0.72 to
+  # 192.168.0.245 (Reolink MAC ec:71:db:15:cb:17) and is hung — answers
+  # ping but no services. Physical power cycle required. Re-enable by
+  # uncommenting and pointing at .245 (or its new lease) when it's back.
+  # reolink_e1_pro:
+  #   ffmpeg:
+  #     inputs:
+  #       - path: rtsp://admin:{FRIGATE_REOLINK_E1_PRO_PASSWORRD}@192.168.0.245:554/h264Preview_01_sub
+  #         roles:
+  #           - detect
