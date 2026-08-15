@@ -78,6 +78,24 @@ spec:
               - secretRef:
                   name: *appname
             probes:
+              # Qwen3.8-27B-FP8 on the 4090 takes ~8.5 min to reach HTTP-ready
+              # (torch.compile + CUDA graph capture + MTP draft graphs). The old
+              # initialDelaySeconds: 600 on liveness/readiness raced the
+              # Deployment progressDeadlineSeconds: 600 — healthy-but-slow
+              # rollouts were declared Failed and roll-backed (flux flap, which
+              # also GC'd the pods before --previous logs could be captured).
+              # Startup probe owns the slow-boot window (up to 20 min); readiness
+              # and liveness are gated on startup success, so their delays drop.
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8000
+                  periodSeconds: 30
+                  failureThreshold: 40
+                  timeoutSeconds: 10
               liveness:
                 enabled: true
                 custom: true
@@ -85,7 +103,7 @@ spec:
                   httpGet:
                     path: /health
                     port: 8000
-                  initialDelaySeconds: 600
+                  initialDelaySeconds: 15
                   periodSeconds: 30
                   successThreshold: 1
                   failureThreshold: 5
@@ -97,7 +115,7 @@ spec:
                   httpGet:
                     path: /health
                     port: 8000
-                  initialDelaySeconds: 600
+                  initialDelaySeconds: 15
                   periodSeconds: 15
                   successThreshold: 1
                   failureThreshold: 5
