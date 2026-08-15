@@ -5,7 +5,7 @@
 # per-PR concurrency group.
 #
 # The `uses:` ref MUST be a hardcoded tag (no vars context — see ai-workflows
-# README Lessons Learned #1). The renovate[bot] skip must stay in the caller (#4).
+# README Lessons Learned #1). The automation-bot skip must stay in the caller (#4).
 name: PR Review
 
 on:
@@ -20,8 +20,14 @@ permissions:
 
 jobs:
   review:
-    # Skip renovate[bot] PRs — handled by renovate-analysis.yml
-    if: github.event.pull_request.user.login != 'renovate[bot]'
+    # Skip automation-bot PRs. renovate[bot] PRs are analyzed by
+    # renovate-analysis.yml. llm-provider[bot] PRs (AI-generated fixes, e.g.
+    # mechanic remediation) can't be processed by the opencode action: its
+    # assertPermissions() requires the PR author to be a repo collaborator
+    # with write — app bot accounts are never collaborators, so the run fails
+    # before the AI reviews. The ai-workflows reusable workflow skips its own
+    # shared bot list; add org-specific bots here.
+    if: ${{ !contains(fromJson('["renovate[bot]","llm-provider[bot]"]'), github.event.pull_request.user.login) }}
     uses: lenaxia/ai-workflows/.github/workflows/pr-review.yml@v0.2.9
     secrets: inherit
     with:
