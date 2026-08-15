@@ -70,6 +70,9 @@ spec:
                 memory: 2Gi
                 gpu.intel.com/i915: '1'
             probes:
+              # Full-config startup (OpenVINO model load, camera ffprobes,
+              # db vacuum) takes >60s on this hardware; the old 30s+10x3
+              # liveness budget killed nginx before it ever bound :5000.
               liveness: &probes
                 enabled: true
                 custom: true
@@ -77,13 +80,19 @@ spec:
                   httpGet:
                     path: /api/version
                     port: &port 5000
-                  initialDelaySeconds: 30
                   periodSeconds: 10
-                  timeoutSeconds: 1
-                  failureThreshold: 3
+                  timeoutSeconds: 3
+                  failureThreshold: 5
               readiness: *probes
               startup:
-                enabled: false
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/version
+                    port: *port
+                  periodSeconds: 5
+                  failureThreshold: 36
             securityContext:
               privileged: true
         statefulset:
