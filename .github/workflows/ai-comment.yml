@@ -54,5 +54,5 @@ jobs:
     uses: lenaxia/ai-workflows/.github/workflows/ai-comment.yml@v0.2.10
     secrets: inherit
     with:
-      version: v0.2.9
+      version: v0.2.10
       project_name: talos-ops-prod
