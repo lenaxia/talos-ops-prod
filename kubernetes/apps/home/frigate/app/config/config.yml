@@ -46,14 +46,16 @@ snapshots:
 
 record:
   enabled: True
-  retain:
+  continuous:
     days: 1
   alerts:
     retain:
       days: 30
+      mode: active_objects
   detections:
     retain:
       days: 30
+      mode: active_objects
 
 objects:
   track:
