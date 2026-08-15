@@ -25,14 +25,11 @@ auth:
   enabled: False
 
 detectors:
-  #  ov:
-  #    type: openvino
-  #    device: GPU
-  #    model:
-  #      path: /openvino-model/ssdlite_mobilenet_v2.xml
-  coral:
-    type: edgetpu
-    device: pci
+  # worker-03 (PCIe Coral) was removed as dead hardware 2026-07-06;
+  # switched to OpenVINO on the Intel iGPU (workers 00/01/02)
+  ov:
+    type: openvino
+    device: GPU
 
 ffmpeg:
   global_args: ["-hide_banner", "-loglevel", "warning"]
