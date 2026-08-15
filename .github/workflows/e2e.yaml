@@ -11,6 +11,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
+# Serial bottle downloads: parallel fetches race on the *.incomplete
+# cache files (observed: "No such file or directory @ dir_s_rmdir" on
+# talosctl while cloudflared failed in the same brew bundle run).
+# HOMEBREW_DOWNLOAD_CONCURRENCY=1 trades a few seconds of install time
+# for deterministic brew runs. Applies to every brew invocation below.
+env:
+  HOMEBREW_DOWNLOAD_CONCURRENCY: "1"
+
 jobs:
   archlinux:
     name: workstation (archlinux)
