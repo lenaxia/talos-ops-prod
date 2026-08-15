@@ -16,7 +16,7 @@ spec:
       activeDeadlineSeconds: 600
       containers:
         - name: ansible
-          image: python:3.12-slim
+          image: python:3.14-slim
           workingDir: /workspace
           command: ["/bin/bash", "/scripts/entrypoint.sh"]
           env:
