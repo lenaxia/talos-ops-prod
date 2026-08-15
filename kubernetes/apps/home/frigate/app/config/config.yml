@@ -25,13 +25,13 @@ auth:
   enabled: False
 
 detectors:
-  # worker-03 (PCIe Coral) was removed as dead hardware 2026-07-06;
-  # switched to OpenVINO on the Intel iGPU (workers 00/01/02)
-  ov:
-    type: openvino
-    device: GPU
-    model:
-      path: /openvino-model/ssdlite_mobilenet_v2.xml
+  # 2026-08-15: OpenVINO-on-iGPU attempt abandoned (0.17.2 plugin bugs:
+  # no model_path default, stat(None) crash). Coral detector restored;
+  # frigate scaled to 0 until the PCIe Coral is re-homed from dead
+  # worker-03 onto a live worker. Scale replicas back up on recovery.
+  coral:
+    type: edgetpu
+    device: pci
 
 ffmpeg:
   global_args: ["-hide_banner", "-loglevel", "warning"]
