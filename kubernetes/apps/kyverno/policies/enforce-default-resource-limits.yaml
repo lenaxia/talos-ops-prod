@@ -16,7 +16,6 @@ metadata:
       degradation. Excludes system namespaces where components manage their
       own resource reservations.
 spec:
-  mutateExistingOnPolicyUpdate: true
   rules:
     - name: add-default-cpu-limit-containers
       match:
