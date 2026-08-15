@@ -48,15 +48,12 @@ record:
   enabled: True
   retain:
     days: 1
-    mode: all
   alerts:
     retain:
       days: 30
-      mode: active_objects
   detections:
     retain:
       days: 30
-      mode: active_objects
 
 objects:
   track:
