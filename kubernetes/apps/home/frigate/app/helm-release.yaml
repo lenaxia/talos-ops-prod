@@ -34,6 +34,7 @@ spec:
   values:
     defaultPodOptions:
       nodeSelector:
+        google.feature.node.kubernetes.io/coral: 'true'
         intel.feature.node.kubernetes.io/gpu: 'true'
       affinity:
         podAntiAffinity:
@@ -47,6 +48,9 @@ spec:
     controllers:
       main:
         type: statefulset
+        # Scaled to 0 pending Coral recovery (worker-03 dead, OpenVINO
+        # fallback abandoned). Restore replicas on Coral re-home.
+        replicas: 0
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
@@ -159,3 +163,9 @@ spec:
         sizeLimit: 4Gi
         globalMounts:
           - path: /dev/shm
+      coral:
+        type: hostPath
+        hostPath: /dev/apex_0
+        hostPathType: CharDevice
+        globalMounts:
+          - path: /dev/apex_0
