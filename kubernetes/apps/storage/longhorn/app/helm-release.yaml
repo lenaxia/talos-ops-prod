@@ -63,7 +63,7 @@ spec:
       defaultDataPath: "/var/mnt/longhorn"
       storageMinimalAvailablePercentage: 15
       concurrentAutomaticEngineUpgradePerNodeLimit: 1
-      defaultEngineImage: docker.io/longhornio/longhorn-engine:v1.12.0
+      defaultEngineImage: docker.io/longhornio/longhorn-engine:v1.12.1
       systemManagedComponentsNodeSelector: "node-role.kubernetes.io/worker: true"
       # Allow detached volumes to rebuild replicas in the background.
       # Without this, volumes that detach during a node disruption stay
