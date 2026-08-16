@@ -30,7 +30,7 @@ spec:
         enabled: true
         type: deployment
         replicas: 1
-        strategy: RollingUpdate
+        strategy: Recreate
         containers:
           main:
             image:
