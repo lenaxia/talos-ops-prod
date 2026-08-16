@@ -30,6 +30,8 @@ spec:
       main:
         type: daemonset
         strategy: RollingUpdate
+        serviceAccount:
+          identifier: vector-agent
         containers:
           main:
             image:
@@ -109,5 +111,8 @@ spec:
         globalMounts:
           - path: /host/sys
     serviceAccount:
-      create: true
-      name: vector-agent
+      vector-agent:
+        forceRename: vector-agent
+    defaultPodOptions:
+      # vector's kubernetes_logs source reads pod metadata via the K8s API
+      automountServiceAccountToken: true
