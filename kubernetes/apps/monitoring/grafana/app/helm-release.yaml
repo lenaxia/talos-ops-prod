@@ -136,6 +136,10 @@ spec:
         deleteDatasources:
           - name: Loki
             orgId: 1
+          # recreate on uid change (provisioning cannot mutate an existing
+          # datasource's uid in place)
+          - name: VictoriaLogs
+            orgId: 1
         datasources:
           - name: Prometheus
             type: prometheus
