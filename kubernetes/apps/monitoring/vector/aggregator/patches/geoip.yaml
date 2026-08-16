@@ -23,6 +23,3 @@ spec:
             envFrom:
               - secretRef:
                   name: vector-aggregator-secret
-            volumeMounts:
-              - name: geoip
-                mountPath: /usr/share/GeoIP
