@@ -1,0 +1,121 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app victoria-metrics
+  namespace: monitoring
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: victoria-metrics-k8s-stack
+      version: 0.90.2
+      sourceRef:
+        kind: HelmRepository
+        name: victoria-metrics
+        namespace: flux-system
+      interval: 15m
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 6
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 6
+  uninstall:
+    keepHistory: false
+  values:
+    fullnameOverride: *app
+
+    # Operator converts existing ServiceMonitor/PodMonitor/PrometheusRule CRs
+    # into VM* equivalents (disable_prometheus_converter defaults to false),
+    # so vmagent reuses the scrape config already defined across the cluster.
+    victoria-metrics-operator:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      upgradeJob:
+        nodeSelector:
+          node-role.kubernetes.io/worker: "true"
+
+    # External Grafana is deployed separately; dashboard ConfigMaps created by
+    # the sync-job are labeled grafana_dashboard=1 and picked up by its sidecar.
+    grafana:
+      enabled: false
+
+    # Parallel-run with kube-prometheus-stack: alerting stays on the existing
+    # Prometheus + Alertmanager. Enable both at cutover to avoid duplicate
+    # notifications. Converted PrometheusRules sit dormant as VMRules until
+    # vmalert is enabled.
+    alertmanager:
+      enabled: false
+    vmalert:
+      enabled: false
+
+    external:
+      grafana:
+        host: grafana.${SECRET_DEV_DOMAIN}
+        datasource: VictoriaMetrics
+
+    vmagent:
+      enabled: true
+      spec:
+        nodeSelector:
+          node-role.kubernetes.io/worker: "true"
+        scrapeInterval: 30s
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+
+    vmsingle:
+      enabled: true
+      spec:
+        nodeSelector:
+          node-role.kubernetes.io/worker: "true"
+        retentionPeriod: 90d
+        resources:
+          requests:
+            cpu: 50m
+            memory: 256Mi
+        storage:
+          storageClassName: longhorn
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 100Gi
+
+    # VictoriaLogs single-node (LogsQL). Vector aggregator ships logs to it
+    # via the Elasticsearch bulk API on port 9428.
+    vlsingle:
+      enabled: true
+      spec:
+        nodeSelector:
+          node-role.kubernetes.io/worker: "true"
+        retentionPeriod: 30d
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        storage:
+          storageClassName: longhorn
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 50Gi
+
+    # Reuse kube-state-metrics and node-exporter already deployed by
+    # kube-prometheus-stack (their ServiceMonitors are converted by the
+    # operator). Re-enable both here when kube-prometheus-stack is removed.
+    kube-state-metrics:
+      enabled: false
+    prometheus-node-exporter:
+      enabled: false
+
+    syncJob:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"

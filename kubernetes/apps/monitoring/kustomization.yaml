@@ -7,5 +7,6 @@ resources:
   - ./prometheus-stack/ks.yaml
   - ./pvc-reaper/ks.yaml
   - ./grafana/ks.yaml
+  - ./victoria-metrics/ks.yaml
   #- ./loki/ks.yaml
-  #- ./vector/ks.yaml
+  - ./vector/ks.yaml

@@ -12,6 +12,7 @@ resources:
   - ./prometheus-community.yaml
   - ./spegel.yaml
   - ./stakater.yaml
+  - ./victoria-metrics.yaml
 
   ## My Charts
   - angelnu.yaml
