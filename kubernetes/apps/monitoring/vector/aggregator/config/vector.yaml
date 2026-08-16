@@ -4,10 +4,12 @@ api:
   enabled: true
   address: 0.0.0.0:8686
 
-enrichment_tables:
-  geoip_table:
-    type: geoip
-    path: /usr/share/GeoIP/GeoLite2-City.mmdb
+# GeoIP enrichment disabled — MaxMind creds invalid (401). See
+# aggregator kustomization.yaml for re-enable notes.
+#enrichment_tables:
+#  geoip_table:
+#    type: geoip
+#    path: /usr/share/GeoIP/GeoLite2-City.mmdb
 
 sources:
   journald_source:

@@ -6,11 +6,16 @@ namespace: monitoring
 resources:
   - ./helm-release.yaml
   - ./secret.sops.yaml
-patches:
-  - path: ./patches/geoip.yaml
-    target:
-      kind: HelmRelease
-      name: vector-aggregator
+# GeoIP enrichment is disabled: MaxMind credentials in vector-aggregator-secret
+# currently return 401 (AUTHORIZATION_INVALID) and geoipupdate v8 crash-loops.
+# The enrichment table is unused by the VictoriaLogs pipeline (opnsense route
+# commented out). Re-enable both the patch and the enrichment_tables block in
+# config/vector.yaml after rotating the MaxMind license key.
+#patches:
+#  - path: ./patches/geoip.yaml
+#    target:
+#      kind: HelmRelease
+#      name: vector-aggregator
 configMapGenerator:
   - name: vector-aggregator-configmap
     files:
