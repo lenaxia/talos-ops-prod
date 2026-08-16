@@ -142,10 +142,18 @@ spec:
             access: proxy
             url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/
             isDefault: true
-          - name: Loki
-            type: loki
+          # uid must match the sync-job dashboards' datasourceUID from the
+          # victoria-metrics-k8s-stack chart (defaultDatasources.victoriametrics)
+          - name: VictoriaMetrics
+            type: prometheus
             access: proxy
-            url: http://loki-read:3100
+            uid: VictoriaMetrics
+            url: http://vmsingle-victoria-metrics.monitoring.svc.cluster.local:8428
+            isDefault: false
+          - name: VictoriaLogs
+            type: victoriametrics-logs-datasource
+            access: proxy
+            url: http://vlsingle-victoria-metrics.monitoring.svc.cluster.local:9428
     dashboards:
       default:
 #        # Ref: https://grafana.com/grafana/dashboards/7845
@@ -196,6 +204,7 @@ spec:
       - grafana-worldmap-panel
       - grafana-clock-panel
       - marcusolsson-hourly-heatmap-panel
+      - victoriametrics-logs-datasource
     serviceMonitor:
       enabled: true
     persistence:

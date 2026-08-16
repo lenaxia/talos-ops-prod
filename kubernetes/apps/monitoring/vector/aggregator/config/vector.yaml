@@ -31,6 +31,10 @@ transforms:
     source: |
       # Standardize 'app' index
       .custom_app_name = .pod_labels."app.kubernetes.io/name" || .pod_labels.app || .pod_labels."k8s-app" || "unknown"
+      # Flat fields for VictoriaLogs stream fields / LogsQL filters
+      .app = .custom_app_name
+      .namespace = .kubernetes.pod_namespace
+      .node = .kubernetes.pod_node_name
 
 #  opnsense_remap:
 #    type: remap
@@ -75,44 +79,37 @@ transforms:
 #        })
 
 sinks:
+  # VictoriaLogs accepts the Elasticsearch bulk API at /insert/elasticsearch/
+  # https://docs.victoriametrics.com/victorialogs/data-ingestion/vector/
   journald:
-    type: loki
-    batch:
-      max_bytes: 2049000
-    encoding:
-      codec: json
-    endpoint: http://loki-gateway.monitoring.svc.cluster.local:80
+    type: elasticsearch
     inputs:
       - journald_source
-    labels:
-      hostname: '{{ host }}'
-    out_of_order_action: accept
-    remove_label_fields: true
-    remove_timestamp: true
-    # Vector 0.57.0 enforces template confinement on {{ }} sink templates
-    # and rejects label templates with no literal prefix at startup. These are
-    # low-cardinality, operator-controlled Loki labels (host/custom_app_name/
-    # namespace/node), so opt out to preserve pre-0.57 label values verbatim.
-    # Prefixing the values (e.g. 'host-{{ host }}') would corrupt label values
-    # and break existing Grafana queries/dashboards/alerts.
-    dangerously_allow_unconfined_template_resolution: true
+    endpoints:
+      - http://vlsingle-victoria-metrics.monitoring.svc.cluster.local:9428/insert/elasticsearch/
+    api_version: v8
+    compression: gzip
+    healthcheck:
+      enabled: false
+    query:
+      _msg_field: message
+      _time_field: timestamp
+      _stream_fields: host,unit
   kubernetes:
-    type: loki
-    batch:
-      max_bytes: 2049000
-    encoding:
-      codec: json
-    endpoint: http://loki-gateway.monitoring.svc.cluster.local:80
+    type: elasticsearch
     inputs:
       - kubernetes_remap
-    labels:
-      app: '{{ custom_app_name }}'
-      namespace: '{{ kubernetes.pod_namespace }}'
-      node: '{{ kubernetes.pod_node_name }}'
-    out_of_order_action: accept
-    remove_label_fields: true
-    remove_timestamp: true
-    dangerously_allow_unconfined_template_resolution: true
+    endpoints:
+      - http://vlsingle-victoria-metrics.monitoring.svc.cluster.local:9428/insert/elasticsearch/
+    api_version: v8
+    compression: gzip
+    healthcheck:
+      enabled: false
+    query:
+      _msg_field: message
+      _time_field: timestamp
+      _stream_fields: app,namespace,node
+      ignore_fields: custom_app_name,source_type,file
 #  opnsense:
 #    type: loki
 #    batch:
