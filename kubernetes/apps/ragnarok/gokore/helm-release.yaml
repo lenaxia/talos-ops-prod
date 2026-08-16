@@ -33,7 +33,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/gokore
-              tag: v1.2.0
+              tag: v1.3.0
               pullPolicy: IfNotPresent
             args:
               - -config-dir
