@@ -153,6 +153,7 @@ spec:
           - name: VictoriaLogs
             type: victoriametrics-logs-datasource
             access: proxy
+            uid: VictoriaLogs
             url: http://vlsingle-victoria-metrics.monitoring.svc.cluster.local:9428
     dashboards:
       default:
