@@ -84,7 +84,10 @@ data:
       navigation:
         stuck_escape_item_id: 602
         enable_npc_warp: true
-        lock_map: ""
+        lock_map: "izlude"
+        lock_map_x: 128
+        lock_map_y: 146
+        lock_radius: 50
 
     cognitive:
       enabled: true
