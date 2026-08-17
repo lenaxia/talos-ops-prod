@@ -114,6 +114,21 @@ spec:
       # Same semver-tag policy as api.image.tag above.
       image:
         tag: "0.15.11"
+      # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
+      # Deliver workspace-agentd to workspace pods via a digest-pinned
+      # read-only image volume instead of the binary baked into
+      # runtimes/base. The per-arch binary sha256s resolve at controller
+      # startup from the image index annotations (stamped by CI's
+      # merge-agentd job) — do NOT set binarySHA256*.
+      # Digest source: CI run 32069764691 (main @ 94dd9acd, 2026-08-17),
+      # "Merge Agentd Manifest" → "Print Helm values block" step. Index
+      # annotations verified present:
+      #   dev.llmsafespaces/agentd.sha256-amd64=d6827fd01344…e0716
+      #   dev.llmsafespaces/agentd.sha256-arm64=3732fcf1d3a5…44296
+      # Rollback = delete this block (controller returns to legacy
+      # baked-in mode); existing pods are unaffected (immutable specs).
+      agentdDelivery:
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:35a1a5bb85a5f4f6a8491f89307e02ce00112165fd5d5d6beb6002b803986ce1
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
