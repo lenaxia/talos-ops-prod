@@ -104,6 +104,9 @@ spec:
         api_url: https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/userinfo
         login_attribute_path: preferred_username
         groups_attribute_path: groups
+        # All Authelia SSO logins are the homelab owner — grant org Admin so
+        # Explore/datasource editing works (Viewers get no Explore nav at all).
+        role_attribute_path: "'Admin'"
         name_attribute_path: name
         use_pkce: true
         auth_style: InHeader
