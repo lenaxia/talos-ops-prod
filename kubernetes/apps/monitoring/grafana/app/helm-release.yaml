@@ -161,44 +161,6 @@ spec:
             url: http://vlsingle-victoria-metrics.monitoring.svc.cluster.local:9428
     dashboards:
       default:
-        gokore-logs:
-          json: |-
-            {
-              "annotations": { "list": [] },
-              "editable": true,
-              "refresh": "30s",
-              "schemaVersion": 41,
-              "tags": ["logs", "ragnarok"],
-              "time": { "from": "now-1h", "to": "now" },
-              "title": "Gokore Logs",
-              "uid": "gokore-logs",
-              "panels": [
-                {
-                  "datasource": { "type": "victoriametrics-logs-datasource", "uid": "VictoriaLogs" },
-                  "gridPos": { "h": 24, "w": 24, "x": 0, "y": 0 },
-                  "id": 1,
-                  "options": {
-                    "dedupStrategy": "none",
-                    "enableLogDetails": true,
-                    "prettifyLogMessage": false,
-                    "showCommonLabels": false,
-                    "showLabels": false,
-                    "showTime": true,
-                    "sortOrder": "Descending",
-                    "wrapLogMessage": true
-                  },
-                  "targets": [
-                    {
-                      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "VictoriaLogs" },
-                      "expr": "{app=\"gokore\"}",
-                      "refId": "A"
-                    }
-                  ],
-                  "title": "gokore",
-                  "type": "logs"
-                }
-              ]
-            }
 #        # Ref: https://grafana.com/grafana/dashboards/7845
 #        zfs:
 #          gnetId: 7845
