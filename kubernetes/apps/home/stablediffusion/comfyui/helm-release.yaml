@@ -57,7 +57,11 @@ spec:
               requests:
                 nvidia.com/gpu: 1
                 cpu: 2000m
-                memory: 4Gi
+                # Request sized for scheduling only: worker-04 (the only NVIDIA
+                # node) runs ~95% memory-requested, leaving ~2.7Gi free. Models
+                # live in VRAM (3090, 24Gi); host working set is well under 2Gi.
+                # Limit stays 4Gi as the OOM guard.
+                memory: 2Gi
               limits:
                 memory: 4Gi
                 nvidia.com/gpu: 1
