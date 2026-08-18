@@ -128,10 +128,7 @@ spec:
       # Rollback = delete this block (controller returns to legacy
       # baked-in mode); existing pods are unaffected (immutable specs).
       agentdDelivery:
-        # LEG2 TAMPER (#863 validation): dev-image digest + current-release binary hashes → entrypoint verify must exit 81
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:3d528d7dc7e2936b914a8a56f56962702d5adcbd11ec85ee4386bd8d74550d6a
-        binarySHA256Amd64: "d6827fd013442febb3e8280e6738e94b356f8627ff8e678762519e43026e0716"
-        binarySHA256Arm64: "3732fcf1d3a5814d3767465a18557391f41beac2b08c47f964f92a3c48144296"
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:35a1a5bb85a5f4f6a8491f89307e02ce00112165fd5d5d6beb6002b803986ce1
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
