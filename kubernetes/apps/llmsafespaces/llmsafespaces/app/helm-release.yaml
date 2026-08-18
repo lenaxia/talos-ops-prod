@@ -128,7 +128,7 @@ spec:
       # Rollback = delete this block (controller returns to legacy
       # baked-in mode); existing pods are unaffected (immutable specs).
       agentdDelivery:
-        image: ""
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:35a1a5bb85a5f4f6a8491f89307e02ce00112165fd5d5d6beb6002b803986ce1
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
