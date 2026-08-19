@@ -68,7 +68,7 @@ spec:
               # Auth handled by Authelia forwardAuth (chain-authelia on ingress);
               # Traefik forwards Remote-User/Remote-Email headers from Authelia.
               # Users are auto-provisioned on first authenticated request.
-              AUTHENTICATION_GUARD: remote_user_header
+              AUTHENTICATION_GUARD: remote_user_guard
               AUTHENTICATION_GUARD_HEADER: REMOTE_USER
               AUTHENTICATION_GUARD_EMAIL: REMOTE-EMAIL
               DB_CONNECTION: pgsql
