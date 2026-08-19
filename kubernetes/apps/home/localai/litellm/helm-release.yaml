@@ -264,6 +264,14 @@ spec:
               retry_policy:
                 RateLimitErrorRetries: 0
                 AuthenticationErrorRetries: 0
+              # Cooldown any deployment for 5 min on its FIRST 429.
+              # NOTE: per-deployment allowed_fails_policy under model_info
+              # was NOT honored in v1.83.14 (verified via live mock-429 test
+              # 2026-08-19: second call still went upstream); router-level
+              # policy is the documented shape and is verified working.
+              allowed_fails_policy:
+                RateLimitErrorAllowedFails: 0
+              cooldown_time: 300
 
             general_settings:
               master_key: os.environ/LITELLM_MASTER_KEY  # Use environment variable for security
