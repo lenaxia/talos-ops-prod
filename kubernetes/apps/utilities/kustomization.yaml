@@ -19,4 +19,5 @@ resources:
   - ./forgejo/ks.yaml
   - ./it-tools/ks.yaml
   - ./wealthfolio/ks.yaml
+  - ./firefly-iii/ks.yaml
     #- ./k8sgpt/ks.yaml
