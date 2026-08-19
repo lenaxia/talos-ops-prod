@@ -1,0 +1,123 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app firefly-importer
+  namespace: &namespace utilities
+spec:
+  releaseName: *app
+  chart:
+    spec:
+      chart: app-template
+      version: 5.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+      interval: 10m
+  interval: 6m
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+      securityContext:
+        # Alpine-based image; www-data is uid/gid 82 in Alpine. fsGroup only sets
+        # the volume's group ownership (chown + setgid) so PHP-FPM (www-data) can
+        # write to the storage PVC. We do NOT override runAsUser — nginx needs root.
+        fsGroup: 82
+        fsGroupChangePolicy: OnRootMismatch
+
+    controllers:
+      main:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              repository: fireflyiii/data-importer
+              tag: version-2.3.4
+            env:
+              TZ: ${TIMEZONE}
+              APP_ENV: production
+              # Internal DNS so importer->Firefly API calls bypass Authelia.
+              FIREFLY_III_URL: http://firefly-iii.utilities.svc.cluster.local:8080
+              # Public URL used for "back to Firefly III" links.
+              VANITY_URL: https://firefly.${SECRET_DEV_DOMAIN}
+              TRUSTED_PROXIES: '**'
+              EXPECT_SECURE_URL: 'true'
+              FIREFLY_III_ACCESS_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: *app
+                    key: FIREFLY_III_ACCESS_TOKEN
+              SIMPLEFIN_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: *app
+                    key: SIMPLEFIN_TOKEN
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+            probes:
+              liveness:
+                enabled: false
+              readiness:
+                enabled: false
+              startup:
+                enabled: false
+
+    service:
+      main:
+        primary: true
+        ports:
+          http:
+            port: 8080
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/icon: import
+          hajimari.io/group: Utilities
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares:
+            networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri firefly-importer.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
+
+    persistence:
+      storage:
+        enabled: true
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 2Gi
+        storageClass: longhorn
+        retain: true
+        globalMounts:
+          - path: /var/www/html/storage
