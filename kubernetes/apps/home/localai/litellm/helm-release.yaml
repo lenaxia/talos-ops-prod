@@ -264,13 +264,12 @@ spec:
               retry_policy:
                 RateLimitErrorRetries: 0
                 AuthenticationErrorRetries: 0
-              # Cooldown any deployment for 5 min on its FIRST 429.
-              # NOTE: per-deployment allowed_fails_policy under model_info
-              # was NOT honored in v1.83.14 (verified via live mock-429 test
-              # 2026-08-19: second call still went upstream); router-level
-              # policy is the documented shape and is verified working.
-              allowed_fails_policy:
-                RateLimitErrorAllowedFails: 0
+              # Cooldown any deployment for 5 min after its 2nd 429 within
+              # the fail-cache window. NOTE: RateLimitErrorAllowedFails: 0 is
+              # silently ignored (litellm does `policy_value or allowed_fails`
+              # and 0 is falsy -> falls back to default 3), so allowed_fails: 1
+              # is the tightest achievable: cooldown on 2nd failure.
+              allowed_fails: 1
               cooldown_time: 300
 
             general_settings:
