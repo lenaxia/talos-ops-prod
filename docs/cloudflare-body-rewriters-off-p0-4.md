@@ -35,12 +35,23 @@ Zone-level settings, **off for the whole zone**. There is no per-hostname
 exception for these features; if RUM is wanted elsewhere, use the manual
 Web Analytics snippet on chosen pages instead of automatic injection.
 
-| Feature | Dashboard path (names current as of 2026-08; CF reorganizes often) | API (zone_settings) |
+| Feature | Where it actually is (2026-08-20: dashboard paths UNVERIFIED — Cloudflare has reorganized; menu names below are historical and reported missing on the current UI. Use the API discovery below as the source of truth.) | API (zone_settings) |
 |---|---|---|
-| Web Analytics automatic beacon | Analytics & Logs → Web Analytics → automatic site ingestion / "inject the beacon" | discover via `GET zones/:id/zone_settings` (see below) |
-| Rocket Loader | Speed → Optimization → Content Optimization → Rocket Loader | `rocket_loader` = `off` |
-| Email Address Obfuscation | Scrape Shield → Email Address Obfuscation | `email_obfuscation` = `off` |
-| Auto Minify (JS/CSS/HTML) | Speed → Optimization | **removed by Cloudflare Aug 2024** — verify absent; no action if gone |
+| Web Analytics automatic beacon | **Likely ACCOUNT scope, not zone**: dash.cloudflare.com → account → Web Analytics → sites list → automatic instrumentation. (Zone-level search finds nothing — field-confirmed 2026-08-20.) | discover via `GET zones/:id/zone_settings` (see below) |
+| Rocket Loader | Dashboard control reported missing (deprecated by CF) — verify via API whether the setting still exists | `rocket_loader` (may be absent = retired) |
+| Email Address Obfuscation | Zone → Scrape Shield (search "Scrape Shield") | `email_obfuscation` = `off` |
+| Auto Minify (JS/CSS/HTML) | **removed by Cloudflare Aug 2024** — verify absent via API | `minify` (may be absent = retired) |
+
+**IMPORTANT (2026-08-20 correction):** the original version of this runbook
+asserted dashboard paths were "current as of 2026-08" — that currency claim
+was wrong (written from pre-2026 knowledge; Cloudflare removed/deprecated
+several of these features and moved Web Analytics to account scope). The
+canonical procedure is the API: enumerate `zone_settings`, act on what
+actually exists, and verify by byte-diff (§ Verification) — which is
+independent of which toggle did the injecting. Also: first confirm the
+beacon still injects at all (browser view-source on any dev-preview HTML
+page, search `beacon`) — if Cloudflare retired the feature, this runbook
+reduces to recording the fact and re-verifying before Phase 2.
 
 **Honest note on the beacon toggle:** the RUM beacon's exact zone-settings
 key has moved across Cloudflare API revisions (Browser Insights →
@@ -97,9 +108,61 @@ Also verify Rocket Loader / obfuscation did not leave rewrites on non-HTML
 Re-enable the zone settings; re-run verification. No cluster state is
 touched by this change.
 
-## Status tracking
+## Status tracking — CLOSED 2026-08-20
 
-- [ ] Beacon (Web Analytics automatic) off — verified by grep=0
-- [ ] Rocket Loader off — verified (HTML diff still byte-identical)
-- [ ] Email obfuscation off — verified
-- [ ] A4 byte-identity PASS recorded in epic-66 redesign thread
+- [x] Beacon: retired zone-wide by Cloudflare (no WA ruleset/setting; 0 refs
+      in live HTML) — moot, recorded
+- [x] Rocket Loader / Minify ×3 / APO / Polish / Mirage: already off (enumeration)
+- [x] Email obfuscation off — PATCHed 2026-08-20, authoritative re-read `off`
+- [x] Server-side excludes off — PATCHed 2026-08-20, authoritative re-read `off`
+- [x] WebSockets: on (required) — untouched
+- [x] A4 byte-identity PASS — browser verification (mobile-friendly page:
+      `…/dev-preview/5173/verify-rewriters.html`): all three rewriter markers
+      literal (email, no email-protection, sse markers) AND SHA-256 of the
+      tunneled bytes == pod original (`310bf39f…d520e`). Dev-preview HTML is
+      byte-identical from pod to browser.
+
+**Epic-66 Phase 0 is fully closed**: P0-1/P0-2 shipped in v0.16.0 (deployed
+2026-08-20T04:21Z, live-accepted A1 no-store + A2 WS echo RTT 31ms),
+P0-3 dispositioned (docs merged), P0-4 closed above. The T8 sequencing
+prerequisite for Phase 2 (CSP relaxation) is satisfied.
+
+## Field enumeration results (2026-08-20, read-only API token)
+
+Zone `safespaces.dev` (527902a0…), queried via `/zones/:id/settings/{id}`
+(the collection endpoint no longer routes; settings are per-endpoint):
+
+| Setting | Found value |
+|---|---|
+| rocket_loader | off |
+| minify (css/html/js) | all off |
+| automatic_platform_optimization | off |
+| polish / mirage | off / off |
+| websockets | **on** (required — keep) |
+| email_obfuscation | **on — remaining action** |
+| server_side_excludes | **on — remaining action** |
+| browser_insights / web_analytics | **"Undefined zone setting"** — does not exist |
+
+Rulesets on the zone: only sanitize / firewall-managed / ddos_l7 — **no
+web_analytics injection ruleset**. Live HTML on apex/www/chat contains
+zero beacon references. **Conclusion: the automatic beacon injection
+observed 2026-08-19 no longer exists on this zone** (Cloudflare retired or
+relocated the feature); P0-4's beacon leg is moot. Remaining work is the
+two body rewriters above (`email_obfuscation`, `server_side_excludes`)
+for dev-preview byte-accuracy.
+
+Off-switch (needs a token with Zone Settings Edit; the enumeration token
+is read-only):
+
+```bash
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"value":"off"}' \
+  "https://api.cloudflare.com/client/v4/zones/527902a031ba7d8ab430dd2bd8c71ccb/settings/email_obfuscation"
+# repeat with .../settings/server_side_excludes
+```
+
+Byte-accuracy probe: `…/dev-preview/5173/rewriter-probe.html` (pod-local
+md5 36e748b957fdd15101f5ae24880104c0) — contains a literal email and an
+<!--sse--> block; view-source through the tunnel must match the pod bytes
+exactly.
