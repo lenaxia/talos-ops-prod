@@ -1,0 +1,52 @@
+---
+# Epic 66 Phase 1 (llmsafespaces redesign-2026-08-19): per-workspace dev
+# preview origins. Routes <uuid>-preview.safespaces.dev to the API service,
+# which serves preview traffic through its dedicated pipeline (owner
+# bootstrap → one-time token → __Host-pv cookie) and NEVER serves /api/*.
+#
+# DNS: the zone already carries a grey-cloud (DNS-only) wildcard
+#   *.safespaces.dev → 76.135.100.247
+# so preview hostnames resolve directly to the cluster — traffic does NOT
+# traverse Cloudflare (byte-exact by construction; no CF cache/rewriters
+# in the path; direct WSS for HMR). TLS therefore terminates here and
+# needs a publicly-valid cert: certificate-preview-origins.yaml issues
+# *.safespaces.dev via the existing letsencrypt-production DNS-01 solver.
+#
+# Middleware choices (deliberate):
+#   - NO llmsafespaces-api-cors: that Allow-Origin policy is for the API
+#     origin; preview hosts must not receive it (T5 — the preview origin
+#     is a different trust domain).
+#   - NO chain-no-auth / secure-headers: the shared secure-headers sets
+#     accessControl* headers, which makes Traefik short-circuit OPTIONS
+#     preflights with no Allow-Origin (see middleware-cors.yaml header
+#     comment). Attaching it would break any cross-origin use of preview
+#     hosts (e.g. dashboard embedding later). The API's own security
+#     middleware sets the protective headers instead.
+#   - middlewares-rate-limit only: preview hosts are a public surface.
+#
+# The match is intentionally broad (any label before -preview): the API
+# validates the UUID shape and answers 421 for malformed hosts itself —
+# cluster edge and API agree on semantics.
+#
+# Inert until enabled: until the API's previewOrigin config ships and is
+# enabled (llmsafespaces ≥0.17.0 + secret), the API 404s preview-host
+# requests (no middleware registered). Fail-closed.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: llmsafespaces-preview-origins
+  namespace: llmsafespaces
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: HostRegexp(`^[a-z0-9-]+-preview\.safespaces\.dev$`)
+      kind: Rule
+      middlewares:
+        - name: middlewares-rate-limit
+          namespace: networking
+      services:
+        - name: llmsafespaces-api
+          port: 8080
+  tls:
+    secretName: wildcard-safespaces-dev
