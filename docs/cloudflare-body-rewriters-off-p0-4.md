@@ -108,12 +108,24 @@ Also verify Rocket Loader / obfuscation did not leave rewrites on non-HTML
 Re-enable the zone settings; re-run verification. No cluster state is
 touched by this change.
 
-## Status tracking
+## Status tracking — CLOSED 2026-08-20
 
-- [ ] Beacon (Web Analytics automatic) off — verified by grep=0
-- [ ] Rocket Loader off — verified (HTML diff still byte-identical)
-- [ ] Email obfuscation off — verified
-- [ ] A4 byte-identity PASS recorded in epic-66 redesign thread
+- [x] Beacon: retired zone-wide by Cloudflare (no WA ruleset/setting; 0 refs
+      in live HTML) — moot, recorded
+- [x] Rocket Loader / Minify ×3 / APO / Polish / Mirage: already off (enumeration)
+- [x] Email obfuscation off — PATCHed 2026-08-20, authoritative re-read `off`
+- [x] Server-side excludes off — PATCHed 2026-08-20, authoritative re-read `off`
+- [x] WebSockets: on (required) — untouched
+- [x] A4 byte-identity PASS — browser verification (mobile-friendly page:
+      `…/dev-preview/5173/verify-rewriters.html`): all three rewriter markers
+      literal (email, no email-protection, sse markers) AND SHA-256 of the
+      tunneled bytes == pod original (`310bf39f…d520e`). Dev-preview HTML is
+      byte-identical from pod to browser.
+
+**Epic-66 Phase 0 is fully closed**: P0-1/P0-2 shipped in v0.16.0 (deployed
+2026-08-20T04:21Z, live-accepted A1 no-store + A2 WS echo RTT 31ms),
+P0-3 dispositioned (docs merged), P0-4 closed above. The T8 sequencing
+prerequisite for Phase 2 (CSP relaxation) is satisfied.
 
 ## Field enumeration results (2026-08-20, read-only API token)
 
