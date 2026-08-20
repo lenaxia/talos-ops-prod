@@ -22,7 +22,12 @@
 #     comment). Attaching it would break any cross-origin use of preview
 #     hosts (e.g. dashboard embedding later). The API's own security
 #     middleware sets the protective headers instead.
-#   - middlewares-rate-limit only: preview hosts are a public surface.
+#   - llmsafespaces-preview-rate-limit (LOCAL middleware, defined in
+#     middleware-preview-ratelimit.yaml): preview hosts are a public
+#     surface, but Traefik runs WITHOUT allowCrossNamespace — referencing
+#     networking/middlewares-rate-limit from this namespace made the
+#     router error out and not match at all (root cause of the post-#2301
+#     404s). Local copy instead.
 #
 # The match is intentionally broad (any label before -preview): the API
 # validates the UUID shape and answers 421 for malformed hosts itself —
@@ -40,11 +45,10 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: HostRegexp(`^[a-z0-9-]+-preview\.safespaces\.dev$`)
+    - match: HostRegexp(`{host:[a-z0-9-]+-preview\.safespaces\.dev}`)
       kind: Rule
       middlewares:
-        - name: middlewares-rate-limit
-          namespace: networking
+        - name: llmsafespaces-preview-rate-limit
       services:
         - name: llmsafespaces-api
           port: 8080
