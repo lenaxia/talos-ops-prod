@@ -29,10 +29,10 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
       securityContext:
-        # Alpine-based image; www-data is uid/gid 82 in Alpine. fsGroup only sets
-        # the volume's group ownership (chown + setgid) so PHP-FPM (www-data) can
-        # write to the storage PVC. We do NOT override runAsUser — nginx needs root.
-        fsGroup: 82
+        # The data-importer image (serversideup php) runs all processes as
+        # www-data uid/gid 33 (NOT Alpine's 82). fsGroup 33 makes the PVC
+        # group-writable by the app user.
+        fsGroup: 33
         fsGroupChangePolicy: OnRootMismatch
 
     controllers:
@@ -44,7 +44,7 @@ spec:
         initContainers:
           # The image entrypoint creates some storage subdirs root-owned and skips
           # `uploads` entirely, which fails the app's is_writable() bootstrap check.
-          # Ensure the full tree exists and is owned by www-data (82) on the PVC.
+          # Ensure the full tree exists and is owned by the app user (www-data, uid 33).
           fix-storage-perms:
             image:
               repository: busybox
@@ -57,7 +57,7 @@ spec:
                 mkdir -p uploads configurations export app logs \
                   database debugbar build framework/cache framework/sessions \
                   framework/views framework/testing
-                chown -R 82:82 /var/www/html/storage
+                chown -R 33:33 /var/www/html/storage
         containers:
           main:
             image:
