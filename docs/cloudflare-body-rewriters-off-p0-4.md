@@ -35,12 +35,23 @@ Zone-level settings, **off for the whole zone**. There is no per-hostname
 exception for these features; if RUM is wanted elsewhere, use the manual
 Web Analytics snippet on chosen pages instead of automatic injection.
 
-| Feature | Dashboard path (names current as of 2026-08; CF reorganizes often) | API (zone_settings) |
+| Feature | Where it actually is (2026-08-20: dashboard paths UNVERIFIED — Cloudflare has reorganized; menu names below are historical and reported missing on the current UI. Use the API discovery below as the source of truth.) | API (zone_settings) |
 |---|---|---|
-| Web Analytics automatic beacon | Analytics & Logs → Web Analytics → automatic site ingestion / "inject the beacon" | discover via `GET zones/:id/zone_settings` (see below) |
-| Rocket Loader | Speed → Optimization → Content Optimization → Rocket Loader | `rocket_loader` = `off` |
-| Email Address Obfuscation | Scrape Shield → Email Address Obfuscation | `email_obfuscation` = `off` |
-| Auto Minify (JS/CSS/HTML) | Speed → Optimization | **removed by Cloudflare Aug 2024** — verify absent; no action if gone |
+| Web Analytics automatic beacon | **Likely ACCOUNT scope, not zone**: dash.cloudflare.com → account → Web Analytics → sites list → automatic instrumentation. (Zone-level search finds nothing — field-confirmed 2026-08-20.) | discover via `GET zones/:id/zone_settings` (see below) |
+| Rocket Loader | Dashboard control reported missing (deprecated by CF) — verify via API whether the setting still exists | `rocket_loader` (may be absent = retired) |
+| Email Address Obfuscation | Zone → Scrape Shield (search "Scrape Shield") | `email_obfuscation` = `off` |
+| Auto Minify (JS/CSS/HTML) | **removed by Cloudflare Aug 2024** — verify absent via API | `minify` (may be absent = retired) |
+
+**IMPORTANT (2026-08-20 correction):** the original version of this runbook
+asserted dashboard paths were "current as of 2026-08" — that currency claim
+was wrong (written from pre-2026 knowledge; Cloudflare removed/deprecated
+several of these features and moved Web Analytics to account scope). The
+canonical procedure is the API: enumerate `zone_settings`, act on what
+actually exists, and verify by byte-diff (§ Verification) — which is
+independent of which toggle did the injecting. Also: first confirm the
+beacon still injects at all (browser view-source on any dev-preview HTML
+page, search `beacon`) — if Cloudflare retired the feature, this runbook
+reduces to recording the fact and re-verifying before Phase 2.
 
 **Honest note on the beacon toggle:** the RUM beacon's exact zone-settings
 key has moved across Cloudflare API revisions (Browser Insights →
