@@ -9,5 +9,7 @@ resources:
   - helm-release.yaml
   - ingress-frontend.yaml
   - ingress-api.yaml
+  - ingress-preview-origins.yaml
+  - certificate-preview-origins.yaml
   - middleware-cors.yaml
   - secret.sops.yaml

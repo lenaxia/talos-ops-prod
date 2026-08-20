@@ -1,0 +1,18 @@
+---
+# Wildcard certificate for the grey-cloud *.safespaces.dev DNS record
+# (epic-66 preview origins): preview traffic bypasses Cloudflare, so
+# Traefik terminates TLS publicly. *.safespaces.dev covers every
+# <uuid>-preview.safespaces.dev host. DNS-01 via the existing
+# letsencrypt-production solver, which already handles this zone.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-safespaces-dev
+  namespace: llmsafespaces
+spec:
+  secretName: wildcard-safespaces-dev
+  dnsNames:
+    - "*.safespaces.dev"
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
