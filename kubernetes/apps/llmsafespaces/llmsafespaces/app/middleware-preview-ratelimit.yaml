@@ -1,0 +1,17 @@
+---
+# Preview-origin rate limit (epic-66 Phase 1). LOCAL to this namespace
+# because Traefik runs without --providers.kubernetescrd.allowCrossNamespace
+# — a cross-namespace middleware reference makes the whole router error
+# out and not match (the bug that 404'd every preview host after #2301).
+# Mirrors networking/middlewares-rate-limit (avg 100 / burst 200).
+# Real per-workspace preview budgeting is the redesign's P1-5 (instrument
+# first); this is the interim edge guard at the cluster-standard rate.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: llmsafespaces-preview-rate-limit
+  namespace: llmsafespaces
+spec:
+  rateLimit:
+    average: 100
+    burst: 200
