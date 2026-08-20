@@ -99,6 +99,17 @@ spec:
     #     -o /dev/null -w "%{http_code}\n" \
     #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/0.5.0
     #     https://ghcr.io/v2/lenaxia/llmsafespaces/api/manifests/0.8.0
+    # ── Epic 66 Phase 1: per-workspace preview origins ────────────────────
+    # <uuid>-preview.safespaces.dev hosts served by the API's dedicated
+    # pipeline (owner bootstrap → one-time token → __Host-pv cookie).
+    # IngressRoute + wildcard cert: PR #2301. Token secret key
+    # preview-origin-token-secret in llmsafespaces-credentials (added in
+    # 29fcafeb). NOTE: top-level values key — sibling of api:/controller:,
+    # NOT nested under controller (the #2302 misplacement is why preview
+    # hosts 404'd on the first 0.17.0 rollout).
+    previewOrigin:
+      enabled: true
+      baseDomain: safespaces.dev
     api:
       replicaCount: 2
       image:
@@ -149,16 +160,6 @@ spec:
         router:
           image:
             tag: "0.17.0"
-      # ── Epic 66 Phase 1: per-workspace preview origins ──────────────────
-      # <uuid>-preview.safespaces.dev hosts served by the API's dedicated
-      # pipeline (owner bootstrap → one-time token → __Host-pv cookie).
-      # IngressRoute + wildcard cert landed in PR #2301. The token secret
-      # key preview-origin-token-secret MUST exist in llmsafespaces-
-      # credentials BEFORE Flux applies this — the API fail-closes at
-      # boot otherwise (see bump PR notes for the add command).
-      previewOrigin:
-        enabled: true
-        baseDomain: safespaces.dev
       freeModelsRefresher:
         enabled: false
 
