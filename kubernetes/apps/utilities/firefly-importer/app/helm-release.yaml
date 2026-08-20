@@ -54,9 +54,10 @@ spec:
               - -c
               - |
                 cd /var/www/html/storage
-                mkdir -p uploads configurations export app logs \
-                  database debugbar build framework/cache framework/sessions \
-                  framework/views framework/testing
+                mkdir -p uploads jobs import-jobs conversion-routines \
+                  submission-routines configurations export app logs \
+                  database debugbar build framework/cache/data \
+                  framework/sessions framework/views framework/testing app/public
                 chown -R 33:33 /var/www/html/storage
         containers:
           main:
