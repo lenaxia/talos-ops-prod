@@ -102,7 +102,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.15.12"
+        tag: "0.16.0"
       config:
         security:
           allowedOrigins:
@@ -113,22 +113,23 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.15.12"
+        tag: "0.16.0"
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.15.12 (Release workflow run 32266668142),
-      # "Merge Agentd Manifest" job → ghcr index annotations. Verified
-      # present on ghcr.io/lenaxia/llmsafespaces/agentd:0.15.12:
-      #   dev.llmsafespaces/agentd.sha256-amd64=78ea081d7190…82cc9
-      #   dev.llmsafespaces/agentd.sha256-arm64=f60451837c72…b7f3a
+      # Digest source: release v0.16.0 (Release workflow run 32326981354),
+      # ghcr index annotations, fetched anonymously from the registry and
+      # verified present on ghcr.io/lenaxia/llmsafespaces/agentd:0.16.0:
+      #   dev.llmsafespaces/agentd.sha256-amd64=f37608e646c4…c290
+      #   dev.llmsafespaces/agentd.sha256-arm64=f131c032a20f…eefc
+      #   dev.llmsafespaces/version=0.16.0
       # Rollback = delete this block (controller returns to legacy
       # baked-in mode); existing pods are unaffected (immutable specs).
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:3d36506d6ba5a1be3218fbd06dd8b6a76b5f81496acfc4dd7712ae910ce4cbfc
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:741004351dba1f70747d1c001692e56cf0f37a952ae65d002945b0e2a0f886b8
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -147,7 +148,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.15.12"
+            tag: "0.16.0"
       freeModelsRefresher:
         enabled: false
 
@@ -218,7 +219,7 @@ spec:
       # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
       # alongside the other four images.
       image:
-        tag: "0.15.12"
+        tag: "0.16.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -237,7 +238,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: "0.15.12"
+          tag: "0.16.0"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart
