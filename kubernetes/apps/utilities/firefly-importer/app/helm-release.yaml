@@ -67,6 +67,8 @@ spec:
             env:
               TZ: ${TIMEZONE}
               APP_ENV: production
+              # DEBUG logs credential-bearing SimpleFIN URLs; keep at warning.
+              LOG_LEVEL: warning
               # Internal DNS so importer->Firefly API calls bypass Authelia.
               FIREFLY_III_URL: http://firefly-iii.utilities.svc.cluster.local:8080
               # Public URL used for "back to Firefly III" links.
