@@ -41,6 +41,23 @@ spec:
         strategy: Recreate
         annotations:
           reloader.stakater.com/auto: 'true'
+        initContainers:
+          # The image entrypoint creates some storage subdirs root-owned and skips
+          # `uploads` entirely, which fails the app's is_writable() bootstrap check.
+          # Ensure the full tree exists and is owned by www-data (82) on the PVC.
+          fix-storage-perms:
+            image:
+              repository: busybox
+              tag: '1.36'
+            command:
+              - sh
+              - -c
+              - |
+                cd /var/www/html/storage
+                mkdir -p uploads configurations export app logs \
+                  database debugbar build framework/cache framework/sessions \
+                  framework/views framework/testing
+                chown -R 82:82 /var/www/html/storage
         containers:
           main:
             image:
