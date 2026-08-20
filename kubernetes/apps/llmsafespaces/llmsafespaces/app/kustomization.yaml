@@ -12,4 +12,5 @@ resources:
   - ingress-preview-origins.yaml
   - certificate-preview-origins.yaml
   - middleware-cors.yaml
+  - middleware-preview-ratelimit.yaml
   - secret.sops.yaml
