@@ -114,3 +114,43 @@ touched by this change.
 - [ ] Rocket Loader off — verified (HTML diff still byte-identical)
 - [ ] Email obfuscation off — verified
 - [ ] A4 byte-identity PASS recorded in epic-66 redesign thread
+
+## Field enumeration results (2026-08-20, read-only API token)
+
+Zone `safespaces.dev` (527902a0…), queried via `/zones/:id/settings/{id}`
+(the collection endpoint no longer routes; settings are per-endpoint):
+
+| Setting | Found value |
+|---|---|
+| rocket_loader | off |
+| minify (css/html/js) | all off |
+| automatic_platform_optimization | off |
+| polish / mirage | off / off |
+| websockets | **on** (required — keep) |
+| email_obfuscation | **on — remaining action** |
+| server_side_excludes | **on — remaining action** |
+| browser_insights / web_analytics | **"Undefined zone setting"** — does not exist |
+
+Rulesets on the zone: only sanitize / firewall-managed / ddos_l7 — **no
+web_analytics injection ruleset**. Live HTML on apex/www/chat contains
+zero beacon references. **Conclusion: the automatic beacon injection
+observed 2026-08-19 no longer exists on this zone** (Cloudflare retired or
+relocated the feature); P0-4's beacon leg is moot. Remaining work is the
+two body rewriters above (`email_obfuscation`, `server_side_excludes`)
+for dev-preview byte-accuracy.
+
+Off-switch (needs a token with Zone Settings Edit; the enumeration token
+is read-only):
+
+```bash
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"value":"off"}' \
+  "https://api.cloudflare.com/client/v4/zones/527902a031ba7d8ab430dd2bd8c71ccb/settings/email_obfuscation"
+# repeat with .../settings/server_side_excludes
+```
+
+Byte-accuracy probe: `…/dev-preview/5173/rewriter-probe.html` (pod-local
+md5 36e748b957fdd15101f5ae24880104c0) — contains a literal email and an
+<!--sse--> block; view-source through the tunnel must match the pod bytes
+exactly.
