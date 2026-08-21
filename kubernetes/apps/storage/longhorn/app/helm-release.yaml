@@ -98,6 +98,28 @@ spec:
   postRenderers:
     - kustomize:
         patches:
+          # Longhorn 1.12.1 renders the internal NetworkPolicies gated on
+          # networkPolicies.restrictInternalTraffic (default true), NOT on
+          # networkPolicies.enabled. The manager policy only allows
+          # same-namespace ingress, which blocks Prometheus (monitoring ns)
+          # from scraping longhorn-backend:9500 — TargetDown 100%. The chart
+          # has no values knob for this; append an ingress rule instead.
+          - target:
+              group: networking.k8s.io
+              version: v1
+              kind: NetworkPolicy
+              name: longhorn-manager
+            patch: |
+              - op: add
+                path: /spec/ingress/-
+                value:
+                  from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: monitoring
+                  ports:
+                    - protocol: TCP
+                      port: 9500
           # The Longhorn chart hardcodes the manager readiness probe with
           # no timeoutSeconds (k8s default: 1s). Under CPU pressure the
           # manager's /v1/healthz takes longer than 1s to respond, causing
