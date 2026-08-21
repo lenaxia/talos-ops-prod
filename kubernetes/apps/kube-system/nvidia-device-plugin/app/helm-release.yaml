@@ -32,6 +32,20 @@ spec:
     devicePlugin:
       enabled: true
 
+    # chart default tolerates the deprecated node-role.kubernetes.io/master
+    # taint key; Talos control planes now carry the control-plane key, which
+    # left 2 NFD worker pods mis-scheduled on the cp nodes.
+    nfd:
+      worker:
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Equal
+            effect: NoSchedule
+          - key: nvidia.com/gpu
+            operator: Equal
+            value: present
+            effect: NoSchedule
+
     gfd:
       enabled: true
       nameOverride: gpu-feature-discovery
