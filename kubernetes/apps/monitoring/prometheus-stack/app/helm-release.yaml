@@ -352,12 +352,20 @@ spec:
         groups:
           - name: dockerhub
             rules:
+              # Replaced 2026-08-21: old expr counted containers *running*
+              # docker.io images (>100 always true here) — a permanent false
+              # positive, not a rate-limit signal. Spegel serves cached layers
+              # cluster-wide; only mirror misses go upstream. Alert on actual
+              # upstream miss pressure approaching DockerHub's anonymous
+              # 100-pulls-per-6h-per-IP budget instead.
               - alert: DockerhubRateLimitRisk
                 annotations:
-                  summary: Kubernetes cluster Dockerhub rate limit risk
-                expr: count(time() - container_last_seen{image=~"(docker.io).*",container!=""} < 30) > 100
+                  summary: >-
+                    Spegel mirror misses for docker.io are approaching the
+                    DockerHub anonymous rate limit (100 pulls/6h per egress IP)
+                expr: increase(spegel_mirror_requests_total{registry="docker.io",cache="miss"}[6h]) > 75
                 labels:
-                  severity: critical
+                  severity: warning
       oom-rules:
         groups:
           - name: oom
