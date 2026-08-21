@@ -10,8 +10,10 @@ spec:
     - name: volsync.rules
       rules:
         - alert: VolSyncComponentAbsent
+          # job label = service name (volsync-volsync-perfectra1n-metrics),
+          # not "volsync-metrics" — match on job prefix instead
           expr: |
-            absent(up{job="volsync-metrics"})
+            absent(up{job=~"volsync.*"})
           annotations:
             summary: >-
               VolSync component has disappeared from Prometheus target discovery

@@ -61,11 +61,12 @@ spec:
 
     resources:
       requests:
-        cpu: 25m
-        memory: 50Mi
+        cpu: 100m
+        memory: 128Mi
       limits:
-        cpu: 50m
-        memory: 100Mi
+        # raised from 50m 2026-08-21: 40%+ CPU throttling (alert CPUThrottlingHigh)
+        cpu: 500m
+        memory: 256Mi
 
     tolerations:
       - key: "node-role.kubernetes.io/control-plane"
