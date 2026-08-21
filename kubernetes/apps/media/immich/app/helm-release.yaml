@@ -113,7 +113,9 @@ spec:
                 memory: 10Gi
                 gpu.intel.com/i915: "1"
               limits:
-                memory: 10Gi
+                # raised from 10Gi 2026-08-21: OOMKilled during thumbnail
+                # generation on oversized/corrupt assets (sharp decode bursts)
+                memory: 16Gi
                 gpu.intel.com/i915: "1"
             probes:
               liveness:
