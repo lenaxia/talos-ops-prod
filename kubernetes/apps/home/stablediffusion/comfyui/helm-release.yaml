@@ -22,6 +22,9 @@ spec:
     controllers:
       comfyui:
         type: deployment
+        # scaled to 0 2026-08-21: unschedulable — all 4 GPUs on worker-04
+        # allocated to vllm pods and node memory requests at 95%
+        replicas: 0
         annotations:
           reloader.stakater.com/auto: "true"
         pod:
