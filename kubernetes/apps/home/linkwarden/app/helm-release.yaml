@@ -59,7 +59,7 @@ spec:
           main:
             image:
               repository: ghcr.io/linkwarden/linkwarden
-              tag: v2.16.0
+              tag: v2.16.1
             resources:
               requests:
                 memory: 512Mi
