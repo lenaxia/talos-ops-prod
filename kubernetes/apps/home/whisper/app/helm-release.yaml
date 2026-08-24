@@ -45,7 +45,7 @@ spec:
               repository: rhasspy/wyoming-whisper
               tag: '3.6.0'
             args:
-              - --model=small-en
+              - --model=small.en
               - --language=en
               - --beam-size=5
               - --compute-type=int8
