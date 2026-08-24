@@ -11,6 +11,12 @@ RUN ./models/download-ggml-model.sh base.en && ./models/download-ggml-model.sh s
 
 FROM intel/oneapi:2025.0.1-0-devel-ubuntu24.04
 WORKDIR /app
+COPY --from=builder /app/whisper.cpp/build/src/libwhisper.so* /usr/local/lib/
+COPY --from=builder /app/whisper.cpp/build/ggml/src/libggml.so* /usr/local/lib/
+COPY --from=builder /app/whisper.cpp/build/ggml/src/ggml-sycl/libggml-sycl.so* /usr/local/lib/
+COPY --from=builder /app/whisper.cpp/build/ggml/src/ggml-base/libggml-base.so* /usr/local/lib/
+COPY --from=builder /app/whisper.cpp/build/ggml/src/ggml-cpu/libggml-cpu.so* /usr/local/lib/
+RUN ldconfig
 COPY --from=builder /app/whisper.cpp/build/bin/whisper-server .
 COPY --from=builder /app/whisper.cpp/models/ggml-base.en.bin ./models/
 COPY --from=builder /app/whisper.cpp/models/ggml-small.en.bin ./models/
