@@ -49,13 +49,11 @@ spec:
               - /bin/bash
               - -c
               - |
-                exec whisper-server -m /app/models/ggml-${WHISPER_MODEL}.bin \
-                  --host 0.0.0.0 --port 8910 -l en --suppress-nst ${WHISPER_EXTRA_ARGS}
+                exec whisper-server -m /app/models/ggml-base.en.bin \
+                  --host 0.0.0.0 --port 8910 -l en --suppress-nst -bs 5
             env:
               - name: TZ
                 value: ${TIMEZONE}
-              - name: WHISPER_MODEL
-                value: base.en
               - name: SYCL_CACHE_PERSISTENT
                 value: "1"
             probes:
