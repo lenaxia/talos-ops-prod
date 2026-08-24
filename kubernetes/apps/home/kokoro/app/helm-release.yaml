@@ -27,6 +27,7 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+        kubernetes.io/hostname: 'worker-01'
       tolerations:
         - key: "dedicated"
           operator: "Equal"
@@ -83,11 +84,10 @@ spec:
                   timeoutSeconds: 10
             resources:
               requests:
-                cpu: "2"
-                memory: "4Gi"
+                cpu: "1500m"
+                memory: "2Gi"
               limits:
-                cpu: "6"
-                memory: "8Gi"
+                memory: "6Gi"
 
     service:
       app:

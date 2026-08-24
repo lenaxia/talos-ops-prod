@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname whisper-sycl
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  upgrade:
+    timeout: 15m
+    remediation:
+      retries: 3
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+        kubernetes.io/hostname: 'worker-02'
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "special"
+          effect: "NoSchedule"
+
+    controllers:
+      app:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          app:
+            image:
+              repository: ghcr.io/lenaxia/whisper-sycl
+              tag: latest
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              - name: WHISPER_MODEL
+                value: small.en
+            probes:
+              readiness:
+                enabled: false
+              liveness:
+                enabled: false
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "1Gi"
+                gpu.intel.com/i915: "1"
+              limits:
+                cpu: "2"
+                memory: "4Gi"
+                gpu.intel.com/i915: "1"
+          wyoming:
+            image:
+              repository: ghcr.io/ser/wyoming-whisper-api-client
+              tag: latest
+            args:
+              - --uri=tcp://0.0.0.0:10300
+              - --api=http://localhost:8910/inference
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "128Mi"
+              limits:
+                memory: "512Mi"
+
+    service:
+      app:
+        controller: app
+        primary: true
+        type: ClusterIP
+        ports:
+          wyoming:
+            port: 10300
