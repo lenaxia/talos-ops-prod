@@ -42,8 +42,8 @@ spec:
         containers:
           app:
             image:
-              repository: ghcr.io/remsky/kokoro-fastapi-gpu
-              tag: v0.2.4-master
+              repository: ghcr.io/remsky/kokoro-fastapi-cpu
+              tag: v0.8.1
             env:
               - name: TZ
                 value: ${TIMEZONE}
@@ -83,10 +83,10 @@ spec:
                   timeoutSeconds: 10
             resources:
               requests:
-                nvidia.com/gpu: "1"
+                cpu: "2"
                 memory: "4Gi"
               limits:
-                nvidia.com/gpu: "1"
+                cpu: "6"
                 memory: "8Gi"
 
     service:
