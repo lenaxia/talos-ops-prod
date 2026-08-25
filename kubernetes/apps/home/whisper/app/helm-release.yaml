@@ -66,10 +66,11 @@ spec:
       # restart happens before a satellite needs the service
       keepalive:
         type: cronjob
-        schedule: "*/10 * * * *"
-        concurrencyPolicy: Forbid
-        successfulJobsHistoryLimit: 1
-        failedJobsHistoryLimit: 3
+        cronjob:
+          schedule: "*/10 * * * *"
+          concurrencyPolicy: Forbid
+          successfulJobsHistoryLimit: 1
+          failedJobsHistoryLimit: 3
         containers:
           app:
             image:
