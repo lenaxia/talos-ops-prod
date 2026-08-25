@@ -62,34 +62,6 @@ spec:
                 cpu: "1"
                 memory: "3Gi"
 
-      # keepalive canary: TCP check every 10m catches zombie listeners so a
-      # restart happens before a satellite needs the service
-      keepalive:
-        type: cronjob
-        cronjob:
-          schedule: "*/10 * * * *"
-          concurrencyPolicy: Forbid
-          successfulJobsHistoryLimit: 1
-          failedJobsHistoryLimit: 3
-        containers:
-          app:
-            image:
-              repository: busybox
-              tag: '1.37'
-            command:
-              - nc
-              - -z
-              - -w
-              - '5'
-              - whisper.home.svc.cluster.local
-              - '10300'
-            resources:
-              requests:
-                cpu: "10m"
-                memory: "16Mi"
-              limits:
-                memory: "32Mi"
-
     podDisruptionBudget:
       app:
         enabled: true
