@@ -63,6 +63,16 @@ spec:
       defaultDataPath: "/var/mnt/longhorn"
       storageMinimalAvailablePercentage: 15
       concurrentAutomaticEngineUpgradePerNodeLimit: 1
+      # Instance-manager CPU reservation. The chart default (12% of node
+      # allocatable) reserves 2x954m per 8-core worker (v1+v2 engine IMs) and
+      # 7674m on the 64-core worker-04, while actual usage is ~0.1 core per IM.
+      # Observed 2026-08-26: these reservations left no schedulable CPU for
+      # workspace pods (3 workspaces stuck Creating/unschedulable).
+      # 4% keeps 3-4x headroom over measured usage and frees ~1.2 cores per
+      # 8-core worker plus ~5 cores on worker-04. A plain string applies to
+      # both v1 and v2 data engines. Applying this restarts instance-manager
+      # pods (brief volume I/O latency, replicas stay healthy).
+      guaranteedInstanceManagerCPU: "4"
       defaultEngineImage: docker.io/longhornio/longhorn-engine:v1.12.1
       systemManagedComponentsNodeSelector: "node-role.kubernetes.io/worker: true"
       # Allow detached volumes to rebuild replicas in the background.
