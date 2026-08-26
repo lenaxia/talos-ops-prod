@@ -136,15 +136,22 @@ spec:
       #   dev.llmsafespaces/agentd.sha256-amd64=757cc6ee2c41…4254
       #   dev.llmsafespaces/agentd.sha256-arm64=461f7878b036…a391
       #   dev.llmsafespaces/version=0.21.3
-      # v0.21.0 carries the sidecar migration (#1021): init-fs subcommand,
-      # sidecar boot phase, supervisor self-verify, and the fixed
-      # materialize cross-uid mode (the 2026-08-25 incident class).
-      # agentdSidecar.enabled stays false until one green K1–K13 kind run
-      # on released artifacts (docs/runbooks/sidecar-flip.md precondition);
-      # legacy-mode pods already benefit: platform-init/bootstrap/materialize
-      # run from THIS pinned artifact, not the runtime base.
-      # Rollback = delete this block (controller returns to legacy
-      # baked-in mode); existing pods are unaffected (immutable specs).
+      # v0.21.0+ carries the sidecar migration (#1021): init-fs subcommand,
+      # sidecar boot phase, supervisor self-verify, fixed materialize
+      # cross-uid mode (the 2026-08-25 incident class), and the supervisor
+      # Command bypass — in sidecar mode the main container runs the
+      # overlay supervisor DIRECTLY; the stale baked entrypoint is never
+      # executed (the 80683260 incident's residual).
+      # FLIPPED 2026-08-26: precondition met — kind run 4 (v0.21.3,
+      # run 32993684357) passed K1–K13 including K13 (degraded base
+      # boots Ready). Per docs/runbooks/sidecar-flip.md: canary →
+      # rolling delete; suspended workspaces upgrade free on resume.
+      # Rollback = set enabled: false (D6.1 convergence: recreated pods
+      # return to the legacy single-container spec).
+      # Design 0051 sidecar mode (flip 2026-08-26; see runbook
+      # docs/runbooks/sidecar-flip.md and the agentdDelivery note above).
+      agentdSidecar:
+        enabled: true
       agentdDelivery:
         image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:44f16a084c12ede62e282f00ef99a47626ab7bf3015a2797512918a3387078e1
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
