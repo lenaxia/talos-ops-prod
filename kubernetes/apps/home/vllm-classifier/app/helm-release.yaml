@@ -51,7 +51,7 @@ spec:
                     --served-model-name classifier \
                     --max-model-len 16384 \
                     --max-num-seqs 64 \
-                    --gpu-memory-utilization 0.95 \
+                    --gpu-memory-utilization 0.9863 \
                     --kv-cache-dtype fp8 \
                     --tensor-parallel-size 1 \
                     --trust-remote-code \
@@ -112,7 +112,7 @@ spec:
                     --served-model-name classifier \
                     --max-model-len 16384 \
                     --max-num-seqs 64 \
-                    --gpu-memory-utilization 0.95 \
+                    --gpu-memory-utilization 0.9863 \
                     --kv-cache-dtype fp8 \
                     --tensor-parallel-size 1 \
                     --trust-remote-code \
