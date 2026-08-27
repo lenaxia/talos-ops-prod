@@ -113,7 +113,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.21.3"
+        tag: "0.22.0"
       config:
         security:
           allowedOrigins:
@@ -124,18 +124,18 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.21.3"
+        tag: "0.22.0"
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.21.3 (Release workflow, verified on
+      # Digest source: release v0.22.0 (Release workflow, verified on
       # ghcr.io/lenaxia/llmsafespaces/agentd:0.21.0):
       #   dev.llmsafespaces/agentd.sha256-amd64=757cc6ee2c41…4254
       #   dev.llmsafespaces/agentd.sha256-arm64=461f7878b036…a391
-      #   dev.llmsafespaces/version=0.21.3
+      #   dev.llmsafespaces/version=0.22.0
       # v0.21.0+ carries the sidecar migration (#1021): init-fs subcommand,
       # sidecar boot phase, supervisor self-verify, fixed materialize
       # cross-uid mode (the 2026-08-25 incident class), and the supervisor
@@ -153,7 +153,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:44f16a084c12ede62e282f00ef99a47626ab7bf3015a2797512918a3387078e1
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:c2f9fb875102c9bad1ecfcf6e59dfb55f44e67a2c4c6e4c2d93b0953a34453f1
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -172,7 +172,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.21.3"
+            tag: "0.22.0"
       freeModelsRefresher:
         enabled: false
 
@@ -243,7 +243,7 @@ spec:
       # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
       # alongside the other four images.
       image:
-        tag: "0.21.3"
+        tag: "0.22.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -262,7 +262,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: "0.21.3"
+          tag: "0.22.0"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart
