@@ -76,7 +76,10 @@ spec:
       main:
         type: statefulset
         # StatefulSet so /config has a stable identity for VolumeSnapshots.
-        replicas: 1
+        # Scaled to 0 (2026-08-27): rarely used; 30d max was 577Mi/13m vs
+        # 4Gi/1000m requested. PVCs survive scale-down — flip back to 1 to
+        # restore the desktop session as-is.
+        replicas: 0
         strategy: RollingUpdate
         annotations:
           reloader.staketer.com/auto: "true"

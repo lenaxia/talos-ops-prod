@@ -157,9 +157,11 @@ spec:
               - secretRef:
                   name: *appname
             resources:
+              # 30d max: 7.1Gi / 1.4 cores. Request trimmed from 14Gi
+              # (2026-08-27); limit kept at 14Gi for burst room.
               requests:
                 cpu: 100m
-                memory: 14Gi
+                memory: 8Gi
                 gpu.intel.com/i915: "1"
               limits:
                 memory: 14Gi
