@@ -113,7 +113,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.24.0"
+        tag: "0.25.0"
       config:
         security:
           allowedOrigins:
@@ -124,18 +124,25 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.24.0"
+        tag: "0.25.0"
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.24.0 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.23.0):
-      #   index digest sha256:3add37a8e90c91e55dc7d57921830640318a9e94c9eae3b14ccc4961aa4a5368
-      #   dev.llmsafespaces/version=0.24.0
-      # v0.23.0 adds: Epic 67 port-in-subdomain preview origins (#1069),
+      # Digest source: release v0.25.0 (Release workflow, fetched from
+      # ghcr.io manifest for tag 0.25.0):
+      #   index digest sha256:82c718c60a4ed3f03d57da371f5c7ba3082e1e85f33ceae6de1c68e366e5fd5a
+      #   dev.llmsafespaces/version=0.25.0
+      # v0.25.0 adds: image-factory auto release-train tracking (#1094 —
+      # the catalog default advances without operator action; existing
+      # builds/configs immutable), hash display + hash-based re-selection
+      # (GET /image-factory/resolve/:hash), git auth decoupled from
+      # gh/GH_TOKEN (#1087/#1096).
+      # v0.24.0 added: mise shims PATH fix (#1086), Epic 67 attachments
+      # pipeline (#1083/#1084/#1085).
+      # v0.23.0 added: Epic 67 port-in-subdomain preview origins (#1069),
       # default platform prompt (#1073), MCP tool guidance contract
       # (#1076/#1079), US-67.1 file ingest + US-67.3 attachment manifest.
       # v0.21.0+ carries the sidecar migration (#1021): init-fs subcommand,
@@ -155,7 +162,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:3add37a8e90c91e55dc7d57921830640318a9e94c9eae3b14ccc4961aa4a5368
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:82c718c60a4ed3f03d57da371f5c7ba3082e1e85f33ceae6de1c68e366e5fd5a
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -174,7 +181,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.24.0"
+            tag: "0.25.0"
       freeModelsRefresher:
         enabled: false
 
@@ -245,7 +252,7 @@ spec:
       # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
       # alongside the other four images.
       image:
-        tag: "0.24.0"
+        tag: "0.25.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -264,7 +271,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: "0.24.0"
+          tag: "0.25.0"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart
