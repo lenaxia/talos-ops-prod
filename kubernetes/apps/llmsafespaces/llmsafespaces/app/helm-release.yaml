@@ -113,7 +113,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.25.0"
+        tag: "0.25.1"
       config:
         security:
           allowedOrigins:
@@ -124,18 +124,28 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.25.0"
+        tag: "0.25.1"
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.25.0 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.25.0):
-      #   index digest sha256:82c718c60a4ed3f03d57da371f5c7ba3082e1e85f33ceae6de1c68e366e5fd5a
-      #   dev.llmsafespaces/version=0.25.0
-      # v0.25.0 adds: image-factory auto release-train tracking (#1094 —
+      # Digest source: release v0.25.1 (Release workflow, fetched from
+      # ghcr.io manifest for tag 0.25.1):
+      #   index digest sha256:22818420b361cd175fa2f3da539061bdc669ecadf44b854c7029d86f5b752d64
+      #   dev.llmsafespaces/version="" (annotation empty on 0.25.0 and
+      #   0.25.1 alike — cosmetic; per-arch binary sha256s below are the
+      #   functional pins and are stamped)
+      #   sha256-amd64=268772dd3f18fe3a3152d0047b0d31c5a40f34ca6a707039cf911716e11d631a
+      #   sha256-arm64=9ca95b550e4a4e129be6449bd462dc3a04a387eb235d273221acdbf6b496d314
+      # v0.25.1 adds: user-DEK secrets deliver at pod bootstrap via
+      # server-side unwrap (#1104, #1087 follow-up — a workspace pod now
+      # receives ALL its bound secrets with no active jwt_sessions row;
+      # closes the suspend/resume class where env-secrets were skipped at
+      # bootstrap and the secretautopush recovery was suppressed by
+      # skipped_ucp_true).
+      # v0.25.0 added: image-factory auto release-train tracking (#1094 —
       # the catalog default advances without operator action; existing
       # builds/configs immutable), hash display + hash-based re-selection
       # (GET /image-factory/resolve/:hash), git auth decoupled from
@@ -162,7 +172,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:82c718c60a4ed3f03d57da371f5c7ba3082e1e85f33ceae6de1c68e366e5fd5a
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:22818420b361cd175fa2f3da539061bdc669ecadf44b854c7029d86f5b752d64
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -181,7 +191,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.25.0"
+            tag: "0.25.1"
       freeModelsRefresher:
         enabled: false
 
@@ -252,7 +262,7 @@ spec:
       # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
       # alongside the other four images.
       image:
-        tag: "0.25.0"
+        tag: "0.25.1"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -271,7 +281,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: "0.25.0"
+          tag: "0.25.1"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart
