@@ -113,7 +113,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.25.1"
+        tag: "0.25.2"
       config:
         security:
           allowedOrigins:
@@ -124,27 +124,30 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.25.1"
+        tag: "0.25.2"
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.25.1 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.25.1):
-      #   index digest sha256:22818420b361cd175fa2f3da539061bdc669ecadf44b854c7029d86f5b752d64
+      # Digest source: release v0.25.2 (Release workflow, fetched from
+      # ghcr.io manifest for tag 0.25.2):
+      #   index digest sha256:01eac544fe0ec8682a8e8c724d5e0930b48cc2ca8b0ddd758c50939aa7fd838f
       #   dev.llmsafespaces/version="" (annotation empty on 0.25.0 and
       #   0.25.1 alike — cosmetic; per-arch binary sha256s below are the
       #   functional pins and are stamped)
       #   sha256-amd64=268772dd3f18fe3a3152d0047b0d31c5a40f34ca6a707039cf911716e11d631a
       #   sha256-arm64=9ca95b550e4a4e129be6449bd462dc3a04a387eb235d273221acdbf6b496d314
-      # v0.25.1 adds: user-DEK secrets deliver at pod bootstrap via
-      # server-side unwrap (#1104, #1087 follow-up — a workspace pod now
-      # receives ALL its bound secrets with no active jwt_sessions row;
-      # closes the suspend/resume class where env-secrets were skipped at
-      # bootstrap and the secretautopush recovery was suppressed by
-      # skipped_ucp_true).
+      # v0.25.2 adds: bootstrap DEK failures are LOUD (pod_bootstrap_dek_failed
+      # audit row with the underlying error — the silent-degrade forensic
+      # cost) and legacy user_keys rows heal opportunistically (#1114:
+      # master-provider unwrap failure → session-source DEK recovery →
+      # re-wrap at active version with verify-after-write). Converges the
+      # 2026-08-28 incident row on its next resume. Also #1112 (V2
+      # streaming buffer priming), #1113 (helm api.extraEnv).
+      # v0.25.1 added: user-DEK secrets deliver at pod bootstrap via
+      # server-side unwrap (#1104 — no active jwt_sessions row required).
       # v0.25.0 added: image-factory auto release-train tracking (#1094 —
       # the catalog default advances without operator action; existing
       # builds/configs immutable), hash display + hash-based re-selection
@@ -172,7 +175,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:22818420b361cd175fa2f3da539061bdc669ecadf44b854c7029d86f5b752d64
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:01eac544fe0ec8682a8e8c724d5e0930b48cc2ca8b0ddd758c50939aa7fd838f
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -191,7 +194,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.25.1"
+            tag: "0.25.2"
       freeModelsRefresher:
         enabled: false
 
@@ -262,7 +265,7 @@ spec:
       # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
       # alongside the other four images.
       image:
-        tag: "0.25.1"
+        tag: "0.25.2"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -281,7 +284,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: "0.25.1"
+          tag: "0.25.2"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart
