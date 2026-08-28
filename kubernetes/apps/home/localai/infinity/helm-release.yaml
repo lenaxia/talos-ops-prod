@@ -1,0 +1,153 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname infinity
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    timeout: 30m
+    remediation:
+      retries: 3
+  upgrade:
+    timeout: 30m
+    remediation:
+      retries: 3
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+    controllers:
+      app:
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          app:
+            image:
+              repository: michaelf34/infinity
+              # renovate: depName=michaelf34/infinity
+              tag: 0.0.77-cpu@sha256:94db836145f609c508f3f296f3b9bd0e78ae088025e879664d073dfd9f929e96
+            # Image ENTRYPOINT is `infinity_emb`; args start at the `v2` subcommand.
+            # Verified against 0.0.77: --engine optimum (ONNX, image default),
+            # --device cpu, routes POST /embeddings, GET /models, GET /health
+            # (url_prefix defaults to ""). bge-m3 ships ONNX weights in-repo
+            # (onnx/model.onnx + onnx/model_quantized.onnx); optimum picks the
+            # quantized int8 variant automatically.
+            args:
+              - v2
+              - --model-id
+              - BAAI/bge-m3
+              - --served-model-name
+              - bge-m3
+              - --engine
+              - optimum
+              - --device
+              - cpu
+              - --port
+              - '7997'
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              # Opt out of anonymous usage telemetry
+              - name: INFINITY_ANONYMOUS_USAGE_STATS
+                value: '0'
+              # bge-m3 ships only fp32 ONNX (no model_quantized.onnx), and
+              # optimum's ORTOptimizer pass (optimization_level=99 +
+              # NchwcTransformer) OOMKilled the pod even at 8Gi. This env
+              # var (0.0.77 embedder/optimum.py: optimize_model=not
+              # os.environ.get("INFINITY_ONNX_DISABLE_OPTIMIZE")) skips the
+              # pass and runs the unoptimized graph directly — flatter
+              # memory profile, modest inference cost.
+              - name: INFINITY_ONNX_DISABLE_OPTIMIZE
+                value: '1'
+            probes:
+              # First boot downloads bge-m3 (~2.3GB fp32 + ~2.4GB ONNX) and
+              # runs ORT graph optimization; with the PVC-warmed cache,
+              # restarts are ~1 min. Startup probe owns the slow-boot window.
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 7997
+                  periodSeconds: 30
+                  failureThreshold: 40
+                  timeoutSeconds: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 7997
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  successThreshold: 1
+                  failureThreshold: 5
+                  timeoutSeconds: 10
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 7997
+                  initialDelaySeconds: 15
+                  periodSeconds: 15
+                  successThreshold: 1
+                  failureThreshold: 5
+                  timeoutSeconds: 10
+            resources:
+              requests:
+                cpu: 250m
+                memory: 2Gi
+              # Unoptimized fp32 ONNX session (~2.3GB weights) + tokenizer
+              # + warmup; the optimizer pass that OOM'd at 8Gi is disabled
+              # via INFINITY_ONNX_DISABLE_OPTIMIZE above.
+              limits:
+                cpu: '4'
+                memory: 6Gi
+
+    persistence:
+      # HF model cache (documented mount path for the infinity image is
+      # HF_HOME=/app/.cache). longhorn (cluster default) with 1 replica per
+      # the repo convention for non-critical volumes — no 3x write
+      # amplification, and the pod is not node-pinned (unlike openebs-
+      # hostpath). Worst case if the replica's node is lost: delete the PVC
+      # and re-download the model.
+      cache:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 10Gi
+        # retain: PVC survives helm uninstall/remediation — otherwise each
+        # failed install retry wipes the model cache and the next attempt
+        # re-downloads ~4.7GB from scratch.
+        retain: true
+        annotations:
+          longhorn.io/numberOfReplicas: '1'
+        globalMounts:
+          - path: /app/.cache
+    service:
+      app:
+        type: ClusterIP
+        ports:
+          http:
+            port: 7997
+        primary: true
