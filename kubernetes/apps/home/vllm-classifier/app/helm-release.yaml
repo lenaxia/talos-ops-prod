@@ -51,7 +51,7 @@ spec:
                     --served-model-name classifier \
                     --max-model-len 16384 \
                     --max-num-seqs 64 \
-                    --max-num-batched-tokens 16384 \
+                    --max-num-batched-tokens 12288 \
                     --gpu-memory-utilization 0.9863 \
                     --kv-cache-dtype fp8 \
                     --tensor-parallel-size 1 \
@@ -113,7 +113,7 @@ spec:
                     --served-model-name classifier \
                     --max-model-len 16384 \
                     --max-num-seqs 64 \
-                    --max-num-batched-tokens 16384 \
+                    --max-num-batched-tokens 12288 \
                     --gpu-memory-utilization 0.9863 \
                     --kv-cache-dtype fp8 \
                     --tensor-parallel-size 1 \
