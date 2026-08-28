@@ -559,6 +559,27 @@ spec:
                 supports_function_calling: true
                 supports_response_schema: true
                 supports_vision: true
+            # Embeddings - infinity (michaelfeil/infinity) on CPU, serving
+            # bge-m3 dense vectors via ONNX int8. LiteLLM's native infinity/
+            # provider (v1.83.14, litellm/llms/infinity/embedding) POSTs to
+            # {api_base}/embeddings, which matches infinity's root-level
+            # route (url_prefix defaults to ""). Bearer auth header is sent
+            # but ignored by infinity (no --api-key configured; in-cluster
+            # ClusterIP only). Reranker can be added later with a second
+            # --model-id (e.g. BAAI/bge-reranker-v2-m3) on the same pod.
+            - model_name: bge-m3
+              litellm_params:
+                model: infinity/bge-m3
+                api_base: http://infinity.home.svc.cluster.local:7997
+                api_key: doesnotmatter
+              model_info:
+                mode: embedding
+                max_input_tokens: 8192
+                max_tokens: 8192
+                supports_tool_choice: false
+                supports_function_calling: false
+                supports_response_schema: false
+                supports_vision: false
             # TTS - Kokoro FastAPI (OpenAI-compatible /v1/audio/speech)
             - model_name: kokoro
               litellm_params:
