@@ -114,17 +114,15 @@ spec:
       replicaCount: 2
       image:
         tag: "0.25.3"
-      # V2 inboard delivery (design 0052) — enabled 2026-08-29 on 0.25.3
-      # AFTER the acknowledgment seam (#1121): outbox entries complete at
-      # PROMOTION (VerifyDelivery-polled), never at admission; defect-class
-      # deaths go ambiguous→verifying→bounded re-admit. Prereqs verified:
-      # every workspace pod on opencode 1.18.15 (base 0.25.2/0.25.3),
-      # adapter capability probing live (#1120). Known trade-off (accepted):
-      # global history read switch — pre-flip transcripts render empty
-      # while this is on. Rollback = revert this block (chart 0.12.0+).
-      extraEnv:
-        - name: OPENCODE_V2_DELIVERY
-          value: "1"
+      # V2 delivery REVERTED 2026-08-29 (~05:0xZ): first live traffic exposed
+      # two UI-contract gaps — (1) V2 turns emit session.next.* only; the
+      # frontend busy/new-message indicators ride session.status /
+      # message.part.delta, which never fire in V2 mode (14k+ events
+      # classified unknown; both counters flat since flip); (2) per-prompt
+      # model overrides silently dropped (capability-probe indeterminate →
+      # legacy wire shape — fix in flight, #1123 branch). The delivery
+      # seam itself worked (no silent drops — #1119 held). Re-flip after
+      # the event bridge + override fix ship and pass e2e.
       config:
         security:
           allowedOrigins:
