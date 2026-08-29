@@ -114,14 +114,16 @@ spec:
       replicaCount: 2
       image:
         tag: "0.25.5"
-      # V2 delivery OFF again 2026-08-29 (~06:4xZ): the delivery-verify
-      # oracle was silently dead — production adapters are wrapped
-      # (systemnotices.Wrap) and the handlers' deliveryVerifier type
-      # assertion failed against the wrapper, so EVERY verification
-      # returned inconclusive without touching the network (no logs).
-      # V1 masks it (blocking send completes without the oracle); V2
-      # depends on it. Fix: #1127 promotes VerifyDelivery to
-      # agent.Adapter. Re-flip on 0.25.5 (test-mode gate, design 0054).
+      # V2 delivery ON (third flip) 2026-08-29 (~08:0xZ) on 0.25.5 under
+      # the TEST-MODE gate (design 0054; solo-operator environment).
+      # 0.25.5 ships the working verify oracle (#1127: VerifyDelivery on
+      # agent.Adapter — the wrapper-broken assertion that parked every
+      # delivery) + I6 outbox metrics. Test-mode degradations unchanged:
+      # indicators dark (event bridge pending, R5), pre-flip transcripts
+      # hidden (R6 exception). Rollback = revert + drain (G1).
+      extraEnv:
+        - name: OPENCODE_V2_DELIVERY
+          value: "1"
       config:
         security:
           allowedOrigins:
