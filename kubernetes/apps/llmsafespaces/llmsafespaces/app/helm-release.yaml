@@ -114,16 +114,19 @@ spec:
       replicaCount: 2
       image:
         tag: "0.25.7"
-      # V2 delivery ON (third flip) 2026-08-29 (~08:0xZ) on 0.25.5 under
-      # the TEST-MODE gate (design 0054; solo-operator environment).
-      # 0.25.5 ships the working verify oracle (#1127: VerifyDelivery on
-      # agent.Adapter — the wrapper-broken assertion that parked every
-      # delivery) + I6 outbox metrics. Test-mode degradations unchanged:
-      # indicators dark (event bridge pending, R5), pre-flip transcripts
-      # hidden (R6 exception). Rollback = revert + drain (G1).
+      # V2 delivery ROLLED BACK (fourth flip) 2026-08-29 on 0.25.7:
+      # OPENCODE_V2_DELIVERY=0 — back to V1 sync delivery pending Epic
+      # 69 (#1134, design 0055 — agentd state authority supersedes this
+      # path). Reasons: stranding class #1119 still open + test-mode
+      # degradations no longer worth carrying (indicators dark R5,
+      # pre-flip transcripts hidden R6). Flip history: ON (third flip)
+      # 2026-08-29 ~08:0xZ on 0.25.5 under the TEST-MODE gate (design
+      # 0054; solo-operator environment) — 0.25.5 shipped the #1127
+      # verify-oracle fix + I6 outbox metrics. Re-flip = set "1" again
+      # (G1: drain first).
       extraEnv:
         - name: OPENCODE_V2_DELIVERY
-          value: "1"
+          value: "0"
       config:
         security:
           allowedOrigins:
