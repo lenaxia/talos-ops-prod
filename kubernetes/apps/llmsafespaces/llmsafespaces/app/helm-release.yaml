@@ -114,6 +114,17 @@ spec:
       replicaCount: 2
       image:
         tag: "0.25.3"
+      # V2 inboard delivery (design 0052) — enabled 2026-08-29 on 0.25.3
+      # AFTER the acknowledgment seam (#1121): outbox entries complete at
+      # PROMOTION (VerifyDelivery-polled), never at admission; defect-class
+      # deaths go ambiguous→verifying→bounded re-admit. Prereqs verified:
+      # every workspace pod on opencode 1.18.15 (base 0.25.2/0.25.3),
+      # adapter capability probing live (#1120). Known trade-off (accepted):
+      # global history read switch — pre-flip transcripts render empty
+      # while this is on. Rollback = revert this block (chart 0.12.0+).
+      extraEnv:
+        - name: OPENCODE_V2_DELIVERY
+          value: "1"
       config:
         security:
           allowedOrigins:
