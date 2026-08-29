@@ -114,15 +114,20 @@ spec:
       replicaCount: 2
       image:
         tag: "0.25.4"
-      # V2 delivery REVERTED 2026-08-29 (~05:0xZ): first live traffic exposed
-      # two UI-contract gaps — (1) V2 turns emit session.next.* only; the
-      # frontend busy/new-message indicators ride session.status /
-      # message.part.delta, which never fire in V2 mode (14k+ events
-      # classified unknown; both counters flat since flip); (2) per-prompt
-      # model overrides silently dropped (capability-probe indeterminate →
-      # legacy wire shape — fix in flight, #1123 branch). The delivery
-      # seam itself worked (no silent drops — #1119 held). Re-flip after
-      # the event bridge + override fix ship and pass e2e.
+      # V2 delivery RE-ENABLED 2026-08-29 (~06:0xZ) on 0.25.4 under the
+      # TEST-MODE gate (design 0054; solo-operator test environment, no
+      # production traffic): invariants I1-I6 + model fidelity hold —
+      # completion at promotion (#1121), model-override probe fix,
+      # wedge-immune verify oracle, sized delivery budget (#1123).
+      # Known test-mode degradations (accepted until the production gate):
+      # busy/new-message indicators dark (event bridge pending — R5),
+      # pre-flip transcripts hidden (R6 documented exception). Flag stays
+      # ON through bridge development to exercise the path with live
+      # traffic. Rollback = revert this commit + drain verifying entries
+      # (G1 procedure).
+      extraEnv:
+        - name: OPENCODE_V2_DELIVERY
+          value: "1"
       config:
         security:
           allowedOrigins:
