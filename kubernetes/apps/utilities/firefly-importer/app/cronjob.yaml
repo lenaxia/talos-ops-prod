@@ -1,0 +1,162 @@
+---
+# Hourly maintenance for SimpleFIN-imported accounts.
+# SimpleFIN quirks this corrects (idempotently, every run):
+#   1. duplicate imports — journals sharing the same external_id are collapsed
+#      to the newest journal (the importer's own dedup is known to miss some)
+#   2. 401(k) contributions arrive institution-signed (withdrawals) and are
+#      re-created as deposits so the account balance reflects reality
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: firefly-importer-fixer
+  namespace: utilities
+data:
+  fixer.php: |
+    <?php
+    $base  = rtrim(getenv('FIREFLY_III_URL') ?: 'http://firefly-iii.utilities.svc.cluster.local:8080', '/');
+    $tok   = getenv('FIREFLY_III_ACCESS_TOKEN');
+    $match = getenv('FIREFLY_ACCOUNT_MATCH') ?: '401(K)';
+
+    function api($m, $p, $body = null) {
+        global $tok, $base;
+        $ctx = ['http' => ['method' => $m, 'ignore_errors' => true, 'timeout' => 30,
+            'header' => "Authorization: Bearer $tok\r\nAccept: application/json\r\nContent-Type: application/json\r\n"]];
+        if ($body !== null) { $ctx['http']['content'] = json_encode($body); }
+        $r = @file_get_contents($base . '/api/v1' . $p, false, stream_context_create($ctx));
+        return [strpos($http_response_header[0] ?? '', ' 2') !== false, json_decode((string)$r, true)];
+    }
+
+    // all SimpleFIN-named asset accounts: "<name> (NNNN)"
+    $accounts = [];
+    for ($p = 1; $p <= 10; $p++) {
+        [, $j] = api('GET', "/accounts?limit=100&page=$p");
+        foreach (($j['data'] ?? []) as $a) {
+            $at = $a['attributes'];
+            if (($at['type'] ?? '') === 'asset' && preg_match('/\(\d{4}\)$/', $at['name'])) {
+                $accounts[$a['id']] = $at['name'];
+            }
+        }
+        if (($j['meta']['pagination']['current_page'] ?? 1) >= ($j['meta']['pagination']['total_pages'] ?? 1)) { break; }
+    }
+    printf("simplefin accounts: %d\n", count($accounts));
+
+    function journalsOf($id) {
+        $out = [];
+        for ($p = 1; $p <= 50; $p++) {
+            [, $j] = api('GET', "/accounts/$id/transactions?limit=100&page=$p");
+            foreach (($j['data'] ?? []) as $g) {
+                foreach ($g['attributes']['transactions'] as $t) {
+                    if ($t['type'] === 'opening balance') { continue; }
+                    $out[] = ['gid' => $g['id'], 'jid' => (int)$t['transaction_journal_id'],
+                        'date' => $t['date'], 'amount' => $t['amount'], 'desc' => $t['description'],
+                        'type' => $t['type'], 'ext' => $t['external_id'] ?? '', 'dst' => $t['destination_name']];
+                }
+            }
+            if (($j['meta']['pagination']['current_page'] ?? 1) >= ($j['meta']['pagination']['total_pages'] ?? 1)) { break; }
+        }
+        return $out;
+    }
+
+    // ---- phase 1: dedupe by external_id (keep newest journal) ----
+    $dupes = 0;
+    foreach ($accounts as $id => $name) {
+        $byext = [];
+        foreach (journalsOf($id) as $t) {
+            if ($t['ext'] !== '') { $byext[$t['ext']][] = $t; }
+        }
+        foreach ($byext as $ext => $list) {
+            if (count($list) < 2) { continue; }
+            usort($list, fn($a, $b) => $b['jid'] <=> $a['jid']);
+            $keep = array_shift($list);
+            foreach ($list as $t) {
+                api('DELETE', '/transactions/' . $t['gid']);
+                printf("  dupe del: %s grp %s %s %s (kept jid %d)\n", substr($name, 0, 30), $t['gid'], $t['amount'], $t['date'], $keep['jid']);
+                $dupes++;
+            }
+        }
+    }
+    echo "duplicates removed: $dupes\n";
+
+    // ---- phase 2: flip 401(k) contributions (withdrawal -> deposit) ----
+    $k401 = null;
+    foreach ($accounts as $id => $name) { if (strpos($name, $match) !== false) { $k401 = $id; } }
+    if ($k401 === null) { echo "no account matching '$match'\n"; exit(0); }
+    echo "flip target: {$accounts[$k401]} (id $k401)\n";
+
+    $byext = [];
+    foreach (journalsOf($k401) as $t) { $byext[$t['ext']][] = $t; }
+    $flips = 0;
+    foreach ($byext as $ext => $list) {
+        if ($ext === '') { continue; }
+        $deposits = array_filter($list, fn($t) => $t['type'] === 'deposit');
+        if (empty($deposits)) {
+            $rep = $list[0];
+            [$ok, $resp] = api('POST', '/transactions', ['transactions' => [[
+                'type' => 'deposit', 'date' => $rep['date'], 'amount' => $rep['amount'],
+                'description' => $rep['desc'], 'source_name' => $rep['dst'],
+                'destination_id' => (int)$k401, 'external_id' => $ext,
+            ]]]);
+            echo $ok ? "  created deposit {$rep['amount']} {$rep['date']}\n"
+                     : '  POST FAILED: ' . substr(json_encode($resp), 0, 200) . "\n";
+            if ($ok) { $flips++; }
+        }
+        foreach ($list as $t) {
+            if ($t['type'] === 'withdrawal') {
+                [$ok] = api('DELETE', '/transactions/' . $t['gid']);
+                echo "  deleted withdrawal grp {$t['gid']} {$t['amount']} {$t['date']}\n";
+                if ($ok) { $flips++; }
+            }
+        }
+    }
+    echo "flips: $flips\n";
+    [, $a] = api('GET', "/accounts/$k401");
+    echo '401k balance now: ' . ($a['data']['attributes']['current_balance'] ?? '?') . "\n";
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: firefly-importer-fixer
+  namespace: utilities
+spec:
+  schedule: '0 * * * *'
+  timeZone: ${TIMEZONE}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          restartPolicy: Never
+          nodeSelector:
+            node-role.kubernetes.io/worker: 'true'
+          containers:
+            - name: fixer
+              image: fireflyiii/data-importer:version-2.3.4
+              command: ['php', '/fixer/fixer.php']
+              env:
+                - name: FIREFLY_III_URL
+                  value: http://firefly-iii.utilities.svc.cluster.local:8080
+                - name: FIREFLY_ACCOUNT_MATCH
+                  value: 401(K)
+                - name: FIREFLY_III_ACCESS_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: firefly-importer
+                      key: FIREFLY_III_ACCESS_TOKEN
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+              volumeMounts:
+                - name: fixer
+                  mountPath: /fixer
+                  readOnly: true
+          volumes:
+            - name: fixer
+              configMap:
+                name: firefly-importer-fixer

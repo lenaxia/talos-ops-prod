@@ -1,0 +1,303 @@
+---
+# Nightly automated SimpleFIN import (data-importer CLI).
+# The JSON template carries the account mapping from the original UI import.
+# Two placeholders are injected at runtime by the initContainer:
+#   __SIMPLEFIN_ACCESS_URL__  credential from the firefly-importer Secret
+#                             (must never live in a ConfigMap)
+#   __IMPORT_START_DATE__     rolling window start (default: today - 90d),
+#                             keeps the import window bounded forever
+# Unmapped SimpleFIN accounts fall back to default_account = Firefly account
+# "Unmapped Import" (id 201) instead of the cash wallet, so stray transactions
+# are visible in one place instead of polluting real accounts.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: firefly-importer-autoimport
+  namespace: utilities
+data:
+  simplefin.json: |-
+    {
+      "version": 3,
+      "source": "ff3-importer-2.3.4",
+      "created_at": "2026-08-24T17:14:58-07:00",
+      "date": "",
+      "default_account": 201,
+      "delimiter": "comma",
+      "headers": false,
+      "rules": true,
+      "webhooks": true,
+      "skip_form": false,
+      "add_import_tag": true,
+      "roles": [],
+      "do_mapping": [],
+      "mapping": [],
+      "duplicate_detection_method": "classic",
+      "ignore_duplicate_lines": false,
+      "unique_column_index": 0,
+      "unique_column_type": "external-id",
+      "pseudo_identifier": [],
+      "flow": "simplefin",
+      "content_type": "csv",
+      "camt_type": "",
+      "custom_tag": "",
+      "file_name": "(unknown)",
+      "identifier": "0",
+      "connection": "0",
+      "ignore_spectre_categories": false,
+      "grouped_transaction_handling": "",
+      "use_entire_opposing_address": false,
+      "map_all_data": false,
+      "pending_transactions": false,
+      "access_token": "__SIMPLEFIN_ACCESS_URL__",
+      "accounts": {
+        "ACT-8b542237-c283-499e-b842-ff3d2c8ef85e": 6,
+        "ACT-ae13100a-0fe7-4995-8537-92b58731c600": 7,
+        "ACT-dcbda1ef-f548-4ba1-a0b1-362f94d43c07": 8,
+        "ACT-f81df8a5-881e-47ad-b5df-fb7f676deedd": 9,
+        "ACT-1f155a12-7c4d-490e-b09c-c0e46d1a6ece": 10,
+        "ACT-2b996874-5d5f-469e-adfd-c61dc957bfd6": 11,
+        "ACT-69c4612c-c8c3-401c-b1b6-2e634a4ae6f8": 12,
+        "ACT-a5a27997-ae57-48d0-81db-fa026d0b2a59": 13,
+        "ACT-566d1d3b-2ff9-44ef-965e-b0fe6e70973a": 76,
+        "ACT-da4a0d12-a263-48cd-b8d5-216c7c5e2342": 77,
+        "ACT-a64b8419-ebf3-4dc6-829b-2ec9b1d58aee": 78,
+        "ACT-39df4846-d2b1-4e78-b320-03c2f6c47afd": 79,
+        "ACT-26469254-0bdb-45c2-91b5-f05797addb31": 80,
+        "ACT-1f51fea6-05d4-4a5b-a986-8e783926ca46": 179
+      },
+      "new_accounts": {
+        "ACT-8b542237-c283-499e-b842-ff3d2c8ef85e": {
+          "create": "1",
+          "name": "ROTH IRA (3351)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-ae13100a-0fe7-4995-8537-92b58731c600": {
+          "create": "1",
+          "name": "Rollover IRA (1608)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-dcbda1ef-f548-4ba1-a0b1-362f94d43c07": {
+          "create": "1",
+          "name": "INVESTMENT (3476)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-f81df8a5-881e-47ad-b5df-fb7f676deedd": {
+          "create": "1",
+          "name": "HOLDING (6846)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-1f155a12-7c4d-490e-b09c-c0e46d1a6ece": {
+          "create": "1",
+          "name": "AMAZON 401(K) PLAN (7440)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-2b996874-5d5f-469e-adfd-c61dc957bfd6": {
+          "create": "1",
+          "name": "AMAZON RSU (8521)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-69c4612c-c8c3-401c-b1b6-2e634a4ae6f8": {
+          "create": "1",
+          "name": "Costco Anywhere Visa® Card by Citi-7174 (7174)",
+          "type": "asset",
+          "account_role": "ccAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-a5a27997-ae57-48d0-81db-fa026d0b2a59": {
+          "create": "1",
+          "name": "Citi Prestige® Card-4786 (4786)",
+          "type": "asset",
+          "account_role": "ccAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-566d1d3b-2ff9-44ef-965e-b0fe6e70973a": {
+          "create": "1",
+          "name": "01 Daily Checking (4540)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-da4a0d12-a263-48cd-b8d5-216c7c5e2342": {
+          "create": "1",
+          "name": "02 Member Advantage Checking (1500)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-a64b8419-ebf3-4dc6-829b-2ec9b1d58aee": {
+          "create": "1",
+          "name": "03 Member Advantage Savings (1427)",
+          "type": "asset",
+          "account_role": "savingAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-39df4846-d2b1-4e78-b320-03c2f6c47afd": {
+          "create": "1",
+          "name": "04 Savings (3735)",
+          "type": "asset",
+          "account_role": "savingAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        },
+        "ACT-26469254-0bdb-45c2-91b5-f05797addb31": {
+          "create": "1",
+          "name": "05 Line of Credit (3981)",
+          "type": "asset",
+          "account_role": "defaultAsset",
+          "liability_type": "debt",
+          "liability_direction": "credit",
+          "opening_balance": null,
+          "currency": "USD"
+        }
+      },
+      "date_range": "partial",
+      "date_range_number": 60,
+      "date_range_unit": "d",
+      "date_range_not_after_unit": "",
+      "date_range_not_after_number": 0,
+      "date_not_before": "__IMPORT_START_DATE__",
+      "date_not_after": "",
+      "nordigen_country": "",
+      "nordigen_bank": "",
+      "nordigen_requisitions": [],
+      "nordigen_max_days": "90",
+      "lunch_flow_api_key": "",
+      "enable_banking_country": "",
+      "enable_banking_bank": "",
+      "enable_banking_auth_id": "",
+      "enable_banking_sessions": [],
+      "conversion": false,
+      "ignore_duplicate_transactions": true
+    }
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: firefly-importer-autoimport
+  namespace: utilities
+spec:
+  schedule: '40 2 * * *'
+  timeZone: ${TIMEZONE}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 1800
+      template:
+        spec:
+          restartPolicy: Never
+          nodeSelector:
+            node-role.kubernetes.io/worker: 'true'
+          initContainers:
+            - name: render-config
+              image: fireflyiii/data-importer:version-2.3.4
+              command:
+                - php
+                - -r
+                - >-
+                  $d = (int)(getenv("IMPORT_WINDOW_DAYS") ?: 90);
+                  file_put_contents("/import/simplefin.json",
+                  str_replace(["__SIMPLEFIN_ACCESS_URL__", "__IMPORT_START_DATE__"],
+                  [getenv("SIMPLEFIN_ACCESS_URL"), date("Y-m-d", strtotime("-$d days"))],
+                  file_get_contents("/template/simplefin.json")));
+              env:
+                - name: SIMPLEFIN_ACCESS_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: firefly-importer
+                      key: SIMPLEFIN_ACCESS_URL
+              volumeMounts:
+                - name: template
+                  mountPath: /template
+                  readOnly: true
+                - name: import
+                  mountPath: /import
+          containers:
+            - name: import
+              image: fireflyiii/data-importer:version-2.3.4
+              command:
+                - sh
+                - -c
+                - |
+                  php artisan config:clear >/dev/null 2>&1
+                  php artisan import:validate-json /import/simplefin.json
+                  IMPORT_DIR_ALLOWLIST=/import php artisan importer:import /import/simplefin.json > /tmp/import.log 2>&1
+                  tail -5 /tmp/import.log
+                  # importer exits GENERAL_ERROR when Firefly rejects re-imported
+                  # duplicates; success = the run reached "Done!"
+                  grep -q 'Done!' /tmp/import.log
+              env:
+                - name: FIREFLY_III_URL
+                  value: http://firefly-iii.utilities.svc.cluster.local:8080
+                - name: FIREFLY_III_ACCESS_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: firefly-importer
+                      key: FIREFLY_III_ACCESS_TOKEN
+                - name: IMPORT_DIR_ALLOWLIST
+                  value: /import
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 256Mi
+                limits:
+                  memory: 1Gi
+              volumeMounts:
+                - name: import
+                  mountPath: /import
+                  readOnly: true
+          volumes:
+            - name: template
+              configMap:
+                name: firefly-importer-autoimport
+            - name: import
+              emptyDir: {}

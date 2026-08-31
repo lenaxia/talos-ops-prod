@@ -154,5 +154,7 @@ spec:
         size: 5Gi
         storageClass: longhorn
         retain: true
+        labels:
+          snapshot.home.arpa/enabled: 'true'
         globalMounts:
           - path: /var/www/html/storage
