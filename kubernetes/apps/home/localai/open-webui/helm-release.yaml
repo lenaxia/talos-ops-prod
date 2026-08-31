@@ -97,6 +97,20 @@ spec:
                     key: LITELLM_MASTER_KEY
               AUDIO_TTS_MODEL: "fish-speech"
               AUDIO_TTS_VOICE: "alloy"
+              # RAG embeddings - bge-m3 served by infinity (CPU/ONNX), routed
+              # through litellm in-cluster (v0.11.1 config.py: RAG_OPENAI_*
+              # default to the external OPENAI_API_BASE_URL; pin explicitly
+              # to avoid hairpinning RAG indexing through the ingress).
+              RAG_EMBEDDING_ENGINE: openai
+              RAG_EMBEDDING_MODEL: bge-m3
+              RAG_OPENAI_API_BASE_URL:
+                http://litellm.home.svc.cluster.local:4000/v1
+              RAG_OPENAI_API_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: litellm
+                    key: LITELLM_MASTER_KEY
+              RAG_EMBEDDING_BATCH_SIZE: '8'
             envFrom:
               - secretRef:
                   name: &appname openwebui
