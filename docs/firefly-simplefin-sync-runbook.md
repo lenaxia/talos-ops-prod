@@ -82,6 +82,18 @@ Both `firefly-iii` (5Gi) and `firefly-importer` (2Gi) PVCs carry the
 `snapshot-cronjob-controller` policy generates daily Kopia snapshot CronJobs
 for them (see `kubernetes/apps/kyverno/policies/snapshot-cronjob-controller.yaml`).
 
+### Post-deploy verification (once, after first merge)
+
+1. `kubectl -n utilities get pvc firefly-iii firefly-importer -o jsonpath='{.items[*].metadata.labels}'`
+   — confirm `snapshot.home.arpa/enabled: "true"` propagated (app-template
+   applies persistence `labels` on helm upgrade). If not, apply manually:
+   `kubectl -n utilities label pvc firefly-iii firefly-importer snapshot.home.arpa/enabled=true`
+2. Confirm Kyverno generated snapshot CronJobs:
+   `kubectl -n utilities get cronjobs | grep snap` — expect
+   `firefly-iii-firefly-iii-snap` and `firefly-importer-firefly-importer-snap`.
+   If missing despite correct labels, re-trigger the generate rule by touching
+   a PVC label (add + remove any annotation).
+
 ## Known incident history
 
 - **2026-08-31**: Initial setup. Fixed inverted 401(k) contributions + a
