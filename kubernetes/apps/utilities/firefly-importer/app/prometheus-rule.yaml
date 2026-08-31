@@ -1,0 +1,36 @@
+---
+# Alerts for the Firefly III SimpleFIN sync pipeline.
+# Depends on kube-state-metrics (prometheus-stack) — kube_job_* metrics.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: firefly-importer-sync
+  namespace: utilities
+spec:
+  groups:
+    - name: firefly-importer-sync.rules
+      rules:
+        - alert: FireflyImportJobFailed
+          expr: |
+            kube_job_status_failed{namespace="utilities", job_name=~"firefly-importer-(autoimport|fixer).*"} > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: >-
+              Firefly sync job {{ $labels.job_name }} failed. Check
+              `kubectl -n utilities logs job/{{ $labels.job_name }}` — likely a
+              dead SimpleFIN access URL (refresh SIMPLEFIN_ACCESS_URL in the
+              firefly-importer secret) or Firefly III being unreachable.
+        - alert: FireflyAutoImportStalled
+          expr: |
+            time() - max by ()
+              (kube_job_status_completion_time{namespace="utilities", job_name=~"firefly-importer-autoimport.*"})
+              > 93600
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: >-
+              Nightly Firefly SimpleFIN import has not succeeded in over 26h.
+              Check the firefly-importer-autoimport CronJob and recent jobs.

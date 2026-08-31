@@ -7,4 +7,7 @@ commonLabels:
   app.kubernetes.io/instance: *app
 resources:
   - helm-release.yaml
+  - autoimport.yaml
+  - cronjob.yaml
+  - prometheus-rule.yaml
   - secret.sops.yaml
