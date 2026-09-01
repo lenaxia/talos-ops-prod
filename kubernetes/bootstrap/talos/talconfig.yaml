@@ -156,6 +156,7 @@ nodes:
         mtu: 1500
     patches:
       - "@./patches/global/containerd.yaml"
+      - "@./patches/worker/max-pods-200.yaml"
   - hostname: "worker-02"
     ipAddress: "192.168.3.22"
     controlPlane: false
