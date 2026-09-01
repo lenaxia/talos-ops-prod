@@ -28,8 +28,8 @@ jobs:
     # before the AI reviews. The ai-workflows reusable workflow skips its own
     # shared bot list; add org-specific bots here.
     if: ${{ !contains(fromJson('["renovate[bot]","llm-provider[bot]"]'), github.event.pull_request.user.login) }}
-    uses: lenaxia/ai-workflows/.github/workflows/pr-review.yml@v0.2.10
+    uses: lenaxia/ai-workflows/.github/workflows/pr-review.yml@v0.2.15
     secrets: inherit
     with:
-      version: v0.2.10
+      version: v0.2.15
       project_name: talos-ops-prod
