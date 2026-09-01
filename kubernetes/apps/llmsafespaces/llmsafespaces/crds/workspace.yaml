@@ -1,0 +1,378 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: workspaces.llmsafespaces.dev
+spec:
+  group: llmsafespaces.dev
+  names:
+    kind: Workspace
+    plural: workspaces
+    singular: workspace
+    shortNames:
+      - ws
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - owner
+                - runtime
+                - storage
+              properties:
+                owner:
+                  type: object
+                  required:
+                    - userID
+                  properties:
+                    userID:
+                      type: string
+                runtime:
+                  type: string
+                  description: "Runtime environment (e.g. python:3.11)"
+                architecture:
+                  type: string
+                  enum: ["amd64", "arm64"]
+                  default: "amd64"
+                  description: "CPU architecture for the workspace pod. Sets a nodeSelector. Changing this triggers pod recreation."
+                securityLevel:
+                  type: string
+                  enum: ["standard", "high"]
+                  default: "standard"
+                storage:
+                  type: object
+                  required:
+                    - size
+                  properties:
+                    size:
+                      type: string
+                      pattern: "^[1-9][0-9]*(Gi|Mi)$"
+                    storageClassName:
+                      type: string
+                    accessMode:
+                      type: string
+                      enum: ["ReadWriteOnce", "ReadWriteMany"]
+                      default: "ReadWriteOnce"
+                networkAccess:
+                  type: object
+                  properties:
+                    egress:
+                      type: array
+                      items:
+                        type: object
+                        required: [domain]
+                        properties:
+                          domain:
+                            type: string
+                    ingress:
+                      type: boolean
+                      default: false
+                    devPreview:
+                      type: boolean
+                      default: false
+                autoSuspend:
+                  type: object
+                  default: {}
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: true
+                    idleTimeoutSeconds:
+                      type: integer
+                      minimum: 1
+                      default: 86400
+                ttlSecondsAfterSuspended:
+                  type: integer
+                  minimum: 0
+                  default: 0
+                packages:
+                  type: array
+                  items:
+                    type: object
+                    required: [runtime, requirements]
+                    properties:
+                      runtime:
+                        type: string
+                      requirements:
+                        type: array
+                        items:
+                          type: string
+                initScript:
+                  type: string
+                maxActiveSessions:
+                  type: integer
+                  minimum: 1
+                  maximum: 20
+                  default: 5
+                credentials:
+                  type: object
+                  properties:
+                    secretName:
+                      type: string
+                timeout:
+                  type: integer
+                  minimum: 0
+                  maximum: 86400
+                  default: 0
+                  description: "Max pod lifetime in seconds. 0 = no limit."
+                resources:
+                  type: object
+                  default: {}
+                  properties:
+                    cpu:
+                      type: string
+                      default: "500m"
+                    memory:
+                      type: string
+                      default: "512Mi"
+                    cpuPinning:
+                      type: boolean
+                      default: false
+                    cpuLimit:
+                      type: string
+                      pattern: '^([1-9][0-9]*m|[1-9][0-9]*\.[0-9]+|0\.[0-9]*[1-9][0-9]*)$'
+                    memoryLimit:
+                      type: string
+                      pattern: '^[1-9][0-9]*(Ki|Mi|Gi)$'
+                restartGeneration:
+                  type: integer
+                  format: int64
+                  default: 0
+                podSecurityContext:
+                  type: object
+                  properties:
+                    runAsUser:
+                      type: integer
+                      format: int64
+                    runAsGroup:
+                      type: integer
+                      format: int64
+                    seccompProfile:
+                      type: string
+                runtimeClass:
+                  type: string
+                  nullable: true
+                  description: "Override the container runtime for this workspace (Epic 51). Set to 'runc' to opt out of the default gVisor sandbox. Empty means use the controller default."
+                autoApprovePermissions:
+                  type: boolean
+                  default: false
+                  description: "Auto-approve all agent permission requests without user interaction. Default: false."
+                suspend:
+                  type: boolean
+                  nullable: true
+                  description: "Tri-state request flag (US-23.3). nil=unspecified/acknowledged; true=request suspend; false=request resume from Suspended. No default — the nil state must be reachable so the controller doesn't auto-resume."
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - "Pending"
+                    - "Creating"
+                    - "Active"
+                    - "Suspending"
+                    - "Suspended"
+                    - "Resuming"
+                    - "Terminating"
+                    - "Terminated"
+                    - "Failed"
+                pvcName:
+                  type: string
+                activeSessions:
+                  type: integer
+                lastActivityAt:
+                  type: string
+                  format: date-time
+                suspendedAt:
+                  type: string
+                  format: date-time
+                pendingAt:
+                  type: string
+                  format: date-time
+                resumedAt:
+                  type: string
+                  format: date-time
+                userCredsPresent:
+                  type: boolean
+                  description: |
+                    Whether agentd has user-DEK content materialized on
+                    disk. Populated by controller from agentd's
+                    /v1/healthz scrape. Absent (nil) means the
+                    controller hasn't scraped yet — the API's
+                    watcher-driven auto-push treats absent as unknown.
+                secretsDelivery:
+                  type: object
+                  description: |
+                    Terminal-verified spawn-env delivery state (US-70.1,
+                    design 0057 R2). Populated by the controller from
+                    agentd's /v1/healthz scrape. Absent (nil) means no
+                    evidence (unreachable pod, or a pre-US-70.1 runtime).
+                  properties:
+                    spawnedRev:
+                      type: string
+                      description: |
+                        Revision of the secrets delta the agent process
+                        actually spawned with — measured at the point of
+                        consumption, never at materialization or fetch.
+                    degradedReason:
+                      type: string
+                      description: |
+                        Machine-readable reason when delivery is
+                        incomplete (spawn_env_unavailable,
+                        spawn_env_unauthorized, spawn_env_no_credential,
+                        spawn_env_bad_response; R2b adds the
+                        spawn_files_* family for file-class delivery).
+                        Empty means converged.
+                    filesRev:
+                      type: string
+                      description: |
+                        Terminal revision over the file-class credential
+                        set the uid-1000 supervisor actually wrote (R2b,
+                        #1165 — ownership-by-construction delivery of
+                        ssh keys/config, git-credentials, secret-files).
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    required: [type, status]
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum: ["True", "False", "Unknown"]
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                message:
+                  type: string
+                failureReason:
+                  description: "Typed enum identifying why the workspace entered Failed phase."
+                  type: string
+                  enum: ["", "TransientPodLoss", "PodFailedDuringCreation", "PodBuildFailed", "PVCBindTimeout", "PendingTimeout", "TooManyFailures"]
+                observedGeneration:
+                  type: integer
+                  format: int64
+                podName:
+                  type: string
+                podNamespace:
+                  type: string
+                podIP:
+                  type: string
+                imageTag:
+                  type: string
+                  description: "Container image tag observed when the pod started. Set by the controller."
+                endpoint:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                restartCount:
+                  type: integer
+                  format: int32
+                consecutiveFailures:
+                  type: integer
+                  format: int32
+                lastFailureClass:
+                  type: string
+                lastFailureAt:
+                  type: string
+                  format: date-time
+                nextRetryAt:
+                  type: string
+                  format: date-time
+                lastStableAt:
+                  type: string
+                  format: date-time
+                controllerRestartCount:
+                  type: integer
+                  format: int32
+                safeMode:
+                  type: boolean
+                observedRestartGeneration:
+                  type: integer
+                  format: int64
+                credentialSecretHash:
+                  type: string
+                lastHealthCheckAt:
+                  type: string
+                  format: date-time
+                consecutiveHealthFailures:
+                  type: integer
+                  format: int32
+                # Agent-reported fields (populated from agentd /v1/statusz scrape).
+                sessions:
+                  type: array
+                  description: "Sessions reported by the agentd /v1/statusz endpoint."
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      title:
+                        type: string
+                      status:
+                        type: string
+                        enum: ["idle", "busy"]
+                        description: "Activity status of the session as reported by agentd."
+                      contextUsed:
+                        type: integer
+                        format: int64
+                        description: "LLM prompt tokens consumed by this session in the last completed step."
+                diskUsedBytes:
+                  type: integer
+                  format: int64
+                  description: "Bytes consumed by the workspace PVC, reported by agentd."
+                diskTotalBytes:
+                  type: integer
+                  format: int64
+                  description: "Total bytes available on the workspace PVC, reported by agentd."
+                memoryUsedBytes:
+                  type: integer
+                  format: int64
+                  description: "Memory bytes consumed by the workspace, reported by agentd."
+                memoryTotalBytes:
+                  type: integer
+                  format: int64
+                  description: "Total memory available to the workspace, reported by agentd."
+                cpuUsageMicros:
+                  type: integer
+                  format: int64
+                  description: "Cumulative CPU microseconds consumed by the workspace pod cgroup (cgroup v2 cpu.stat usage_usec)."
+                cpuLimitMicrosPerSec:
+                  type: integer
+                  format: int64
+                  description: "CPU quota in microseconds per second from cgroup v2 cpu.max (0 = unlimited)."
+                contextUsed:
+                  type: integer
+                  format: int64
+                  description: "LLM context tokens consumed across active sessions, reported by agentd."
+                contextTotal:
+                  type: integer
+                  format: int64
+                  description: "Total LLM context window tokens available, reported by agentd."
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Runtime
+          type: string
+          jsonPath: .spec.runtime
+        - name: Storage
+          type: string
+          jsonPath: .spec.storage.size
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}
