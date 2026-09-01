@@ -113,7 +113,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.25.7"
+        tag: "0.26.0"
       # V2 delivery ROLLED BACK (fourth flip) 2026-08-29 on 0.25.7:
       # OPENCODE_V2_DELIVERY=0 — back to V1 sync delivery pending Epic
       # 69 (#1134, design 0055 — agentd state authority supersedes this
@@ -137,7 +137,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.25.7"
+        tag: "0.26.0"
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
@@ -188,7 +188,15 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:302b190790613523ccad07d508a42edeaae68f0620d22774f065f02107dcfd56
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:511fb2975721b2e22fc490ddc455480be96d21d2491d1ba535f733e9c57c6d67
+      # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
+      # 0.26.0 strips opencode out of runtimes/base; the controller
+      # mounts this digest-pinned image volume at /opencode and the
+      # supervisor sha256-verifies before spawn (exit 83/84 →
+      # OpencodeVerified condition). Render fails without it — by design.
+      # Digest source: release v0.26.0 (ghcr manifest, tag 0.26.0).
+      opencodeDelivery:
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:55279dab2982dcc0ca190599c562f496e5191d349ba2a6111f0ea094f71f52be
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -207,7 +215,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.25.7"
+            tag: "0.26.0"
       freeModelsRefresher:
         enabled: false
 
@@ -278,7 +286,7 @@ spec:
       # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
       # alongside the other four images.
       image:
-        tag: "0.25.7"
+        tag: "0.26.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -297,7 +305,7 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: "0.25.7"
+          tag: "0.26.0"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart

@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Out-of-band CRD apply (Helm 3 does not upgrade crds/ on HelmRelease
+# upgrades; helm-release.yaml sets upgrade.crds: Skip). Sourced from the
+# chart's crds/ at the pinned tag — keep in sync with the GitRepository
+# ref in kubernetes/flux/repositories/git/llmsafespaces.yaml.
+#
+# v0.26.0: workspace.yaml adds status.secretsDelivery (spawnedRev /
+# degradedReason / filesRev — US-70.1 terminal verification, design 0057).
+# Additive and optional; safe to apply before the chart upgrade.
+resources:
+  - workspace.yaml
