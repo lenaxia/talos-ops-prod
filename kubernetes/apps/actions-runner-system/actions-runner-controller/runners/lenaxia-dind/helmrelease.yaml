@@ -49,7 +49,9 @@ spec:
               - name: dind-cert
                 mountPath: /certs/client
           - name: dind
-            image: docker:27-dind
+            # Digest-pinned to match gokore's reproducibility posture
+            # (review round 1). docker:27-dind @ sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce
+            image: docker@sha256:sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce
             securityContext:
               privileged: true
             env:
