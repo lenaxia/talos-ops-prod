@@ -1,0 +1,44 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app lenaxia-general-runner
+  namespace: actions-runner-system
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: gha-runner-scale-set
+    namespace: actions-runner-system
+  values:
+    # Org-scoped: accepts jobs from every lenaxia/* repo whose workflow
+    # uses `runs-on: lenaxia-general`. Requires the GitHub App to be
+    # installed at the ORG level (installation id in the secret below).
+    githubConfigUrl: https://github.com/lenaxia
+    githubConfigSecret: *app
+    minRunners: 0
+    maxRunners: 10
+    containerMode:
+      type: kubernetes-novolume
+    controllerServiceAccount:
+      name: actions-runner-controller
+      namespace: actions-runner-system
+    template:
+      spec:
+        automountServiceAccountToken: true
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io/worker
+                      operator: In
+                      values:
+                        - "true"
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: kubernetes.io/hostname
+            whenUnsatisfiable: ScheduleAnyway
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: *app
