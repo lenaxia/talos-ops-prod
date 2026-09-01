@@ -49,7 +49,8 @@ spec:
                 test -f /config/app/lib/core-8.9.0-exec.jar && exit 0
                 echo "fetching nzbhydra2 8.9.0 generic release"
                 wget -q https://github.com/theotherp/nzbhydra2/releases/download/v8.9.0/nzbhydra2-8.9.0-generic.zip -O /tmp/g.zip
-                unzip -oq /tmp/g.zip -d /config/app
+                unzip -oq /tmp/g.zip 'lib/*' -d /config/app
+                rm -f /tmp/g.zip
         containers:
           main:
             image:
