@@ -57,7 +57,11 @@ spec:
     pod:
       # Must be Deployment, DaemonSet, or StatefulSet.
       kind: Deployment
-      replicas: 1
+      # 2 replicas: authelia is a stateless frontend (state lives in
+      # redis + postgres), so rollouts/restarts must not be auth outages.
+      # The 2026-09-01 zombie-pod incident left 12 stale replicas and a
+      # single live pod — a second replica removes that fragility.
+      replicas: 2
 
       selectors:
         nodeSelector:
