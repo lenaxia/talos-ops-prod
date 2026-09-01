@@ -33,44 +33,14 @@ spec:
         type: statefulset
         annotations:
           reloader.stakater.com/auto: 'true'
-        # The linuxserver native binary (all 8.9.0 ls9x-ls102 builds) exits
-        # silently before main() on this cluster's kernels; the jar release
-        # runs fine. The app jar is fetched into the config PVC once and
-        # skipped on subsequent boots.
-        initContainers:
-          fetch-app:
-            image:
-              repository: alpine
-              tag: '3.22.4'
-            command:
-              - sh
-              - -c
-              - |
-                test -f /config/app/lib/core-8.9.0-exec.jar && exit 0
-                echo "fetching nzbhydra2 8.9.0 generic release"
-                wget -q https://github.com/theotherp/nzbhydra2/releases/download/v8.9.0/nzbhydra2-8.9.0-generic.zip -O /tmp/g.zip
-                unzip -oq /tmp/g.zip 'lib/*' -d /config/app
-                rm -f /tmp/g.zip
         containers:
           main:
             image:
-              repository: eclipse-temurin
-              tag: 17.0.16_8-jre-alpine-3.22
+              repository: ghcr.io/lenaxia/nzbhydra2
+              tag: '8.9.0'
 
             env:
               TZ: ${TIMEZONE}
-            command:
-              - java
-              - -Xms64m
-              - -Xmx384m
-              - -Dsun.security.pkcs11.enable-solaris=false
-              - -Dfile.encoding=UTF8
-              - -jar
-              - /config/app/lib/core-8.9.0-exec.jar
-              - --nobrowser
-              - --datafolder
-              - /config
-              - directstart
             resources:
               requests:
                 cpu: 50m
