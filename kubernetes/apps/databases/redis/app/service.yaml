@@ -28,6 +28,21 @@ metadata:
   labels:
     app.kubernetes.io/name: redis
     app.kubernetes.io/instance: redis
+  annotations:
+    redis.home.arpa/change-notice: >-
+      Changed from ExternalName (CNAME to redis-0.redis-headless) to a
+      ClusterIP selector Service on 2026-09-01. Same DNS name, so no client
+      changes needed (consumers: authelia, and any app following the
+      redis-primary convention). Motivation: authelia intermittently hit
+      'dial tcp: lookup redis-primary...: i/o timeout' on the CNAME chain
+      (2+ resolver round-trips per dial); a single A record halves the
+      DNS exposure per connection attempt.
 spec:
-  type: ExternalName
-  externalName: redis-0.redis-headless.databases.svc.cluster.local
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: redis
+  ports:
+    - name: valkey
+      port: 6379
+      targetPort: 6379
