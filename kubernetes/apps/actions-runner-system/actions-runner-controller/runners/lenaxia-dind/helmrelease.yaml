@@ -1,0 +1,67 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app lenaxia-dind-runner
+  namespace: actions-runner-system
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: gha-runner-scale-set
+    namespace: actions-runner-system
+  values:
+    # Org-scoped PRIVILEGED set for docker/kind workloads
+    # (`runs-on: lenaxia-dind`): runner pod + docker:dind sidecar, jobs
+    # set DOCKER_HOST implicitly via the shared /certs volume. ONLY
+    # point workflow_dispatch/schedule-triggered (fork-safe) workflows
+    # at this label — privileged pods on shared workers must not run
+    # untrusted fork PRs (US-70 pool precedent: dispatch+cron only).
+    githubConfigUrl: https://github.com/lenaxia
+    githubConfigSecret: *app
+    minRunners: 0
+    maxRunners: 4
+    controllerServiceAccount:
+      name: actions-runner-controller
+      namespace: actions-runner-system
+    template:
+      spec:
+        automountServiceAccountToken: true
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io/worker
+                      operator: In
+                      values:
+                        - "true"
+        containers:
+          - name: runner
+            env:
+              - name: DOCKER_HOST
+                value: tcp://localhost:2376
+              - name: DOCKER_TLS_CERTDIR
+                value: /certs/client
+              - name: DOCKER_CONFIG
+                value: /certs/client/.docker
+            volumeMounts:
+              - name: dind-cert
+                mountPath: /certs/client
+          - name: dind
+            image: docker:27-dind
+            securityContext:
+              privileged: true
+            env:
+              - name: DOCKER_TLS_CERTDIR
+                value: /certs/client
+            volumeMounts:
+              - name: dind-cert
+                mountPath: /certs/client
+            resources:
+              requests:
+                cpu: 2
+                memory: 4Gi
+        volumes:
+          - name: dind-cert
+            emptyDir: {}
