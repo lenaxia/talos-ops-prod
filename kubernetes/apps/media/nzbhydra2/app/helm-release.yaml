@@ -69,6 +69,7 @@ spec:
               - --nobrowser
               - --datafolder
               - /config
+              - directstart
             resources:
               requests:
                 cpu: 50m
