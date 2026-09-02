@@ -15,7 +15,7 @@ spec:
     # uses `runs-on: lenaxia-general`. Requires the GitHub App to be
     # installed at the ORG level (installation id in the secret below).
     githubConfigUrl: https://github.com/lenaxia
-    githubConfigSecret: *app
+    githubConfigSecret: actions-runner
     minRunners: 0
     maxRunners: 10
     containerMode:

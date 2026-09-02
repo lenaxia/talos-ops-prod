@@ -18,7 +18,7 @@ spec:
     # at this label — privileged pods on shared workers must not run
     # untrusted fork PRs (US-70 pool precedent: dispatch+cron only).
     githubConfigUrl: https://github.com/lenaxia
-    githubConfigSecret: *app
+    githubConfigSecret: actions-runner
     minRunners: 0
     maxRunners: 4
     controllerServiceAccount:
