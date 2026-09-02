@@ -145,9 +145,6 @@ spec:
               # Production Environment Settings
               - name: LITELLM_MODE
                 value: "PRODUCTION"
-              # TEMPORARY (2026-09-02): DEBUG to capture full request/response
-              # payloads in pod logs — diagnosing goKore strategic-cycle
-              # garbage next_location values. Revert to ERROR when done.
               - name: LITELLM_LOG
                 value: "ERROR"
               # Route openai/* models through /chat/completions (not /responses)
