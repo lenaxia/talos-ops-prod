@@ -11,13 +11,13 @@ spec:
     name: gha-runner-scale-set
     namespace: actions-runner-system
   values:
-    # Org-scoped PRIVILEGED set for docker/kind workloads
-    # (`runs-on: lenaxia-dind`): runner pod + docker:dind sidecar, jobs
+    # Repo-scoped (lenaxia/LLMSafeSpaces) PRIVILEGED set for docker/kind
+    # workloads (`runs-on: lenaxia-dind`): runner pod + docker:dind sidecar, jobs
     # set DOCKER_HOST implicitly via the shared /certs volume. ONLY
     # point workflow_dispatch/schedule-triggered (fork-safe) workflows
     # at this label — privileged pods on shared workers must not run
     # untrusted fork PRs (US-70 pool precedent: dispatch+cron only).
-    githubConfigUrl: https://github.com/lenaxia
+    githubConfigUrl: https://github.com/lenaxia/LLMSafeSpaces
     githubConfigSecret: actions-runner
     minRunners: 0
     maxRunners: 4
