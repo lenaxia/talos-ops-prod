@@ -305,7 +305,12 @@ spec:
     runtimeEnvironments:
       base:
         image:
-          tag: "0.26.0"
+          # CalVer (design 0053 D5/S4): the base is content-versioned on
+          # its own cadence (catalog seed: api/internal/imagefactory/
+          # catalog.seed.yaml) and NEVER follows the platform VERSION —
+          # base:0.26.0 does not exist and caused fleet-wide
+          # ImagePullBackOff on every workspace pod recycle (2026-09-01).
+          tag: "2026.08.0"
 
     # ── Workspace defaults ──────────────────────────────────────────────────
     # Pin workspace PVCs to the 2-replica Longhorn StorageClass. Chart
