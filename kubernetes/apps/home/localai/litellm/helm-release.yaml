@@ -149,7 +149,7 @@ spec:
               # payloads in pod logs — diagnosing goKore strategic-cycle
               # garbage next_location values. Revert to ERROR when done.
               - name: LITELLM_LOG
-                value: "DEBUG"
+                value: "ERROR"
               # Route openai/* models through /chat/completions (not /responses)
               # when called via the Anthropic /v1/messages endpoint, so that
               # OpenAI-compatible backends without a /responses API (e.g. Z.AI

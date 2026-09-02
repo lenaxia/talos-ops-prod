@@ -71,6 +71,12 @@ spec:
                 value: "GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337" # 3090 FE
               - name: VLLM_USE_MODELSCOPE
                 value: "false"
+              # TEMPORARY (2026-09-02): log full prompts alongside
+              # --enable-log-requests (DEBUG gates the "Request ... prompt:"
+              # line in RequestLogger). goKore strategic-cycle diagnosis —
+              # remove when done.
+              - name: VLLM_LOGGING_LEVEL
+                value: "DEBUG"
             envFrom:
               - secretRef:
                   name: *appname
@@ -133,6 +139,9 @@ spec:
                 value: "GPU-6726851a-d64e-09c8-a938-1537593e3106" # 3090 Zotac
               - name: VLLM_USE_MODELSCOPE
                 value: "false"
+              # TEMPORARY (2026-09-02): see controller A — full prompt logging.
+              - name: VLLM_LOGGING_LEVEL
+                value: "DEBUG"
             envFrom:
               - secretRef:
                   name: *appname
