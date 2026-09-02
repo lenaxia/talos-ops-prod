@@ -51,7 +51,7 @@ spec:
               - name: DOCKER_TLS_VERIFY
                 value: "1"
               - name: DOCKER_CERT_PATH
-                value: /certs/client
+                value: /certs/client/client
             volumeMounts:
               - name: dind-cert
                 mountPath: /certs/client
