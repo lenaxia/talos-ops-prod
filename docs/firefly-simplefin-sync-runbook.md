@@ -96,6 +96,13 @@ for them (see `kubernetes/apps/kyverno/policies/snapshot-cronjob-controller.yaml
 
 ## Known incident history
 
+- **2026-09-03**: ~00:50 PDT OTP SMS from BECU — SimpleFIN bridge re-authenticating
+  its BECU session (bank sessions expire every few days; the bridge re-logins
+  server-side and BECU texts the account holder the code). Not a security event
+  unless no SimpleFIN re-auth was pending. To keep imports flowing, relay the
+  code via a pending prompt at bridge.simplefin.org. Expect this to recur
+  periodically; a missed code simply means BECU data goes stale until re-linked.
+
 - **2026-08-31**: Initial setup. Fixed inverted 401(k) contributions + a
   duplicate import; backfilled opening balances from BECU/Fidelity/Citi
   statements; re-anchored after the first full-window import brought missing
