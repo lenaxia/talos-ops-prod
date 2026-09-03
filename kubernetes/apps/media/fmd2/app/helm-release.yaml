@@ -58,8 +58,8 @@ spec:
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: 
-            networking-chain-authelia@kubernetescrd
+          traefik.ingress.kubernetes.io/router.middlewares:
+            networking-chain-authelia-kasm@kubernetescrd
         hosts:
           - host: &uri fmd.thekao.cloud
             paths:
