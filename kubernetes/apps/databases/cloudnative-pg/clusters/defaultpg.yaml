@@ -18,6 +18,15 @@ metadata:
 spec:
   instances: 3
   imageName: ghcr.io/cloudnative-pg/postgresql:16.3
+  # Eviction protection: pods were BestEffort (no requests) — first victims
+  # of node-pressure eviction on worker-04. Sized from observed usage
+  # (VictoriaMetrics 17d: max ~1.1Gi across all replicas/generations).
+  resources:
+    requests:
+      memory: 2Gi
+    limits:
+      memory: 4Gi
+  priorityClassName: database-protected
   primaryUpdateStrategy: unsupervised
   storage:
     size: 20Gi

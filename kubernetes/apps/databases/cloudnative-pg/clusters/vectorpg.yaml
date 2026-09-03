@@ -20,6 +20,15 @@ spec:
   # Plain CNPG image — ships pgvector + barman-cloud (standard-bookworm is
   # missing barman-cloud binaries, which broke all backups for 136 days).
   imageName: ghcr.io/cloudnative-pg/postgresql:16.8
+  # Eviction protection: pods were BestEffort (no requests) — first victims
+  # of node-pressure eviction on worker-04. Sized from observed usage
+  # (VictoriaMetrics 17d: max ~0.6Gi; 256MB shared_buffers).
+  resources:
+    requests:
+      memory: 2Gi
+    limits:
+      memory: 4Gi
+  priorityClassName: database-protected
   primaryUpdateStrategy: unsupervised
   storage:
     size: 20Gi

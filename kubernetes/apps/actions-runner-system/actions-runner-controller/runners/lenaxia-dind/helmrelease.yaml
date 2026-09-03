@@ -39,6 +39,12 @@ spec:
         containers:
           - name: runner
             image: ghcr.io/home-operations/actions-runner:2.337.0@sha256:8b8e8326b5a08e658a0a41cfd2867afab69ca4194a152f986aa6fcd5430d09e7
+            # Eviction protection: the runner agent is small but must not be
+            # first-victim BestEffort when a busy dind sidecar pressures the node.
+            resources:
+              requests:
+                cpu: 250m
+                memory: 512Mi
             command:
               - /bin/bash
               - -c
@@ -68,9 +74,20 @@ spec:
               - name: dind-cert
                 mountPath: /certs/client
             resources:
+              # LLMSafeSpaces#1244: the US-70 pool's kind-in-dind was 3-5x
+              # slower than hosted and starved cert-manager-webhook past its
+              # progress deadline on a 1-CPU request (etcd CNI timeouts too).
+              # 3 CPU / 8Gi: scheduler now places this on worker-04 (64
+              # cores, ~54 free) — the 8-core workers only have ~1.8-2.3
+              # unrequested cores (the 1baed34c constraint). No cpu limit:
+              # burst into idle cores stays the posture; ~54 idle on the
+              # placement target. Memory: request sized for kind node +
+              # 5-image build churn; no limit (limit would OOMKill dind
+              # mid-build). Note: at 8Gi only 2 concurrent runners fit on
+              # worker-04 (maxRunners 4) — the pool runs one job at a time.
               requests:
-                cpu: 1
-                memory: 4Gi
+                cpu: 3
+                memory: 8Gi
         volumes:
           - name: dind-cert
             emptyDir: {}
