@@ -1,0 +1,17 @@
+machine:
+  sysctls:
+    # Talos defaults this to 0 (unprivileged-userns hardening). Every gVisor
+    # runsc sandbox creates its own user namespace, and clone(CLONE_NEWUSER)
+    # past the cap returns ENOSPC — so gVisor could not start a SINGLE
+    # sandbox on any worker (LLMSafeSpaces US-70 pool AC-13: "cannot create
+    # gofer process: gofer: fork/exec /proc/self/exe: no space left on
+    # device", every run; verified user.max_user_namespaces=0 on all four
+    # workers 2026-09-03). 63154 is the standard distro default. Runtime
+    # value already set on all workers 2026-09-03 via privileged probe —
+    # this patch makes it persist across reboots/config applies.
+    # WORKER-SCOPED deliberately: control-plane nodes run no gVisor or
+    # user-namespaced workloads and keep the Talos hardening default.
+    # Trade-off on workers: re-enables unprivileged userns (a known
+    # container-escape primitive); acceptable — workers already run the
+    # privileged dind runner set and known workloads only.
+    user.max_user_namespaces: "63154"
