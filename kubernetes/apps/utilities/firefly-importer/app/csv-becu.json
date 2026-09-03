@@ -1,0 +1,29 @@
+{
+    "version": 3,
+    "source": "ff3-importer-2.3.4",
+    "flow": "file",
+    "delimiter": "comma",
+    "headers": true,
+    "date": "m/d/Y",
+    "roles": [
+        "date_transaction",
+        "description",
+        "amount"
+    ],
+    "do_mapping": [],
+    "mapping": [],
+    "default_account": __FIREFLY_ACCOUNT_ID__,
+    "skip_form": true,
+    "add_import_tag": true,
+    "custom_tag": "becu-csv",
+    "rules": false,
+    "ignore_duplicate_transactions": true,
+    "ignore_duplicate_lines": false,
+    "conversion": false, "_conversion_unused": {
+        "do": false,
+        "factors": {}
+    },
+    "duplicate_detection_method": "classic",
+    "unique_column_type": "external-id",
+    "unique_column_index": 0
+}

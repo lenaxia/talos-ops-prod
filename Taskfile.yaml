@@ -21,6 +21,7 @@ env:
 
 includes:
   snapshot: .taskfiles/snapshot
+  finance: .taskfiles/finance
   bootstrap: .taskfiles/bootstrap
   ansible: .taskfiles/ansible
   kubernetes: .taskfiles/kubernetes

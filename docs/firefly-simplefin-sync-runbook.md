@@ -94,6 +94,30 @@ for them (see `kubernetes/apps/kyverno/policies/snapshot-cronjob-controller.yaml
    If missing despite correct labels, re-trigger the generate rule by touching
    a PVC label (add + remove any annotation).
 
+## CSV tier (manual export, zero credentials)
+
+Institutions with SMS-only/no API access and low data velocity are imported via
+manual CSV export instead of SimpleFIN — no credentials in the cluster, no OTP
+relay. Currently: **BECU** (monthly).
+
+```sh
+task finance:becu FILE=~/Downloads/transactions.csv ACCOUNT=3735
+```
+
+- `ACCOUNT` = last-4 (4540/1500/1427/3735/3981/9440 → the mapped Firefly account)
+- Config: `kubernetes/apps/utilities/firefly-importer/app/csv-becu.json`
+  (data-importer v3 config; note the key is `date`, not `date-format`)
+- Export one account at a time from the BECU portal; use a non-overlapping
+  date window — re-covered rows are rejected as content duplicates anyway,
+  but a clean window keeps the run output quiet
+- Imports are tagged `becu-csv` for provenance and bulk cleanup
+- Verified end-to-end 2026-09-03: date format `m/d/Y`, signed amounts,
+  auto deposit/withdrawal typing, duplicate rejection on re-import
+
+Adding another bank = copy `csv-becu.json`, adjust `roles`/`date`/`delimiter`
+to the export's shape, add a task with an account map. Mortgages (SPS, Guild)
+don't get CSV either — update those quarterly via opening-balance re-anchor.
+
 ## Known incident history
 
 - **2026-09-03**: ~00:50 PDT OTP SMS from BECU — SimpleFIN bridge re-authenticating
