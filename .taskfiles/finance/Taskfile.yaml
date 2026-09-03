@@ -20,19 +20,19 @@ tasks:
   becu:
     desc: Import a BECU CSV export into Firefly III (task finance:becu FILE=export.csv ACCOUNT=3735)
     vars:
-      ACCOUNT: '{{.ACCOUNT | default "3735"}}'
+      ACCOUNT: '{{.ACCOUNT}}'
       ACCOUNT_MAP:
         map: {"4540": 76, "1500": 77, "1427": 78, "3735": 79, "3981": 80, "9440": 179}
       FIREFLY_ACCOUNT_ID: '{{index .ACCOUNT_MAP .ACCOUNT | toString}}'
       POD:
-        sh: kubectl -n utilities get pod -l app.kubernetes.io/name=firefly-importer --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}'
+        sh: kubectl -n utilities get pod -l 'app.kubernetes.io/name=firefly-importer,app.kubernetes.io/controller=main' --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}'
       TS: '{{now | date "20060102150405"}}'
     preconditions:
-      - sh: test -f {{.FILE | default "/nonexistent"}}
+      - sh: test -f "{{.FILE | default "/nonexistent"}}"
         msg: "FILE=<path to csv> is required"
-      - sh: test -n "{{.FIREFLY_ACCOUNT_ID}}"
-        msg: "ACCOUNT must be one of: 4540 1500 1427 3735 3981 9440"
-      - sh: kubectl -n utilities get pod {{.POD}} >/dev/null
+      - sh: test -n "{{.ACCOUNT}}" && test "{{.FIREFLY_ACCOUNT_ID}}" != "<nil>"
+        msg: "ACCOUNT=<last4> is required and must be one of: 4540 1500 1427 3735 3981 9440"
+      - sh: test -n "{{.POD}}"
         msg: "No running firefly-importer pod"
     cmds:
       - echo "importing {{.FILE}} into firefly account {{.ACCOUNT}} (id {{.FIREFLY_ACCOUNT_ID}})"
