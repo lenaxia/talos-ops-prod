@@ -94,10 +94,16 @@ spec:
                   failureThreshold: 5
                   timeoutSeconds: 10
               readiness: *probe
+            # Requests sized to observed peaks (VictoriaMetrics 17d, all pod
+            # generations): steady RSS ~3.5Gi, startup warmup spikes to
+            # ~9Gi (both classifiers spike at pod creation), pre-2026-08-28
+            # generation ran ~10.5Gi steady. 10Gi request covers current-gen
+            # startup; limit 22Gi retained for safety. If the pre-08-28 model
+            # config ever returns, raise to 12Gi.
             resources: &resources
               requests:
                 nvidia.com/gpu: "1"
-                memory: "16Gi"
+                memory: "10Gi"
               limits:
                 nvidia.com/gpu: "1"
                 memory: "22Gi"
