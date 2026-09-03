@@ -55,6 +55,20 @@ spec:
       - name: middlewares-secure-headers
       - name: middlewares-authelia
 ---
+# Kasm/KasmVNC apps (fmd2): same as chain-authelia but with the
+# frame-tolerant secure headers — see middlewares-secure-headers-frames.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: chain-authelia-kasm
+  namespace: networking
+spec:
+  chain:
+    middlewares:
+      - name: middlewares-rate-limit
+      - name: middlewares-secure-headers-frames
+      - name: middlewares-authelia
+---
 #apiVersion: traefik.io/v1alpha1
 #kind: Middleware
 #metadata:
