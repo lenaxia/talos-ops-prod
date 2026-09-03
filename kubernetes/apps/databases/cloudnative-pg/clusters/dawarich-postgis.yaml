@@ -18,6 +18,15 @@ metadata:
 spec:
   instances: 2  # TODO: bump to 3 after Longhorn disk pressure is resolved
   imageName: ghcr.io/cloudnative-pg/postgis:16
+  # Eviction protection: pods were BestEffort (no requests) — first victims
+  # of node-pressure eviction. (The postgis-2 CrashLoop is a Longhorn
+  # read-only-FS disk issue — see the instances TODO — not memory.)
+  resources:
+    requests:
+      memory: 2Gi
+    limits:
+      memory: 4Gi
+  priorityClassName: database-protected
   primaryUpdateStrategy: unsupervised
   storage:
     size: 10Gi
