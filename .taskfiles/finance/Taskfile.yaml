@@ -1,0 +1,44 @@
+---
+version: '3'
+
+# Manual CSV imports for institutions without API access (see
+# docs/firefly-simplefin-sync-runbook.md — "CSV tier").
+#
+# Usage:
+#   task finance:becu FILE=~/Downloads/transactions.csv ACCOUNT=3735
+#
+# FILE     path to the CSV export from the BECU web portal
+# ACCOUNT  last-4 of the BECU account the export belongs to
+#          (4540=01 Checking, 1500=02 Checking, 1427=03 Savings,
+#           3735=04 Savings, 3981=05 LOC, 9440=06 Kirkland)
+
+vars:
+  BECU_CSV_CONFIG: '{{.ROOT_DIR}}/kubernetes/apps/utilities/firefly-importer/app/csv-becu.json'
+
+tasks:
+
+  becu:
+    desc: Import a BECU CSV export into Firefly III (task finance:becu FILE=export.csv ACCOUNT=3735)
+    vars:
+      ACCOUNT: '{{.ACCOUNT | default "3735"}}'
+      ACCOUNT_MAP:
+        map: {"4540": 76, "1500": 77, "1427": 78, "3735": 79, "3981": 80, "9440": 179}
+      FIREFLY_ACCOUNT_ID: '{{index .ACCOUNT_MAP .ACCOUNT | toString}}'
+      POD:
+        sh: kubectl -n utilities get pod -l app.kubernetes.io/name=firefly-importer --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}'
+      TS: '{{now | date "20060102150405"}}'
+    preconditions:
+      - sh: test -f {{.FILE | default "/nonexistent"}}
+        msg: "FILE=<path to csv> is required"
+      - sh: test -n "{{.FIREFLY_ACCOUNT_ID}}"
+        msg: "ACCOUNT must be one of: 4540 1500 1427 3735 3981 9440"
+      - sh: kubectl -n utilities get pod {{.POD}} >/dev/null
+        msg: "No running firefly-importer pod"
+    cmds:
+      - echo "importing {{.FILE}} into firefly account {{.ACCOUNT}} (id {{.FIREFLY_ACCOUNT_ID}})"
+      - sed "s/__FIREFLY_ACCOUNT_ID__/{{.FIREFLY_ACCOUNT_ID}}/" {{.BECU_CSV_CONFIG}} > /tmp/becu-import-{{.TS}}.json
+      - kubectl -n utilities cp "{{.FILE}}" "{{.POD}}:/tmp/becu-import.csv"
+      - kubectl -n utilities cp "/tmp/becu-import-{{.TS}}.json" "{{.POD}}:/tmp/becu-import.json"
+      - |
+        kubectl -n utilities exec "{{.POD}}" -- sh -c 'php artisan config:clear >/dev/null 2>&1; IMPORT_DIR_ALLOWLIST=/tmp php artisan importer:import /tmp/becu-import.json /tmp/becu-import.csv; rm -f /tmp/becu-import.json /tmp/becu-import.csv'
+      - rm -f /tmp/becu-import-{{.TS}}.json
