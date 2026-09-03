@@ -121,9 +121,16 @@ spec:
                   failureThreshold: 5
                   timeoutSeconds: 10
             resources:
+              # Requests sized to observed peaks (VictoriaMetrics 17d, all pod
+              # generations): steady RSS ~4.9Gi but every pod start spikes to
+              # ~18.7Gi (model load + torch.compile + CUDA graph capture +
+              # MTP draft graphs). Request 20Gi covers the spike — usage never
+              # exceeds request, so no overcommit on worker-04; limit stays
+              # 24Gi. LLMSafeSpaces#1244 context. Do NOT drop the request
+              # below ~19Gi without re-measuring startup peaks.
               requests:
                 cpu: 100m
-                memory: 24Gi
+                memory: 20Gi
                 nvidia.com/gpu: "1"
               limits:
                 memory: 24Gi

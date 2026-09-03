@@ -1,0 +1,17 @@
+---
+# Cluster-wide PriorityClass for database pods (created 2026-09-03 during the
+# LLMSafeSpaces#1244 worker-04 capacity review). All CNPG clusters set
+# priorityClassName: database-protected. Rationale: memory is incompressible —
+# under node-pressure eviction, pods whose usage exceeds their requests (or
+# BestEffort pods) are evicted first; databases are small, critical, and now
+# carry requests sized to observed peaks, so this class only moves them to
+# the back of the eviction queue. preemptionPolicy: Never — databases must
+# never evict other workloads to schedule.
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: database-protected
+value: 5000
+preemptionPolicy: Never
+globalDefault: false
+description: "Protects database pods from node-pressure eviction (usage never exceeds requests; preemption disabled)"
