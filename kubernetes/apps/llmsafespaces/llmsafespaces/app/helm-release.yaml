@@ -232,9 +232,13 @@ spec:
       create: true
       scope: cluster
 
-    # gVisor is not installed on the Talos workers. Workspace pods will run
-    # under runc — fine for a single-operator deployment, NOT fine for
-    # multi-tenant. Document the trade-off in chart values.
+    # gVisor is not preinstalled on the Talos workers, but user namespaces
+    # are now enabled on workers (patches/worker/userns.yaml) and the US-70
+    # pool provisions runsc into its kind nodes — so runsc-based sandboxes
+    # DO work on this cluster when provisioned. Default still runc for the
+    # in-cluster deployment; multi-tenant hardening is documented in chart
+    # values. (Updated 2026-09-03 — the old "gVisor cannot run here" note
+    # predated the userns fix; see LLMSafeSpaces#1244 thread.)
     gvisor:
       enabled: false
 

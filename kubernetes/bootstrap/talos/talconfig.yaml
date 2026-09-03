@@ -288,6 +288,7 @@ controlPlane:
 worker:
   patches:
     - "@./patches/worker/longhorn-extramount.yaml"
+    - "@./patches/worker/userns.yaml"
   userVolumes:
     - name: longhorn
       provisioning:
