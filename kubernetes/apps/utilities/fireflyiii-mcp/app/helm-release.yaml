@@ -74,16 +74,10 @@ spec:
               repository: ghcr.io/daften/fireflyiii-mcp
               tag: 0.4.3
               pullPolicy: IfNotPresent
-            # Image CMD already passes --transport http --host 0.0.0.0;
-            # pin --port explicitly so EADDRINUSE fails fast instead of
-            # silently drifting to 3001+.
-            args:
-              - --transport
-              - http
-              - --host
-              - 0.0.0.0
-              - --port
-              - "3000"
+            # Image CMD already runs: node dist/index.js --transport http
+            #   --host 0.0.0.0  (port defaults to 3000). Do NOT set args
+            # here — the image has an ENTRYPOINT (docker-entrypoint.sh)
+            # with no "command", so bare args would replace the CMD.
             env:
               TZ: ${TIMEZONE}
               # PAT-only mode: only FIREFLY_URL is required. Deliberately
