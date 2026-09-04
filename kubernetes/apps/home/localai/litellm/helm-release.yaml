@@ -315,6 +315,19 @@ spec:
                 transport: http
                 description: Opengist CRUD via lenaxia/opengist-mcp
                 allow_all_keys: true
+              # Firefly III MCP (daften/fireflyiii-mcp) in HTTP PAT-only mode:
+              # every request needs a Firefly III Personal Access Token as the
+              # Bearer. auth_value os.environ/ refs are resolved by the proxy's
+              # _check_for_os_environ_vars over the full config; FIREFLY_MCP_PAT
+              # lives in the litellm SOPS secret (loaded via envFrom). Server
+              # itself is credential-free — see its helm-release for details.
+              fireflyiii:
+                url: http://fireflyiii-mcp.utilities.svc.cluster.local:3000/mcp
+                transport: http
+                description: Firefly III finance tools via daften/fireflyiii-mcp
+                allow_all_keys: true
+                auth_type: bearer_token
+                auth_value: os.environ/FIREFLY_MCP_PAT
 
 
             model_list:

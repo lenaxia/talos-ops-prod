@@ -1,0 +1,131 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname fireflyiii-mcp
+  namespace: &namespace utilities
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 4
+  uninstall:
+    keepHistory: false
+  values:
+    # ──────────────────────────────────────────────────────────────────────
+    # fireflyiii-mcp (daften/fireflyiii-mcp) — MCP server for Firefly III
+    # ──────────────────────────────────────────────────────────────────────
+    # Runs in HTTP PAT-only mode: no FIREFLY_OAUTH_CLIENT_ID is set, so no
+    # OAuth proxy surface is served. Clients must authenticate per-request
+    # with a Firefly III Personal Access Token as the Bearer token; the
+    # server forwards it to Firefly III unchanged and stores nothing.
+    #
+    # LiteLLM is the (only) documented client, registered in
+    # kubernetes/apps/home/localai/litellm/helm-release.yaml under
+    # mcp_servers.fireflyiii with auth_value: os.environ/FIREFLY_MCP_PAT
+    # (the PAT lives in the litellm SOPS secret, NOT here — the server
+    # itself holds no credentials).
+    #
+    # Transport is stateless streamable-http (fresh transport per POST,
+    # sessionIdGenerator: undefined) which LiteLLM's mcp client handles.
+    #
+    # Network exposure: ClusterIP only. In-cluster access is the only
+    # protection. The /mcp endpoint requires the Bearer PAT; /health is
+    # unauthenticated by design for probes.
+    #
+    # Tool count: all 140 tools are exposed by default. If tool-injection
+    # bloat becomes a problem, filter server-side via MCP_PRESET
+    # (minimal|default|budgeting|insights|automation|full) or MCP_GROUPS
+    # (accounts,transactions,budgets,...) env vars, or MCP_READ_ONLY: "true".
+    # ──────────────────────────────────────────────────────────────────────
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+    controllers:
+      main:
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/daften/fireflyiii-mcp
+              tag: 0.4.3
+              pullPolicy: IfNotPresent
+            # Image CMD already passes --transport http --host 0.0.0.0;
+            # pin --port explicitly so EADDRINUSE fails fast instead of
+            # silently drifting to 3001+.
+            args:
+              - --transport
+              - http
+              - --host
+              - 0.0.0.0
+              - --port
+              - "3000"
+            env:
+              TZ: ${TIMEZONE}
+              # PAT-only mode: only FIREFLY_URL is required. Deliberately
+              # no FIREFLY_TOKEN (stdio-only) and no FIREFLY_OAUTH_CLIENT_ID.
+              FIREFLY_URL: http://firefly-iii.utilities.svc.cluster.local:8080
+            resources:
+              requests:
+                cpu: 10m
+                memory: 96Mi
+              limits:
+                memory: 256Mi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 3000
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  failureThreshold: 3
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 3000
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 3
+                  timeoutSeconds: 5
+              startup:
+                enabled: false
+    service:
+      main:
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 3000
+            protocol: TCP

@@ -20,5 +20,6 @@ resources:
   - ./it-tools/ks.yaml
   - ./wealthfolio/ks.yaml
   - ./firefly-iii/ks.yaml
+  - ./fireflyiii-mcp/ks.yaml
   - ./firefly-importer/ks.yaml
     #- ./k8sgpt/ks.yaml
