@@ -113,20 +113,27 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.26.0"
-      # V2 delivery ROLLED BACK (fourth flip) 2026-08-29 on 0.25.7:
-      # OPENCODE_V2_DELIVERY=0 — back to V1 sync delivery pending Epic
-      # 69 (#1134, design 0055 — agentd state authority supersedes this
-      # path). Reasons: stranding class #1119 still open + test-mode
-      # degradations no longer worth carrying (indicators dark R5,
-      # pre-flip transcripts hidden R6). Flip history: ON (third flip)
-      # 2026-08-29 ~08:0xZ on 0.25.5 under the TEST-MODE gate (design
-      # 0054; solo-operator environment) — 0.25.5 shipped the #1127
-      # verify-oracle fix + I6 outbox metrics. Re-flip = set "1" again
-      # (G1: drain first).
+        tag: "0.27.0"
+      # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
+      # 0.27.0): the US-70 delivery pool ran fully green for the first
+      # time under exactly these flags (delivery suite + revisions +
+      # Epic 69 evidence incl. the authority park/unpark flip drill +
+      # faults F1-F5, gVisor, 40-workspace scale — #1244 trail, LLMSafe
+      # #1275). 0.27.0 carries what made V2 hold: file-class live
+      # delivery (refresh_files, #1271), handler-enforced bootstrap-token
+      # expiry (#1282), concurrent workspace reconciles (#1257), and the
+      # F3 DEK semantics (#1280). The 2026-08-29 rollback reasons stand
+      # resolved or accepted: #1119 promotion-await is bounded and the
+      # pool's F2 partition row exercises it; indicators/transcript UX
+      # shipped since. AGENTD_STATE_AUTHORITY rides the same wiring (the
+      # outbox/terminus stack only wires under V2; the flip drill's
+      # Park/Unpark/inflight admin endpoints are live under it).
+      # Flip history: 4x on/off 2026-08-29 (0.25.5/0.25.7 era).
       extraEnv:
         - name: OPENCODE_V2_DELIVERY
-          value: "0"
+          value: "1"
+        - name: AGENTD_STATE_AUTHORITY
+          value: "1"
       config:
         security:
           allowedOrigins:
@@ -137,7 +144,11 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.26.0"
+        tag: "0.27.0"
+      # #1257: fleet resume was linear at the default 1 concurrent
+      # reconcile (~8s/workspace). 4 is the product default; plenty for
+      # a solo-operator fleet.
+      maxConcurrentReconciles: 4
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
@@ -188,7 +199,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:511fb2975721b2e22fc490ddc455480be96d21d2491d1ba535f733e9c57c6d67
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:0aa7d779322c3fab3586b9753b3d99829ec3d067d2c0aaff5aafc4294305c031
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
@@ -196,7 +207,7 @@ spec:
       # OpencodeVerified condition). Render fails without it — by design.
       # Digest source: release v0.26.0 (ghcr manifest, tag 0.26.0).
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:55279dab2982dcc0ca190599c562f496e5191d349ba2a6111f0ea094f71f52be
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:5dd4a34085a5f043ec75c7479d67dc805d5a72ef8904d0248aca929037042077
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
