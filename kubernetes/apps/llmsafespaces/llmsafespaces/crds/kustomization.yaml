@@ -10,5 +10,9 @@ kind: Kustomization
 # v0.26.0: workspace.yaml adds status.secretsDelivery (spawnedRev /
 # degradedReason / filesRev — US-70.1 terminal verification, design 0057).
 # Additive and optional; safe to apply before the chart upgrade.
+# v0.27.0: workspace.yaml REMOVES status.userCredsPresent (dead field —
+# nothing in 0.27.0 writes it; the controller's agentd scrape feeds
+# secretsDelivery now). Superset-safe either direction, but synced per
+# the lockstep doctrine.
 resources:
   - workspace.yaml
