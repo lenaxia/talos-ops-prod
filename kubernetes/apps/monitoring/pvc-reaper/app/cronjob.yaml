@@ -24,7 +24,7 @@ spec:
           containers:
             - name: reaper
               # kubectl + jq + yq, same minor as the cluster (1.36.x).
-              image: alpine/k8s:1.36.2
+              image: alpine/k8s:1.37.0
               imagePullPolicy: IfNotPresent
               env:
                 - name: NAMESPACES
