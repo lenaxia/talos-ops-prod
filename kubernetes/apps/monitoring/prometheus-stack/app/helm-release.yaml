@@ -242,6 +242,10 @@ spec:
         # available, leaving pods stuck in Init forever.
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
         podMonitorSelectorNilUsesHelmValues: false
         probeSelectorNilUsesHelmValues: false
         ruleSelectorNilUsesHelmValues: false

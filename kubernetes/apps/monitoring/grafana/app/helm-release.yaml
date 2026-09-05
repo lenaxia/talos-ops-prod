@@ -23,6 +23,10 @@ spec:
       retries: 12
   values:
     replicas: 3
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
     env:
       GF_EXPLORE_ENABLED: true
       GF_PANELS_DISABLE_SANITIZE_HTML: true

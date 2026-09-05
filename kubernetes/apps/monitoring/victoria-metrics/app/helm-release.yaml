@@ -64,22 +64,26 @@ spec:
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
+          # Pin to the 64-core node: single replica, ~500m actual CPU — keeps
+          # the small 8-core workers free for app workloads.
+          kubernetes.io/hostname: worker-04
         scrapeInterval: 30s
         resources:
           requests:
-            cpu: 50m
-            memory: 128Mi
+            cpu: 400m
+            memory: 512Mi
 
     vmsingle:
       enabled: true
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
+          kubernetes.io/hostname: worker-04
         retentionPeriod: 90d
         resources:
           requests:
-            cpu: 50m
-            memory: 256Mi
+            cpu: 300m
+            memory: 2Gi
         storage:
           storageClassName: longhorn
           accessModes:
@@ -95,11 +99,12 @@ spec:
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
+          kubernetes.io/hostname: worker-04
         retentionPeriod: 30d
         resources:
           requests:
-            cpu: 50m
-            memory: 128Mi
+            cpu: 200m
+            memory: 1Gi
         storage:
           storageClassName: longhorn
           accessModes:
