@@ -72,7 +72,7 @@ spec:
           main:
             image:
               repository: ghcr.io/daften/fireflyiii-mcp
-              tag: 0.4.3
+              tag: 0.4.4
               pullPolicy: IfNotPresent
             # Image CMD already runs: node dist/index.js --transport http
             #   --host 0.0.0.0  (port defaults to 3000). Do NOT set args
