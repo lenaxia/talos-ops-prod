@@ -158,11 +158,9 @@ spec:
       # Digest source: release v0.27.1 (Release workflow, fetched from
       # ghcr.io manifest for tag 0.27.1):
       #   index digest sha256:7e3cebd2b8ba8e6b56a54b59b075a4f0a1b596136385a2b0df3d397889e046f2
-      #   (the deployed pin below). Child manifests: amd64
-      #   sha256:7a945e3eaf4f1f191539eee832f0cf54677c001ecc224865448ce4203e2df48b, arm64
-      #   sha256:bdd2e4821b90c15000049ba26234172ecd11c17443db7364410e9fc24c039949.
-      #   Per-arch binary sha256s: see the annotation note at the top of
-      #   this delivery block.
+      #   (the deployed pin below). Per-arch binary sha256s resolve from
+      #   the index annotations at controller startup — see the note at
+      #   the top of this delivery block.
       # v0.25.2 adds: bootstrap DEK failures are LOUD (pod_bootstrap_dek_failed
       # audit row with the underlying error — the silent-degrade forensic
       # cost) and legacy user_keys rows heal opportunistically (#1114:
