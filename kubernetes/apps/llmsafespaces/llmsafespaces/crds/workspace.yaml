@@ -198,14 +198,6 @@ spec:
                 resumedAt:
                   type: string
                   format: date-time
-                userCredsPresent:
-                  type: boolean
-                  description: |
-                    Whether agentd has user-DEK content materialized on
-                    disk. Populated by controller from agentd's
-                    /v1/healthz scrape. Absent (nil) means the
-                    controller hasn't scraped yet — the API's
-                    watcher-driven auto-push treats absent as unknown.
                 secretsDelivery:
                   type: object
                   description: |

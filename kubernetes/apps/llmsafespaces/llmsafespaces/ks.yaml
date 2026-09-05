@@ -8,8 +8,9 @@ metadata:
     substitution.flux.home.arpa/enabled: "true"
 spec:
   # Out-of-band CRDs (see crds/kustomization.yaml). Applied before the
-  # chart so additive status schema (v0.26.0: secretsDelivery) is live
-  # when the new controller starts writing it.
+  # chart so schema changes are live when the new controller starts
+  # (v0.27.0: userCredsPresent removed — delta record in
+  # crds/kustomization.yaml).
   path: ./kubernetes/apps/llmsafespaces/llmsafespaces/crds
   prune: false
   sourceRef:
