@@ -155,8 +155,8 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.25.7 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.25.7):
+      # Digest source: release v0.27.0 (Release workflow, fetched from
+      # ghcr.io manifest for tag 0.27.0):
       #   index digest sha256:302b190790613523ccad07d508a42edeaae68f0620d22774f065f02107dcfd56
       #   dev.llmsafespaces/version="" (annotation empty on 0.25.0 and
       #   0.25.1 alike — cosmetic; per-arch binary sha256s below are the
@@ -205,7 +205,7 @@ spec:
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.26.0 (ghcr manifest, tag 0.26.0).
+      # Digest source: release v0.27.0 (ghcr manifest, tag 0.27.0).
       opencodeDelivery:
         image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:5dd4a34085a5f043ec75c7479d67dc805d5a72ef8904d0248aca929037042077
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
