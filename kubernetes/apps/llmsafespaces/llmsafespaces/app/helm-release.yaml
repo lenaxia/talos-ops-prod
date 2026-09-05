@@ -295,11 +295,11 @@ spec:
       enabled: true
       replicaCount: 1
       # Pinned to the same semver as api/controller/relay-router/base — the
-      # platform rolls atomically because kind/slug wire format, CRD field
-      # `workspace.status.userCredsPresent`, and DB migrations must all be
-      # in lockstep. The upstream release-tag build produces `frontend:0.5.0`
-      # in lockstep. The upstream release-tag build produces `frontend:0.8.0`
-      # alongside the other four images.
+      # platform rolls atomically because kind/slug wire format, CRD
+      # schema (v0.27.0 removed status.userCredsPresent; secretsDelivery
+      # stays), and DB migrations must all be in lockstep. The upstream
+      # release-tag build produces `frontend:<same semver>` alongside the
+      # other four images.
       image:
         tag: "0.27.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
