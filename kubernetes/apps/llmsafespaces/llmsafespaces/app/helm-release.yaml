@@ -157,7 +157,7 @@ spec:
       # merge-agentd job) — do NOT set binarySHA256*.
       # Digest source: release v0.27.3 (Release workflow, fetched from
       # ghcr.io manifest for tag 0.27.3):
-      #   index digest sha256:bbfce19a75bd6df2fe30395e12b57da29e52af597a912a0174aec7b1e5cff0eb
+      #   index digest sha256:4e9591577cdf44f7a98cdaae2fdb386c465f0662f56effc029efe6412155f2e5
       #   (the deployed pin below). Per-arch binary sha256s resolve from
       #   the index annotations at controller startup — see the note at
       #   the top of this delivery block.
@@ -197,7 +197,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:bbfce19a75bd6df2fe30395e12b57da29e52af597a912a0174aec7b1e5cff0eb
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:4e9591577cdf44f7a98cdaae2fdb386c465f0662f56effc029efe6412155f2e5
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
