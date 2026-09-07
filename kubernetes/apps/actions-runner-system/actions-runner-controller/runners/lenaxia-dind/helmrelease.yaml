@@ -77,16 +77,19 @@ spec:
               # LLMSafeSpaces#1244: the US-70 pool's kind-in-dind was 3-5x
               # slower than hosted and starved cert-manager-webhook past its
               # progress deadline on a 1-CPU request (etcd CNI timeouts too).
-              # 3 CPU / 8Gi: scheduler now places this on worker-04 (64
-              # cores, ~54 free) — the 8-core workers only have ~1.8-2.3
-              # unrequested cores (the 1baed34c constraint). No cpu limit:
-              # burst into idle cores stays the posture; ~54 idle on the
-              # placement target. Memory: request sized for kind node +
-              # 5-image build churn; no limit (limit would OOMKill dind
-              # mid-build). Note: at 8Gi only 2 concurrent runners fit on
-              # worker-04 (maxRunners 4) — the pool runs one job at a time.
+              # 2500m / 8Gi (2026-09-07): worker-04's memory filled to 96%
+              # after the monitoring relocation (477a6d0d), so the blob
+              # no longer fits there; the 8-core workers free ~2.8
+              # cores after the kokoro/whisper relocations (#2433) —
+              # 2500m fits them with margin where 3 did not (two pool
+              # dispatches stalled 12h+ on exactly that gap; run
+              # 34079807816 was canceled mid-build when its runner
+              # could not be placed). No cpu limit: burst into idle
+              # cores stays the posture. Memory: request sized for kind
+              # node + 5-image build churn; no limit (limit would
+              # OOMKill dind mid-build).
               requests:
-                cpu: 3
+                cpu: 2500m
                 memory: 8Gi
         volumes:
           - name: dind-cert
