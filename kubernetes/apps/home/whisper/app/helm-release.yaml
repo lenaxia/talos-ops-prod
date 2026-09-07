@@ -27,6 +27,12 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+        # 2026-09-06: pinned to worker-00 (RAM-rich; the 1-CPU request
+        # fits its ~1.1 spare cores) — keeps worker-01 free for the
+        # dind runner blob (3 CPU/8Gi). worker-04 has CPU but its
+        # memory is 96% requested after the monitoring relocation, so
+        # the 3Gi request does not fit there. Mirrors the live patch.
+        kubernetes.io/hostname: 'worker-00'
       tolerations:
         - key: "dedicated"
           operator: "Equal"
