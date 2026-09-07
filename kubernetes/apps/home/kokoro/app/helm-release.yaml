@@ -27,7 +27,10 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
-        kubernetes.io/hostname: 'worker-01'
+        # 2026-09-06: relocated off worker-01 — the actions-runner dind
+        # blob (3 CPU/8Gi) needs worker-01's CPU; worker-02 fits this
+        # TTS service with margin. Mirrors the live emergency patch.
+        kubernetes.io/hostname: 'worker-02'
       tolerations:
         - key: "dedicated"
           operator: "Equal"
