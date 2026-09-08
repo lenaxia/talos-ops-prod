@@ -176,13 +176,11 @@ spec:
           gnetId: 13502
           revision: 10
           datasource: VictoriaMetrics
-        # official Traefik Labs dashboard — v3-metric-native (uses
-        # traefik_open_connections etc.; the old hand-imported "Traefik"
-        # dashboard is v2-era and needed manual query patches)
-        traefik:
-          gnetId: 17347
-          revision: 9
-          datasource: VictoriaMetrics
+        # NOTE: dashboards.default (gnetId) writes to /var/lib/grafana/
+        # dashboards/default/ which NO provider watches (only the sidecar
+        # provider on /tmp/dashboards is configured) — entries here are
+        # dead config. Use dashboard-*.yaml ConfigMaps in this dir instead
+        # (see dashboard-traefik-official.yaml, dashboard-gokore-logs.yaml).
 #        # Ref: https://grafana.com/grafana/dashboards/11315
 #        unifi-client-insights:
 #          gnetId: 11315
