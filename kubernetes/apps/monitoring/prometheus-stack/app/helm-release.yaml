@@ -146,7 +146,7 @@ spec:
               matchers:
                 - alertname =~ "KubeNodeNotReady|KubeNodeUnreachable|KubeNodeReadinessFlapping"
               continue: true
-            - receiver: "pushover"
+            - receiver: "null"
               matchers:
                 - alertname =~ "KubePodCrashLooping|KubePodNotReady"
               continue: true
