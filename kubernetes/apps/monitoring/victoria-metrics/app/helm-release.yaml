@@ -267,7 +267,10 @@ spec:
             - ReadWriteOnce
           resources:
             requests:
-              storage: 50Gi
+              # 50Gi filled to 99.98% (DiskRunsOutOfSpace firing, rows
+              # intermittently dropped). Longhorn expands online. 30d
+              # retention of vector-shipped logs needs ~3-4Gi/day.
+              storage: 100Gi
 
     # Reuse kube-state-metrics and node-exporter already deployed by
     # kube-prometheus-stack (their ServiceMonitors are converted by the
