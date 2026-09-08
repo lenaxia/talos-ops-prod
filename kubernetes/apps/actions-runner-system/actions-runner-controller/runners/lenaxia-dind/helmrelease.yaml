@@ -36,6 +36,15 @@ spec:
                       operator: In
                       values:
                         - "true"
+                    # 2026-09-08: pin to the 64-core node — the only host
+                    # that sustains the full US-70 pool suite (8-core
+                    # workers starve the kind node's DB/controller under
+                    # post-wave load). Memory made available by relocating
+                    # prometheus + vmsingle + litellm to worker-00.
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - worker-04
         containers:
           - name: runner
             image: ghcr.io/home-operations/actions-runner:2.337.0@sha256:8b8e8326b5a08e658a0a41cfd2867afab69ca4194a152f986aa6fcd5430d09e7
@@ -89,7 +98,10 @@ spec:
               # churn; no limit (a limit OOMKills dind mid-build).
               requests:
                 cpu: 3
-                memory: 8Gi
+                # 6Gi request fits worker-04 after the monitoring/litellm
+                # relocation (scheduling-only: no limit — burst posture
+                # unchanged; kind + waves ride the node's idle RAM).
+                memory: 6Gi
         volumes:
           - name: dind-cert
             emptyDir: {}
