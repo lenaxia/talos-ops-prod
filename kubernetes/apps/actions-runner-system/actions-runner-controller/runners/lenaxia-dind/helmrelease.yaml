@@ -98,13 +98,14 @@ spec:
               # churn; no limit (a limit OOMKills dind mid-build).
               requests:
                 cpu: 3
-                # 4Gi request fits worker-04's post-relocation REQUESTS math
-                # (vmsingle + one litellm replica leave; Prometheus stays —
-                # node-local-PVC STS, r1 review). Scheduling-only: no limit,
-                # and the node's ACTUAL headroom is ~19Gi (kubectl top: 69%
-                # used; the 99% requests figure is vllm-fleet inflation) —
-                # kind + waves burst into real RAM.
-                memory: 4Gi
+                # 2Gi request fits worker-04's requests math after the
+                # litellm replica was cordon-evicted to worker-00 (owner
+                # operation, 2026-09-08; no git pin — it can drift back on
+                # a future reschedule). Scheduling-only: no limit; the
+                # node's ACTUAL headroom is ~19Gi (kubectl top: 69% used;
+                # the 96% requests figure is vllm-fleet inflation) — kind
+                # + build churn burst into real RAM.
+                memory: 2Gi
         volumes:
           - name: dind-cert
             emptyDir: {}
