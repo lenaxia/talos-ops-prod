@@ -6,15 +6,18 @@ resources:
   - ./pod-monitor.yaml
   #  - ./prometheus-rule.yaml
 configMapGenerator:
+  # Local copies of upstream flux2 v0.37.0 dashboards with datasource refs
+  # pinned to uid VictoriaMetrics/VictoriaLogs (upstream ships ${DS_PROMETHEUS}
+  # / Loki refs, which broke when kube-prometheus-stack was removed).
   - name: flux-cluster-dashboard
     files:
-      - flux-cluster-dashboard.json=https://raw.githubusercontent.com/fluxcd/flux2/v0.37.0/manifests/monitoring/monitoring-config/dashboards/cluster.json
+      - flux-cluster-dashboard.json=./flux-cluster-dashboard.json
   - name: flux-control-plane-dashboard
     files:
-      - flux-control-plane-dashboard.json=https://raw.githubusercontent.com/fluxcd/flux2/v0.37.0//manifests/monitoring/monitoring-config/dashboards/control-plane.json
+      - flux-control-plane-dashboard.json=./flux-control-plane-dashboard.json
   - name: flux-logs-dashboard
     files:
-      - flux-logs-dashboard.json=https://raw.githubusercontent.com/fluxcd/flux2/v0.37.0/manifests/monitoring/monitoring-config/dashboards/logs.json
+      - flux-logs-dashboard.json=./flux-logs-dashboard.json
 generatorOptions:
   disableNameSuffixHash: true
   annotations:
