@@ -78,7 +78,7 @@ spec:
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
-          kubernetes.io/hostname: worker-00
+          kubernetes.io/hostname: worker-04
         retentionPeriod: 90d
         resources:
           requests:
@@ -99,7 +99,7 @@ spec:
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
-          kubernetes.io/hostname: worker-00
+          kubernetes.io/hostname: worker-04
         retentionPeriod: 30d
         resources:
           requests:
