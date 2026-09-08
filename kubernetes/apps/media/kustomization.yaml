@@ -24,3 +24,4 @@ resources:
   - ./komga/ks.yaml
   - ./fmd2/ks.yaml
   - ./immich/ks.yaml
+  - ./xianscan/ks.yaml
