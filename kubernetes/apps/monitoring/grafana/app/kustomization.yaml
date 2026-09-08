@@ -5,3 +5,4 @@ resources:
   - secret.sops.yaml
   - helm-release.yaml
   - dashboard-gokore-logs.yaml
+  - dashboard-traefik-official.yaml
