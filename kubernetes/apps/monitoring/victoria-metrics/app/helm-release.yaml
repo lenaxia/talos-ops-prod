@@ -45,11 +45,8 @@ spec:
     grafana:
       enabled: false
 
-    # Parallel-run: kube-prometheus-stack Alertmanager stays the live pager
-    # until cutover. Both are configured with identical Pushover receivers,
-    # so expect DUPLICATE notifications while both stacks evaluate rules.
-    # At cutover: set the kube-prometheus-stack alertmanager default route
-    # receiver to "null" (or remove the stack) to stop the duplicates.
+    # Pushover receiver + routes carried over from kube-prometheus-stack's
+    # alertmanager at cutover. This is the sole pager now.
     alertmanager:
       enabled: true
       spec:
@@ -183,75 +180,37 @@ spec:
             requests:
               storage: 100Gi
 
-    # The chart's synced rule groups below duplicate the standard k8s rules
-    # the operator already converts from kube-prometheus-stack's
-    # PrometheusRules (kube-prometheus-stack-* VMRules). Evaluating both
-    # doubles vmalert's query load on vmsingle (429 storm at boot) and
-    # produces duplicate alert instances. Disabled here; RE-ENABLE at
-    # kube-prometheus-stack removal. VM-component health rules (vm-health,
-    # vmagent, vmalert, vmsingle, vlogs, vl-health, vmoperator), etcd, and
-    # kubelet/kubernetes-system groups stay enabled — kube-prometheus-stack
-    # has those disabled (etcd: false, kubernetesSystem: false, kubelet:
-    # false) so they are NOT duplicated.
-    # NOTE: alertmanager-rules on chart <=0.91.2 targets selectors that never
-    # match our VMAlertmanager (fixed in 0.92.0) — stays disabled until the
-    # chart bump, then it becomes the only AM watchdog after cutover.
+    # Rule groups re-enabled at cutover (kube-prometheus-stack removed — its
+    # converted rules no longer provide these).
+    # alertmanager source stays disabled: on chart <=0.91.2 its selectors never
+    # match our VMAlertmanager (fixed in 0.92.0). Re-enable after chart bump.
     defaultRules:
-      groups:
-        alertmanager.rules:
-          enabled: false
-        general.rules:
-          enabled: false
-        k8s.rules.container_cpu_limits:
-          enabled: false
-        k8s.rules.container_cpu_requests:
-          enabled: false
-        k8s.rules.container_cpu_usage_seconds_total:
-          enabled: false
-        k8s.rules.container_memory_cache:
-          enabled: false
-        k8s.rules.container_memory_limits:
-          enabled: false
-        k8s.rules.container_memory_requests:
-          enabled: false
-        k8s.rules.container_memory_rss:
-          enabled: false
-        k8s.rules.container_memory_swap:
-          enabled: false
-        k8s.rules.container_memory_working_set_bytes:
-          enabled: false
-        k8s.rules.pod_owner:
-          enabled: false
-        kube-apiserver-burnrate.rules:
-          enabled: false
-        kube-apiserver-histogram.rules:
-          enabled: false
-        kube-apiserver-slos:
-          enabled: false
-        kube-prometheus-general.rules:
-          enabled: false
-        kube-prometheus-node-recording.rules:
-          enabled: false
-        kube-scheduler.rules:
-          enabled: false
-        kubernetes-apps:
-          enabled: false
-        kubernetes-resources:
-          enabled: false
-        kubernetes-storage:
-          enabled: false
-        kubernetes-system-controller-manager:
-          enabled: false
-        node-network:
-          enabled: false
-        node.rules:
-          enabled: false
-      # alertmanager source: on chart <=0.91.2 its rule selectors never match
-      # our VMAlertmanager (fixed in 0.92.0) and duplicate the converted
-      # kube-prometheus-stack alertmanager rules. Re-enable after chart bump.
       sources:
         alertmanager:
           enabled: false
+
+    # Control-plane scrapes: chart defaults verify TLS against the service
+    # account CA, which fails for the self-signed kube-scheduler/controller-
+    # manager certs (TargetDown/InstanceUnreachable fired continuously until
+    # this fix — matches kube-prometheus-stack's insecureSkipVerify behavior).
+    kubeControllerManager:
+      vmScrape:
+        spec:
+          endpoints:
+            - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              port: http-metrics
+              scheme: https
+              tlsConfig:
+                insecureSkipVerify: true
+    kubeScheduler:
+      vmScrape:
+        spec:
+          endpoints:
+            - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              port: http-metrics
+              scheme: https
+              tlsConfig:
+                insecureSkipVerify: true
 
     # VictoriaLogs single-node (LogsQL). Vector aggregator ships logs to it
     # via the Elasticsearch bulk API on port 9428.
@@ -279,80 +238,20 @@ spec:
               # retention of vector-shipped logs needs ~3-4Gi/day.
               storage: 100Gi
 
-    # Reuse kube-state-metrics and node-exporter already deployed by
-    # kube-prometheus-stack (their ServiceMonitors are converted by the
-    # operator). Re-enable both here when kube-prometheus-stack is removed.
+    # Deploy our own kube-state-metrics and node-exporter (kube-prometheus-stack
+    # was removed at cutover — these were previously borrowed from it).
     kube-state-metrics:
-      enabled: false
+      enabled: true
     prometheus-node-exporter:
-      enabled: false
+      enabled: true
 
-    # The k8s dashboards below are identical (same upstream source AND same
-    # internal Grafana uid) to the ones shipped by kube-prometheus-stack.
-    # Importing both makes the grafana sidecar write two CMs to the same
-    # /tmp/dashboards/<name>.json file, flapping every resync (~90s) and
-    # resetting variable selections — dashboards appear to have "no data".
-    # Disabled here; kube-prometheus-stack's copies stay authoritative until
-    # that stack is removed. RE-ENABLE (delete this block) at cutover.
-    defaultDashboards:
-      dashboards:
-        apiserver:
-          enabled: false
-        cluster-total:
-          enabled: false
-        controller-manager:
-          enabled: false
-        etcd:
-          enabled: false
-        k8s-resources-cluster:
-          enabled: false
-        k8s-resources-multicluster:
-          enabled: false
-        k8s-resources-namespace:
-          enabled: false
-        k8s-resources-node:
-          enabled: false
-        k8s-resources-nodes-overview:
-          enabled: false
-        k8s-resources-pod:
-          enabled: false
-        k8s-resources-workload:
-          enabled: false
-        k8s-resources-workloads-namespace:
-          enabled: false
-        kubelet:
-          enabled: false
-        namespace-by-pod:
-          enabled: false
-        namespace-by-workload:
-          enabled: false
-        node-cluster-rsrc-use:
-          enabled: false
-        node-rsrc-use:
-          enabled: false
-        nodes:
-          enabled: false
-        nodes-aix:
-          enabled: false
-        nodes-darwin:
-          enabled: false
-        persistentvolumesusage:
-          enabled: false
-        pod-total:
-          enabled: false
-        prometheus:
-          enabled: false
-        scheduler:
-          enabled: false
-        workload-total:
-          enabled: false
-      # NOTE: the VM-internal dashboards (victoriametrics-single-node/-vmagent/
-      # -operator) ship a `ds` datasource variable pinned to uid
-      # P1809F7CD0C75ACF3 (the chart's own Grafana uid), which does not exist
-      # here — panels show "no data". Their ConfigMaps were patched in-cluster
-      # to pin `ds` to uid "VictoriaMetrics". The sync job regenerates them on
-      # every chart upgrade, so re-run that patch after each Renovate bump
-      # (or until upstream fixes variable injection).
+    # NOTE: the VM-internal dashboards (victoriametrics-single-node/-vmagent/
+    # -operator) ship a `ds` datasource variable pinned to uid
+    # P1809F7CD0C75ACF3 (the chart's own Grafana uid), which does not exist
+    # here — panels show "no data". Their ConfigMaps were patched in-cluster
+    # to pin `ds` to uid "VictoriaMetrics". The sync job regenerates them on
+    # every chart upgrade, so re-run that patch after each Renovate bump
+    # (or until upstream fixes variable injection).
 
     syncJob:
       nodeSelector:

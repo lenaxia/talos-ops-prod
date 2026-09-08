@@ -147,12 +147,10 @@ spec:
           # datasource's uid in place)
           - name: VictoriaLogs
             orgId: 1
-        datasources:
+          # kube-prometheus-stack removed at VM cutover — drop its datasource
           - name: Prometheus
-            type: prometheus
-            access: proxy
-            url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/
-            isDefault: true
+            orgId: 1
+        datasources:
           # uid must match the sync-job dashboards' datasourceUID from the
           # victoria-metrics-k8s-stack chart (defaultDatasources.victoriametrics)
           - name: VictoriaMetrics
@@ -160,7 +158,7 @@ spec:
             access: proxy
             uid: VictoriaMetrics
             url: http://vmsingle-victoria-metrics.monitoring.svc.cluster.local:8428
-            isDefault: false
+            isDefault: true
           - name: VictoriaLogs
             type: victoriametrics-logs-datasource
             access: proxy
@@ -177,7 +175,7 @@ spec:
         minio:
           gnetId: 13502
           revision: 10
-          datasource: Prometheus
+          datasource: VictoriaMetrics
 #        # Ref: https://grafana.com/grafana/dashboards/11315
 #        unifi-client-insights:
 #          gnetId: 11315
