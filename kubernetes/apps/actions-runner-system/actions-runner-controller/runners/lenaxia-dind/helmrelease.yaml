@@ -88,7 +88,7 @@ spec:
               # LLMSafeSpaces#1244: the US-70 pool's kind-in-dind was 3-5x
               # slower than hosted and starved cert-manager-webhook past its
               # progress deadline on a 1-CPU request (etcd CNI timeouts too).
-              # 3 CPU / 1750Mi (2026-09-08; see the sizing note below for the
+              # 3 CPU / 1250Mi (2026-09-08; see the sizing note below for the
               # request-vs-actual rationale). The 2026-09-07 trim
               # to 2300m was a placement workaround for the capacity
               # crisis (worker-04 memory-full after 477a6d0d, workers
@@ -101,14 +101,14 @@ spec:
               # churn; no limit (a limit OOMKills dind mid-build).
               requests:
                 cpu: 3
-                # 1750Mi request fits worker-04's requests math after the
+                # 1250Mi request fits worker-04's requests math after the
                 # litellm replica was cordon-evicted to worker-00 (owner
                 # operation, 2026-09-08; no git pin — it can drift back on
                 # a future reschedule). Scheduling-only: no limit; the
                 # node's ACTUAL headroom is ~19Gi (kubectl top: 69% used;
                 # the 96% requests figure is vllm-fleet inflation) — kind
                 # + build churn burst into real RAM.
-                memory: 1750Mi
+                memory: 1250Mi
         volumes:
           - name: dind-cert
             emptyDir: {}
