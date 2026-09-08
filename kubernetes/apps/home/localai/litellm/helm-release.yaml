@@ -26,6 +26,9 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+        # 2026-09-08: to worker-00 — frees worker-04 memory for the dind
+        # runner's return (64-core node = the only full-suite-capable host).
+        kubernetes.io/hostname: worker-00
     controllers:
       app:
         type: deployment

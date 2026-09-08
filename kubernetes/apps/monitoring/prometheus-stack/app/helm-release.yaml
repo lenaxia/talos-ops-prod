@@ -242,6 +242,11 @@ spec:
         # available, leaving pods stuck in Init forever.
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
+          # 2026-09-08: to worker-00 (re-imaged onto Talos v1.13.6, healthy,
+          # 56Gi free) — frees worker-04 memory for the dind runner's return
+          # (the 64-core node is the only host that sustains the full US-70
+          # pool suite).
+          kubernetes.io/hostname: worker-00
         resources:
           requests:
             cpu: 500m
