@@ -253,6 +253,19 @@ spec:
     # every chart upgrade, so re-run that patch after each Renovate bump
     # (or until upstream fixes variable injection).
 
+    defaultDashboards:
+      dashboards:
+        # These monitor components that no longer exist post-cutover:
+        # prometheus/prometheus-remote-write watched the removed Prometheus;
+        # alertmanager-overview's selectors never match our VMAlertmanager
+        # on chart <=0.91.2 (fixed in 0.92.0 — re-enable it after the bump).
+        prometheus:
+          enabled: false
+        prometheus-remote-write:
+          enabled: false
+        alertmanager-overview:
+          enabled: false
+
     syncJob:
       nodeSelector:
         node-role.kubernetes.io/worker: "true"
