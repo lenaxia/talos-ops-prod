@@ -127,7 +127,10 @@ spec:
           group_wait: 30s
           group_interval: 5m
           repeat_interval: 6h
-          receiver: "pushover"
+          # Pushover muted on the prometheus side — vmalert -> VMAlertmanager
+          # is the live pager now. Re-enable (flip receivers back to
+          # "pushover") if vmalert needs to be taken offline.
+          receiver: "null"
           routes:
             - receiver: "null"
               matchers:
@@ -135,11 +138,11 @@ spec:
             - receiver: "null"
               matchers:
                 - severity = "info"
-            - receiver: "pushover"
+            - receiver: "null"
               matchers:
                 - severity = "critical"
               continue: true
-            - receiver: "pushover"
+            - receiver: "null"
               matchers:
                 - alertname =~ "KubeNodeNotReady|KubeNodeUnreachable|KubeNodeReadinessFlapping"
               continue: true
