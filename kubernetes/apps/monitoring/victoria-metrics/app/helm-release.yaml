@@ -171,6 +171,11 @@ spec:
             cpu: 300m
             memory: 7Gi
         storage:
+          # NOTE: live volume is 2-replica (verified in longhorn). SC `longhorn`
+          # is 3-replica — on ANY volume recreation, switch this block to
+          # storageClassName: longhorn-2r BEFORE the new PVC is created, or it
+          # binds at 3 replicas (~200Gi extra we don't have). storageClassName
+          # is immutable on PVCs — do not change while this PVC exists.
           storageClassName: longhorn
           accessModes:
             - ReadWriteOnce
@@ -262,6 +267,8 @@ spec:
             cpu: 200m
             memory: 4Gi
         storage:
+          # Same 2-replica note as vmsingle above: on recreation use
+          # storageClassName: longhorn-2r. Live volume is already 2-replica.
           storageClassName: longhorn
           accessModes:
             - ReadWriteOnce
