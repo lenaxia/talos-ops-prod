@@ -77,21 +77,18 @@ spec:
               # LLMSafeSpaces#1244: the US-70 pool's kind-in-dind was 3-5x
               # slower than hosted and starved cert-manager-webhook past its
               # progress deadline on a 1-CPU request (etcd CNI timeouts too).
-              # 2300m / 8Gi (2026-09-07): worker-04's memory filled to
-              # 96% after the monitoring relocation (477a6d0d), so the
-              # blob no longer fits there. The 8-core workers free
-              # ~2.2-2.7 cores after the kokoro/whisper relocations
-              # (#2433) — the POD total is what schedules: 2550m (this
-              # + the runner container's 250m) fits worker-02's 2727m
-              # free where the previous totals (3250m, then 2750m)
-              # missed (two pool dispatches stalled 12h+ on exactly
-              # that gap; run 34079807816 was canceled mid-build when
-              # its runner could not be placed). No cpu limit: burst
-              # into idle cores stays the posture. Memory: request
-              # sized for kind node + 5-image build churn; no limit
-              # (limit would OOMKill dind mid-build).
+              # 3 CPU / 8Gi (2026-09-08: restored). The 2026-09-07 trim
+              # to 2300m was a placement workaround for the capacity
+              # crisis (worker-04 memory-full after 477a6d0d, workers
+              # fragmented) — which ended when worker-00 was re-imaged
+              # onto Talos v1.13.6 and stabilized. At 2300m the US-70
+              # pool's 40-way gVisor resume wave starved the sandbox
+              # creation (FailedCreatePodSandBox, run 34195326798);
+              # 3 CPU is the measured-full sizing. No cpu limit: burst
+              # posture unchanged. Memory: kind node + 5-image build
+              # churn; no limit (a limit OOMKills dind mid-build).
               requests:
-                cpu: 2300m
+                cpu: 3
                 memory: 8Gi
         volumes:
           - name: dind-cert
