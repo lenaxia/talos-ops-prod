@@ -191,6 +191,11 @@ spec:
         entryPoint: metrics
         ## Enable metrics on routers. Default=false
         addRoutersLabels: true
+        # expose entrypoint/service open-connections gauges — the Grafana
+        # traefik dashboard's $entrypoint/$service variables and connection
+        # panels are sourced from these metrics.
+        addEntryPointsOpenConnections: true
+        addServicesOpenConnections: true
 
         serviceMonitor:
           enabled: true
