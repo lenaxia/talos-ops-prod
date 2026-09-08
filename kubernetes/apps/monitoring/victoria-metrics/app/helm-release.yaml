@@ -163,10 +163,13 @@ spec:
           node-role.kubernetes.io/worker: "true"
           kubernetes.io/hostname: worker-04
         retentionPeriod: 90d
+        # NOTE: keep requests modest — worker-04 memory is tightly budgeted
+        # (see runner sizing commits). No limits set, so actual usage beyond
+        # request is fine; this is only a scheduling guarantee.
         resources:
           requests:
-            cpu: 500m
-            memory: 4Gi
+            cpu: 300m
+            memory: 2Gi
         storage:
           storageClassName: longhorn
           accessModes:
