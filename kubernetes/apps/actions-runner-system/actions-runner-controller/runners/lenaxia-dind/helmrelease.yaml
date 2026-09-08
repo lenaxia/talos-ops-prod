@@ -98,10 +98,13 @@ spec:
               # churn; no limit (a limit OOMKills dind mid-build).
               requests:
                 cpu: 3
-                # 6Gi request fits worker-04 after the monitoring/litellm
-                # relocation (scheduling-only: no limit — burst posture
-                # unchanged; kind + waves ride the node's idle RAM).
-                memory: 6Gi
+                # 4Gi request fits worker-04's post-relocation REQUESTS math
+                # (vmsingle + one litellm replica leave; Prometheus stays —
+                # node-local-PVC STS, r1 review). Scheduling-only: no limit,
+                # and the node's ACTUAL headroom is ~19Gi (kubectl top: 69%
+                # used; the 99% requests figure is vllm-fleet inflation) —
+                # kind + waves burst into real RAM.
+                memory: 4Gi
         volumes:
           - name: dind-cert
             emptyDir: {}
