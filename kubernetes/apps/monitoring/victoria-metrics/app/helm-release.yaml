@@ -193,6 +193,22 @@ spec:
     # account CA, which fails for the self-signed kube-scheduler/controller-
     # manager certs (TargetDown/InstanceUnreachable fired continuously until
     # this fix — matches kube-prometheus-stack's insecureSkipVerify behavior).
+    # Talos runs etcd outside the API (no pods with component=etcd) but
+    # exposes plain-HTTP metrics on :2381 (talos patch: listen-metrics-urls).
+    # Trick carried over from kube-prometheus-stack: select the host-networked
+    # kube-controller-manager mirror pods — their pod IP == node IP — so the
+    # Service endpoints resolve to the control-plane nodes, then scrape :2381.
+    kubeEtcd:
+      service:
+        port: 2381
+        targetPort: 2381
+        selector:
+          k8s-app: kube-controller-manager
+      vmScrape:
+        spec:
+          endpoints:
+            - port: http-metrics
+              scheme: http
     kubeControllerManager:
       vmScrape:
         spec:
