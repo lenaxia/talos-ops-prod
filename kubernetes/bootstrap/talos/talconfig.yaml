@@ -119,18 +119,16 @@ nodes:
             gateway: "192.168.0.1"
         mtu: 1500
     patches:
-      - "@./patches/nvidia/gpu-worker-patch.yaml"
-      - "@./patches/nvidia/nvidia-default-runtimeclass.yaml"
       - "@./patches/worker/max-pods-200.yaml"
     schematic:
       customization:
+        extraKernelArgs:
+          - video=1920x1080@60e
         systemExtensions:
             officialExtensions:
               - siderolabs/i915
               - siderolabs/intel-ucode
               - siderolabs/iscsi-tools
-              - siderolabs/nvidia-container-toolkit-lts
-              - siderolabs/nvidia-open-gpu-kernel-modules-lts
               - siderolabs/thunderbolt
               - siderolabs/util-linux-tools
   - hostname: "worker-01"
@@ -207,6 +205,8 @@ nodes:
       - "@./patches/worker/gasket-apex.yaml"
     schematic:
       customization:
+        extraKernelArgs:
+          - video=1920x1080@60e
         systemExtensions:
             officialExtensions:
               - siderolabs/gasket-driver
@@ -247,6 +247,8 @@ nodes:
       - "@./patches/nvidia/nvidia-default-runtimeclass.yaml"
     schematic:
       customization:
+        extraKernelArgs:
+          - video=1920x1080@60e
         systemExtensions:
             officialExtensions:
               - siderolabs/amd-ucode
@@ -279,6 +281,8 @@ controlPlane:
     - "@./patches/global/containerd.yaml"
   schematic:
     customization:
+      extraKernelArgs:
+        - video=1920x1080@60e
       systemExtensions:
           officialExtensions:
               - siderolabs/intel-ucode
@@ -298,10 +302,12 @@ worker:
         grow: true
   schematic:
     customization:
+      extraKernelArgs:
+        - video=1920x1080@60e
       systemExtensions:
           officialExtensions:
-              - siderolabs/i915
-              - siderolabs/intel-ucode
-              - siderolabs/iscsi-tools
-              - siderolabs/thunderbolt
-              - siderolabs/util-linux-tools
+            - siderolabs/i915
+            - siderolabs/intel-ucode
+            - siderolabs/iscsi-tools
+            - siderolabs/thunderbolt
+            - siderolabs/util-linux-tools
