@@ -190,43 +190,41 @@ spec:
     # chart bump, then it becomes the only AM watchdog after cutover.
     defaultRules:
       groups:
-        alertmanager-rules:
+        alertmanager.rules:
           enabled: false
-        general-rules:
+        general.rules:
           enabled: false
-        k8s-rules-container-cpu-limits:
+        k8s.rules.container_cpu_limits:
           enabled: false
-        k8s-rules-container-cpu-requests:
+        k8s.rules.container_cpu_requests:
           enabled: false
-        k8s-rules-container-cpu-usage-seconds-total:
+        k8s.rules.container_cpu_usage_seconds_total:
           enabled: false
-        k8s-rules-container-memory-cache:
+        k8s.rules.container_memory_cache:
           enabled: false
-        k8s-rules-container-memory-limits:
+        k8s.rules.container_memory_limits:
           enabled: false
-        k8s-rules-container-memory-requests:
+        k8s.rules.container_memory_requests:
           enabled: false
-        k8s-rules-container-memory-rss:
+        k8s.rules.container_memory_rss:
           enabled: false
-        k8s-rules-container-memory-swap:
+        k8s.rules.container_memory_swap:
           enabled: false
-        k8s-rules-container-memory-working-set-bytes:
+        k8s.rules.container_memory_working_set_bytes:
           enabled: false
-        k8s-rules-pod-owner:
+        k8s.rules.pod_owner:
           enabled: false
-        kube-apiserver-availability-rules:
+        kube-apiserver-burnrate.rules:
           enabled: false
-        kube-apiserver-burnrate-rules:
-          enabled: false
-        kube-apiserver-histogram-rules:
+        kube-apiserver-histogram.rules:
           enabled: false
         kube-apiserver-slos:
           enabled: false
-        kube-prometheus-general-rules:
+        kube-prometheus-general.rules:
           enabled: false
-        kube-prometheus-node-recording-rules:
+        kube-prometheus-node-recording.rules:
           enabled: false
-        kube-scheduler-rules:
+        kube-scheduler.rules:
           enabled: false
         kubernetes-apps:
           enabled: false
@@ -238,7 +236,13 @@ spec:
           enabled: false
         node-network:
           enabled: false
-        node-rules:
+        node.rules:
+          enabled: false
+      # alertmanager source: on chart <=0.91.2 its rule selectors never match
+      # our VMAlertmanager (fixed in 0.92.0) and duplicate the converted
+      # kube-prometheus-stack alertmanager rules. Re-enable after chart bump.
+      sources:
+        alertmanager:
           enabled: false
 
     # VictoriaLogs single-node (LogsQL). Vector aggregator ships logs to it
