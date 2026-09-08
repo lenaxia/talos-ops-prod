@@ -36,17 +36,13 @@ spec:
                       operator: In
                       values:
                         - "true"
-                    # 2026-09-08: pin to the 64-core node — the only host
-                    # that sustains the full US-70 pool suite (8-core
+                    # 2026-09-08: unpinned — worker-04 (64-core) went NotReady
+                    # from memory exhaustion and needs a physical power-cycle;
+                    # the hard pin left all CI hanging. Original pin rationale:
+                    # only host sustaining the full US-70 pool suite (8-core
                     # workers starve the kind node's DB/controller under
-                    # post-wave load). Memory headroom: one litellm
-                    # replica was cordon-evicted to worker-00 (owner
-                    # operation, no git pin — it can drift back); the
-                    # node's real free RAM is ~19Gi (requests overstate).
-                    - key: kubernetes.io/hostname
-                      operator: In
-                      values:
-                        - worker-04
+                    # post-wave load) — re-pin deliberately if that suite
+                    # becomes CI-critical again.
         containers:
           - name: runner
             image: ghcr.io/home-operations/actions-runner:2.337.0@sha256:8b8e8326b5a08e658a0a41cfd2867afab69ca4194a152f986aa6fcd5430d09e7
