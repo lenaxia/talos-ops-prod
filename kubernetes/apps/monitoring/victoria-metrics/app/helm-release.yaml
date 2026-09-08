@@ -147,29 +147,29 @@ spec:
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
-          # Pin to the 64-core node: single replica, ~500m actual CPU — keeps
-          # the small 8-core workers free for app workloads.
-          kubernetes.io/hostname: worker-04
         scrapeInterval: 30s
+        # No hostname pin. Request sized from observed 7d peak (~2.9GiB) so
+        # the scheduler doesn't overpack a node — see vmsingle note.
         resources:
           requests:
             cpu: 400m
-            memory: 512Mi
+            memory: 3Gi
 
     vmsingle:
       enabled: true
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
-          kubernetes.io/hostname: worker-04
         retentionPeriod: 90d
-        # NOTE: keep requests modest — worker-04 memory is tightly budgeted
-        # (see runner sizing commits). No limits set, so actual usage beyond
-        # request is fine; this is only a scheduling guarantee.
+        # NOTE: no hostname pin, no memory limit — the scheduler can only pack
+        # safely if the request is honest. Observed 7d peak working set is
+        # ~6.7GiB; the old 2Gi request let the scheduler overpack worker-04
+        # (2026-09-08 NotReady memory-exhaustion incident). Sized requests are
+        # what make unpinned placement safe.
         resources:
           requests:
             cpu: 300m
-            memory: 2Gi
+            memory: 7Gi
         storage:
           storageClassName: longhorn
           accessModes:
@@ -255,12 +255,12 @@ spec:
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
-          kubernetes.io/hostname: worker-04
         retentionPeriod: 30d
+        # Sized from observed 7d peak (~3.2GiB) — see vmsingle note.
         resources:
           requests:
             cpu: 200m
-            memory: 1Gi
+            memory: 4Gi
         storage:
           storageClassName: longhorn
           accessModes:
