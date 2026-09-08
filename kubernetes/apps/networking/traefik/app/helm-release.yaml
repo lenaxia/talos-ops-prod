@@ -124,10 +124,6 @@ spec:
       - "--providers.kubernetesingress.ingressendpoint.ip=${SVC_TRAEFIK_ADDR}"
       - "--providers.kubernetesingress.allowexternalnameservices=true"
       - "--providers.kubernetescrd.allowexternalnameservices=true"
-      # expose open-connections gauges for the Grafana traefik dashboard
-      # ($entrypoint/$service variables + connection panels) — single flag
-      # covers both entrypoints and services in traefik v3
-      - "--metrics.prometheus.addopenconnsconnections=true"
       # Disable read/write timeouts on all entrypoints so large Immich uploads
       # are never killed mid-transfer (mobile app uploads 400-600MB videos)
       - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=0"
