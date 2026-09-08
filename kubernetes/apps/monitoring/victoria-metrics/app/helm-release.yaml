@@ -57,12 +57,14 @@ spec:
           node-role.kubernetes.io/worker: "true"
         # persist silences/nflog across restarts
         storage:
-          storageClassName: longhorn
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 1Gi
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
       config:
         global:
           resolve_timeout: 5m
