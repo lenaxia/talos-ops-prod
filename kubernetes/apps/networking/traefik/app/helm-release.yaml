@@ -124,6 +124,10 @@ spec:
       - "--providers.kubernetesingress.ingressendpoint.ip=${SVC_TRAEFIK_ADDR}"
       - "--providers.kubernetesingress.allowexternalnameservices=true"
       - "--providers.kubernetescrd.allowexternalnameservices=true"
+      # expose open-connections gauges for the Grafana traefik dashboard
+      # ($entrypoint/$service variables + connection panels)
+      - "--metrics.prometheus.addentrypointsopenconnections=true"
+      - "--metrics.prometheus.addservicesopenconnections=true"
       # Disable read/write timeouts on all entrypoints so large Immich uploads
       # are never killed mid-transfer (mobile app uploads 400-600MB videos)
       - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=0"
@@ -191,11 +195,10 @@ spec:
         entryPoint: metrics
         ## Enable metrics on routers. Default=false
         addRoutersLabels: true
-        # expose entrypoint/service open-connections gauges — the Grafana
-        # traefik dashboard's $entrypoint/$service variables and connection
-        # panels are sourced from these metrics.
-        addEntryPointsOpenConnections: true
-        addServicesOpenConnections: true
+        # NOTE: chart 41.3.0 has no values keys for the open-connections
+        # gauges — passed as raw args below. Exposes
+        # traefik_{entrypoint,service}_open_connections, which the Grafana
+        # traefik dashboard's $entrypoint/$service variables source from.
 
         serviceMonitor:
           enabled: true
