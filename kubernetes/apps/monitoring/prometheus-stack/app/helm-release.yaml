@@ -242,11 +242,6 @@ spec:
         # available, leaving pods stuck in Init forever.
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
-          # NOT hostname-pinned (r1 review): 3 replicas on node-local
-          # openebs-hostpath PVCs — a pin strands node-affine PVCs and the
-          # STS rollout stalls Pending. Prometheus stays spread; the
-          # worker-04 replicas' 2Gi stays requested there (actual node
-          # headroom is ~19Gi per kubectl top — requests overstate).
         resources:
           requests:
             cpu: 500m

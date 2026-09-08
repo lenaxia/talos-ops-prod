@@ -25,7 +25,7 @@ spec:
   values:
     defaultPodOptions:
       nodeSelector:
-        node-role.kubernetes.io/worker: 'true' 
+        node-role.kubernetes.io/worker: 'true'
     controllers:
       app:
         type: deployment
