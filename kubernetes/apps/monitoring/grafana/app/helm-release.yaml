@@ -176,6 +176,13 @@ spec:
           gnetId: 13502
           revision: 10
           datasource: VictoriaMetrics
+        # official Traefik Labs dashboard — v3-metric-native (uses
+        # traefik_open_connections etc.; the old hand-imported "Traefik"
+        # dashboard is v2-era and needed manual query patches)
+        traefik:
+          gnetId: 17347
+          revision: 9
+          datasource: VictoriaMetrics
 #        # Ref: https://grafana.com/grafana/dashboards/11315
 #        unifi-client-insights:
 #          gnetId: 11315
