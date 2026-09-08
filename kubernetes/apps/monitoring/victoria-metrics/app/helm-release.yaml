@@ -64,10 +64,9 @@ spec:
       spec:
         nodeSelector:
           node-role.kubernetes.io/worker: "true"
-          # 2026-09-08: relocated to worker-00 (re-imaged, healthy, 56Gi
-          # free) — frees worker-04 memory for the dind runner's return
-          # (the 64-core node is the only full-pool-suite-capable host).
-          kubernetes.io/hostname: worker-00
+          # Pin to the 64-core node: single replica, ~500m actual CPU — keeps
+          # the small 8-core workers free for app workloads.
+          kubernetes.io/hostname: worker-04
         scrapeInterval: 30s
         resources:
           requests:
