@@ -36,6 +36,17 @@ spec:
                       operator: In
                       values:
                         - "true"
+                    # 2026-09-08: pin to the 64-core node — the only host
+                    # that sustains the full US-70 pool suite (8-core
+                    # workers starve the kind node's DB/controller under
+                    # post-wave load). Memory headroom: one litellm
+                    # replica was cordon-evicted to worker-00 (owner
+                    # operation, no git pin — it can drift back); the
+                    # node's real free RAM is ~19Gi (requests overstate).
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - worker-04
         containers:
           - name: runner
             image: ghcr.io/home-operations/actions-runner:2.337.0@sha256:8b8e8326b5a08e658a0a41cfd2867afab69ca4194a152f986aa6fcd5430d09e7
@@ -77,7 +88,8 @@ spec:
               # LLMSafeSpaces#1244: the US-70 pool's kind-in-dind was 3-5x
               # slower than hosted and starved cert-manager-webhook past its
               # progress deadline on a 1-CPU request (etcd CNI timeouts too).
-              # 3 CPU / 8Gi (2026-09-08: restored). The 2026-09-07 trim
+              # 3 CPU / 2Gi (2026-09-08; see the sizing note below for the
+              # request-vs-actual rationale). The 2026-09-07 trim
               # to 2300m was a placement workaround for the capacity
               # crisis (worker-04 memory-full after 477a6d0d, workers
               # fragmented) — which ended when worker-00 was re-imaged
@@ -89,7 +101,14 @@ spec:
               # churn; no limit (a limit OOMKills dind mid-build).
               requests:
                 cpu: 3
-                memory: 8Gi
+                # 2Gi request fits worker-04's requests math after the
+                # litellm replica was cordon-evicted to worker-00 (owner
+                # operation, 2026-09-08; no git pin — it can drift back on
+                # a future reschedule). Scheduling-only: no limit; the
+                # node's ACTUAL headroom is ~19Gi (kubectl top: 69% used;
+                # the 96% requests figure is vllm-fleet inflation) — kind
+                # + build churn burst into real RAM.
+                memory: 2Gi
         volumes:
           - name: dind-cert
             emptyDir: {}
