@@ -155,9 +155,9 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.27.4 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.27.4):
-      #   index digest sha256:66a8925ca44ea1372d80f9f64ba0b6e6b41672aa53aa0077803739d95b2ff3c8
+      # Digest source: release v0.27.5 (Release workflow, fetched from
+      # ghcr.io manifest for tag 0.27.5):
+      #   index digest sha256:ee1ae797794bdaa806639320aad9544070519ba0d60b5315a5af74158427e624
       #   (the deployed pin below). Per-arch binary sha256s resolve from
       #   the index annotations at controller startup — see the note at
       #   the top of this delivery block.
