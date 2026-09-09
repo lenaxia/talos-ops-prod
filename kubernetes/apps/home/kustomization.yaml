@@ -33,7 +33,9 @@ resources:
   - ./msedge/ks.yaml
   - ./oncall-sim/ks.yaml
   - ./librechat/ks.yaml
-  - ./kicad/ks.yaml
+  # kicad disabled 2026-09-09 (app mid-rework; empty scrape pool noise).
+  # Re-enable by uncommenting. PVCs/volsync backups survive uninstall.
+  # - ./kicad/ks.yaml
   - ./opengist/ks.yaml
   - ./aiornot/ks.yaml
   - ./ansible-runner/ks.yaml
