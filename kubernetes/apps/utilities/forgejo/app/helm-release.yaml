@@ -219,7 +219,7 @@ spec:
           SMTP_ADDR: ${SECRET_AWS_SMTP_HOST}
           SMTP_PORT: ${SECRET_AWS_SMTP_PORT}
           FROM: "Forgejo <forgejo@${SECRET_DEV_DOMAIN}>"
-          USER: ${SECRET_AWS_SMTP_USER}
+          USER: ${SECRET_AWS_SMTP_USERNAME}
           PASSWD: ${SECRET_AWS_SMTP_PASSWORD}
 
         # Cron Jobs
