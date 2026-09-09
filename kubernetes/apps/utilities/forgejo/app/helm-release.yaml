@@ -344,7 +344,9 @@ spec:
         enabled: true
         serviceMonitor:
           enabled: true
-          namespace: monitoring
+          # NOTE: no namespace override — the SM must land in utilities with
+          # the forgejo service; when it lived in monitoring its implicit
+          # namespaceSelector selected nothing (empty scrape pool forever).
           additionalLabels:
             release: kube-prometheus-stack
 
