@@ -211,8 +211,12 @@ spec:
             - action: labeldrop
               regex: (beta_kubernetes_io_.*|kubernetes_io_arch|kubernetes_io_os|feature_node_.*|extensions_talos_dev_.*|gpu_intel_com_.*|intel_feature_node_.*|node_role_kubernetes_io_.*)
           relabelConfigs:
-            - action: labelmap
-              regex: __meta_kubernetes_node_label_(.+)
+            # NOTE: no blanket labelmap of __meta_kubernetes_node_label_(.+) —
+            # it attaches EVERY node label (feature_*, beta_*, gpu_*) to the
+            # target, and vmagent's synthetic scrape_duration_seconds inherits
+            # them pre-metricRelabel -> 70+ labels -> vmsingle rejects the
+            # series (too_many_labels). The `node` label set by VMNodeScrape
+            # is sufficient identity for kubelet series.
             - sourceLabels: [__metrics_path__]
               targetLabel: metrics_path
             - targetLabel: job
