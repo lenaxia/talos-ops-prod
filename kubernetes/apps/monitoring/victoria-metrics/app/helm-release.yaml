@@ -184,7 +184,47 @@ spec:
     # converted rules no longer provide these).
     # alertmanager source stays disabled: on chart <=0.91.2 its selectors never
     # match our VMAlertmanager (fixed in 0.92.0). Re-enable after chart bump.
+    # Kubelet/VMNodeScrape labelmaps ALL node labels onto every scraped
+    # series (feature_node_*, beta_*, extensions_talos_dev_*, gpu_intel_*),
+    # which blew up cardinality and made vmsingle reject rows with
+    # "too_many_labels". Chart defaults + a labeldrop for the node noise.
+    kubelet:
+      vmScrape:
+        spec:
+          scheme: "https"
+          honorLabels: true
+          interval: "30s"
+          scrapeTimeout: "5s"
+          tlsConfig:
+            insecureSkipVerify: true
+            caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+          metricRelabelConfigs:
+            - action: labeldrop
+              regex: (uid)
+            - action: labeldrop
+              regex: (id|name)
+            - action: drop
+              source_labels: [__name__]
+              regex: (rest_client_request_duration_seconds_bucket|rest_client_request_duration_seconds_sum|rest_client_request_duration_seconds_count)
+            # drop node-metadata labels leaked by VMNodeScrape's labelmap
+            - action: labeldrop
+              regex: (beta_kubernetes_io_.*|kubernetes_io_arch|kubernetes_io_os|feature_node_.*|extensions_talos_dev_.*|gpu_intel_com_.*|intel_feature_node_.*|node_role_kubernetes_io_.*)
+          relabelConfigs:
+            - action: labelmap
+              regex: __meta_kubernetes_node_label_(.+)
+            - sourceLabels: [__metrics_path__]
+              targetLabel: metrics_path
+            - targetLabel: job
+              replacement: kubelet
+          honorTimestamps: false
+
     defaultRules:
+      # count:up0 recording rule is empty whenever nothing is down (normal
+      # state), which made vmalert's RecordingRulesNoData fire forever.
+      rules:
+        "count:up0":
+          enabled: false
       sources:
         alertmanager:
           enabled: false
