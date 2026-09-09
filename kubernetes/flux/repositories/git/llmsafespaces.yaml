@@ -16,7 +16,7 @@ spec:
   # kubernetes/apps/llmsafespaces/llmsafespaces/app/helm-release.yaml
   # together in one PR.
   ref:
-    tag: v0.27.4
+    tag: v0.27.5
   ignore: |
     # exclude everything
     /*
