@@ -1,0 +1,33 @@
+---
+# One-shot data copy old -> migrated PVC. Remove this file after the
+# migration completes (see helm-release existingClaim note).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jellyfin-config-migration
+  namespace: media
+spec:
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      containers:
+        - name: rsync
+          image: ghcr.io/linuxserver/alpine:3.21
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -e
+              apk add --no-cache rsync >/dev/null
+              rsync -aHAX --info=progress2 /old/ /new/
+              echo "copy complete"
+          volumeMounts:
+            - {name: old, mountPath: /old}
+            - {name: new, mountPath: /new}
+      volumes:
+        - name: old
+          persistentVolumeClaim: {claimName: config-jellyfin-0}
+        - name: new
+          persistentVolumeClaim: {claimName: config-jellyfin-migrated}
