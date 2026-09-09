@@ -2,5 +2,11 @@ cluster:
   etcd:
     extraArgs:
       listen-metrics-urls: http://0.0.0.0:2381
+      # etcd had NO auto-compaction (Talos default) — the db file grew to
+      # 3x live data (598MB file / 191MB in-use) with zero compactions ever
+      # run, tripping etcdDatabaseHighFragmentationRatio forever.
+      # 1h retention keeps recent revisions for watchers/backups.
+      auto-compaction-mode: periodic
+      auto-compaction-retention: 1h
     advertisedSubnets:
       - 192.168.0.0/16
