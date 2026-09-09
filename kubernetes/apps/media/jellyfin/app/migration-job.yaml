@@ -12,7 +12,9 @@ spec:
     spec:
       restartPolicy: Never
       nodeSelector:
-        node-role.kubernetes.io/worker: "true"
+        # pinned: the source volume's only live replica is on worker-00 —
+        # attaching elsewhere forces a (broken-chain) rebuild
+        kubernetes.io/hostname: worker-00
       containers:
         - name: rsync
           image: ghcr.io/linuxserver/alpine:3.21
