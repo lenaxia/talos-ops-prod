@@ -1,0 +1,19 @@
+---
+# Migration target for the broken config-jellyfin-0 volume (longhorn snapshot
+# chain corruption — missing volume-snap-*.img files made replica rebuilds
+# fail forever). One-shot migration; this claim becomes the permanent config
+# volume via existingClaim in the helm-release.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config-jellyfin-migrated
+  namespace: media
+  labels:
+    snapshot.home.arpa/enabled: "true"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 50Gi
