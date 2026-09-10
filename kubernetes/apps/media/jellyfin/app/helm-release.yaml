@@ -57,16 +57,14 @@ spec:
               limits:
                 gpu.intel.com/i915: 1
                 memory: 6000Mi
-        statefulset:
-          volumeClaimTemplates:
-            - name: config
-              accessMode: ReadWriteOnce
-              size: 50Gi
-              storageClass: longhorn
-              labels:
-                snapshot.home.arpa/enabled: 'true'
-              globalMounts:
-                - path: /config
+    persistence:
+      config:
+        # Migrated 2026-09-09 from config-jellyfin-0 (broken longhorn
+        # snapshot chain — rebuilds failed forever). Keep as existingClaim;
+        # the old PVC/volume was deleted after verification.
+        existingClaim: config-jellyfin-migrated
+        globalMounts:
+          - path: /config
     service:
       main:
         type: LoadBalancer
