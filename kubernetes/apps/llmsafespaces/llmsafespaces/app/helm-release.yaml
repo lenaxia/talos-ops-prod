@@ -113,7 +113,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.27.5"
+        tag: "0.27.6"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -144,7 +144,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.27.5"
+        tag: "0.27.6"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -156,8 +156,8 @@ spec:
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
       # Digest source: release v0.27.5 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.27.5):
-      #   index digest sha256:567c7c9b971584b4d0394957887dea8f56e2e840515838cf802eea98af9a385d
+      # ghcr.io manifest for tag 0.27.6):
+      #   index digest sha256:40d41ceb630ba20b6fbdece38f2ef972f07103f52256164e942fce1ede5c93f0
       #   (the deployed pin below). Per-arch binary sha256s resolve from
       #   the index annotations at controller startup — see the note at
       #   the top of this delivery block.
@@ -197,15 +197,15 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:567c7c9b971584b4d0394957887dea8f56e2e840515838cf802eea98af9a385d
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:40d41ceb630ba20b6fbdece38f2ef972f07103f52256164e942fce1ede5c93f0
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.27.5 (ghcr manifest, tag 0.27.5).
+      # Digest source: release v0.27.5 (ghcr manifest, tag 0.27.6).
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:3df6c90687a8d8f0c80ce73f3fee6a6a8b8ec6627cb21c7993c9c372e7ffafda
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:48a4823355f7817f8cdd24a4d167b0e09b1212327d581c5ac67808a443c559ec
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -224,7 +224,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.27.5"
+            tag: "0.27.6"
       freeModelsRefresher:
         enabled: false
 
@@ -299,7 +299,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.27.5"
+        tag: "0.27.6"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
