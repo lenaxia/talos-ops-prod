@@ -157,7 +157,7 @@ spec:
       # merge-agentd job) — do NOT set binarySHA256*.
       # Digest source: release v0.28.1 (Release workflow, fetched from
       # ghcr.io manifest for tag 0.28.1):
-      #   index digest sha256:sha256:sha256:sha256:ca5f8669ad6f906140f711923ccd322d3637007c449936350cdb728959998e3a
+      #   index digest sha256:ca5f8669ad6f906140f711923ccd322d3637007c449936350cdb728959998e3a
       #   (the deployed pin below). Per-arch binary sha256s resolve from
       #   the index annotations at controller startup — see the note at
       #   the top of this delivery block.
