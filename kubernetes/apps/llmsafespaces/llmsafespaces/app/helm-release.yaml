@@ -197,7 +197,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:sha256:sha256:sha256:ca5f8669ad6f906140f711923ccd322d3637007c449936350cdb728959998e3a
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:ca5f8669ad6f906140f711923ccd322d3637007c449936350cdb728959998e3a
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
@@ -205,7 +205,7 @@ spec:
       # OpencodeVerified condition). Render fails without it — by design.
       # Digest source: release v0.28.1 (ghcr manifest, tag 0.28.1).
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:sha256:sha256:sha256:ca5f8669ad6f906140f711923ccd322d3637007c449936350cdb728959998e3a
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:2b6424d460e407c45ca3c9e0e42164414e58d12ddf0b9c995b773107f001ddca
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
