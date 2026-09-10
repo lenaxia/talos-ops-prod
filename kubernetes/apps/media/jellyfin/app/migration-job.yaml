@@ -17,7 +17,7 @@ spec:
         kubernetes.io/hostname: worker-00
       containers:
         - name: rsync
-          image: ghcr.io/linuxserver/alpine:3.21
+          image: docker.io/library/alpine:3.20
           command: ["/bin/sh","-c"]
           args:
             - |
