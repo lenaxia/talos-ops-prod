@@ -93,7 +93,7 @@ spec:
           server:
             image:
               repository: ghcr.io/immich-app/immich-server
-              tag: v3.1.0
+              tag: v3.2.0
             env:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
@@ -148,7 +148,7 @@ spec:
           machine-learning:
             image:
               repository: ghcr.io/immich-app/immich-machine-learning
-              tag: v3.1.0-openvino
+              tag: v3.2.0-openvino
             env:
               TZ: ${TIMEZONE}
               IMMICH_LOG_LEVEL: log
