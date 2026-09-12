@@ -43,7 +43,7 @@ spec:
           app:
             image:
               repository: rhasspy/wyoming-piper
-              tag: '2.4.3'
+              tag: '2.5.2'
             args:
               - --voice=en_US-lessac-medium
             probes:
