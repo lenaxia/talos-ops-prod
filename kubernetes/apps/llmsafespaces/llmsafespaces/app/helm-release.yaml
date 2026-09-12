@@ -113,7 +113,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.29.0"
+        tag: "0.29.1"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -144,7 +144,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.29.0"
+        tag: "0.29.1"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -224,7 +224,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.29.0"
+            tag: "0.29.1"
       freeModelsRefresher:
         enabled: false
 
@@ -299,7 +299,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.29.0"
+        tag: "0.29.1"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
