@@ -30,7 +30,7 @@ spec:
       repository: traefik
       # chart 40.3.0 only supports proxy up to v3.7.4 — see chart Chart.yaml
       # kube-version annotation. Pin matches chart's max supported version.
-      tag: v3.7.11
+      tag: v3.7.13
     deployment:
       # DaemonSet: guarantees a Traefik pod on every worker node, so the Cilium
       # L2 leader election for the LoadBalancer VIP always has a local backend.
