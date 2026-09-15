@@ -18,7 +18,7 @@ spec:
   # CalVer-pinned on its own cadence and does NOT roll with this ref; the
   # agentd/opencode overlay digests roll via their own delivery-pin PRs.)
   ref:
-    tag: v0.30.0
+    tag: v0.30.1
   ignore: |
     # exclude everything
     /*
