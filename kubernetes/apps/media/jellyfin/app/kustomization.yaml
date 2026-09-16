@@ -4,6 +4,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: media
 resources:
+  # migration-pvc is the PERMANENT config volume (existingClaim in the
+  # helm-release) — keep. migration-job.yaml was removed with its
+  # completed one-shot migration (9597d933) but its stale reference
+  # broke kustomize build; dropped here (PR #2491 review finding 1).
   - ./migration-pvc.yaml
-  - ./migration-job.yaml
   - ./helm-release.yaml
