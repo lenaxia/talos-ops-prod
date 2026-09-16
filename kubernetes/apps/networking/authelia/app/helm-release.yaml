@@ -268,6 +268,10 @@ spec:
             - 'relay.${SECRET_SAFESPACES_DOMAIN}'
           policy: bypass
 
+        # lenaxia.net — auth portal itself must bypass auth
+        - domain: 'authelia.${SECRET_LENAXIA_DOMAIN}'
+          policy: bypass
+
         # Require 2fa in all access modes
         - domain:
             - "dsm.${SECRET_DEV_DOMAIN}"
@@ -480,8 +484,12 @@ spec:
           policy: one_factor
 
         # Catchall for anything undefined to be two factor
-        - domain: 
+        - domain:
             - "*.${SECRET_DEV_DOMAIN}"
+          policy: two_factor
+
+        # lenaxia.net — catchall for apps under the second domain
+        - domain: "*.${SECRET_LENAXIA_DOMAIN}"
           policy: two_factor
 
         # rules:
@@ -549,6 +557,9 @@ spec:
           - domain: '${SECRET_SAFESPACES_DOMAIN}'
             subdomain: 'authelia'
             default_redirection_url: 'https://chat.${SECRET_SAFESPACES_DOMAIN}'
+          - domain: '${SECRET_LENAXIA_DOMAIN}'
+            subdomain: 'authelia'
+            default_redirection_url: 'https://${SECRET_LENAXIA_DOMAIN}'
 
         ##
         ## Redis Provider

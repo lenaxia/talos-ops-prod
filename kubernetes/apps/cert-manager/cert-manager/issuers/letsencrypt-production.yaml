@@ -21,3 +21,4 @@ spec:
           dnsZones:
             - ${SECRET_DEV_DOMAIN}
             - ${SECRET_SAFESPACES_DOMAIN}
+            - ${SECRET_LENAXIA_DOMAIN}
