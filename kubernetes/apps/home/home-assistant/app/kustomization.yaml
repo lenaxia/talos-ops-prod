@@ -18,6 +18,11 @@ configMapGenerator:
       - config/packages/battery_monitor.yaml
       - config/packages/house_mode.yaml
       - config/packages/presence_experience.yaml
+      - config/packages/morning_briefing.yaml
+      - config/packages/voice_intents.yaml
+  - name: ha-custom-sentences
+    files:
+      - house.yaml=config/custom-sentences/house.yaml
   - name: openai-conversation-overrides
     files:
       - ./openai/__init__.py

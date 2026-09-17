@@ -1,0 +1,36 @@
+# =============================================================================
+# Voice intents package — kitchen satellite phrases
+# =============================================================================
+# Sentence patterns live in /config/custom_sentences/en/house.yaml (mounted
+# via the ha-custom-sentences ConfigMap). This package maps the intents to
+# actions and spoken responses. Works on any Assist pipeline: kitchen
+# ReSpeaker, Voice PE, phone apps.
+# =============================================================================
+
+voice_intents:
+
+  intent_script:
+    HausGoodNight:
+      action:
+        - action: script.goodnight
+      speech:
+        text: "Good night. Lights are off and the house is in night mode."
+    HausGuestsHere:
+      action:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.guest_mode_active
+      speech:
+        text: "Guest mode is on. The house will stay occupied while you're away."
+    HausGuestsLeft:
+      action:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.guest_mode_active
+      speech:
+        text: "Guest mode is off."
+    HausBriefing:
+      action:
+        - action: script.morning_briefing
+      speech:
+        text: "Here's the briefing, playing in the kitchen."
