@@ -17,7 +17,7 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (current: v0.32.1). Rationale: if we ever move a
+      # is now pinned to a semver tag (current: v0.33.0). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
