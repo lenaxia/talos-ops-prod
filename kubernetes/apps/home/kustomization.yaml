@@ -39,3 +39,4 @@ resources:
   - ./opengist/ks.yaml
   - ./aiornot/ks.yaml
   - ./ansible-runner/ks.yaml
+  - ./mini4wd/ks.yaml
