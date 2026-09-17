@@ -289,8 +289,6 @@ spec:
                 controllerRestartCount:
                   type: integer
                   format: int32
-                safeMode:
-                  type: boolean
                 observedRestartGeneration:
                   type: integer
                   format: int64
