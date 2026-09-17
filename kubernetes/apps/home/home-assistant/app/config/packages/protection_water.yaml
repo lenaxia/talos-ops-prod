@@ -10,8 +10,9 @@
 #           Valve stays closed until reopened via notification button or UI.
 #
 # Tuning:
-#   - To add more valves later: extend the valve switch list in the
-#     VALVE_SWITCHES variable in both automations below.
+#   - To add more valves later: extend the valve_entities list in BOTH
+#     protection_water_leak_response and protection_water_reopen_valve_button
+#     automations below (they are kept in sync deliberately).
 #   - To pause auto-shutoff (e.g. working on plumbing): turn off
 #     input_boolean.protection_water_auto_shutoff. Alerts still fire.
 # =============================================================================
