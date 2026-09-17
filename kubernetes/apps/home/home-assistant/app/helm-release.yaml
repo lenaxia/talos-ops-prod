@@ -112,9 +112,9 @@ spec:
         globalMounts:
           - path: /config/ldap-auth
         defaultMode: 0777
-      heatpump-package:
+      ha-packages:
         type: configMap
-        name: heatpump-package
+        name: ha-packages
         globalMounts:
           - path: /config/packages
       logs:

@@ -1,57 +1,416 @@
-# ReSpeaker -> Sonos TTS redirect automation.
-#
-# This file is reference/config-of-record. Home Assistant writes to
-# automations.yaml when you edit via the UI, so mounting this read-only via
-# ConfigMap would break UI editing. Two deployment options:
-#
-#   Option A (simple): Paste this YAML into HA via
-#     Settings -> Automations -> Edit in YAML.
-#     The state lives on the HA PVC and is not in git, but the source of
-#     truth is documented here.
-#
-#   Option B (GitOps): Add a ConfigMap mount in home-assistant/app/helm-release.yaml:
-#       persistence:
-#         automations:
-#           type: configMap
-#           name: home-assistant-automations
-#           globalMounts:
-#             - path: /config/automations.yaml
-#               subPath: automations.yaml
-#     This makes automations.yaml read-only from HA's perspective, breaking
-#     UI editing. Use only if you commit to editing in git only.
-#
-# Before deploying, replace these placeholders:
-#   03eff58ab24c18db7ddb45320e7770a7  -> ReSpeaker device_id
-#     (Developer Tools -> Events -> listen for esphome.tts_uri)
-#   media_player.dining_room_dining_room  -> your Sonos entity
-#
-# Prerequisites:
-#   1. The ReSpeaker satellite must be flashed with the MP3 supported_formats
-#      change (see kubernetes/apps/home/esphome/app/config/common/) so the
-#      tts_uri URLs end in .mp3 instead of .flac. Sonos's announce API
-#      silently rejects FLAC; MP3 works.
-#   2. switch.respeaker_kitchen_speaker_mute must be ON (otherwise TTS plays
-#      from both the satellite's onboard amp and the Sonos).
-#   3. The Assist pipeline assigned to the satellite must use Wyoming Piper.
----
-- id: respeaker_kitchen_sonos_tts_redirect
-  alias: "ReSpeaker Kitchen -> Sonos TTS"
-  description: >-
-    Play assistant TTS responses on the dining room Sonos instead of the
-    satellite's onboard speaker. Uses announce: true so Sonos ducks music,
-    plays TTS, then restores previous playback state.
+- id: '1725206826847'
+  alias: 'Front Door: Open/Closed Notifications'
+  description: Notify only when the front door opens/closes
+  triggers:
+  - entity_id: binary_sensor.front_door_intrusion
+    from: 'off'
+    to: 'on'
+    trigger: state
+  - entity_id: binary_sensor.front_door_intrusion
+    from: 'on'
+    to: 'off'
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.front_door_intrusion
+        state: 'on'
+      sequence:
+      - data:
+          message: 🚪 Front Door is OPEN
+        action: notify.send_message
+        target:
+          entity_id: notify.device_phone_app_serena
+      - data:
+          message: 🚪 Front Door is OPEN
+        action: notify.send_message
+        target:
+          entity_id: notify.rosebud_8_ha_app
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.front_door_intrusion
+        state: 'off'
+      sequence:
+      - data:
+          message: ✅ Front Door is CLOSED
+        action: notify.send_message
+        target:
+          entity_id: notify.device_phone_app_serena
+      - data:
+          message: ✅ Front Door is CLOSED
+        action: notify.send_message
+        target:
+          entity_id: notify.rosebud_8_ha_app
   mode: single
-  trigger:
-    - platform: event
-      event_type: esphome.tts_uri
-      event_data:
-        device_id: 03eff58ab24c18db7ddb45320e7770a7
-  condition: []
-  action:
-    - action: media_player.play_media
-      data:
-        announce: true
+- id: '1726631234652'
+  alias: 'Garage: Garage door open for 15m'
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.garage_door_is_open
+    from: 'off'
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+    trigger: state
+  conditions: []
+  actions:
+  - action: notify.send_message
+    target:
+      entity_id: notify.device_phone_app_serena
+    metadata: {}
+    data:
+      message: Garage Door has been open for 15m
+  - action: notify.send_message
+    target:
+      entity_id: notify.rosebud_8_ha_app
+    metadata: {}
+    data:
+      message: Garage door has been open for 15m
+  mode: single
+- id: auto_lights_on_leave_return
+  alias: Auto Lights - Smart Home/Away with Persistent Snapshot Restore
+  description: 'Automatically snapshot and turn off all interior lights when both
+    Serena and Mike leave home for 5 minutes, and restore them when either returns.
+    Disabled if guest mode is active.
+
+    '
+  triggers:
+  - entity_id:
+    - person.serena
+    - person.mike_kao
+    to:
+    - home
+    - not_home
+    trigger: state
+  conditions:
+  - condition: state
+    entity_id: input_boolean.guest_mode_active
+    state: 'off'
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ states(''person.serena'') != ''home'' and states(''person.mike_kao'')
+          != ''home'' }}
+
+          '
+      sequence:
+      - delay:
+          minutes: 5
+      - condition: template
+        value_template: '{{ states(''person.serena'') != ''home'' and states(''person.mike_kao'')
+          != ''home'' }}
+
+          '
+      - data:
+          scene_id: last_interior_lighting_state
+          snapshot_entities: '{{ expand(''group.interior_lights'') | map(attribute=''entity_id'')
+            | list }}
+
+            '
+        action: scene.create
+      - target:
+          entity_id: scene.all_interior_lights_off
+        action: scene.turn_on
+      - data:
+          name: Auto Lights
+          message: All interior lights turned off after both left (snapshot saved).
+          entity_id: group.interior_lights
+        action: logbook.log
+    - conditions:
+      - condition: template
+        value_template: '{{ states(''person.serena'') == ''home'' or states(''person.mike_kao'')
+          == ''home'' }}
+
+          '
+      sequence:
+      - target:
+          entity_id: scene.last_interior_lighting_state
+        action: scene.turn_on
+      - data:
+          name: Auto Lights
+          message: Restored prior lighting scene after someone returned.
+          entity_id: group.interior_lights
+        action: logbook.log
+  mode: single
+- id: '1762235354881'
+  alias: 'Exterior Lights: Sunset & Sunrise'
+  description: Turn exterior lights on 1h30 before sunset and off 1h after sunrise
+  triggers:
+  - event: sunset
+    offset: -00:30:00
+    id: sunset
+    trigger: sun
+  - event: sunrise
+    offset: +00:15:00
+    id: sunrise
+    trigger: sun
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: sunset
+      sequence:
+      - target:
+          device_id:
+          - 928bf64e8160a29e19798123b04c35e8
+          - d034a9d5030053abb59356894aa9b7fc
+          - efba0b8d4edaadf297ab1980ab36b626
+        action: switch.turn_on
+    - conditions:
+      - condition: trigger
+        id: sunrise
+      sequence:
+      - target:
+          device_id:
+          - 928bf64e8160a29e19798123b04c35e8
+          - d034a9d5030053abb59356894aa9b7fc
+          - efba0b8d4edaadf297ab1980ab36b626
+        action: switch.turn_off
+    - conditions:
+      - condition: trigger
+        id: test_on
+      sequence:
+      - target:
+          device_id:
+          - 928bf64e8160a29e19798123b04c35e8
+          - d034a9d5030053abb59356894aa9b7fc
+          - efba0b8d4edaadf297ab1980ab36b626
+        action: switch.turn_on
+    - conditions:
+      - condition: trigger
+        id: test_off
+      sequence:
+      - target:
+          device_id:
+          - 928bf64e8160a29e19798123b04c35e8
+          - d034a9d5030053abb59356894aa9b7fc
+          - efba0b8d4edaadf297ab1980ab36b626
+        action: switch.turn_off
+  mode: single
+- id: '1762547876019'
+  alias: 'Kitchen: Fridge Power Loss Alert'
+  description: Notify if fridge loses power (active power < 1 W for 10 min)
+  triggers:
+  - entity_id: sensor.kitchen_plugs_2_active_power
+    below: 1
+    for:
+      minutes: 10
+    trigger: numeric_state
+  conditions: []
+  actions:
+  - data:
+      message: ⚠️ Fridge power has been below 1 W for 10 minutes — check if it lost
+        power.
+    action: notify.send_message
+    target:
+      entity_id: notify.device_phone_app_serena
+  - data:
+      message: ⚠️ Fridge power has been below 1 W for 10 minutes — check if it lost
+        power.
+    action: notify.send_message
+    target:
+      entity_id: notify.rosebud_8_ha_app
+  mode: single
+- id: '1764545816552'
+  alias: 'Garage Entry: Open/Closed Notifications'
+  description: Notify when the garage entry door status changes
+  triggers:
+  - entity_id: binary_sensor.garage_entry_intrusion
+    from: 'off'
+    to: 'on'
+    trigger: state
+  - entity_id: binary_sensor.garage_entry_intrusion
+    from: 'on'
+    to: 'off'
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.garage_entry_intrusion
+        state: 'on'
+      sequence:
+      - data:
+          message: 🚪 Garage Entry Door is OPEN
+        action: notify.send_message
+        target:
+          entity_id: notify.device_phone_app_serena
+      - data:
+          message: 🚪 Garage Entry Door is OPEN
+        action: notify.send_message
+        target:
+          entity_id: notify.rosebud_8_ha_app
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.garage_entry_intrusion
+        state: 'off'
+      sequence:
+      - data:
+          message: ✅ Garage Entry Door is CLOSED
+        action: notify.send_message
+        target:
+          entity_id: notify.device_phone_app_serena
+      - data:
+          message: ✅ Garage Entry Door is CLOSED
+        action: notify.send_message
+        target:
+          entity_id: notify.rosebud_8_ha_app
+  mode: single
+- id: '1764546635805'
+  alias: 'Laundry: Motion Lights'
+  description: Turn on laundry lights when motion is detected, turn off after 5 minutes
+    of no motion
+  triggers:
+  - entity_id: binary_sensor.laundry_motion_detected
+    from: 'off'
+    to: 'on'
+    trigger: state
+  actions:
+  - action: switch.turn_on
+    target:
+      device_id:
+      - 1f8de216aea801d336bf8b4f738008d6
+    data: {}
+  - wait_for_trigger:
+    - entity_id:
+      - binary_sensor.laundry_motion_detected
+      from:
+      - 'on'
+      to:
+      - 'off'
+      for:
+        hours: 0
+        minutes: 2
+        seconds: 30
+      trigger: state
+  - action: switch.turn_off
+    target:
+      device_id:
+      - 1f8de216aea801d336bf8b4f738008d6
+    data: {}
+  mode: restart
+- id: '1783706489856'
+  alias: ReSpeaker Kitchen -> Sonos TTS
+  description: Play assistant TTS responses on Sonos with ducking (announce API)
+  triggers:
+  - event_type: esphome.tts_uri
+    event_data:
+      device_id: 03eff58ab24c18db7ddb45320e7770a7
+    trigger: event
+  conditions: []
+  actions:
+  - action: media_player.play_media
+    data:
+      announce: true
+      media:
+        media_content_id: '{{ trigger.event.data.uri }}'
         media_content_type: music
-        media_content_id: "{{ trigger.event.data.uri }}"
-      target:
-        entity_id: media_player.dining_room_dining_room
+        metadata: {}
+    target:
+      entity_id: media_player.dining_room_dining_room
+  mode: single
+- id: '1783726000001'
+  alias: 'RF Remote: Bedroom WLED Skylar'
+  description: Sonoff RF Bridge 433MHz keyfob (A/B/C/D) controlling WLED.Skylar
+  triggers:
+  - trigger: mqtt
+    topic: tele/tasmota/RESULT
+  conditions:
+  - condition: template
+    value_template: "{{ trigger.payload_json.RfReceived is defined and\n   trigger.payload_json.RfReceived.Data\
+      \ in [11855016, 11855012, 11855010, 11855009] }}"
+  actions:
+  - variables:
+      code: '{{ trigger.payload_json.RfReceived.Data }}'
+      light: light.bedroom_wled_skylar
+      colors:
+      - - 255
+        - 0
+        - 0
+      - - 255
+        - 200
+        - 0
+      - - 0
+        - 255
+        - 0
+      - - 0
+        - 80
+        - 255
+      - - 160
+        - 0
+        - 255
+      - - 255
+        - 255
+        - 255
+      - - 255
+        - 160
+        - 60
+      brightness_levels:
+      - 25
+      - 50
+      - 75
+      - 100
+  - choose:
+    - conditions: '{{ code == 11855016 }}'
+      sequence:
+      - action: light.toggle
+        target:
+          entity_id: '{{ light }}'
+    - conditions: '{{ code == 11855012 }}'
+      sequence:
+      - variables:
+          current: '{{ state_attr(light, "rgb_color") | list if state_attr(light,
+            "rgb_color") else [0,0,0] }}'
+          idx: "{% set ns = namespace(found=-1) %} {% for c in colors %}\n  {% if\
+            \ c == current %}{% set ns.found = loop.index0 %}{% endif %}\n{% endfor\
+            \ %} {{ ns.found }}"
+          nxt: '{{ colors[(idx | int + 1) % (colors | length)] }}'
+      - action: light.turn_on
+        target:
+          entity_id: '{{ light }}'
+        data:
+          rgb_color: '{{ nxt }}'
+          brightness_pct: 80
+          effect: Solid
+    - conditions: '{{ code == 11855010 }}'
+      sequence:
+      - variables:
+          cur_b: '{{ (state_attr(light, "brightness") | float(0) / 255 * 100) | round(0)
+            }}'
+          idx: "{% set ns = namespace(found=-1) %} {% for b in brightness_levels %}\n\
+            \  {% if (cur_b | int) <= b %}{% if ns.found == -1 %}{% set ns.found =\
+            \ loop.index0 %}{% endif %}{% endif %}\n{% endfor %} {{ ns.found }}"
+          nxt_b: '{{ brightness_levels[((idx | int) + 1) % (brightness_levels | length)]
+            if idx | int >= 0 else brightness_levels[0] }}'
+      - action: light.turn_on
+        target:
+          entity_id: '{{ light }}'
+        data:
+          brightness_pct: '{{ nxt_b }}'
+    - conditions: '{{ code == 11855009 }}'
+      sequence:
+      - variables:
+          cur_b: '{{ (state_attr(light, "brightness") | float(0) / 255 * 100) | round(0)
+            }}'
+          cur_rgb: '{{ state_attr(light, "rgb_color") | list if state_attr(light,
+            "rgb_color") else [0,0,0] }}'
+          is_red: '{{ cur_rgb == [255, 0, 0] }}'
+          nxt_b: '{{ 20 if (is_red and (cur_b | int) <= 15) else 10 }}'
+      - action: light.turn_on
+        target:
+          entity_id: '{{ light }}'
+        data:
+          rgb_color:
+          - 255
+          - 0
+          - 0
+          brightness_pct: '{{ nxt_b }}'
+          effect: Solid
+  mode: single

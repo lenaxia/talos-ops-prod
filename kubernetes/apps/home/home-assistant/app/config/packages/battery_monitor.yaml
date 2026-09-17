@@ -1,0 +1,184 @@
+# =============================================================================
+# Battery monitor package (extensible)
+# =============================================================================
+# Auto-enrolls EVERY sensor with device_class: battery, on any platform
+# (Z-Wave, Zigbee, ESPHome, Ecowitt, mobile apps, ...). Add a new battery
+# device and it is monitored immediately — no edits needed here.
+#
+# Behavior:
+#   - Instant alert when a device drops below the CRITICAL threshold
+#   - Daily 09:00 digest of everything below the WARN threshold,
+#     plus battery sensors that went silent (unavailable — often a dead
+#     or offline device, e.g. a Z-Wave sensor that stopped reporting)
+#
+# Filters (adjust in the low_battery template below if needed):
+#   - unit must be '%' (when defined) so volt-based batteries (e.g. Ecowitt
+#     WH90 3.28 V) don't false-trigger
+#   - states < 0 excluded (e.g. 'watch unavailable' reports -1)
+#   - EV charger state-of-charge excluded (car battery ≠ house battery)
+# =============================================================================
+
+battery_monitor:
+
+  input_number:
+    battery_monitor_warn_threshold:
+      name: Battery Warn Threshold (%)
+      min: 5
+      max: 50
+      step: 5
+      initial: 20
+      icon: mdi:battery-20
+    battery_monitor_critical_threshold:
+      name: Battery Critical Threshold (%)
+      min: 1
+      max: 20
+      step: 1
+      initial: 10
+      icon: mdi:battery-alert
+
+  template:
+    - sensor:
+        - name: Low Battery Devices
+          unique_id: battery_monitor_low_battery_devices
+          icon: mdi:battery-alert
+          unit_of_measurement: devices
+          state: >
+            {% set warn = states('input_number.battery_monitor_warn_threshold') | float(20) %}
+            {% set ns = namespace(low=[]) %}
+            {% for s in states.sensor
+               | selectattr('attributes.device_class', 'defined')
+               | selectattr('attributes.device_class', 'eq', 'battery')
+               | rejectattr('entity_id', 'search', 'wallbox')
+               | rejectattr('entity_id', 'search', 'state_of_charge') %}
+              {% if s.state | float(-1) >= 0 and s.state | float(0) < warn %}
+                {% if s.attributes.get('unit_of_measurement') in (none, '%') %}
+                  {% set ns.low = ns.low + [s.entity_id] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.low | count }}
+          attributes:
+            low: >
+              {% set warn = states('input_number.battery_monitor_warn_threshold') | float(20) %}
+              {% set ns = namespace(out=[]) %}
+              {% for s in states.sensor
+                 | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'battery')
+                 | rejectattr('entity_id', 'search', 'wallbox')
+                 | rejectattr('entity_id', 'search', 'state_of_charge') %}
+                {% if s.state | float(-1) >= 0 and s.state | float(0) < warn %}
+                  {% set u = s.attributes.get('unit_of_measurement') %}
+                  {% if u in (none, '%') %}
+                    {% set area = area_name(s.entity_id) %}
+                    {% set where = ' (' ~ area ~ ')' if area else '' %}
+                    {% set ns.out = ns.out + [s.name ~ where ~ ' — ' ~ s.state ~ '%'] %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.out | sort | join(' | ') if ns.out else 'none' }}
+            critical: >
+              {% set crit = states('input_number.battery_monitor_critical_threshold') | float(10) %}
+              {% set ns = namespace(out=[]) %}
+              {% for s in states.sensor
+                 | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'battery')
+                 | rejectattr('entity_id', 'search', 'wallbox')
+                 | rejectattr('entity_id', 'search', 'state_of_charge') %}
+                {% if s.state | float(-1) >= 0 and s.state | float(0) < crit %}
+                  {% set u = s.attributes.get('unit_of_measurement') %}
+                  {% if u in (none, '%') %}
+                    {% set ns.out = ns.out + [s.name ~ ' — ' ~ s.state ~ '%'] %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.out | sort | join(' | ') if ns.out else 'none' }}
+            silent: >
+              {% set ns = namespace(out=[]) %}
+              {% for s in states.sensor
+                 | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'battery')
+                 | rejectattr('entity_id', 'search', 'wallbox')
+                 | rejectattr('entity_id', 'search', 'state_of_charge') %}
+                {% if s.state in ['unavailable', 'unknown'] %}
+                  {% set ns.out = ns.out + [s.name] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.out | sort | join(' | ') if ns.out else 'none' }}
+            monitored_devices: >
+              {{ states.sensor
+                 | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'battery')
+                 | list | count }}
+
+  automation:
+    # -------------------------------------------------------------------------
+    - id: battery_monitor_instant_critical
+      alias: "BATTERY: Instant alert on new critical device"
+      description: >
+        Fires the moment a battery device first crosses the critical
+        threshold. Uses the aggregate sensor so ANY battery sensor on ANY
+        platform is covered.
+      triggers:
+        - trigger: state
+          entity_id: sensor.low_battery_devices
+      conditions:
+        - condition: template
+          value_template: >
+            {{ state_attr('sensor.low_battery_devices', 'critical') not in [none, 'none'] }}
+      actions:
+        - variables:
+            before: >
+              {{ trigger.from_state.attributes.get('critical', 'none')
+                 if trigger.from_state is not none else 'none' }}
+            now_list: >
+              {{ state_attr('sensor.low_battery_devices', 'critical') }}
+            newly_critical: >
+              {% set before = before.split(' | ') if before != 'none' else [] %}
+              {% set now_l = now_list.split(' | ') if now_list != 'none' else [] %}
+              {{ now_l | reject('in', before) | list }}
+        - condition: template
+          value_template: "{{ newly_critical | count > 0 }}"
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Battery critical"
+            message: >
+              {{ newly_critical | join(', ') }}.
+              Replace batteries soon — the daily digest will keep tracking it.
+            data:
+              push:
+                interruption-level: time-sensitive
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: battery_monitor_daily_digest
+      alias: "BATTERY: Daily digest"
+      description: >
+        09:00 summary of low + silent battery devices. 'Silent' means the
+        battery sensor is unavailable — frequently the first sign a device
+        died completely or fell off the network.
+      triggers:
+        - trigger: time
+          at: "09:00:00"
+      conditions:
+        - condition: template
+          value_template: >
+            {{ state_attr('sensor.low_battery_devices', 'low') != 'none'
+               or state_attr('sensor.low_battery_devices', 'silent') != 'none' }}
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Battery digest"
+            message: >
+              Low: {{ state_attr('sensor.low_battery_devices', 'low') }}
+              {% if state_attr('sensor.low_battery_devices', 'silent') != 'none' %}
+              — Silent (check device): {{ state_attr('sensor.low_battery_devices', 'silent') }}
+              {% endif %}
+      mode: single
