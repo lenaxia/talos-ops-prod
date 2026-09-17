@@ -43,22 +43,34 @@ morning_briefing:
                   {% set ns.parts = ns.parts + [who ~ ': ' ~ items | join(', ')] %}
                 {% endif %}
               {% endfor %}
-              {{ ns.parts | join('. ') if ns.parts else 'Nothing on the calendar today.' }}
+              {{ ns.parts | join('. ') if ns.parts else 'Nothing on the calendar today' }}
             battery_line: >
               {% set low = state_attr('sensor.low_battery_devices', 'low') %}
               {% if low not in [none, 'none'] %}
                 Also, low battery: {{ low }}.
               {% endif %}
+            weather_line: >
+              {% set bits = [] %}
+              {% set out_t = states('sensor.gw3000b_outdoor_temperature') %}
+              {% set in_t = states('sensor.gw3000b_indoor_temperature') %}
+              {% set wind = states('sensor.gw3000b_wind_speed') %}
+              {% if is_number(out_t) %}
+                {% set bits = bits.concat(["It's " ~ (out_t | float | round(0)) ~ " degrees outside"]) %}
+              {% endif %}
+              {% if is_number(in_t) %}
+                {% set bits = bits.concat([(in_t | float | round(0)) ~ " inside"]) %}
+              {% endif %}
+              {% if is_number(wind) %}
+                {% set bits = bits.concat(["wind at " ~ (wind | float | round(0)) ~ " miles per hour"]) %}
+              {% endif %}
+              {{ bits | join(', ') ~ '.' if bits else '' }}
             briefing: >
-              Good morning. It's {{ states('sensor.gw3000b_outdoor_temperature') | round(0) }}
-              degrees outside, {{ states('sensor.gw3000b_indoor_temperature') | round(0) }}
-              inside, wind at {{ states('sensor.gw3000b_wind_speed') | round(0) }} miles per hour.
-              {{ today_line }}. {{ battery_line }}
+              Good morning. {{ weather_line }} {{ today_line }}. {{ battery_line }}
         - action: tts.speak
           target:
             entity_id: tts.piper
           data:
-            media_player: media_player.kitchen
+            media_player_entity_id: media_player.kitchen
             message: "{{ briefing }}"
         - action: notify.send_message
           target:
