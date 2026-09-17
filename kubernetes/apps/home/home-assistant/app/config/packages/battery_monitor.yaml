@@ -166,8 +166,8 @@ battery_monitor:
       conditions:
         - condition: template
           value_template: >
-            {{ state_attr('sensor.low_battery_devices', 'low') != 'none'
-               or state_attr('sensor.low_battery_devices', 'silent') != 'none' }}
+            {{ state_attr('sensor.low_battery_devices', 'low') not in [none, 'none']
+               or state_attr('sensor.low_battery_devices', 'silent') not in [none, 'none'] }}
       actions:
         - action: notify.send_message
           target:
@@ -178,7 +178,7 @@ battery_monitor:
             title: "Battery digest"
             message: >
               Low: {{ state_attr('sensor.low_battery_devices', 'low') }}
-              {% if state_attr('sensor.low_battery_devices', 'silent') != 'none' %}
+              {% if state_attr('sensor.low_battery_devices', 'silent') not in [none, 'none'] %}
               — Silent (check device): {{ state_attr('sensor.low_battery_devices', 'silent') }}
               {% endif %}
       mode: single
