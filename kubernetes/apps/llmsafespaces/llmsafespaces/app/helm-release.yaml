@@ -154,9 +154,9 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.32.1 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.32.1):
-      #   index digest sha256:f981478aa2145861ac9b83b070b225bf5885007a3b98be033925bce16a86cf2b
+      # Digest source: release v0.33.0 (Release workflow, fetched from
+      # ghcr.io manifest for tag 0.33.0):
+      #   index digest sha256:0e82ad4e769b0b46c1f4e8429a737bb09d74dccadea3b4b9d209ef9e5915e6bf
       #   (the deployed pin below). Per-arch binary sha256s resolve from
       #   the index annotations at controller startup — see the note at
       #   the top of this delivery block.
@@ -205,15 +205,15 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:f981478aa2145861ac9b83b070b225bf5885007a3b98be033925bce16a86cf2b
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:0e82ad4e769b0b46c1f4e8429a737bb09d74dccadea3b4b9d209ef9e5915e6bf
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.32.1 (ghcr manifest, tag 0.32.1).
+      # Digest source: release v0.33.0 (ghcr manifest, tag 0.33.0).
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:8a01ed792f82f94282b7e7247cff903c9c10d918cba6efe54b7631002435516b
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:59ca434eb49e7a190a08f7b4a95a21186143233ac1d2ccbb9bb64759e6a0314a
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
