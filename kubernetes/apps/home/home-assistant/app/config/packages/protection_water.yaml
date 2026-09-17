@@ -115,8 +115,6 @@ protection_water:
               actions:
                 - action: REOPEN_WATER_VALVE
                   name: Reopen water valve
-                - action: ACK_LEAK
-                  name: Acknowledge
       mode: single
 
     # -------------------------------------------------------------------------
@@ -151,9 +149,19 @@ protection_water:
           event_data:
             action: REOPEN_WATER_VALVE
       actions:
+        - variables:
+            # Keep in sync with valve_entities in protection_water_leak_response.
+            valve_entities: ["switch.water_valve_actuator"]
+        - variables:
+            controllable_valves: >
+              {{ valve_entities
+                 | select('in', states | map(attribute='entity_id') | list)
+                 | list }}
+        - condition: template
+          value_template: "{{ controllable_valves | count > 0 }}"
         - action: switch.turn_on
           target:
-            entity_id: switch.water_valve_actuator
+            entity_id: "{{ controllable_valves }}"
         - action: notify.send_message
           target:
             entity_id:
