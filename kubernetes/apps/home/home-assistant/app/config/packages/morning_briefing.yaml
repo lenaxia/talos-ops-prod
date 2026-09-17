@@ -1,0 +1,89 @@
+# =============================================================================
+# Morning briefing package
+# =============================================================================
+# Daily 07:30 spoken briefing on the kitchen Sonos (with ducking via announce)
+# plus the same text to both phones. Skipped when nobody is home.
+# Also available on demand: script.morning_briefing (voice intent or dashboard).
+#
+# Content: real weather from the GW3000B station, today's calendar events
+# (Mike's work, Serena, Chaikaosky), and any low-battery devices.
+# =============================================================================
+
+morning_briefing:
+
+  script:
+    morning_briefing:
+      description: Speak and send the morning briefing.
+      icon: mdi:newspaper-variant-multiple-outline
+      mode: single
+      sequence:
+        - action: calendar.get_events
+          target:
+            entity_id:
+              - calendar.mike_work
+              - calendar.serena_chai
+              - calendar.chaikaosky_adventures
+          data:
+            duration:
+              hours: 24
+          response_variable: cal_events
+        - variables:
+            today_line: >
+              {% set ns = namespace(parts=[]) %}
+              {% for cal, data in (cal_events or {}).items() %}
+                {% set who = {'calendar.mike_work': 'Mike', 'calendar.serena_chai': 'Serena',
+                              'calendar.chaikaosky_adventures': 'Chaikaosky'}.get(cal, cal) %}
+                {% set evts = (data.get('events') or []) | selectattr('summary','defined') | list %}
+                {% if evts %}
+                  {% set items = [] %}
+                  {% for e in evts[:4] %}
+                    {% set t = (e.start.get('dateTime', e.start.get('date', '')) or '')[11:16] %}
+                    {% set items = items.concat([e.summary ~ (' at ' ~ t if t else '')]) %}
+                  {% endfor %}
+                  {% set ns.parts = ns.parts + [who ~ ': ' ~ items | join(', ')] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.parts | join('. ') if ns.parts else 'Nothing on the calendar today.' }}
+            battery_line: >
+              {% set low = state_attr('sensor.low_battery_devices', 'low') %}
+              {% if low not in [none, 'none'] %}
+                Also, low battery: {{ low }}.
+              {% endif %}
+            briefing: >
+              Good morning. It's {{ states('sensor.gw3000b_outdoor_temperature') | round(0) }}
+              degrees outside, {{ states('sensor.gw3000b_indoor_temperature') | round(0) }}
+              inside, wind at {{ states('sensor.gw3000b_wind_speed') | round(0) }} miles per hour.
+              {{ today_line }}. {{ battery_line }}
+        - action: tts.speak
+          target:
+            entity_id: tts.piper
+          data:
+            media_player: media_player.kitchen
+            message: "{{ briefing }}"
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Morning briefing"
+            message: "{{ briefing }}"
+
+  automation:
+    - id: morning_briefing_daily
+      alias: "BRIEFING: Daily 07:30"
+      triggers:
+        - trigger: time
+          at: "07:30:00"
+      conditions:
+        - condition: not
+          conditions:
+            - condition: state
+              entity_id: input_select.house_mode
+              state: away
+            - condition: state
+              entity_id: input_select.house_mode
+              state: vacation
+      actions:
+        - action: script.morning_briefing
+      mode: single

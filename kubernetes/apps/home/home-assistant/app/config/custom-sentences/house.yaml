@@ -1,0 +1,30 @@
+language: "en"
+intents:
+  HausGoodNight:
+    data:
+      - sentences:
+          - "good night"
+          - "goodnight"
+          - "time for bed"
+          - "bedtime"
+  HausGuestsHere:
+    data:
+      - sentences:
+          - "we have guests"
+          - "guests are here"
+          - "guest mode on"
+          - "turn on guest mode"
+  HausGuestsLeft:
+    data:
+      - sentences:
+          - "guests left"
+          - "guests are gone"
+          - "guest mode off"
+          - "turn off guest mode"
+  HausBriefing:
+    data:
+      - sentences:
+          - "morning briefing"
+          - "give me the briefing"
+          - "what's the briefing"
+          - "read the briefing"
