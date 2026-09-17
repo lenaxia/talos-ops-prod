@@ -1,0 +1,123 @@
+# =============================================================================
+# House mode package — the keystone state machine
+# =============================================================================
+# Single source of truth for "what is the house doing". Other automations key
+# on input_select.house_mode instead of re-deriving time/presence conditions.
+#
+# Modes:
+#   morning  06:30 – 09:00 (occupied)
+#   day      09:00 – dusk  (occupied)   [dusk = sun elevation < -4 deg]
+#   evening  dusk – 21:30   (occupied)
+#   night    21:30 – 06:30  (occupied)
+#   away     nobody home and no guests  (automatic, debounced by occupancy)
+#   vacation manual only: input_boolean.vacation_mode (supersedes everything;
+#           occupancy changes do NOT exit vacation)
+#
+# Manual overrides (selecting a mode by hand / dashboard / voice) hold until
+# the next natural trigger fires (person arrives/leaves, guest/vacation
+# toggled, dusk crossing, 06:30/09:00/21:30 boundary).
+# =============================================================================
+
+house_mode:
+
+  input_boolean:
+    vacation_mode:
+      name: Vacation Mode
+      icon: mdi:palm-tree
+
+  input_select:
+    house_mode:
+      name: House Mode
+      options:
+        - morning
+        - day
+        - evening
+        - night
+        - away
+        - vacation
+      icon: mdi:home-outline
+
+  template:
+    - binary_sensor:
+        - name: House Occupied
+          unique_id: house_mode_house_occupied
+          device_class: occupancy
+          state: >
+            {{ is_state('person.mike_kao', 'home')
+               or is_state('person.serena', 'home')
+               or is_state('input_boolean.guest_mode_active', 'on') }}
+          attributes:
+            who_home: >
+              {% set ns = namespace(who=[]) %}
+              {% if is_state('person.mike_kao', 'home') %}
+                {% set ns.who = ns.who + ['Mike'] %}
+              {% endif %}
+              {% if is_state('person.serena', 'home') %}
+                {% set ns.who = ns.who + ['Serena'] %}
+              {% endif %}
+              {% if is_state('input_boolean.guest_mode_active', 'on') %}
+                {% set ns.who = ns.who + ['guests'] %}
+              {% endif %}
+              {{ ns.who | join(', ') if ns.who else 'nobody' }}
+
+  script:
+    house_mode_sync:
+      description: Recompute and apply the house mode (the engine).
+      icon: mdi:home-switch-outline
+      sequence:
+        - variables:
+            occupied: >
+              {{ is_state('binary_sensor.house_occupied', 'on') }}
+            target_mode: >
+              {% set t = now().hour * 60 + now().minute %}
+              {% set dusk = state_attr('sun.sun', 'elevation') | float(0) < -4 %}
+              {% if is_state('input_boolean.vacation_mode', 'on') %}vacation
+              {% elif not occupied %}away
+              {% elif t < 390 %}night
+              {% elif t < 540 %}morning
+              {% elif not dusk %}day
+              {% elif t < 1290 %}evening
+              {% else %}night
+              {% endif %}
+        - condition: template
+          value_template: >
+            {{ states('input_select.house_mode') != target_mode }}
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.house_mode
+          data:
+            option: "{{ target_mode }}"
+
+  automation:
+    - id: house_mode_engine
+      alias: "MODE: House mode engine"
+      description: >
+        Drives input_select.house_mode from presence, guests, vacation,
+        sun elevation, and time boundaries. Runs the sync script on every
+        relevant change.
+      triggers:
+        - trigger: state
+          entity_id:
+            - person.mike_kao
+            - person.serena
+            - input_boolean.guest_mode_active
+            - input_boolean.vacation_mode
+        - trigger: numeric_state
+          entity_id: sun.sun
+          attribute: elevation
+          below: -4
+        - trigger: numeric_state
+          entity_id: sun.sun
+          attribute: elevation
+          above: -4
+        - trigger: time
+          at: "06:30:00"
+        - trigger: time
+          at: "09:00:00"
+        - trigger: time
+          at: "21:30:00"
+        - trigger: homeassistant
+          event: start
+      actions:
+        - action: script.house_mode_sync
+      mode: restart

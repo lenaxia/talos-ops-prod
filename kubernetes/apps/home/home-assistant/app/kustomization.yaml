@@ -16,6 +16,8 @@ configMapGenerator:
       - config/packages/heatpump.yaml
       - config/packages/protection_water.yaml
       - config/packages/battery_monitor.yaml
+      - config/packages/house_mode.yaml
+      - config/packages/presence_experience.yaml
   - name: openai-conversation-overrides
     files:
       - ./openai/__init__.py
