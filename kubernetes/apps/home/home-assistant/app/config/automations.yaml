@@ -1,15 +1,11 @@
-- id: '1725206826847'
-  alias: 'Front Door: Open/Closed Notifications'
-  description: Notify only when the front door opens/closes
-  triggers:
-  - entity_id: binary_sensor.front_door_intrusion
-    from: 'off'
-    to: 'on'
-    trigger: state
-  - entity_id: binary_sensor.front_door_intrusion
-    from: 'on'
-    to: 'off'
-    trigger: state
+# =============================================================================
+# automations.yaml — UI-owned mirror snapshot (NOT deployed by Flux)
+# =============================================================================
+# This file is a point-in-time mirror of the live /config/automations.yaml on
+# the home-assistant PVC, resynced manually after UI edits. It is NOT mounted
+# by the ha-packages ConfigMap and NOT reconciled by Flux. Live edits happen
+# via the HA UI; resync here for change history only.
+# =============================================================================
 - id: '1725206826847'
   alias: 'Front Door: Open/Closed Notifications'
   description: Notify only when the front door opens/closes
