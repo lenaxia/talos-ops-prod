@@ -17,7 +17,7 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (current: v0.32.0). Rationale: if we ever move a
+      # is now pinned to a semver tag (current: v0.32.1). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -112,7 +112,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.32.0"
+        tag: "0.32.1"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -143,7 +143,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.32.0"
+        tag: "0.32.1"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -154,9 +154,9 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.32.0 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.32.0):
-      #   index digest sha256:892f2959b49452934e9e5c1c494b2725c3bb5c3570c6687d7da442d6108a47ce
+      # Digest source: release v0.32.1 (Release workflow, fetched from
+      # ghcr.io manifest for tag 0.32.1):
+      #   index digest sha256:f981478aa2145861ac9b83b070b225bf5885007a3b98be033925bce16a86cf2b
       #   (the deployed pin below). Per-arch binary sha256s resolve from
       #   the index annotations at controller startup — see the note at
       #   the top of this delivery block.
@@ -164,6 +164,11 @@ spec:
       # workflow_* over /internal/v1/automation pod identity (delegation
       # to the user handlers; trigger-create workspace forcing; verbatim
       # schema-decoupled bodies).
+      # v0.32.1 adds: trigger_rotate_webhook_secret (#1405, rotation
+      # AUDITED — trigger.rotate_webhook_secret event) and fixes the
+      # webhook receiver resolving the wrong ID (#1404 — every
+      # advertised hook URL 404'd; now resolved by trigger_id, existing
+      # webhooks repaired with zero migration).
       # v0.25.2 adds: bootstrap DEK failures are LOUD (pod_bootstrap_dek_failed
       # audit row with the underlying error — the silent-degrade forensic
       # cost) and legacy user_keys rows heal opportunistically (#1114:
@@ -200,15 +205,15 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:892f2959b49452934e9e5c1c494b2725c3bb5c3570c6687d7da442d6108a47ce
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:f981478aa2145861ac9b83b070b225bf5885007a3b98be033925bce16a86cf2b
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.32.0 (ghcr manifest, tag 0.32.0).
+      # Digest source: release v0.32.1 (ghcr manifest, tag 0.32.1).
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:7807232e80974ae5b31697144f41c8597fa31a7d48dd5f191bcb411e29c62abc
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:8a01ed792f82f94282b7e7247cff903c9c10d918cba6efe54b7631002435516b
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -227,7 +232,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.32.0"
+            tag: "0.32.1"
       freeModelsRefresher:
         enabled: false
 
@@ -302,7 +307,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.32.0"
+        tag: "0.32.1"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
