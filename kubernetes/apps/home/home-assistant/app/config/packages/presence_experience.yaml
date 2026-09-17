@@ -1,0 +1,173 @@
+# =============================================================================
+# Presence experience package — goodbye / goodnight / arrival
+# =============================================================================
+# The daily-life layer on top of house_mode:
+#
+#   Away (last person leaves, 6-min debounce):
+#     interior lights off -> HP presence setback
+#     -> actionable notification with "I'm still home" cancel button
+#
+#   Arrival (first person home):
+#     HP presence setback cleared
+#
+#   Goodnight (manual: dashboard button / voice / script call):
+#     interior lights off -> mode=night -> garage check (actionable close)
+#     -> HP eco preset if no preset was active (sleep setback -3F)
+# =============================================================================
+
+presence_experience:
+
+  automation:
+    # -------------------------------------------------------------------------
+    - id: presence_experience_away_arm
+      alias: "PRESENCE: Away — house emptied"
+      description: >
+        Fires 6 minutes after the last person leaves (guest mode off).
+        Debounce protects against GPS flapping near the home zone.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.house_occupied
+          to: "off"
+          for: "00:06:00"
+      actions:
+        - action: scene.turn_on
+          target:
+            entity_id: scene.all_interior_lights_off
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.hp_presence_occupied
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Away mode armed"
+            message: >
+              Interior lights off, heat pump setback.
+              Garage: {{ states('cover.garage_garage_door_opener_ratgdo_door') }}.
+            data:
+              actions:
+                - action: STILL_HOME
+                  name: I'm still home
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: presence_experience_arrival
+      alias: "PRESENCE: Arrival — someone home"
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.house_occupied
+          to: "on"
+      actions:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.hp_presence_occupied
+        - action: script.house_mode_sync
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: presence_experience_still_home_button
+      alias: "PRESENCE: Still-home cancel button"
+      description: Handles the STILL_HOME actionable-notification button.
+      triggers:
+        - trigger: event
+          event_type: mobile_app_notification_action
+          event_data:
+            action: STILL_HOME
+      actions:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.hp_presence_occupied
+        - action: script.house_mode_sync
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Away mode cancelled"
+            message: >
+              Welcome back — heat pump restored. Lights were left off;
+              turn them on as needed.
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: presence_experience_garage_close_button
+      alias: "PRESENCE: Garage close button"
+      description: Handles the CLOSE_GARAGE actionable-notification button.
+      triggers:
+        - trigger: event
+          event_type: mobile_app_notification_action
+          event_data:
+            action: CLOSE_GARAGE
+      actions:
+        - action: cover.close_cover
+          target:
+            entity_id: cover.garage_garage_door_opener_ratgdo_door
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Garage closing"
+            message: "Requested from the notification by {{ trigger.event.data.get('actionName', 'someone') }}."
+      mode: single
+
+  script:
+    # -------------------------------------------------------------------------
+    goodnight:
+      description: >-
+        Goodnight routine — interior off, night mode, garage check,
+        heat pump sleep setback (eco preset, only if none was set).
+      icon: mdi:weather-night
+      mode: single
+      sequence:
+        - action: scene.turn_on
+          target:
+            entity_id: scene.all_interior_lights_off
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.house_mode
+          data:
+            option: night
+        - if:
+            - condition: state
+              entity_id: input_select.hp_preset
+              state: none
+          then:
+            - action: input_select.select_option
+              target:
+                entity_id: input_select.hp_preset
+              data:
+                option: eco
+        - if:
+            - condition: state
+              entity_id: cover.garage_garage_door_opener_ratgdo_door
+              state: open
+          then:
+            - action: notify.send_message
+              target:
+                entity_id:
+                  - notify.device_phone_app_serena
+                  - notify.rosebud_8_ha_app
+              data:
+                title: "Garage is open"
+                message: "The garage door is still open."
+                data:
+                  push:
+                    interruption-level: time-sensitive
+                  actions:
+                    - action: CLOSE_GARAGE
+                      name: Close garage
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Goodnight"
+            message: >
+              Lights off, house in night mode
+              ({{ states('input_select.hp_preset') }} preset).
