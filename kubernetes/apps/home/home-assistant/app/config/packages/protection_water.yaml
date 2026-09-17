@@ -1,0 +1,174 @@
+# =============================================================================
+# Water leak protection package (extensible)
+# =============================================================================
+# Auto-enrolls EVERY binary_sensor with device_class: moisture, on any
+# platform (Z-Wave, Zigbee, ESPHome, MQTT, ...). Add a new leak sensor and
+# it is protected immediately — no edits needed here.
+#
+# Response: leak detected -> close water main valve (switch.water_valve_actuator)
+#           -> time-sensitive actionable notification to both phones.
+#           Valve stays closed until reopened via notification button or UI.
+#
+# Tuning:
+#   - To add more valves later: extend the valve_entities list in BOTH
+#     protection_water_leak_response and protection_water_reopen_valve_button
+#     automations below (they are kept in sync deliberately).
+#   - To pause auto-shutoff (e.g. working on plumbing): turn off
+#     input_boolean.protection_water_auto_shutoff. Alerts still fire.
+# =============================================================================
+
+protection_water:
+
+  input_boolean:
+    protection_water_auto_shutoff:
+      name: Water Auto-Shutoff Armed
+      icon: mdi:water-alert
+
+  template:
+    - binary_sensor:
+        - name: Water Leak Anywhere
+          unique_id: protection_water_leak_anywhere
+          device_class: safety
+          state: >
+            {{ states.binary_sensor
+               | selectattr('attributes.device_class', 'defined')
+               | selectattr('attributes.device_class', 'eq', 'moisture')
+               | selectattr('state', 'eq', 'on')
+               | list | count > 0 }}
+          attributes:
+            active_leaks: >
+              {{ states.binary_sensor
+                 | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'moisture')
+                 | selectattr('state', 'eq', 'on')
+                 | map(attribute='entity_id')
+                 | list }}
+            active_leaks_friendly: >
+              {% set ns = namespace(out=[]) %}
+              {% for e in states.binary_sensor
+                 | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'moisture')
+                 | selectattr('state', 'eq', 'on') %}
+                {% set area = area_name(e.entity_id) %}
+                {% set where = area ~ ' — ' if area else '' %}
+                {% set ns.out = ns.out + [where ~ e.name] %}
+              {% endfor %}
+              {{ ns.out | join(', ') if ns.out else 'none' }}
+            monitored_sensors: >
+              {{ states.binary_sensor
+                 | selectattr('attributes.device_class', 'defined')
+                 | selectattr('attributes.device_class', 'eq', 'moisture')
+                 | list | count }}
+
+  automation:
+    # -------------------------------------------------------------------------
+    - id: protection_water_leak_response
+      alias: "WATER: Leak detected — close valve and notify"
+      description: >
+        Any moisture sensor trips -> close the water main valve (if armed and
+        reachable) and send a time-sensitive actionable notification.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.water_leak_anywhere
+          to: "on"
+      actions:
+        - variables:
+            # Extend this list to add more water-main valves later.
+            valve_entities: ["switch.water_valve_actuator"]
+        - variables:
+            controllable_valves: >
+              {{ valve_entities
+                 | select('in', states | map(attribute='entity_id') | list)
+                 | list }}
+        - if:
+            - condition: state
+              entity_id: input_boolean.protection_water_auto_shutoff
+              state: "on"
+          then:
+            - if:
+                - condition: template
+                  value_template: "{{ controllable_valves | count > 0 }}"
+              then:
+                - action: switch.turn_off
+                  target:
+                    entity_id: "{{ controllable_valves }}"
+                - variables:
+                    valve_msg: "Valve CLOSED automatically."
+              else:
+                - variables:
+                    valve_msg: "WARNING: valve not controllable — check the actuator!"
+          else:
+            - variables:
+                valve_msg: "Auto-shutoff is DISARMED — valve left as-is."
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "WATER LEAK DETECTED"
+            message: >
+              {{ state_attr('binary_sensor.water_leak_anywhere', 'active_leaks_friendly') }}.
+              {{ valve_msg }}
+            data:
+              push:
+                interruption-level: time-sensitive
+              actions:
+                - action: REOPEN_WATER_VALVE
+                  name: Reopen water valve
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: protection_water_leak_cleared
+      alias: "WATER: Leak cleared — notify"
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.water_leak_anywhere
+          from: "on"
+          to: "off"
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Water leak cleared"
+            message: >
+              All moisture sensors are dry again. The water valve was NOT
+              reopened automatically — reopen it from the notification or
+              the dashboard if the leak is fixed.
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: protection_water_reopen_valve_button
+      alias: "WATER: Reopen valve from notification"
+      description: Handles the REOPEN_WATER_VALVE actionable-notification button.
+      triggers:
+        - trigger: event
+          event_type: mobile_app_notification_action
+          event_data:
+            action: REOPEN_WATER_VALVE
+      actions:
+        - variables:
+            # Keep in sync with valve_entities in protection_water_leak_response.
+            valve_entities: ["switch.water_valve_actuator"]
+        - variables:
+            controllable_valves: >
+              {{ valve_entities
+                 | select('in', states | map(attribute='entity_id') | list)
+                 | list }}
+        - condition: template
+          value_template: "{{ controllable_valves | count > 0 }}"
+        - action: switch.turn_on
+          target:
+            entity_id: "{{ controllable_valves }}"
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Water valve reopened"
+            message: "Requested by {{ trigger.event.data.name | default('a household member') }}."
+      mode: single
