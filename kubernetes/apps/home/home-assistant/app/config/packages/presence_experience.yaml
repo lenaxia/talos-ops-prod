@@ -88,8 +88,8 @@ presence_experience:
           data:
             title: "Away mode cancelled"
             message: >
-              Welcome back {{ trigger.event.data.name | default('home') }} —
-              heat pump restored. Lights were left off; turn them on as needed.
+              Welcome back — heat pump restored. Lights were left off;
+              turn them on as needed.
       mode: single
 
     # -------------------------------------------------------------------------
@@ -112,7 +112,7 @@ presence_experience:
               - notify.rosebud_8_ha_app
           data:
             title: "Garage closing"
-            message: "Requested by {{ trigger.event.data.name | default('a household member') }}."
+            message: "Requested from the notification by {{ trigger.event.data.get('actionName', 'someone') }}."
       mode: single
 
   script:
