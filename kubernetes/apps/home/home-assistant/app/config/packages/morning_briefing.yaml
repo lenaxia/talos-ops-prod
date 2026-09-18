@@ -35,12 +35,12 @@ morning_briefing:
                               'calendar.chaikaosky_adventures': 'Chaikaosky'}.get(cal, cal) %}
                 {% set evts = (data.get('events') or []) | selectattr('summary','defined') | list %}
                 {% if evts %}
-                  {% set items = [] %}
+                  {% set ev = namespace(items=[]) %}
                   {% for e in evts[:4] %}
                     {% set t = (e.start.get('dateTime', e.start.get('date', '')) or '')[11:16] %}
-                    {% set items = items.concat([e.summary ~ (' at ' ~ t if t else '')]) %}
+                    {% set ev.items = ev.items + [e.summary ~ (' at ' ~ t if t else '')] %}
                   {% endfor %}
-                  {% set ns.parts = ns.parts + [who ~ ': ' ~ items | join(', ')] %}
+                  {% set ns.parts = ns.parts + [who ~ ': ' ~ (ev.items | join(', '))] %}
                 {% endif %}
               {% endfor %}
               {{ ns.parts | join('. ') if ns.parts else 'Nothing on the calendar today' }}
@@ -50,20 +50,20 @@ morning_briefing:
                 Also, low battery: {{ low }}.
               {% endif %}
             weather_line: >
-              {% set bits = [] %}
+              {% set ns = namespace(bits=[]) %}
               {% set out_t = states('sensor.gw3000b_outdoor_temperature') %}
               {% set in_t = states('sensor.gw3000b_indoor_temperature') %}
               {% set wind = states('sensor.gw3000b_wind_speed') %}
               {% if is_number(out_t) %}
-                {% set bits = bits.concat(["It's " ~ (out_t | float | round(0)) ~ " degrees outside"]) %}
+                {% set ns.bits = ns.bits + ["It's " ~ (out_t | float | round(0)) ~ " degrees outside"] %}
               {% endif %}
               {% if is_number(in_t) %}
-                {% set bits = bits.concat([(in_t | float | round(0)) ~ " inside"]) %}
+                {% set ns.bits = ns.bits + [(in_t | float | round(0)) ~ " inside"] %}
               {% endif %}
               {% if is_number(wind) %}
-                {% set bits = bits.concat(["wind at " ~ (wind | float | round(0)) ~ " miles per hour"]) %}
+                {% set ns.bits = ns.bits + ["wind at " ~ (wind | float | round(0)) ~ " miles per hour"] %}
               {% endif %}
-              {{ bits | join(', ') ~ '.' if bits else '' }}
+              {{ (ns.bits | join(', ') ~ '.') if ns.bits else '' }}
             briefing: >
               Good morning. {{ weather_line }} {{ today_line }}. {{ battery_line }}
         - action: tts.speak
