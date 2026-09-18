@@ -17,7 +17,7 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (current: v0.33.2). Rationale: if we ever move a
+      # is now pinned to a semver tag (current: v0.34.0). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -112,7 +112,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.33.2"
+        tag: "0.34.0"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -143,7 +143,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.33.2"
+        tag: "0.34.0"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -232,7 +232,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.33.2"
+            tag: "0.34.0"
       freeModelsRefresher:
         enabled: false
 
@@ -307,7 +307,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.33.2"
+        tag: "0.34.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
