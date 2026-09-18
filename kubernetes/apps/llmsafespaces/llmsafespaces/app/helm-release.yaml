@@ -17,7 +17,7 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (current: v0.33.1). Rationale: if we ever move a
+      # is now pinned to a semver tag (current: v0.33.2). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -112,7 +112,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.33.1"
+        tag: "0.33.2"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -143,7 +143,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.33.1"
+        tag: "0.33.2"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -154,9 +154,9 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.33.1 (Release workflow, fetched from
+      # Digest source: release v0.33.2 (Release workflow, fetched from
       # ghcr.io manifest for tag 0.33.1):
-      #   index digest sha256:7d42aecb341edbf1f30f281d3fe3a677f0f448a19cbb11c90022897081c3dafc
+      #   index digest sha256:70313204057cee22c7b87f023579ed9a3308ae50a3933698248cec2b93d22497
       #   (the deployed pin below). Per-arch binary sha256s resolve from
       #   the index annotations at controller startup — see the note at
       #   the top of this delivery block.
@@ -205,15 +205,15 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:7d42aecb341edbf1f30f281d3fe3a677f0f448a19cbb11c90022897081c3dafc
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:70313204057cee22c7b87f023579ed9a3308ae50a3933698248cec2b93d22497
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.33.1 (ghcr manifest, tag 0.33.1).
+      # Digest source: release v0.33.2 (ghcr manifest, tag 0.33.2).
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:0ebe465fff99becddebe309772f0377ada9d744d80990630fc74c44eda15ce52
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:8e436da87d450e3f6448fdcd1f7a8355b5d41fa13d3e7b0277098e2902aafb48
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -232,7 +232,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.33.1"
+            tag: "0.33.2"
       freeModelsRefresher:
         enabled: false
 
@@ -307,7 +307,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.33.1"
+        tag: "0.33.2"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
