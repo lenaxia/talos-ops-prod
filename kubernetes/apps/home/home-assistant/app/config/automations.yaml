@@ -54,18 +54,21 @@
   mode: single
 - id: '1726631234652'
   alias: 'Garage: Garage door open for 15m'
-  description: ''
+  description: Daytime reminder; night hours are handled by the garage night watchdog.
   triggers:
-  - entity_id:
-    - binary_sensor.garage_door_is_open
-    from: 'off'
-    to: 'on'
+  - trigger: state
+    entity_id: cover.garage_garage_door_opener_ratgdo_door
+    to: open
     for:
       hours: 0
       minutes: 15
       seconds: 0
-    trigger: state
-  conditions: []
+  conditions:
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: input_select.house_mode
+      state: night
   actions:
   - action: notify.send_message
     target:
