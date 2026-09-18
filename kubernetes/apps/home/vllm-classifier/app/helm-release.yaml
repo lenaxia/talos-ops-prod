@@ -42,7 +42,7 @@ spec:
             image:
               repository: vllm/vllm-openai
               tag:
-                v0.27.1@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967
+                v0.29.0@sha256:c2914767605584b6d8f45686b82de173ecc99e781897aa3d0a66dacd72c51ae1
             command: ["/bin/sh", "-c"]
             args:
               - |
@@ -116,7 +116,7 @@ spec:
             image:
               repository: vllm/vllm-openai
               tag:
-                v0.27.1@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967
+                v0.29.0@sha256:c2914767605584b6d8f45686b82de173ecc99e781897aa3d0a66dacd72c51ae1
             command: ["/bin/sh", "-c"]
             args:
               - |
