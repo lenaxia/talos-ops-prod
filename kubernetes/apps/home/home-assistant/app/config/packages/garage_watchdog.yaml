@@ -26,6 +26,8 @@
 # final moment before closing too. NOTE: a vehicle parked in frame all
 # night latches 'vehicle' on and effectively disables the watchdog — if
 # that happens, drop binary_sensor.north_garage_vehicle from the guard.
+# A camera that goes offline fails the guard OPEN (watchdog proceeds) by
+# design — a dead camera must not wedge the door protection permanently.
 # =============================================================================
 
 garage_watchdog:
@@ -66,6 +68,15 @@ garage_watchdog:
             - binary_sensor.north_garage_vehicle
           to: "off"
           for: "00:05:00"
+        # re-arm the bed path if its 20-minute trigger completed before the
+        # 22:00 window / lights-out (in-bed fires once per continuous period)
+        - trigger: state
+          entity_id:
+            - light.master_bedroom_lights
+            - light.master_bedroom_outlet
+          to: "off"
+        - trigger: time
+          at: "22:00:00"
       conditions:
         - condition: state
           entity_id: cover.garage_garage_door_opener_ratgdo_door
