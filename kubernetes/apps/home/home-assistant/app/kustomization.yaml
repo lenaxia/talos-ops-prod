@@ -20,6 +20,7 @@ configMapGenerator:
       - config/packages/presence_experience.yaml
       - config/packages/morning_briefing.yaml
       - config/packages/voice_intents.yaml
+      - config/packages/garage_watchdog.yaml
   - name: ha-custom-sentences
     files:
       - house.yaml=config/custom-sentences/house.yaml

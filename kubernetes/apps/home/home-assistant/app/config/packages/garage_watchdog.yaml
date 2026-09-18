@@ -1,0 +1,128 @@
+# =============================================================================
+# Garage night watchdog package
+# =============================================================================
+# Never wake up to an open garage again.
+#
+# While house mode is 'night' (21:30–06:30, or after a manual goodnight):
+#   - garage open for 20 min, or mode turns night with garage open
+#     -> time-sensitive push with [Close garage] and [Keep open] buttons
+#     -> 15 min later, if still open and not snoozed: CLOSE IT automatically
+#
+# "Keep open" snoozes the watchdog until the next 09:00 (working on the car,
+# hot night, etc). The [Close garage] button reuses the CLOSE_GARAGE handler
+# from the presence_experience package.
+#
+# Bed sensors (Withings in_bed) are NOT a dependency by design — they have
+# been flaky-offline. If they become reliable, mode-night can later be
+# widened to "night mode OR everyone in bed".
+# =============================================================================
+
+garage_watchdog:
+
+  input_datetime:
+    garage_watchdog_snooze_until:
+      name: Garage Watchdog Snoozed Until
+      has_date: true
+      has_time: true
+      icon: mdi:garage-alert
+
+  automation:
+    # -------------------------------------------------------------------------
+    - id: garage_watchdog_night
+      alias: "GARAGE: Night watchdog"
+      description: >
+        Open garage during night mode -> actionable alert -> auto-close after
+        15 minutes if nobody responded. Snoozable until 09:00.
+      triggers:
+        - trigger: state
+          entity_id: cover.garage_garage_door_opener_ratgdo_door
+          to: "open"
+          for: "00:20:00"
+        - trigger: state
+          entity_id: input_select.house_mode
+          to: night
+      conditions:
+        - condition: state
+          entity_id: input_select.house_mode
+          state: night
+        - condition: state
+          entity_id: cover.garage_garage_door_opener_ratgdo_door
+          state: open
+        - condition: template
+          value_template: >
+            {{ now().timestamp() >
+               (states('input_datetime.garage_watchdog_snooze_until') | as_timestamp(0)) }}
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Garage is open — night watchdog"
+            message: >
+              The garage door is open and everyone should be asleep.
+              It will close automatically in 15 minutes.
+            data:
+              push:
+                interruption-level: time-sensitive
+              actions:
+                - action: CLOSE_GARAGE
+                  name: Close garage now
+                - action: KEEP_GARAGE_OPEN
+                  name: Keep it open tonight
+        - wait_for_trigger:
+            - trigger: state
+              entity_id: cover.garage_garage_door_opener_ratgdo_door
+              to: closed
+          timeout: "00:15:00"
+        - if:
+            - condition: template
+              value_template: "{{ wait.completed == false }}"
+          then:
+            - condition: state
+              entity_id: cover.garage_garage_door_opener_ratgdo_door
+              state: open
+            - action: cover.close_cover
+              target:
+                entity_id: cover.garage_garage_door_opener_ratgdo_door
+            - action: notify.send_message
+              target:
+                entity_id:
+                  - notify.device_phone_app_serena
+                  - notify.rosebud_8_ha_app
+              data:
+                title: "Garage closed automatically"
+                message: >
+                  The garage door was still open and was closed by the night
+                  watchdog. Door is now {{ states('cover.garage_garage_door_opener_ratgdo_door') }}.
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: garage_watchdog_keep_open_button
+      alias: "GARAGE: Keep-open snooze button"
+      description: Handles the KEEP_GARAGE_OPEN actionable-notification button.
+      triggers:
+        - trigger: event
+          event_type: mobile_app_notification_action
+          event_data:
+            action: KEEP_GARAGE_OPEN
+      actions:
+        - variables:
+            snooze_until: >
+              {% set base = now().replace(hour=9, minute=0, second=0, microsecond=0) %}
+              {{ (base if now() < base else base + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.garage_watchdog_snooze_until
+          data:
+            datetime: "{{ snooze_until }}"
+        - action: notify.send_message
+          target:
+            entity_id:
+              - notify.device_phone_app_serena
+              - notify.rosebud_8_ha_app
+          data:
+            title: "Garage watchdog snoozed"
+            message: "The garage will be left open until {{ snooze_until }}. Good night."
+      mode: single
