@@ -12,12 +12,22 @@
 # hot night, etc). The [Close garage] button reuses the CLOSE_GARAGE handler
 # from the presence_experience package.
 #
-# Bed sensors (Withings in_bed) act as a second wake path: the alert also
-# fires outside night mode when every AVAILABLE in-bed sensor reports 'on'
-# for 20 minutes (afternoon nap, forgot to set night). Unavailable/unknown
+# Bed sensors (Withings in_bed) act as a second wake path, gated: only
+# 22:00–07:00, only with BOTH master bedroom lights off (ceiling dimmer and
+# the outlet lamp), and only when every AVAILABLE in-bed sensor has been on
+# for 20 minutes (afternoon nap, forgot the mode). Unavailable/unknown
 # sensors (e.g. a mat still offline) are excluded rather than blocking.
 # Auto-close outside night mode requires BOTH sensors explicitly 'on' —
 # partial knowledge only earns an alert, never an automatic close.
+#
+# Area-in-use guard (North Garage Reolink): if motion, person, or vehicle
+# detection is active, the watchdog stands down entirely; when activity
+# clears for 5 minutes it re-evaluates. The driveway is re-checked in the
+# final moment before closing too. NOTE: a vehicle parked in frame all
+# night latches 'vehicle' on and effectively disables the watchdog — if
+# that happens, drop binary_sensor.north_garage_vehicle from the guard.
+# A camera that goes offline fails the guard OPEN (watchdog proceeds) by
+# design — a dead camera must not wedge the door protection permanently.
 # =============================================================================
 
 garage_watchdog:
@@ -50,6 +60,23 @@ garage_watchdog:
             - binary_sensor.master_bedroom_serenawithings_in_bed
           to: "on"
           for: "00:20:00"
+        # re-evaluate once driveway activity settles
+        - trigger: state
+          entity_id:
+            - binary_sensor.north_garage_motion
+            - binary_sensor.north_garage_person
+            - binary_sensor.north_garage_vehicle
+          to: "off"
+          for: "00:05:00"
+        # re-arm the bed path if its 20-minute trigger completed before the
+        # 22:00 window / lights-out (in-bed fires once per continuous period)
+        - trigger: state
+          entity_id:
+            - light.master_bedroom_lights
+            - light.master_bedroom_outlet
+          to: "off"
+        - trigger: time
+          at: "22:00:00"
       conditions:
         - condition: state
           entity_id: cover.garage_garage_door_opener_ratgdo_door
@@ -58,14 +85,25 @@ garage_watchdog:
           value_template: >
             {{ now().timestamp() >
                (states('input_datetime.garage_watchdog_snooze_until') | as_timestamp(0)) }}
+        # area in use -> stand down (motion/person/vehicle on the North Garage camera)
+        - condition: template
+          value_template: >
+            {{ not (is_state('binary_sensor.north_garage_motion', 'on')
+                   or is_state('binary_sensor.north_garage_person', 'on')
+                   or is_state('binary_sensor.north_garage_vehicle', 'on')) }}
         - condition: template
           value_template: >
             {% set beds = [
                states('binary_sensor.master_bedroom_mikewithings_in_bed'),
                states('binary_sensor.master_bedroom_serenawithings_in_bed')] %}
             {% set avail = beds | select('in', ['on', 'off']) | list %}
+            {% set bed_window = now().hour >= 22 or now().hour < 7 %}
+            {% set bedroom_dark = is_state('light.master_bedroom_lights', 'off')
+               and is_state('light.master_bedroom_outlet', 'off') %}
             {{ is_state('input_select.house_mode', 'night')
-               or (avail | count > 0 and avail | select('eq', 'on') | list | count == avail | count) }}
+               or (bed_window and bedroom_dark
+                   and avail | count > 0
+                   and avail | select('eq', 'on') | list | count == avail | count) }}
       actions:
         - variables:
             auto_close_allowed: >
@@ -106,19 +144,39 @@ garage_watchdog:
             - condition: state
               entity_id: cover.garage_garage_door_opener_ratgdo_door
               state: open
-            - action: cover.close_cover
-              target:
-                entity_id: cover.garage_garage_door_opener_ratgdo_door
-            - action: notify.send_message
-              target:
-                entity_id:
-                  - notify.device_phone_app_serena
-                  - notify.rosebud_8_ha_app
-              data:
-                title: "Garage closed automatically"
-                message: >
-                  The garage door was still open and was closed by the night
-                  watchdog. Door is now {{ states('cover.garage_garage_door_opener_ratgdo_door') }}.
+            # re-check the driveway right before closing — someone may have
+            # stepped out during the 15-minute wait
+            - if:
+                - condition: template
+                  value_template: >
+                    {{ is_state('binary_sensor.north_garage_motion', 'on')
+                       or is_state('binary_sensor.north_garage_person', 'on')
+                       or is_state('binary_sensor.north_garage_vehicle', 'on') }}
+              then:
+                - action: notify.send_message
+                  target:
+                    entity_id:
+                      - notify.device_phone_app_serena
+                      - notify.rosebud_8_ha_app
+                  data:
+                    title: "Garage auto-close deferred"
+                    message: >
+                      Activity at the North Garage camera — the watchdog is
+                      standing by and will retry when the area is clear.
+              else:
+                - action: cover.close_cover
+                  target:
+                    entity_id: cover.garage_garage_door_opener_ratgdo_door
+                - action: notify.send_message
+                  target:
+                    entity_id:
+                      - notify.device_phone_app_serena
+                      - notify.rosebud_8_ha_app
+                  data:
+                    title: "Garage closed automatically"
+                    message: >
+                      The garage door was still open and was closed by the night
+                      watchdog. Door is now {{ states('cover.garage_garage_door_opener_ratgdo_door') }}.
       mode: single
 
     # -------------------------------------------------------------------------
