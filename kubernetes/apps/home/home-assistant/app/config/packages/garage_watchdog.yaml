@@ -12,9 +12,12 @@
 # hot night, etc). The [Close garage] button reuses the CLOSE_GARAGE handler
 # from the presence_experience package.
 #
-# Bed sensors (Withings in_bed) are NOT a dependency by design — they have
-# been flaky-offline. If they become reliable, mode-night can later be
-# widened to "night mode OR everyone in bed".
+# Bed sensors (Withings in_bed) act as a second wake path: the alert also
+# fires outside night mode when every AVAILABLE in-bed sensor reports 'on'
+# for 20 minutes (afternoon nap, forgot to set night). Unavailable/unknown
+# sensors (e.g. a mat still offline) are excluded rather than blocking.
+# Auto-close outside night mode requires BOTH sensors explicitly 'on' —
+# partial knowledge only earns an alert, never an automatic close.
 # =============================================================================
 
 garage_watchdog:
@@ -41,10 +44,13 @@ garage_watchdog:
         - trigger: state
           entity_id: input_select.house_mode
           to: night
+        - trigger: state
+          entity_id:
+            - binary_sensor.master_bedroom_mikewithings_in_bed
+            - binary_sensor.master_bedroom_serenawithings_in_bed
+          to: "on"
+          for: "00:20:00"
       conditions:
-        - condition: state
-          entity_id: input_select.house_mode
-          state: night
         - condition: state
           entity_id: cover.garage_garage_door_opener_ratgdo_door
           state: open
@@ -52,7 +58,20 @@ garage_watchdog:
           value_template: >
             {{ now().timestamp() >
                (states('input_datetime.garage_watchdog_snooze_until') | as_timestamp(0)) }}
+        - condition: template
+          value_template: >
+            {% set beds = [
+               states('binary_sensor.master_bedroom_mikewithings_in_bed'),
+               states('binary_sensor.master_bedroom_serenawithings_in_bed')] %}
+            {% set avail = beds | select('in', ['on', 'off']) | list %}
+            {{ is_state('input_select.house_mode', 'night')
+               or (avail | count > 0 and avail | select('eq', 'on') | list | count == avail | count) }}
       actions:
+        - variables:
+            auto_close_allowed: >
+              {{ is_state('input_select.house_mode', 'night')
+                 or (is_state('binary_sensor.master_bedroom_mikewithings_in_bed', 'on')
+                     and is_state('binary_sensor.master_bedroom_serenawithings_in_bed', 'on')) }}
         - action: notify.send_message
           target:
             entity_id:
@@ -62,7 +81,11 @@ garage_watchdog:
             title: "Garage is open — night watchdog"
             message: >
               The garage door is open and everyone should be asleep.
+              {% if auto_close_allowed %}
               It will close automatically in 15 minutes.
+              {% else %}
+              Auto-close is withheld — not every sleep sensor confirms everyone is in bed.
+              {% endif %}
             data:
               push:
                 interruption-level: time-sensitive
@@ -78,7 +101,7 @@ garage_watchdog:
           timeout: "00:15:00"
         - if:
             - condition: template
-              value_template: "{{ wait.completed == false }}"
+              value_template: "{{ wait.completed == false and auto_close_allowed }}"
           then:
             - condition: state
               entity_id: cover.garage_garage_door_opener_ratgdo_door
