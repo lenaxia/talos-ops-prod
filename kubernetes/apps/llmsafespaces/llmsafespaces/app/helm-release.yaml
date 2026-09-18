@@ -211,7 +211,7 @@ spec:
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.34.1 (ghcr manifest, tag 0.34.0).
+      # Digest source: release v0.34.1 (ghcr manifest, tag 0.34.1).
       opencodeDelivery:
         image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:ad5f5b6efdd1ed954aacedf988cf36cae59f007bd0083784176ed8f2db566012
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
