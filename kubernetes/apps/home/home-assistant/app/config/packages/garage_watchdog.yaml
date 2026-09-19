@@ -20,8 +20,8 @@
 # Auto-close outside night mode requires BOTH sensors explicitly 'on' —
 # partial knowledge only earns an alert, never an automatic close.
 #
-# Area-in-use guard (North Garage Reolink): if motion, person, or vehicle
-# detection is active, the watchdog stands down entirely; when activity
+# Area-in-use guard (North Garage Reolink): if motion or person detection
+# is active, the watchdog stands down entirely; when activity
 # clears for 5 minutes it re-evaluates. The driveway is re-checked in the
 # final moment before closing too. Vehicle detection is deliberately NOT
 # part of the guard — a car parked in frame would latch it on all night
@@ -85,7 +85,7 @@ garage_watchdog:
           value_template: >
             {{ now().timestamp() >
                (states('input_datetime.garage_watchdog_snooze_until') | as_timestamp(0)) }}
-        # area in use -> stand down (motion/person/vehicle on the North Garage camera)
+        # area in use -> stand down (motion/person on the North Garage camera)
         - condition: template
           value_template: >
             {{ not (is_state('binary_sensor.north_garage_motion', 'on')
