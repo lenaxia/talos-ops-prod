@@ -21,7 +21,7 @@ jobs:
   devcontainer:
     if: ${{ github.repository == 'lenaxia/talos-ops-prod' }}
     name: publish
-    runs-on: ubuntu-24.04 # TODO: Change to ubuntu-latest when available
+    runs-on: ubuntu-26.04 # TODO: Change to ubuntu-latest when available
     permissions:
       contents: read
       packages: write
