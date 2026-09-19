@@ -37,7 +37,7 @@ spec:
           main:
             image:
               repository: nvidia/cuda
-              tag: 13.3.1-runtime-ubuntu22.04
+              tag: 13.4.1-runtime-ubuntu22.04
             command: ["/bin/sh", "-c"]
             args:
               - |
