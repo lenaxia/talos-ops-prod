@@ -154,10 +154,12 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.34.5 (Release workflow, fetched from
-      # ghcr.io manifest for tag 0.34.5):
-      #   index digest sha256:6277e39e1c0b5e0b51fa6d16958fc8a6d56e139ef141d44d656002d6632ae10b
-      #   (the deployed pin below). Per-arch binary sha256s resolve from
+      # Digest source: release v0.34.5 — Release workflow run 35433801014,
+      # Merge Agentd Manifest job (canonical printed Helm block), verified by
+      # authenticated GET by DIGEST sha256:e122b632b4f06aa0e5ade5ab80b781bf4fe0a6918e68a2bb5c5985501cb1467c (200).
+      # NOTE: tag 0.34.5 is RACED by post-release main-CI manifest pushes (dev
+      # rebuilds of the same appVersion) — tag-HEAD fetches are unreliable;
+      # always pin from the Release job print or a digest-GET:
       #   the index annotations at controller startup — see the note at
       #   the top of this delivery block.
       # v0.32.0 adds: agentd automation MCP tools (#1402) — trigger_*/
@@ -205,15 +207,15 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:6277e39edc66f0f1cdd1cd7cd17a25d8d9b4112221e61abd511ed6f49a5fc508
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:e122b632b4f06aa0e5ade5ab80b781bf4fe0a6918e68a2bb5c5985501cb1467c
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.34.5 (ghcr manifest, tag 0.34.5).
+      # Digest source: release v0.34.5 — Release workflow run 35433801014 (canonical print); digest-GET verified 200. Same tag-race note as agentd above.
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:375ff79c80f6507aa3517318a735bbb10b533947593c2c34c9e3635185948390
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:c98c6177af1363fc5355e6c2da4e7c281ba5d293be712258009464d970a4735e
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
