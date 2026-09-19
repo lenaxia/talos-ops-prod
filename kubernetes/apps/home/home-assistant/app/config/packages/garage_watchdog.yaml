@@ -20,12 +20,13 @@
 # Auto-close outside night mode requires BOTH sensors explicitly 'on' —
 # partial knowledge only earns an alert, never an automatic close.
 #
-# Area-in-use guard (North Garage Reolink): if motion, person, or vehicle
-# detection is active, the watchdog stands down entirely; when activity
+# Area-in-use guard (North Garage Reolink): if motion or person detection
+# is active, the watchdog stands down entirely; when activity
 # clears for 5 minutes it re-evaluates. The driveway is re-checked in the
-# final moment before closing too. NOTE: a vehicle parked in frame all
-# night latches 'vehicle' on and effectively disables the watchdog — if
-# that happens, drop binary_sensor.north_garage_vehicle from the guard.
+# final moment before closing too. Vehicle detection is deliberately NOT
+# part of the guard — a car parked in frame would latch it on all night
+# and silently disable the watchdog. (Person/motion are transient events;
+# vehicles are often static.)
 # A camera that goes offline fails the guard OPEN (watchdog proceeds) by
 # design — a dead camera must not wedge the door protection permanently.
 # =============================================================================
@@ -65,7 +66,6 @@ garage_watchdog:
           entity_id:
             - binary_sensor.north_garage_motion
             - binary_sensor.north_garage_person
-            - binary_sensor.north_garage_vehicle
           to: "off"
           for: "00:05:00"
         # re-arm the bed path if its 20-minute trigger completed before the
@@ -85,12 +85,11 @@ garage_watchdog:
           value_template: >
             {{ now().timestamp() >
                (states('input_datetime.garage_watchdog_snooze_until') | as_timestamp(0)) }}
-        # area in use -> stand down (motion/person/vehicle on the North Garage camera)
+        # area in use -> stand down (motion/person on the North Garage camera)
         - condition: template
           value_template: >
             {{ not (is_state('binary_sensor.north_garage_motion', 'on')
-                   or is_state('binary_sensor.north_garage_person', 'on')
-                   or is_state('binary_sensor.north_garage_vehicle', 'on')) }}
+                   or is_state('binary_sensor.north_garage_person', 'on')) }}
         - condition: template
           value_template: >
             {% set beds = [
@@ -150,8 +149,7 @@ garage_watchdog:
                 - condition: template
                   value_template: >
                     {{ is_state('binary_sensor.north_garage_motion', 'on')
-                       or is_state('binary_sensor.north_garage_person', 'on')
-                       or is_state('binary_sensor.north_garage_vehicle', 'on') }}
+                       or is_state('binary_sensor.north_garage_person', 'on') }}
               then:
                 - action: notify.send_message
                   target:
