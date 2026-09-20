@@ -26,6 +26,7 @@ spec:
       className: "traefik"
       annotations:
         hajimari.io/enable: "true"
+        hajimari.io/visible-groups: "administrators"
         hajimari.io/icon: "information-outline"
         hajimari.io/group: "Utilities"
         cert-manager.io/cluster-issuer: "letsencrypt-production"

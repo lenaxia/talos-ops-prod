@@ -229,6 +229,7 @@ spec:
       ingressClassName: "traefik"
       annotations:
         hajimari.io/enable: "true"
+        hajimari.io/visible-groups: "administrators"
         hajimari.io/icon: "chart-scatter-plot-hexbin"
         cert-manager.io/cluster-issuer: "letsencrypt-production"
         traefik.ingress.kubernetes.io/router.entrypoints: "websecure"

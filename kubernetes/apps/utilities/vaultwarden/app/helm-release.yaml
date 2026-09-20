@@ -65,6 +65,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: "bitwarden"
           hajimari.io/icon: shield-key
           hajimari.io/group: Utilities
           cert-manager.io/cluster-issuer: letsencrypt-production

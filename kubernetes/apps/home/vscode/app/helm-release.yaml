@@ -52,6 +52,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: cib:visual-studio-code
           hajimari.io/info: Visual Sudio Code
           hajimari.io/group: Home

@@ -83,6 +83,7 @@ spec:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: networking-chain-no-auth@kubernetescrd
           hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: car-sports
           hajimari.io/appName: Mini4WD Track Editor
           hajimari.io/group: Home

@@ -6,6 +6,7 @@ metadata:
   namespace: llmsafespaces
   annotations:
     hajimari.io/enable: "true"
+    hajimari.io/visible-groups: "administrators"
     hajimari.io/icon: chat-processing-outline
     hajimari.io/info: LLMSafeSpaces
     hajimari.io/group: llmsafespaces

@@ -121,6 +121,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: eos-icons:ai
           hajimari.io/info: Local AI
           hajimari.io/group: Home

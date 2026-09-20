@@ -92,6 +92,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-no-auth@kubernetescrd
           hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: school
           hajimari.io/group: Home
         hosts:

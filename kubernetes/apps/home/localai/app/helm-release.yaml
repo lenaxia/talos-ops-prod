@@ -178,6 +178,7 @@ spec:
       name: localai
       annotations:
         hajimari.io/enable: 'true'
+        hajimari.io/visible-groups: "administrators"
         hajimari.io/icon: resistor-nodes
         hajimari.io/appName: LocalAI
         hajimari.io/group: Home

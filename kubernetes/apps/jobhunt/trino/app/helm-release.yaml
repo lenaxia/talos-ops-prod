@@ -86,6 +86,7 @@ spec:
         traefik.ingress.kubernetes.io/router.entrypoints: websecure
         traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
         hajimari.io/enable: "true"
+        hajimari.io/visible-groups: "administrators"
         hajimari.io/icon: database-search
         hajimari.io/group: Jobhunt
       hosts:

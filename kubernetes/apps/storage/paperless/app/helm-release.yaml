@@ -112,6 +112,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: "paperless"
           hajimari.io/icon: mdi:file-multiple
           hajimari.io/info: Paperless
           hajimari.io/group: Storage

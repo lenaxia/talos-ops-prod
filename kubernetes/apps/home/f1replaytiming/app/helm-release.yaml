@@ -92,6 +92,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd
           hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: racing-helmet
           hajimari.io/group: Home
           hajimari.io/info: F1 Replay Timing
