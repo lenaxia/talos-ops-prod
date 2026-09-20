@@ -7,6 +7,7 @@ metadata:
   annotations:
     hajimari.io/enable: "true"
     hajimari.io/visible-groups: "kaofamily"
+    hajimari.io/icon: "mdi:panorama-variant-outline"
     coredns.io/hostname: "moments.${SECRET_PROD_DOMAIN_KF}"
     cert-manager.io/cluster-issuer: letsencrypt-production
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"

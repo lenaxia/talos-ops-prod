@@ -187,7 +187,7 @@ spec:
           cert-manager.io/cluster-issuer: letsencrypt-production
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: monica
+          hajimari.io/icon: account-heart-outline
           hajimari.io/group: home
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
         hosts:
