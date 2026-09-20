@@ -35,6 +35,8 @@ spec:
       fsGroup: 101
     hajimari:
       defaultEnable: false
+      adminGroups:
+        - administrators
       lightTheme: paper
       darkTheme: chalk
       showGlobalBookmarks: true
