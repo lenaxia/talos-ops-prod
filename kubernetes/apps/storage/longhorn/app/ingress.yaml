@@ -4,6 +4,7 @@ kind: Ingress
 metadata:
   annotations:
     hajimari.io/enable: "true"
+    hajimari.io/visible-groups: "administrators"
     hajimari.io/icon: "cow"
     hajimari.io/appName: "Longhorn"
     hajimari.io/group: "Storage"

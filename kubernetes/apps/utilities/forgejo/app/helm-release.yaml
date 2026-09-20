@@ -85,6 +85,7 @@ spec:
       enabled: true
       annotations:
         hajimari.io/enable: "true"
+        hajimari.io/visible-groups: "administrators"
         hajimari.io/icon: git
         hajimari.io/group: Development
         cert-manager.io/cluster-issuer: letsencrypt-production

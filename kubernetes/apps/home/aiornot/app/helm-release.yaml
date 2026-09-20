@@ -89,6 +89,7 @@ spec:
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: networking-chain-no-auth@kubernetescrd
           hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: robot-outline
           hajimari.io/appName: AI or Not
           hajimari.io/group: Home

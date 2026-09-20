@@ -34,6 +34,7 @@ spec:
         ingressClassName: "traefik"
         annotations:
           hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: "subtitles"
           hajimari.io/group: "Media"
           cert-manager.io/cluster-issuer: "letsencrypt-production"

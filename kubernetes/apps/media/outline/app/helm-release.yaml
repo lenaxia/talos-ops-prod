@@ -71,6 +71,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: "kaofamily"
           hajimari.io/icon: wikipedia
           hajimari.io/appName: Outline
           hajimari.io/group: Media

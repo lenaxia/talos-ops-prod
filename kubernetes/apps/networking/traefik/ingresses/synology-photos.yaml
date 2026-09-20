@@ -5,6 +5,8 @@ metadata:
   name: synology-photos
   namespace: networking
   annotations:
+    hajimari.io/enable: "true"
+    hajimari.io/visible-groups: "kaofamily"
     coredns.io/hostname: "photos.${SECRET_DEV_DOMAIN}"
     cert-manager.io/cluster-issuer: letsencrypt-production
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"

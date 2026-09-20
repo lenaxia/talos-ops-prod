@@ -250,6 +250,7 @@ spec:
         className: traefik
         annotations:
           hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: chat-processing-outline
           hajimari.io/info: LibreChat
           hajimari.io/group: *namespace

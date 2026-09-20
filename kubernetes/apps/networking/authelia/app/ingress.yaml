@@ -4,6 +4,7 @@ kind: Ingress
 metadata:
   annotations:
     hajimari.io/enable: "true"
+    hajimari.io/visible-groups: "administrators"
     hajimari.io/icon: "shield-account"
       #cert-manager.io/cluster-issuer: ca-issuer
     cert-manager.io/cluster-issuer: letsencrypt-production

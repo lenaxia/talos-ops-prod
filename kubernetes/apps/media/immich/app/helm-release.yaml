@@ -195,6 +195,7 @@ spec:
           traefik.ingress.kubernetes.io/router.priority: "1"
           traefik.ingress.kubernetes.io/proxy-body-size: "0"
           hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "immich"
           hajimari.io/icon: image-multiple
           hajimari.io/group: Media
           hajimari.io/info: Immich - Photo & Video Backup

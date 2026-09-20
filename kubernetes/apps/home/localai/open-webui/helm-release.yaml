@@ -156,6 +156,7 @@ spec:
         className: traefik
         annotations:
           hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: "kaofamily,friends"
           hajimari.io/icon: baby-bottle-outline
           hajimari.io/info: ChatGPT
           hajimari.io/group: &namespace home

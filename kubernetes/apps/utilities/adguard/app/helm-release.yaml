@@ -75,6 +75,7 @@ spec:
         className: traefik
         annotations:
           hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: mdiPlayNetwork
           cert-manager.io/cluster-issuer: letsencrypt-staging
           traefik.ingress.kubernetes.io/router.entrypoints: websecure

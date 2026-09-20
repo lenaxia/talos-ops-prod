@@ -57,6 +57,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: swap-horizontal
           hajimari.io/appName: Change Detection
           cert-manager.io/cluster-issuer: letsencrypt-production
