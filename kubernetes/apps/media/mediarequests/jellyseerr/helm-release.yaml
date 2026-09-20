@@ -62,7 +62,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "requestaccess"
+          hajimari.io/visible-groups: 'requestaccess'
           hajimari.io/icon: eye-circle
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production

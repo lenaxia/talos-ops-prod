@@ -71,7 +71,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "jellyfin"
+          hajimari.io/visible-groups: 'jellyfin'
           hajimari.io/icon: simple-icons:jellyfin
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production

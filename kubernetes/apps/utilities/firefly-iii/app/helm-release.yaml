@@ -127,7 +127,7 @@ spec:
         className: traefik
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: currency-usd
           hajimari.io/group: Utilities
           cert-manager.io/cluster-issuer: letsencrypt-production
