@@ -479,6 +479,7 @@ spec:
             - "paperless.${SECRET_DEV_DOMAIN}"
             #utilities
             - "hajimari.${SECRET_DEV_DOMAIN}"
+            - "${SECRET_DEV_DOMAIN}"
           domain_regex:
             - 'baby.*\.${SECRET_DEV_DOMAIN}$'
           policy: one_factor
