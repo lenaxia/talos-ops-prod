@@ -6,7 +6,7 @@ metadata:
   namespace: networking
   annotations:
     hajimari.io/enable: "true"
-    hajimari.io/visible-groups: "kaofamily"
+    hajimari.io/visible-groups: "administrators"
     hajimari.io/icon: "mdi:image"
     coredns.io/hostname: "photos.${SECRET_DEV_DOMAIN}"
     cert-manager.io/cluster-issuer: letsencrypt-production
