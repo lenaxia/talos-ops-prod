@@ -6,5 +6,5 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
-  url: https://hajimari.io
+  url: https://lenaxia.github.io/hajimari
   timeout: 3m
