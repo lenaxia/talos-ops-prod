@@ -98,7 +98,7 @@ spec:
       searchProviders:
         - name: Bing
           token: b
-          icon: simple-icons:bing
+          icon: simple-icons:microsoftbing
           searchUrl: https://www.bing.com/search?q={query}
           url: https://www.bing.com
 
