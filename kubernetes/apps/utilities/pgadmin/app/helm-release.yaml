@@ -70,7 +70,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: database-cog-outline
           hajimari.io/appName: PG Admin 4
           hajimari.io/group: Utilities

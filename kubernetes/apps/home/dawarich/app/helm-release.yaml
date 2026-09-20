@@ -293,7 +293,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: map-marker-radius
           hajimari.io/group: Home
           hajimari.io/info: Dawarich - Location History

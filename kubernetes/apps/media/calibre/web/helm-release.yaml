@@ -63,7 +63,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "calibreweb"
+          hajimari.io/visible-groups: 'calibreweb'
           hajimari.io/icon: bookshelf
           hajimari.io/appName: The Library
           hajimari.io/group: Media

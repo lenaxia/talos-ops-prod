@@ -100,7 +100,7 @@ spec:
         className: traefik
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: chat
           hajimari.io/info: SillyTavern
           hajimari.io/group: *namespace

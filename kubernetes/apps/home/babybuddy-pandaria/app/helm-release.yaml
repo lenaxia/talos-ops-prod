@@ -56,7 +56,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "kaofamily"
+          hajimari.io/visible-groups: 'kaofamily'
           hajimari.io/icon: baby-bottle-outline
           hajimari.io/info: Baby Buddy Ava
           hajimari.io/group: Home

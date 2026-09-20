@@ -59,7 +59,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: cloud-search
           hajimari.io/appName: NZBHydra
           hajimari.io/group: Media

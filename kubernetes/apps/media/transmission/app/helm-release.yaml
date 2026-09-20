@@ -83,7 +83,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: mdi:cloud-download
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production

@@ -41,7 +41,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: baby-bottle-outline
           hajimari.io/info: *appname
           hajimari.io/group: Home

@@ -60,7 +60,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: bookshelf
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
