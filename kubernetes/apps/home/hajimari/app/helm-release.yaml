@@ -26,8 +26,10 @@ spec:
     podLabels:
       app: *app
     image:
-      repository: ghcr.io/toboshii/hajimari
-      tag: v0.3.1
+      # lenaxia fork: group-based visibility (hajimari.io/visible-groups,
+      # forward-auth Remote-Groups header, ?group= admin preview)
+      repository: ghcr.io/lenaxia/hajimari
+      tag: v0.3.1-gv.2
       pullPolicy: Always
     podSecurityContext:
       fsGroup: 101
