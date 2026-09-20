@@ -123,7 +123,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: baby-bottle-outline
+          hajimari.io/icon: simple-icons:frigate
           hajimari.io/info: Baby Buddy
           hajimari.io/group: Home
           cert-manager.io/cluster-issuer: letsencrypt-production

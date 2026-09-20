@@ -86,7 +86,7 @@ spec:
       annotations:
         hajimari.io/enable: "true"
         hajimari.io/visible-groups: "administrators"
-        hajimari.io/icon: git
+        hajimari.io/icon: simple-icons:forgejo
         hajimari.io/group: Development
         cert-manager.io/cluster-issuer: letsencrypt-production
         traefik.ingress.kubernetes.io/router.entrypoints: websecure

@@ -69,7 +69,7 @@ spec:
           cert-manager.io/cluster-issuer: letsencrypt-production
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: home-assistant
+          hajimari.io/icon: simple-icons:esphome
           hajimari.io/group: &namespace home
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
         hosts:

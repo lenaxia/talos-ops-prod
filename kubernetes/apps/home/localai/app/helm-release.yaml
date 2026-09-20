@@ -179,7 +179,7 @@ spec:
       annotations:
         hajimari.io/enable: 'true'
         hajimari.io/visible-groups: 'administrators'
-        hajimari.io/icon: resistor-nodes
+        hajimari.io/icon: mdi:brain
         hajimari.io/appName: LocalAI
         hajimari.io/group: Home
         cert-manager.io/cluster-issuer: letsencrypt-production

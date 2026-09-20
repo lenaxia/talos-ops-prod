@@ -55,7 +55,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: subtitles
+          hajimari.io/icon: mdi:download-box
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure

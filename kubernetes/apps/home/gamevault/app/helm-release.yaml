@@ -43,7 +43,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: baby-bottle-outline
+          hajimari.io/icon: mdi:gamepad-variant
           hajimari.io/info: *appname
           hajimari.io/group: &ns home
           cert-manager.io/cluster-issuer: letsencrypt-production

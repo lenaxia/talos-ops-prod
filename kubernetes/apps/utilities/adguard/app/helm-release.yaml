@@ -76,7 +76,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: play-network
+          hajimari.io/icon: simple-icons:adguard
           cert-manager.io/cluster-issuer: letsencrypt-staging
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
         hosts:
