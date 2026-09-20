@@ -72,7 +72,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'kaofamily'
-          hajimari.io/icon: wikipedia
+          hajimari.io/icon: simple-icons:outline
           hajimari.io/appName: Outline
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production

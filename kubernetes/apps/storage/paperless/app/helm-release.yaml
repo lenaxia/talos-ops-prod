@@ -113,7 +113,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'paperless'
-          hajimari.io/icon: mdi:file-multiple
+          hajimari.io/icon: simple-icons:paperlessngx
           hajimari.io/info: Paperless
           hajimari.io/group: Storage
           cert-manager.io/cluster-issuer: letsencrypt-production

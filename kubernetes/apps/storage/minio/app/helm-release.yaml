@@ -73,7 +73,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: cloud-upload
+          hajimari.io/icon: simple-icons:minio
           hajimari.io/group: Storage
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure

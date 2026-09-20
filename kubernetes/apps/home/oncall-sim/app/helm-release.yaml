@@ -93,7 +93,7 @@ spec:
             networking-chain-no-auth@kubernetescrd
           hajimari.io/enable: "true"
           hajimari.io/visible-groups: "administrators"
-          hajimari.io/icon: school
+          hajimari.io/icon: mdi:phone-ring
           hajimari.io/group: Home
         hosts:
           - host: &uri oncall-sim.${SECRET_DEV_DOMAIN}

@@ -67,7 +67,7 @@ spec:
       annotations: 
           hajimari.io/enable: "true"
           hajimari.io/visible-groups: "administrators"
-          hajimari.io/icon: "play-network"
+          hajimari.io/icon: "mdi:chart-line"
           cert-manager.io/cluster-issuer: "letsencrypt-production"
           traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
       hostname: &uri chronograf.${SECRET_DEV_DOMAIN}

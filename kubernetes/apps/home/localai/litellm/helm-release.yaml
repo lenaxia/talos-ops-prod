@@ -645,7 +645,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: baby-bottle-outline
+          hajimari.io/icon: mdi:api
           hajimari.io/info: ChatGPT
           hajimari.io/group: &namespace home
           cert-manager.io/cluster-issuer: letsencrypt-production

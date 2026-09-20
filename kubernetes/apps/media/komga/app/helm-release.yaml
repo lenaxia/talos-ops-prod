@@ -59,7 +59,7 @@ spec:
         annotations:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'calibreweb'
-          hajimari.io/icon: subtitles
+          hajimari.io/icon: mdi:book-open-variant
           hajimari.io/group: Media
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
