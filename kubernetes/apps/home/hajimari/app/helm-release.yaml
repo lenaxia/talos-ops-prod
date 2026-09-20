@@ -43,8 +43,6 @@ spec:
       showAppGroups: true
       defaultSearchProvider: "Bing"
       groupsHeader: "Remote-Groups"
-      adminGroups:
-        - administrators
       namespaceSelector:
         any: true
         #matchNames:
