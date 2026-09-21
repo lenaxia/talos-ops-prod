@@ -35,6 +35,21 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
 
+        # Rewrites the flux-safe __THEKAO_AI_API_KEY__ sentinel in the
+        # rendered ConfigMap into the literal ${THEKAO_AI_API_KEY} runtime
+        # placeholder before LibreChat starts. See endpoints.custom comment.
+        initContainers:
+          config-rewrite:
+            image:
+              repository: docker.io/library/busybox
+              tag: "1.36.1"
+            command:
+              - sh
+              - -c
+              - >-
+                sed "s/__THEKAO_AI_API_KEY__/$(printf '\044'){THEKAO_AI_API_KEY}/"
+                /config-template/librechat.yaml > /config-runtime/librechat.yaml
+
         containers:
           main:
             image:
@@ -194,12 +209,18 @@ spec:
               # the in-cluster LiteLLM router via its public ingress. The
               # API key is a LiteLLM virtual key (not the master key) so
               # spend/usage gets attributed to LibreChat separately.
-              # The bare ${THEKAO_AI_API_KEY} survives Flux substitution as a
-              # literal via the self-referential postBuild substitute defined
-              # in ks.yaml, and is resolved from process.env at request time.
+              #
+              # The ConfigMap stores a __THEKAO_AI_API_KEY__ sentinel (no
+              # dollar sign, so Flux root-level strict substitution ignores
+              # it). The config-rewrite init container replaces the sentinel
+              # with the literal ${THEKAO_AI_API_KEY} at pod start — the
+              # printf '\044' emits the '$' at runtime so the rendered
+              # manifest itself never contains a Flux-substitutable token —
+              # and LibreChat resolves it from process.env (the real key
+              # lives only in the SOPS-encrypted app Secret).
               custom:
                 - name: 'The Kao Cloud'
-                  apiKey: '${THEKAO_AI_API_KEY}'
+                  apiKey: __THEKAO_AI_API_KEY__
                   baseURL: 'https://ai.thekao.cloud/v1'
                   models:
                     # Pull the live model list from /v1/models on every page
@@ -230,14 +251,27 @@ spec:
                 subPath: uploads
               - path: /app/client/public/images
                 subPath: images
-      # Mount the librechat-config ConfigMap (rendered by app-template above)
-      # at /app/librechat.yaml so LibreChat picks up our custom endpoint.
-      config:
+      # LibreChat config: ConfigMap holds a sentinel for the API key; the
+      # config-rewrite init container materializes the runtime placeholder
+      # into an emptyDir copy, which the main container reads. (A ConfigMap
+      # volume is read-only, so the placeholder can't be written in place.)
+      config-template:
         enabled: true
         type: configMap
         name: librechat-config
         advancedMounts:
           main:
+            config-rewrite:
+              - path: /config-template/librechat.yaml
+                subPath: librechat.yaml
+                readOnly: true
+      config-runtime:
+        enabled: true
+        type: emptyDir
+        advancedMounts:
+          main:
+            config-rewrite:
+              - path: /config-runtime
             main:
               - path: /app/librechat.yaml
                 subPath: librechat.yaml
