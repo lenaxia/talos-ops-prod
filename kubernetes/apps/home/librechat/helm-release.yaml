@@ -253,7 +253,7 @@ spec:
           hajimari.io/visible-groups: "administrators"
           hajimari.io/icon: chat-processing-outline
           hajimari.io/info: LibreChat
-          hajimari.io/group: *namespace
+          hajimari.io/group: AI
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares:
