@@ -26,12 +26,3 @@ spec:
   interval: 30m
   retryInterval: 1m
   timeout: 5m
-  postBuild:
-    substitute:
-      # Self-referential on purpose: strict-mode substitution requires every
-      # ${VAR} to be defined. Substituting this var with its own literal
-      # leaves the rendered HelmRelease values with a single literal
-      # ${THEKAO_AI_API_KEY}, which LibreChat's extractEnvVariable() then
-      # resolves from process.env at request time. The real key lives in the
-      # SOPS-encrypted Secret injected as pod env and never renders to disk.
-      THEKAO_AI_API_KEY: "${THEKAO_AI_API_KEY}"
