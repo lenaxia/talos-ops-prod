@@ -36,8 +36,8 @@ spec:
           reloader.stakater.com/auto: "true"
 
         # Rewrites the flux-safe __THEKAO_AI_API_KEY__ sentinel in the
-        # rendered ConfigMap into the literal ${THEKAO_AI_API_KEY} runtime
-        # placeholder before LibreChat starts. See endpoints.custom comment.
+        # rendered ConfigMap into LibreChat's runtime env placeholder before
+        # the app starts. See the endpoints.custom comment for details.
         initContainers:
           config-rewrite:
             image:
@@ -168,12 +168,13 @@ spec:
             port: 3080
 
     configMaps:
-      # The ${THEKAO_AI_API_KEY} placeholder is interpolated by LibreChat at
-      # runtime from process.env (NOT by Flux variable substitution — the
-      # Kustomization postBuild substitutes the var with its own literal, so
-      # the rendered ConfigMap keeps exactly one ${THEKAO_AI_API_KEY}), so the
-      # actual key never appears in the rendered ConfigMap on disk — it
-      # stays in the SOPS-encrypted Secret and is read from the pod env.
+      # NOTE: Flux postBuild envsubst runs over the raw manifest text —
+      # comments included — so never write dollar-brace tokens (not even in
+      # comments): strict mode fails the whole kustomization on any token
+      # not defined in the substitution vars. The API key sentinel below is
+      # therefore dollar-free; the config-rewrite init container turns it
+      # into LibreChat's runtime env placeholder at pod start, and the real
+      # key is read from pod env (SOPS-encrypted app Secret).
       config:
         enabled: true
         # Override the default name (which would be the release name) so
@@ -213,11 +214,11 @@ spec:
               # The ConfigMap stores a __THEKAO_AI_API_KEY__ sentinel (no
               # dollar sign, so Flux root-level strict substitution ignores
               # it). The config-rewrite init container replaces the sentinel
-              # with the literal ${THEKAO_AI_API_KEY} at pod start — the
-              # printf '\044' emits the '$' at runtime so the rendered
-              # manifest itself never contains a Flux-substitutable token —
-              # and LibreChat resolves it from process.env (the real key
-              # lives only in the SOPS-encrypted app Secret).
+              # with LibreChat's runtime env placeholder for the same var at
+              # pod start — printf '\044' emits the '$' at runtime so the
+              # rendered manifest itself never contains a Flux-substitutable
+              # token — and LibreChat resolves it from process.env (the real
+              # key lives only in the SOPS-encrypted app Secret).
               custom:
                 - name: 'The Kao Cloud'
                   apiKey: __THEKAO_AI_API_KEY__

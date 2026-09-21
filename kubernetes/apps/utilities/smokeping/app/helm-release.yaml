@@ -43,10 +43,12 @@ spec:
     persistence:
       config:
         type: emptyDir
-        mountPath: /config
+        globalMounts:
+          - path: /config
       data:
         existingClaim: smokeping-data-volume
-        mountPath: /data
+        globalMounts:
+          - path: /data
 
     service:
       main:
