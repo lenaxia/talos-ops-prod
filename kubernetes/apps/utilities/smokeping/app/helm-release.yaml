@@ -1,3 +1,5 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -6,67 +8,76 @@ metadata:
 
 spec:
   releaseName: *appname
+  interval: 5m
   chart:
     spec:
-      chart: *appname 
-      version: "0.1.24"
+      chart: app-template
+      version: 5.2.1
       sourceRef:
         kind: HelmRepository
-        name: nicholaswilde
+        name: bjw-s
         namespace: flux-system
-  interval: 5m
+  install:
+    remediation:
+      retries: 4
+  upgrade:
+    remediation:
+      retries: 3
   values:
-    # -- Configures service settings for the chart.
-    # @default -- See values.yaml
-    service:
-      type: LoadBalancer
-      annotations:
-        metallb.universe.tf/address-pool: dev-infra
-      port:
-        port: 80
+    controllers:
+      main:
+        type: deployment
+        strategy: Recreate
+        pod:
+          nodeSelector:
+            node-role.kubernetes.io/worker: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/linuxserver/smokeping
+              tag: version-2.7.3-r5
+              pullPolicy: Always
+            env:
+              TZ: ${TIMEZONE}
 
-    image:
-      repository: ghcr.io/linuxserver/smokeping
-      pullPolicy: Always
-      tag: "version-2.7.3-r5"
-    
-    strategy:
-      type: Recreate
-    
-    # See more environment variables in the smokeping documentation
-    # https://github.com/linuxserver/docker-smokeping#parameters
-    env: 
-      TZ: ${TIMEZONE}
-    
     persistence:
       config:
-        enabled: false 
+        type: emptyDir
         mountPath: /config
       data:
-        enabled: true
         existingClaim: smokeping-data-volume
         mountPath: /data
 
-    ingress:
-      enabled: true
-      ingressClassName: "traefik"
-      annotations:
-        hajimari.io/enable: "true"
-        hajimari.io/visible-groups: "administrators"
-        hajimari.io/icon: "wan"
-        hajimari.io/group: "Utilities"
-        cert-manager.io/cluster-issuer: "letsencrypt-production"
-        traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-        traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
-      hosts:
-        - host: &uri "ping.${SECRET_DEV_DOMAIN}"
-          paths:
-            - path: /
-              pathType: Prefix
-      tls:
-        - hosts:
-          - *uri
-          secretName: *uri
+    service:
+      main:
+        type: LoadBalancer
+        annotations:
+          metallb.universe.tf/address-pool: dev-infra
+        ports:
+          http:
+            port: 80
+        primary: true
 
-    nodeSelector:
-      node-role.kubernetes.io/worker: "true"
+    ingress:
+      main:
+        enabled: true
+        annotations:
+          hajimari.io/enable: 'true'
+          hajimari.io/visible-groups: 'administrators'
+          hajimari.io/icon: wan
+          hajimari.io/group: Utilities
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares:
+            networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri ping.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
