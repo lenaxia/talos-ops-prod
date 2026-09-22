@@ -20,6 +20,17 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "list", "watch"]
+  # Patch 2b — the free-models catalog refresher runs unconditionally in the
+  # controller binary (values flag gates only this chart's RBAC); it worked
+  # pre-v0.34.7 only via the old cluster grant's configmaps CRUD. Name-scoped
+  # write for the catalog CM (update for refresh; create for first boot).
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["llmsafespaces-free-models"]
+    verbs: ["update"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
