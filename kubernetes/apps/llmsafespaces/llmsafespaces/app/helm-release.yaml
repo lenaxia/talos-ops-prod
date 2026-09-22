@@ -17,7 +17,7 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (current: v0.34.6). Rationale: if we ever move a
+      # is now pinned to a semver tag (current: v0.34.7). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -112,7 +112,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.34.6"
+        tag: "0.34.7"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -143,7 +143,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.34.6"
+        tag: "0.34.7"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -154,69 +154,20 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.34.6 — Release workflow (run on deb0243c),
-      # canonical printed Helm block from the Merge Agentd Manifest job;
-      # verified by authenticated digest-GET
-      # sha256:92de584e9b4f48cbd13f157307e33534f1ad400195feb52f4928014934502729 (200).
-      # (The v0.34.5 tag-race note is retired: LLMSafeSpaces #1483 made ci.yml
-      #  unable to emit semver tags; release.yml is the sole writer. Method
-      #  retained: pin from the release print or digest-GET, never tag-HEAD.)
-      #   the index annotations at controller startup — see the note at
-      #   the top of this delivery block.
-      # v0.32.0 adds: agentd automation MCP tools (#1402) — trigger_*/
-      # workflow_* over /internal/v1/automation pod identity (delegation
-      # to the user handlers; trigger-create workspace forcing; verbatim
-      # schema-decoupled bodies).
-      # v0.32.1 adds: trigger_rotate_webhook_secret (#1405, rotation
-      # AUDITED — trigger.rotate_webhook_secret event) and fixes the
-      # webhook receiver resolving the wrong ID (#1404 — every
-      # advertised hook URL 404'd; now resolved by trigger_id, existing
-      # webhooks repaired with zero migration).
-      # v0.25.2 adds: bootstrap DEK failures are LOUD (pod_bootstrap_dek_failed
-      # audit row with the underlying error — the silent-degrade forensic
-      # cost) and legacy user_keys rows heal opportunistically (#1114:
-      # master-provider unwrap failure → session-source DEK recovery →
-      # re-wrap at active version with verify-after-write). Converges the
-      # 2026-08-28 incident row on its next resume. Also #1112 (V2
-      # streaming buffer priming), #1113 (helm api.extraEnv).
-      # v0.25.1 added: user-DEK secrets deliver at pod bootstrap via
-      # server-side unwrap (#1104 — no active jwt_sessions row required).
-      # v0.25.0 added: image-factory auto release-train tracking (#1094 —
-      # the catalog default advances without operator action; existing
-      # builds/configs immutable), hash display + hash-based re-selection
-      # (GET /image-factory/resolve/:hash), git auth decoupled from
-      # gh/GH_TOKEN (#1087/#1096).
-      # v0.24.0 added: mise shims PATH fix (#1086), Epic 67 attachments
-      # pipeline (#1083/#1084/#1085).
-      # v0.23.0 added: Epic 67 port-in-subdomain preview origins (#1069),
-      # default platform prompt (#1073), MCP tool guidance contract
-      # (#1076/#1079), US-67.1 file ingest + US-67.3 attachment manifest.
-      # v0.21.0+ carries the sidecar migration (#1021): init-fs subcommand,
-      # sidecar boot phase, supervisor self-verify, fixed materialize
-      # cross-uid mode (the 2026-08-25 incident class), and the supervisor
-      # Command bypass — in sidecar mode the main container runs the
-      # overlay supervisor DIRECTLY; the stale baked entrypoint is never
-      # executed (the 80683260 incident's residual).
-      # FLIPPED 2026-08-26: precondition met — kind run 4 (v0.21.3,
-      # run 32993684357) passed K1–K13 including K13 (degraded base
-      # boots Ready). Per docs/runbooks/sidecar-flip.md: canary →
-      # rolling delete; suspended workspaces upgrade free on resume.
-      # Rollback = set enabled: false (D6.1 convergence: recreated pods
-      # return to the legacy single-container spec).
-      # Design 0051 sidecar mode (flip 2026-08-26; see runbook
-      # docs/runbooks/sidecar-flip.md and the agentdDelivery note above).
+      # Digest source: release v0.34.7 — Release workflow canonical print (run on 99aa3460);
+      # verified by authenticated digest-GET (200).
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:92de584e9b4f48cbd13f157307e33534f1ad400195feb52f4928014934502729
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:ee48a73cf8a7bf89cfddcf20ecb1bc53a069eec544786626605e7b56a00f7491
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.34.6 — Release workflow canonical print; digest-GET verified 200. (Tag race structurally closed by LLMSafeSpaces #1483 — ci.yml no longer emits semver tags; method retained.)
+      # Digest source: release v0.34.7 — Release workflow canonical print; digest-GET verified 200.
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:5ac92f9026132e90d951239504ea032c2f7d59defdb154f2405255010372d8db
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:9fba17746314f76d0bbe11da2cb03f449a5381ff6e263d0efcd27cc30a2f6004
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -235,7 +186,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.34.6"
+            tag: "0.34.7"
       freeModelsRefresher:
         enabled: false
 
@@ -310,7 +261,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.34.6"
+        tag: "0.34.7"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
