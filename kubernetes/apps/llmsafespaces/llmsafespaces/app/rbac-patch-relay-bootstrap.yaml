@@ -1,0 +1,42 @@
+# Out-of-band RBAC patches for chart 0.12.5+99aa346 (v0.34.7) — two chart
+# defects in the new relay-only key delivery posture, both fixed here so the
+# platform works before the upstream chart patch ships. Remove both files
+# when the chart carries the grants itself (upstream issue filed).
+---
+# Patch 1 — router keypair bootstrap: llm-relay-rbac.yaml scopes the router's
+# `create` on Secrets with resourceNames, but Kubernetes RBAC CANNOT scope
+# create by resourceNames (the apiserver ignores resourceNames for create —
+# the chart itself documents this for the agentd-pins grant). Without an
+# unscoped create the router CrashLoopBackOffs on first bootstrap:
+#   keypair bootstrap: creating hpke keypair secret: secrets is forbidden
+# The router already holds get/list/watch on ALL llm-relay Secrets (§4.3 key
+# owner), so unscoped create in this namespace adds no meaningful surface.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: llm-relay-router-secrets-create-patch
+  namespace: llm-relay
+  labels:
+    app.kubernetes.io/name: llmsafespaces
+    app.kubernetes.io/instance: llmsafespaces
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: llm-relay-router-secrets-create-patch
+  namespace: llm-relay
+  labels:
+    app.kubernetes.io/name: llmsafespaces
+    app.kubernetes.io/instance: llmsafespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: llm-relay-router-secrets-create-patch
+subjects:
+  - kind: ServiceAccount
+    name: llm-relay-router
+    namespace: llm-relay
