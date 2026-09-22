@@ -97,7 +97,7 @@ spec:
             - name: Devhints
               url: "https://devhints.io"
       searchProviders:
-        - name: kagi
+        - name: Kagi
           token: k
           icon: simple-icons:kagi
           searchUrl: https://kagi.com/search?q={query}
