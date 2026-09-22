@@ -10,10 +10,18 @@
 # sensor glitches never close the blinds. Morning opening remains owned by
 # the scheduler-integration routines (07:30 / 08:30 / 09:00).
 #
+# Re-arm: an in-bed state trigger with "for" fires ONCE per continuous
+# on-period, so a bedtime before ~20:40 completes its timer before the
+# 21:00 window opens and would otherwise never close that night (same
+# pattern as garage_watchdog's bed path). The 21:00 time trigger re-checks
+# contiguity: it only closes if the sensor has been on for >= 20 min
+# straight at that moment (a 20:55 bedtime waits for its own timer).
+#
 # Tuning:
 #   - Close window: edit the time conditions below (default 21:00-07:00).
 #     "after 21:00" alone would NOT match after midnight, hence the OR.
-#   - Contiguity window: edit the trigger's "for".
+#   - Contiguity window: edit the trigger's "for" and the 1200s in the
+#     template condition (keep them equal).
 #   - To also key on Mike's mat: add a second trigger for
 #     binary_sensor.master_bedroom_mikewithings_in_bed.
 # =============================================================================
@@ -31,6 +39,9 @@ bedroom_blinds:
           entity_id: binary_sensor.master_bedroom_serenawithings_in_bed
           to: "on"
           for: "00:20:00"
+        # re-arm: bed path's 20-min trigger fired once, before the window
+        - trigger: time
+          at: "21:00:00"
       conditions:
         - condition: or
           conditions:
@@ -38,6 +49,14 @@ bedroom_blinds:
               after: "21:00:00"
             - condition: time
               before: "07:00:00"
+        # contiguity check: sensor on and last state change >= 20 min ago.
+        # Trivially true when the state trigger fires (timer just elapsed);
+        # guards the 21:00 re-arm against a <20-min-in-bed bedtime.
+        - condition: template
+          value_template: >
+            {{ is_state('binary_sensor.master_bedroom_serenawithings_in_bed', 'on')
+               and (now() - states.binary_sensor.master_bedroom_serenawithings_in_bed.last_changed)
+                   .total_seconds() >= 1200 }}
         - condition: not
           conditions:
             - condition: state
