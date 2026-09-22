@@ -148,6 +148,18 @@ spec:
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
       maxConcurrentReconciles: 4
+      # ── v0.34.7 relay-only key delivery posture flip ──────────────────────
+      # relayOnlyKeyDelivery (design 0058) is default-on in 0.12.5+99aa346 and
+      # its render guard REFUSES rbac.scope=cluster: the cluster grant's
+      # informer-cache Secret read would replicate the llm-relay HPKE keypair
+      # into controller memory (§4.3 no-read guarantee). Namespace scope needs
+      # the cache scoped too — controller-runtime defaults to cluster-wide
+      # informers when --watch-namespaces is unset (the old reason we ran
+      # scope=cluster; see the RBAC block below). Pinning the watch to the
+      # release namespace scopes every informer; storageclasses keep their
+      # always-created read-only ClusterRole and RuntimeEnvironment stays
+      # webhook-only (no informer, no RBAC need).
+      watchNamespaces: "llmsafespaces"
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
@@ -168,17 +180,19 @@ spec:
       # Digest source: release v0.34.7 — Release workflow canonical print; digest-GET verified 200.
       opencodeDelivery:
         image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:9fba17746314f76d0bbe11da2cb03f449a5381ff6e263d0efcd27cc30a2f6004
-      # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
-      # The relay-router Deployment renders in this namespace and the
-      # controller's InferenceRelay reconciler starts, but no InferenceRelay
-      # CR exists yet — so the router has no peers and returns 503 for free-
-      # model inference until one is created with provider credentials.
-      # Prereqs already satisfied: rbac.scope=cluster (below) and the
-      # InferenceRelay CRD is installed.
-      # freeModelsRefresher still requires external egress + a published
-      # Worker, so it stays off in this homelab deploy.
+      # InferenceRelay DISABLED at v0.34.7 (2026-09-22): the InferenceRelay
+      # CRD is cluster-scoped and its RBAC exists ONLY inside the opt-in
+      # rbac.scope=cluster block — which the relay-only guard above now
+      # refuses. With enable-inference-relay=true under namespace scope the
+      # reconciler's cluster-wide CRD watch would forbidden-flood (the exact
+      # failure class this file's old RBAC comment documented). The router
+      # was inert anyway: no InferenceRelay CR, no fleet VMs, 503 on every
+      # free-model call. Re-enable only when the fleet is actually
+      # provisioned AND the chart ships a namespace-mode inferencerelays
+      # grant (upstream issue filed); SetupRelayController is a no-op when
+      # disabled, so nothing else changes.
       inferenceRelay:
-        enabled: true
+        enabled: false
         # Chart default tag falls back to Chart.AppVersion; pinning explicitly
         # keeps the five images rolling atomically with the chart source.
         # (Historical note: relay-router used to lag because the per-image
@@ -191,17 +205,21 @@ spec:
         enabled: false
 
     # ── RBAC ────────────────────────────────────────────────────────────────
-    # Chart default `rbac.scope: namespace` is broken for this chart: the
-    # controller-runtime informer cache does cluster-wide list/watch on
-    # Pods/Secrets/PVCs/ServiceAccounts by default, and the chart ships a
-    # cluster-scoped CRD (RuntimeEnvironment). With namespace-scoped RBAC
-    # the controller floods logs with `forbidden ... at the cluster scope`
-    # and the watch loop never establishes. Switching to `cluster` grants
-    # the controller cluster-wide list/watch — least-privilege correctness
-    # vs functionality trade-off the chart should resolve internally.
+    # FLIPPED cluster→namespace at v0.34.7 (2026-09-22). History: we ran
+    # scope=cluster because the chart's namespace mode pre-Epic-17 mixed
+    # cluster-scoped needs into one grant, and because controller-runtime's
+    # informer cache watches cluster-wide when --watch-namespaces is unset
+    # (worklog 0117). Post-G5 the chart splits grants correctly (secrets/
+    # pods ALWAYS namespace-scoped; storageclasses read-only ClusterRole
+    # always created), and controller.watchNamespaces=llmsafespaces (above)
+    # scopes the cache — so namespace mode is now both supported and the
+    # ONLY mode compatible with default-on relayOnlyKeyDelivery (its guard
+    # refuses cluster: cluster-wide Secret read would defeat design 0058
+    # §4.3). Namespace mode drops the inferencerelays grant; see the
+    # inferenceRelay block above for why that's acceptable today.
     rbac:
       create: true
-      scope: cluster
+      scope: namespace
 
     # gVisor is not preinstalled on the Talos workers, but user namespaces
     # are now enabled on workers (patches/worker/userns.yaml) and the US-70
