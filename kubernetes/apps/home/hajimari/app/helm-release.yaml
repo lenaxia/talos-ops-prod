@@ -29,7 +29,7 @@ spec:
       # lenaxia fork: group-based visibility (hajimari.io/visible-groups,
       # forward-auth Remote-Groups header, ?group= admin preview)
       repository: ghcr.io/lenaxia/hajimari
-      tag: v0.3.1-gv.12
+      tag: v0.3.1-gv.14
       pullPolicy: Always
     podSecurityContext:
       fsGroup: 101
