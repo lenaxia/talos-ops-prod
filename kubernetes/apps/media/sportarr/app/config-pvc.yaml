@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: sportarr-config-volume
+    labels:
+        app: sportarr
+        snapshot.home.arpa/enabled: "true"
+spec:
+    accessModes:
+        - ReadWriteOnce
+    storageClassName: longhorn
+    resources:
+        requests:
+            storage: 5Gi
