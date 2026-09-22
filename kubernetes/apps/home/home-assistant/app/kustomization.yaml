@@ -21,6 +21,7 @@ configMapGenerator:
       - config/packages/morning_briefing.yaml
       - config/packages/voice_intents.yaml
       - config/packages/garage_watchdog.yaml
+      - config/packages/bedroom_blinds.yaml
   - name: ha-custom-sentences
     files:
       - house.yaml=config/custom-sentences/house.yaml
