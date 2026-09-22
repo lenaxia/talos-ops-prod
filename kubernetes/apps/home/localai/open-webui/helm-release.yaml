@@ -158,7 +158,6 @@ spec:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'kaofamily,friends'
           hajimari.io/icon: mdi:chat-processing-outline
-          hajimari.io/info: ChatGPT
           hajimari.io/group: AI
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
