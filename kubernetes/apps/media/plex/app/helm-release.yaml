@@ -39,9 +39,10 @@ spec:
         containers:
           main:
             image:
-              repository: ghcr.io/onedr0p/plex
-              tag: 
-                1.41.3.9292-bc7397402@sha256:9a9196a109437035b9b20c8d368c569555623f14faf2247c3aa0a84cf568242d
+              # Built from the lenaxia/containers fork (onedr0p's plex
+              # publishing has been dead since 1.41.5 / Mar 2025).
+              repository: ghcr.io/lenaxia/plex
+              tag: 1.43.4.10903@sha256:ea785323a46bed585c2f8f6538e7d457456da4693eeac01c23d0d4d60fec48a4
             env:
               TZ: ${TIMEZONE}
               PLEX_CLAIM: claim-RGPtV5WwXo9JZcoHzti2
