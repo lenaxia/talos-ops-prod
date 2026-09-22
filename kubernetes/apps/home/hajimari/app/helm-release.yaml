@@ -41,7 +41,7 @@ spec:
       darkTheme: chalk
       showGlobalBookmarks: true
       showAppGroups: true
-      defaultSearchProvider: "Bing"
+      defaultSearchProvider: "Kagi"
       groupsHeader: "Remote-Groups"
       namespaceSelector:
         any: true
@@ -96,6 +96,11 @@ spec:
             - name: Devhints
               url: "https://devhints.io"
       searchProviders:
+        - name: kagi
+          token: k
+          icon: simple-icons:kagi
+          searchUrl: https://kagi.com/search?q={query}
+          url: https://kagi.com/
         - name: Bing
           token: b
           icon: simple-icons:microsoftbing
