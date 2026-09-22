@@ -85,7 +85,7 @@
   mode: single
 - id: '1762235354881'
   alias: 'Exterior Lights: Sunset & Sunrise'
-  description: Turn exterior lights on 1h30 before sunset and off 1h after sunrise
+  description: Exterior lights on 30 min before sunset, off 15 min after sunrise
   triggers:
   - event: sunset
     offset: -00:30:00
@@ -101,42 +101,19 @@
       - condition: trigger
         id: sunset
       sequence:
-      - target:
-          device_id:
-          - 928bf64e8160a29e19798123b04c35e8
-          - d034a9d5030053abb59356894aa9b7fc
-          - efba0b8d4edaadf297ab1980ab36b626
-        action: switch.turn_on
+      - action: switch.turn_on
+        target:
+          entity_id: &id001
+          - switch.exterior_lights_2
+          - switch.on_off_switch
+          - switch.s2_on_off_switch
     - conditions:
       - condition: trigger
         id: sunrise
       sequence:
-      - target:
-          device_id:
-          - 928bf64e8160a29e19798123b04c35e8
-          - d034a9d5030053abb59356894aa9b7fc
-          - efba0b8d4edaadf297ab1980ab36b626
-        action: switch.turn_off
-    - conditions:
-      - condition: trigger
-        id: test_on
-      sequence:
-      - target:
-          device_id:
-          - 928bf64e8160a29e19798123b04c35e8
-          - d034a9d5030053abb59356894aa9b7fc
-          - efba0b8d4edaadf297ab1980ab36b626
-        action: switch.turn_on
-    - conditions:
-      - condition: trigger
-        id: test_off
-      sequence:
-      - target:
-          device_id:
-          - 928bf64e8160a29e19798123b04c35e8
-          - d034a9d5030053abb59356894aa9b7fc
-          - efba0b8d4edaadf297ab1980ab36b626
-        action: switch.turn_off
+      - action: switch.turn_off
+        target:
+          entity_id: *id001
   mode: single
 - id: '1762547876019'
   alias: 'Kitchen: Fridge Power Loss Alert'
@@ -220,8 +197,7 @@
   actions:
   - action: switch.turn_on
     target:
-      device_id:
-      - 1f8de216aea801d336bf8b4f738008d6
+      entity_id: switch.laundry_light
     data: {}
   - wait_for_trigger:
     - entity_id:
@@ -237,8 +213,7 @@
       trigger: state
   - action: switch.turn_off
     target:
-      device_id:
-      - 1f8de216aea801d336bf8b4f738008d6
+      entity_id: switch.laundry_light
     data: {}
   mode: restart
 - id: '1783706489856'
