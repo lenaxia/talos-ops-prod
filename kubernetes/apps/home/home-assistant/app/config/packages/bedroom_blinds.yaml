@@ -1,0 +1,50 @@
+# =============================================================================
+# Bedroom blinds package — evening close on Serena going to bed
+# =============================================================================
+# Replaces the old scheduler entry "close master blinds daily @ 00:00"
+# (switch.schedule_094bc9, removed 2026-09-22).
+#
+# New behavior: after 21:00 (or overnight, before 07:00), once Serena has
+# been in bed CONTIGUOUSLY for 20 minutes, close the master blinds.
+# The 20-minute "for" timer resets if the bed sensor flaps off, so brief
+# sensor glitches never close the blinds. Morning opening remains owned by
+# the scheduler-integration routines (07:30 / 08:30 / 09:00).
+#
+# Tuning:
+#   - Close window: edit the time conditions below (default 21:00-07:00).
+#     "after 21:00" alone would NOT match after midnight, hence the OR.
+#   - Contiguity window: edit the trigger's "for".
+#   - To also key on Mike's mat: add a second trigger for
+#     binary_sensor.master_bedroom_mikewithings_in_bed.
+# =============================================================================
+
+bedroom_blinds:
+
+  automation:
+    - id: bedroom_blinds_close_serena_in_bed
+      alias: "BLINDS: Close when Serena in bed 20m (after 9pm)"
+      description: >
+        After 9pm (or overnight), close the master blinds once Serena has
+        been in bed continuously for 20 minutes.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.master_bedroom_serenawithings_in_bed
+          to: "on"
+          for: "00:20:00"
+      conditions:
+        - condition: or
+          conditions:
+            - condition: time
+              after: "21:00:00"
+            - condition: time
+              before: "07:00:00"
+        - condition: not
+          conditions:
+            - condition: state
+              entity_id: cover.master_blinds
+              state: closed
+      actions:
+        - action: cover.close_cover
+          target:
+            entity_id: cover.master_blinds
+      mode: single
