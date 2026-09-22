@@ -1,0 +1,59 @@
+# =============================================================================
+# Garage exterior light package — flash while the door is moving
+# =============================================================================
+# While the ratgdo motor sensor reports the door as moving (any direction,
+# including obstruction reversals), flash the exterior garage light with a
+# 1 s on / 1 s off duty cycle. When the motor stops, restore the light to
+# its pre-flash state (so the sunset schedule's "on" state survives).
+#
+# Caveat: the light is Z-Wave (each command is a radio transmission with
+# ~0.2-0.5 s latency), so the effective duty cycle stretches slightly.
+#
+# Tuning:
+#   - Duty cycle: edit the two delay values (keep them equal for 50%).
+#   - Light: swap flash_light / was_on / restore targets to another switch.
+#   - Manual toggles DURING a flash are overridden; the pre-flash state is
+#     what gets restored. Flap of the motor sensor re-arms (mode: restart).
+# =============================================================================
+
+garage_flash_light:
+
+  automation:
+    - id: garage_flash_exterior_light_while_moving
+      alias: "GARAGE: Flash exterior light while door is moving"
+      description: >
+        While the garage door motor is running, flash the exterior garage
+        light (1 s on / 1 s off). Restore the pre-flash state when it stops.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.garage_garage_door_opener_ratgdo_motor
+          to: "on"
+      variables:
+        flash_light: switch.s2_on_off_switch
+        was_on: "{{ is_state('switch.s2_on_off_switch', 'on') }}"
+      actions:
+        - repeat:
+            while: >
+              {{ is_state('binary_sensor.garage_garage_door_opener_ratgdo_motor', 'on') }}
+            sequence:
+              - action: switch.turn_on
+                target:
+                  entity_id: "{{ flash_light }}"
+              - delay: "00:00:01"
+              - action: switch.turn_off
+                target:
+                  entity_id: "{{ flash_light }}"
+              - delay: "00:00:01"
+        # deterministic final state = pre-flash state
+        - if:
+            - condition: template
+              value_template: "{{ was_on }}"
+          then:
+            - action: switch.turn_on
+              target:
+                entity_id: "{{ flash_light }}"
+          else:
+            - action: switch.turn_off
+              target:
+                entity_id: "{{ flash_light }}"
+      mode: restart
