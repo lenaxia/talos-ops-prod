@@ -228,6 +228,18 @@ spec:
                         set the uid-1000 supervisor actually wrote (R2b,
                         #1165 — ownership-by-construction delivery of
                         ssh keys/config, git-credentials, secret-files).
+                    relayRevision:
+                      type: string
+                      description: |
+                        Staged relay revision of the applied batch's
+                        token entries (US-72.4, design 0058 §4.5/§4.6) —
+                        the applied-revision half of the §4.2 lineage
+                        conjunct the staging reconcile compares against
+                        the workspace's staged-revision annotation. The
+                        relay degrade codes (relay_unreachable /
+                        token_expired / router reject reasons) ride
+                        degradedReason. Absent on pre-US-72.4 runtimes
+                        and flag-off pods.
                 conditions:
                   type: array
                   items:
