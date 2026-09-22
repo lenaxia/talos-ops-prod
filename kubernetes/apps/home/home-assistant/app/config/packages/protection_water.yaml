@@ -5,6 +5,9 @@
 # platform (Z-Wave, Zigbee, ESPHome, MQTT, ...). Add a new leak sensor and
 # it is protected immediately — no edits needed here.
 #
+# EXCLUDED: binary_sensor.gw3000b_rain_state_piezo (weather-station rain
+# sensor) — it reports device_class: moisture but rain is not a leak.
+#
 # Response: leak detected -> close water main valve (switch.water_valve_actuator)
 #           -> time-sensitive actionable notification to both phones.
 #           Valve stays closed until reopened via notification button or UI.
@@ -33,6 +36,7 @@ protection_water:
             {{ states.binary_sensor
                | selectattr('attributes.device_class', 'defined')
                | selectattr('attributes.device_class', 'eq', 'moisture')
+               | rejectattr('entity_id', 'eq', 'binary_sensor.gw3000b_rain_state_piezo')
                | selectattr('state', 'eq', 'on')
                | list | count > 0 }}
           attributes:
@@ -40,6 +44,7 @@ protection_water:
               {{ states.binary_sensor
                  | selectattr('attributes.device_class', 'defined')
                  | selectattr('attributes.device_class', 'eq', 'moisture')
+                 | rejectattr('entity_id', 'eq', 'binary_sensor.gw3000b_rain_state_piezo')
                  | selectattr('state', 'eq', 'on')
                  | map(attribute='entity_id')
                  | list }}
@@ -47,8 +52,9 @@ protection_water:
               {% set ns = namespace(out=[]) %}
               {% for e in states.binary_sensor
                  | selectattr('attributes.device_class', 'defined')
-                 | selectattr('attributes.device_class', 'eq', 'moisture')
-                 | selectattr('state', 'eq', 'on') %}
+                  | selectattr('attributes.device_class', 'eq', 'moisture')
+                  | rejectattr('entity_id', 'eq', 'binary_sensor.gw3000b_rain_state_piezo')
+                  | selectattr('state', 'eq', 'on') %}
                 {% set area = area_name(e.entity_id) %}
                 {% set where = area ~ ' — ' if area else '' %}
                 {% set ns.out = ns.out + [where ~ e.name] %}
@@ -58,6 +64,7 @@ protection_water:
               {{ states.binary_sensor
                  | selectattr('attributes.device_class', 'defined')
                  | selectattr('attributes.device_class', 'eq', 'moisture')
+                 | rejectattr('entity_id', 'eq', 'binary_sensor.gw3000b_rain_state_piezo')
                  | list | count }}
 
   automation:
