@@ -68,6 +68,7 @@ spec:
           hajimari.io/visible-groups: 'bitwarden,administrators,kaofamily'
           hajimari.io/icon: shield-key
           hajimari.io/appName: 'Bitwarden'
+          hajimari.io/info: 'Password Manager'
           hajimari.io/group: Utilities
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure

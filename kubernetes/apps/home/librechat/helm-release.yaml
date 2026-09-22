@@ -286,7 +286,6 @@ spec:
           hajimari.io/enable: "true"
           hajimari.io/visible-groups: "administrators,kaofamily"
           hajimari.io/icon: chat-processing-outline
-          hajimari.io/info: LibreChat
           hajimari.io/group: AI
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
