@@ -1,0 +1,50 @@
+# Patch 2 — controller pins informer: with rbac.scope=namespace the
+# agentd-pins/opencode-pins ConfigMap informer (first cached Get starts a
+# reflector) needs list/watch on configmaps in the release namespace, but the
+# chart's pins Role grants only resourceNames-scoped get/update + unscoped
+# create. The informer previously worked only because the old scope=cluster
+# grant happened to include cluster-wide configmaps read. Without this the
+# controller floods:
+#   Failed to watch *v1.ConfigMap: configmaps is forbidden ... in the
+#   namespace "llmsafespaces"
+# Read-only; writes stay resourceNames-scoped in the chart's Role.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: llmsafespaces-controller-pins-informer-patch
+  namespace: llmsafespaces
+  labels:
+    app.kubernetes.io/name: llmsafespaces
+    app.kubernetes.io/instance: llmsafespaces
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+  # Patch 2b — the free-models catalog refresher runs unconditionally in the
+  # controller binary (values flag gates only this chart's RBAC); it worked
+  # pre-v0.34.7 only via the old cluster grant's configmaps CRUD. Name-scoped
+  # write for the catalog CM (update for refresh; create for first boot).
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["llmsafespaces-free-models"]
+    verbs: ["update"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: llmsafespaces-controller-pins-informer-patch
+  namespace: llmsafespaces
+  labels:
+    app.kubernetes.io/name: llmsafespaces
+    app.kubernetes.io/instance: llmsafespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: llmsafespaces-controller-pins-informer-patch
+subjects:
+  - kind: ServiceAccount
+    name: llmsafespaces-controller
+    namespace: llmsafespaces
