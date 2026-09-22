@@ -65,7 +65,7 @@ spec:
         enabled: true
         annotations:
           hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: 'bitwarden,administrators'
+          hajimari.io/visible-groups: 'bitwarden,administrators,kaofamily'
           hajimari.io/icon: shield-key
           hajimari.io/appName: 'Bitwarden'
           hajimari.io/group: Utilities
