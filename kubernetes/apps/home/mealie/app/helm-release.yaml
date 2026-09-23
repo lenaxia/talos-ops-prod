@@ -1,0 +1,114 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname mealie
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.2.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+
+    controllers:
+      main:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/mealie-recipes/mealie
+              tag: v3.27.0
+            env:
+              TZ: ${TIMEZONE}
+              PUID: "568"
+              PGID: "568"
+              BASE_URL: https://mealie.${SECRET_DEV_DOMAIN}
+              ALLOW_SIGNUP: "false"
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 9000
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  failureThreshold: 8
+                  timeoutSeconds: 10
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 9000
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+                  failureThreshold: 15
+                  timeoutSeconds: 10
+
+    persistence:
+      data:
+        type: persistentVolumeClaim
+        existingClaim: mealie-data
+        globalMounts:
+          - path: /app/data
+
+    service:
+      main:
+        primary: true
+        type: ClusterIP
+        ports:
+          http:
+            port: 9000
+
+    ingress:
+      main:
+        enabled: true
+        className: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares:
+            networking-chain-authelia@kubernetescrd
+          hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "administrators"
+          hajimari.io/icon: silverware-fork-knife
+          hajimari.io/group: Home
+          hajimari.io/info: Mealie - Recipe Manager
+        hosts:
+          - host: &uri mealie.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: main
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: *uri
