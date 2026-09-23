@@ -28,12 +28,18 @@ spec:
         containers:
           main:
             image:
-              repository: lscr.io/linuxserver/nzbget
-              tag: v21.1-ls136
+              repository: nzbgetcom/nzbget
+              tag: v26.3
               pullPolicy: Always
+
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 100
 
             env:
               TZ: ${TIMEZONE}
+              PUID: '1000'
+              PGID: '100'
     service:
       main:
         type: ClusterIP
