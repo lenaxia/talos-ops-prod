@@ -9,6 +9,7 @@ resources:
   - helm-release.yaml
   - rbac-patch-relay-bootstrap.yaml
   - rbac-patch-pins-informer.yaml
+  - rbac-patch-runtimeenv-reader.yaml
   - ingress-frontend.yaml
   - ingress-api.yaml
   - ingress-preview-origins.yaml
