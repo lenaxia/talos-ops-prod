@@ -43,6 +43,14 @@ spec:
               PGID: ${APP_GID}
               BASE_URL: https://mealie.${SECRET_DEV_DOMAIN}
               ALLOW_SIGNUP: "false"
+              OIDC_AUTH_ENABLED: "true"
+              OIDC_PROVIDER_NAME: Authelia
+              OIDC_CLIENT_ID: mealie
+              OIDC_CLIENT_SECRET: ${SECRET_MEALIE_OAUTH_CLIENT_SECRET}
+              OIDC_CONFIGURATION_URL: https://authelia.${SECRET_DEV_DOMAIN}/.well-known/openid-configuration
+              OIDC_ADMIN_GROUP: administrators
+              OIDC_AUTO_REDIRECT: "true"
+              OIDC_REMEMBER_ME: "true"
             resources:
               requests:
                 cpu: 100m
