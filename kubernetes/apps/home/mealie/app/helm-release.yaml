@@ -104,7 +104,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares:
             networking-chain-authelia@kubernetescrd
           hajimari.io/enable: "true"
-          hajimari.io/visible-groups: "administrators"
+          hajimari.io/visible-groups: "administrators,kaofamily"
           hajimari.io/icon: silverware-fork-knife
           hajimari.io/group: Home
           hajimari.io/info: Mealie - Recipe Manager
