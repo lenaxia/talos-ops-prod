@@ -364,6 +364,29 @@ spec:
     # router-only stage — no fleet provisioned yet).
     inferenceRelayURL: ""
 
+    # ── Relay-only key delivery rollback (LLMSafeSpaces #1548) ─────────────
+    # TEMPORARY builder-only rollback (2026-09-23). Chart 0.12.5 defaults
+    # relayOnlyKeyDelivery.enabled=true and the API half (token-only
+    # emission) is live — but the deployed controller 0.34.7 image never
+    # runs its staging pass: the flag is present in the pod spec yet there
+    # is no startup "relay-only key delivery enabled" line, zero router
+    # traffic, and zero workspace-relay-* handoff Secrets cluster-wide.
+    # The batch builder then fails closed (relay_staging_not_ready): every
+    # workspace with bound llm-provider credentials receives ZERO llm
+    # entries (observed on d8bed486 — thekaocloud gone, default model
+    # unresolvable; refreshing is a no-op because the rebuilt batch is
+    # equally empty).
+    # api.enabled=false is the chart's designed narrow lever
+    # (templates/api-deployment.yaml): raw-key delivery resumes on the
+    # next resync/bootstrap while controller staging and the llm-relay
+    # router stay up. REVERT this block once #1548's root cause is fixed
+    # — controller emits the enable line and the first
+    # workspace-relay-* handoff appears — then flip api.enabled back to
+    # true.
+    relayOnlyKeyDelivery:
+      api:
+        enabled: false
+
     # ── Subdomain routing ───────────────────────────────────────────────────
     # Disabled — single-host frontend per design call. If we ever want
     # per-org SSO subdomain routing, flip this on and add a wildcard cert.
