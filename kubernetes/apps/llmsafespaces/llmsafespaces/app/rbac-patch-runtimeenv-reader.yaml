@@ -1,0 +1,40 @@
+# Patch 3 — RuntimeEnvironment informer read: runtime_resolver.go resolves
+# spec.runtime ("base") through the manager's CACHED client; RuntimeEnvironment
+# is a cluster-scoped CRD, so the cache builds a cluster-wide informer on the
+# first Get. Namespace-mode RBAC grants runtimeenvironments ONLY inside the
+# opt-in rbac.scope=cluster block — so the reflector forbidden-loops, the
+# informer never syncs, and cache.Get BLOCKS FOREVER. Every reconcile worker
+# that reaches pod build wedges silently (no error, no event, no timeout):
+# observed 2026-09-23 as a full controller zombie after a workspace resume
+# (4/4 workers blocked; queue drained into the wedge; restartGeneration bumps
+# and annotations produced no reconcile at all).
+#
+# Read-only cluster grant — the storageclass-reader precedent (F1.3.7).
+# No Secrets involved; design 0058 §4.3 is unaffected.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: llmsafespaces-controller-runtimeenvironment-reader
+  labels:
+    app.kubernetes.io/name: llmsafespaces
+    app.kubernetes.io/instance: llmsafespaces
+rules:
+  - apiGroups: ["llmsafespaces.dev"]
+    resources: ["runtimeenvironments"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: llmsafespaces-controller-runtimeenvironment-reader
+  labels:
+    app.kubernetes.io/name: llmsafespaces
+    app.kubernetes.io/instance: llmsafespaces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: llmsafespaces-controller-runtimeenvironment-reader
+subjects:
+  - kind: ServiceAccount
+    name: llmsafespaces-controller
+    namespace: llmsafespaces
