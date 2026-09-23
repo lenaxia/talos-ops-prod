@@ -40,3 +40,4 @@ resources:
   - ./aiornot/ks.yaml
   - ./ansible-runner/ks.yaml
   - ./mini4wd/ks.yaml
+  - ./mealie/ks.yaml
