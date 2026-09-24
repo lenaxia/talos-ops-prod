@@ -47,7 +47,7 @@
 | vectorpg | ✅ working (fixed) | Immich DB |
 | defaultpg | ✅ working | Phase: degraded (2/3 ready), but backups succeed |
 | llmsafespacespg | ✅ working | Phase: degraded (2/3 ready), but backups succeed |
-| dawarich-postgis | ❌ **failing** | All backups fail. Separate issue — image `postgis:16`, different root cause. Not blocking migration but should be fixed. |
+| dawarich-postgis | ✅ working | Was failing through Aug (gap Aug 8–Sep 2 2026 in S3 base backups); self-healed and daily since 2026-09-02. Re-verified 2026-09-24: daily base backups + continuous WAL archiving to `s3://cnpg-5wxuej/dawarich-postgis16`, manual on-demand backup completes. Note: CNPG 1.30 deprecation warning — `barmanObjectStore` must migrate to the Barman Cloud Plugin before CNPG 1.31. |
 
 ---
 
