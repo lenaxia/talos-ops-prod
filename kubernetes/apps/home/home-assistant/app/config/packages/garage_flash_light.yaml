@@ -1,8 +1,9 @@
 # =============================================================================
-# Front door entry light package — flash while the garage door is moving
+# Front door exterior light package — flash while the garage door is moving
 # =============================================================================
 # While the ratgdo motor sensor reports the door as moving (any direction,
-# including obstruction reversals), flash the front door entry light with a
+# including obstruction reversals), flash the front door exterior light
+# (lights.front_door.exterior) with a
 # 1 s on / 1 s off duty cycle. When the motor stops, restore the light to
 # its pre-flash state (so the sunset schedule's "on" state survives).
 #
@@ -24,8 +25,9 @@ garage_flash_light:
     - id: garage_flash_exterior_light_while_moving
       alias: "GARAGE: Flash front door light while door is moving"
       description: >
-        While the garage door motor is running, flash the front door entry
-        light (1 s on / 1 s off). Restore the pre-flash state when it stops.
+        While the garage door motor is running, flash the front door
+        EXTERIOR light (1 s on / 1 s off). Restore the pre-flash state
+        when it stops.
       triggers:
         - trigger: state
           entity_id: binary_sensor.garage_garage_door_opener_ratgdo_motor
