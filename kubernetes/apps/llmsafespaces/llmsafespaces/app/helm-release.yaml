@@ -17,7 +17,7 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (current: v0.34.7). Rationale: if we ever move a
+      # is now pinned to a semver tag (current: v0.34.8). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -112,7 +112,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.34.7"
+        tag: "0.34.8"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -143,56 +143,42 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.34.7"
+        tag: "0.34.8"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
       maxConcurrentReconciles: 4
-      # ── v0.34.7 relay-only key delivery posture flip ──────────────────────
-      # relayOnlyKeyDelivery (design 0058) is default-on in 0.12.5+99aa346 and
-      # its render guard REFUSES rbac.scope=cluster: the cluster grant's
-      # informer-cache Secret read would replicate the llm-relay HPKE keypair
-      # into controller memory (§4.3 no-read guarantee). Namespace scope needs
-      # the cache scoped too — controller-runtime defaults to cluster-wide
-      # informers when --watch-namespaces is unset (the old reason we ran
-      # scope=cluster; see the RBAC block below). Pinning the watch to the
-      # release namespace scopes every informer; storageclasses keep their
-      # always-created read-only ClusterRole and RuntimeEnvironment stays
-      # webhook-only (no informer, no RBAC need).
-      watchNamespaces: "llmsafespaces"
       # ── Agentd overlay delivery (LLMSafeSpaces #863) ───────────────────────
       # Deliver workspace-agentd to workspace pods via a digest-pinned
       # read-only image volume instead of the binary baked into
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.34.7 — Release workflow canonical print (run on 99aa3460);
+      # Digest source: release v0.34.8 — Release workflow canonical print (run 36200254170 on 9aff5a9d);
       # verified by authenticated digest-GET (200).
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:ee48a73cf8a7bf89cfddcf20ecb1bc53a069eec544786626605e7b56a00f7491
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:1629f778fceadbac42911685d4e52d9a12624c747ec60a82e08331ca8e374eb2
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.34.7 — Release workflow canonical print; digest-GET verified 200.
+      # Digest source: release v0.34.8 — Release workflow canonical print; digest-GET verified 200.
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:9fba17746314f76d0bbe11da2cb03f449a5381ff6e263d0efcd27cc30a2f6004
-      # InferenceRelay DISABLED at v0.34.7 (2026-09-22): the InferenceRelay
-      # CRD is cluster-scoped and its RBAC exists ONLY inside the opt-in
-      # rbac.scope=cluster block — which the relay-only guard above now
-      # refuses. With enable-inference-relay=true under namespace scope the
-      # reconciler's cluster-wide CRD watch would forbidden-flood (the exact
-      # failure class this file's old RBAC comment documented). The router
-      # was inert anyway: no InferenceRelay CR, no fleet VMs, 503 on every
-      # free-model call. Re-enable only when the fleet is actually
-      # provisioned AND the chart ships a namespace-mode inferencerelays
-      # grant (upstream issue filed); SetupRelayController is a no-op when
-      # disabled, so nothing else changes.
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:99f9fb0ee76b30e89f35098b67755b06c26ac5d6a3a1ec32d8d51b1b1dd9cb70
+      # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
+      # The relay-router Deployment renders in this namespace and the
+      # controller's InferenceRelay reconciler starts, but no InferenceRelay
+      # CR exists yet — so the router has no peers and returns 503 for free-
+      # model inference until one is created with provider credentials.
+      # Prereqs already satisfied: rbac.scope=cluster (below) and the
+      # InferenceRelay CRD is installed.
+      # freeModelsRefresher still requires external egress + a published
+      # Worker, so it stays off in this homelab deploy.
       inferenceRelay:
-        enabled: false
+        enabled: true
         # Chart default tag falls back to Chart.AppVersion; pinning explicitly
         # keeps the five images rolling atomically with the chart source.
         # (Historical note: relay-router used to lag because the per-image
@@ -200,26 +186,49 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.34.7"
+            tag: "0.34.8"
       freeModelsRefresher:
         enabled: false
 
     # ── RBAC ────────────────────────────────────────────────────────────────
-    # FLIPPED cluster→namespace at v0.34.7 (2026-09-22). History: we ran
-    # scope=cluster because the chart's namespace mode pre-Epic-17 mixed
-    # cluster-scoped needs into one grant, and because controller-runtime's
-    # informer cache watches cluster-wide when --watch-namespaces is unset
-    # (worklog 0117). Post-G5 the chart splits grants correctly (secrets/
-    # pods ALWAYS namespace-scoped; storageclasses read-only ClusterRole
-    # always created), and controller.watchNamespaces=llmsafespaces (above)
-    # scopes the cache — so namespace mode is now both supported and the
-    # ONLY mode compatible with default-on relayOnlyKeyDelivery (its guard
-    # refuses cluster: cluster-wide Secret read would defeat design 0058
-    # §4.3). Namespace mode drops the inferencerelays grant; see the
-    # inferenceRelay block above for why that's acceptable today.
+    # Chart default `rbac.scope: namespace` is broken for this chart: the
+    # controller-runtime informer cache does cluster-wide list/watch on
+    # Pods/Secrets/PVCs/ServiceAccounts by default, and the chart ships a
+    # cluster-scoped CRD (RuntimeEnvironment). With namespace-scoped RBAC
+    # the controller floods logs with `forbidden ... at the cluster scope`
+    # and the watch loop never establishes. Switching to `cluster` grants
+    # the controller cluster-wide list/watch — least-privilege correctness
+    # vs functionality trade-off the chart should resolve internally.
+    # ── v0.34.8: posture completion (mandatory at this bump) ──────────────
+    # Git forensics (Sep 24): prod has been running relay-only key delivery
+    # since the v0.34.7 bump — chart default enabled:true, no values override
+    # exists in ops history. The v0.34.8 chart adds the fail-loud guard
+    # (llm-relay RBAC under cluster scope hard-fails the render), so this
+    # scope flip is MANDATORY at the v0.34.8 bump, not optional. Evidence:
+    # the M3 posture gate ran green on this exact chart surface (12 green
+    # runs incl. the v0.34.8-merged code on #1566's heads). v0.34.8 is also
+    # the FIRST release whose controller can arm (the *relayFlags by-value
+    # bug, #1548's root cause, fixed in #1566 — v0.34.4-.7 never armed).
     rbac:
       create: true
       scope: namespace
+    # M2 (design 0061 §4): migration-mode fallback — absent/expired staged
+    # handoff delivers the pre-flip raw-key batch + counter instead of a
+    # zero-credential batch (the #1548 resume-creds-loss class). Explicit
+    # pin so the value never rides drift again; flip criteria for strict
+    # mode: 7 consecutive zero-fallback days fleet-wide + gate green.
+    relayOnlyKeyDelivery:
+      enabled: true
+      fallbackMode: migration
+    # NOTE: inferenceRelay.enabled stays true — v0.34.8 ships the
+    # always-created inferencerelays-watch ClusterRole (design 0061 §8.1),
+    # so namespace posture + router coexist; no pre-gate disable needed.
+    # NOTE: watch-namespaces — chart auto-derives --watch-namespaces under
+    # namespace scope when controller.watchNamespaces is unset (runbook
+    # relay-only-flip.md "cache scoping"); nothing to set here.
+    # Train provenance: tag v0.34.8 @ 9aff5a9d, release run 36200254170,
+    # digests from the canonical print (digest-GET-verifiable); CRD
+    # unchanged from v0.34.7 (already carries secretsDelivery.relayRevision).
 
     # gVisor is not preinstalled on the Talos workers, but user namespaces
     # are now enabled on workers (patches/worker/userns.yaml) and the US-70
@@ -279,7 +288,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.34.7"
+        tag: "0.34.8"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
@@ -363,29 +372,6 @@ spec:
     # backends and free-model inference will 503 (acceptable for the
     # router-only stage — no fleet provisioned yet).
     inferenceRelayURL: ""
-
-    # ── Relay-only key delivery rollback (LLMSafeSpaces #1548) ─────────────
-    # TEMPORARY builder-only rollback (2026-09-23). Chart 0.12.5 defaults
-    # relayOnlyKeyDelivery.enabled=true and the API half (token-only
-    # emission) is live — but the deployed controller 0.34.7 image never
-    # runs its staging pass: the flag is present in the pod spec yet there
-    # is no startup "relay-only key delivery enabled" line, zero router
-    # traffic, and zero workspace-relay-* handoff Secrets cluster-wide.
-    # The batch builder then fails closed (relay_staging_not_ready): every
-    # workspace with bound llm-provider credentials receives ZERO llm
-    # entries (observed on d8bed486 — thekaocloud gone, default model
-    # unresolvable; refreshing is a no-op because the rebuilt batch is
-    # equally empty).
-    # api.enabled=false is the chart's designed narrow lever
-    # (templates/api-deployment.yaml): raw-key delivery resumes on the
-    # next resync/bootstrap while controller staging and the llm-relay
-    # router stay up. REVERT this block once #1548's root cause is fixed
-    # — controller emits the enable line and the first
-    # workspace-relay-* handoff appears — then flip api.enabled back to
-    # true.
-    relayOnlyKeyDelivery:
-      api:
-        enabled: false
 
     # ── Subdomain routing ───────────────────────────────────────────────────
     # Disabled — single-host frontend per design call. If we ever want
