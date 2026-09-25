@@ -50,7 +50,7 @@ spec:
                     cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
                     --served-model-name classifier \
                     --max-model-len 16384 \
-                    --max-num-seqs 16 \
+                    --max-num-seqs 32 \
                     --max-num-batched-tokens 12288 \
                     --gpu-memory-utilization 0.9863 \
                     --kv-cache-dtype fp8 \
@@ -117,7 +117,7 @@ spec:
                     cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
                     --served-model-name classifier \
                     --max-model-len 16384 \
-                    --max-num-seqs 16 \
+                    --max-num-seqs 32 \
                     --max-num-batched-tokens 12288 \
                     --gpu-memory-utilization 0.9863 \
                     --kv-cache-dtype fp8 \
