@@ -50,7 +50,7 @@ spec:
                     cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
                     --served-model-name classifier \
                     --max-model-len 16384 \
-                    --max-num-seqs 64 \
+                    --max-num-seqs 16 \
                     --max-num-batched-tokens 12288 \
                     --gpu-memory-utilization 0.9863 \
                     --kv-cache-dtype fp8 \
@@ -62,8 +62,7 @@ spec:
                     --port 8000 \
                     --dtype auto \
                     --enable-chunked-prefill \
-                    --enable-prefix-caching \
-                    --enable-log-requests
+                    --enable-prefix-caching
             env: &env
               - name: TZ
                 value: ${TIMEZONE}
@@ -71,12 +70,6 @@ spec:
                 value: "GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337" # 3090 FE
               - name: VLLM_USE_MODELSCOPE
                 value: "false"
-              # TEMPORARY (2026-09-02): log full prompts alongside
-              # --enable-log-requests (DEBUG gates the "Request ... prompt:"
-              # line in RequestLogger). goKore strategic-cycle diagnosis —
-              # remove when done.
-              - name: VLLM_LOGGING_LEVEL
-                value: "DEBUG"
             envFrom:
               - secretRef:
                   name: *appname
@@ -124,7 +117,7 @@ spec:
                     cyankiwi/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit \
                     --served-model-name classifier \
                     --max-model-len 16384 \
-                    --max-num-seqs 64 \
+                    --max-num-seqs 16 \
                     --max-num-batched-tokens 12288 \
                     --gpu-memory-utilization 0.9863 \
                     --kv-cache-dtype fp8 \
@@ -136,8 +129,7 @@ spec:
                     --port 8000 \
                     --dtype auto \
                     --enable-chunked-prefill \
-                    --enable-prefix-caching \
-                    --enable-log-requests
+                    --enable-prefix-caching
             env:
               - name: TZ
                 value: ${TIMEZONE}
@@ -145,9 +137,6 @@ spec:
                 value: "GPU-6726851a-d64e-09c8-a938-1537593e3106" # 3090 Zotac
               - name: VLLM_USE_MODELSCOPE
                 value: "false"
-              # TEMPORARY (2026-09-02): see controller A — full prompt logging.
-              - name: VLLM_LOGGING_LEVEL
-                value: "DEBUG"
             envFrom:
               - secretRef:
                   name: *appname
