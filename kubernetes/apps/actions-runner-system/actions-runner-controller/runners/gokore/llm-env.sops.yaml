@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+    name: gokore-llm-env
+    namespace: actions-runner-system
+stringData:
+    OPENAI_API_KEY: ENC[AES256_GCM,data:KCdUpOgFmE+6IC2pXompm4zZVumtFMwlnw==,iv:PIaiMeNznx8f763dtIARye3XZxDy7wmlzVTYPdZRxJE=,tag:d2uS8UDVKj/g/QrZqS6UdQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAxKzlId1pnWW5DMVRFTllq
+            b21oMG9MZk9GOG9aZWxXRmhNV0loNGlIY0M4CnJTLzFSb2s5ZmpDVlpIWkZ6UDNL
+            ZGdneDRuVEJSL3RqeCtRSEJBRUtBM0kKLS0tIHQ3bGYvUGF4SndQeTRRU0o5c0ZD
+            bms1blNXZ3g0M1ZMcXlRY3hiREZGNE0KIzemr/AQOdpJ/xWtbWtZftqjxRo/d5vk
+            nMnCyRrRpuV//Hrfyk/pN7sgD3Lcw2GCRZUsOWyWTDnARIMYxfszJA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1rr569v9jm7ck70q4wpnspfhdvt4y5m6s604tx0ygs0a65qkt7g4qdszk6k
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-09-26T06:56:20Z"
+    mac: ENC[AES256_GCM,data:7yvawq851vPofTS1aHVOTZcDLuOMVpO2VWmZgd978gi9PPMhsuzoD7QXUSdyvqBYq7+e/0TgEjIlM4rafwIRf1LtGq2EwXkXhlyJFMbv+IfsdmXMXBAgSwDmD1hbivhg0wmxvOOEOJQpV596ZIlmGoV/vG/spCfcLDeYGnyqpno=,iv:EOh6unfPSbfAJ+weYUnGCFwANkRyqouXJSD8d8qPvwE=,tag:9mhL0VZu7FgGsS0zT2qjHA==,type:str]
+    version: 3.13.3
