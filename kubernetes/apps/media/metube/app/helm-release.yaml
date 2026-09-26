@@ -51,7 +51,7 @@ spec:
           main:
             image:
               repository: ghcr.io/alexta69/metube
-              tag: 2026.09.20
+              tag: 2026.09.25
               pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
