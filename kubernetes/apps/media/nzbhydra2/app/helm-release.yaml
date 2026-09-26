@@ -37,7 +37,7 @@ spec:
           main:
             image:
               repository: ghcr.io/lenaxia/nzbhydra2
-              tag: '8.9.0'
+              tag: '9.0.5'
 
             env:
               TZ: ${TIMEZONE}
