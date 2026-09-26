@@ -173,8 +173,9 @@ spec:
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
       # CR exists yet — so the router has no peers and returns 503 for free-
       # model inference until one is created with provider credentials.
-      # Prereqs already satisfied: rbac.scope=cluster (below) and the
-      # InferenceRelay CRD is installed.
+      # Prereqs already satisfied: rbac.scope=namespace posture gate (below),
+      # controller.watchNamespaces (above — satisfies the §8.1 render guard),
+      # and the InferenceRelay CRD is installed.
       # freeModelsRefresher still requires external egress + a published
       # Worker, so it stays off in this homelab deploy.
       inferenceRelay:
@@ -187,6 +188,17 @@ spec:
         router:
           image:
             tag: "0.34.8"
+      # ── v0.34.8 render guard (design 0061 §8.1 residual) ───────────────────
+      # The v0.34.8 chart hard-FAILS the render when
+      # controller.inferenceRelay.enabled=true under rbac.scope=namespace
+      # and controller.watchNamespaces is unset — the guard reads the
+      # VALUES key, so the deployment-time --watch-namespaces derivation
+      # ("auto-derives, nothing to set" in #2561's note) does NOT satisfy
+      # it. That unset combo is why the v0.34.8 upgrade failed 14x in a
+      # row (HelmRelease status, execution error at rbac.yaml:595). The
+      # explicit pin scopes the controller-runtime cache, which the F5
+      # residual fleet Secret informer requires regardless.
+      watchNamespaces: "llmsafespaces"
       freeModelsRefresher:
         enabled: false
 
@@ -223,9 +235,12 @@ spec:
     # NOTE: inferenceRelay.enabled stays true — v0.34.8 ships the
     # always-created inferencerelays-watch ClusterRole (design 0061 §8.1),
     # so namespace posture + router coexist; no pre-gate disable needed.
-    # NOTE: watch-namespaces — chart auto-derives --watch-namespaces under
-    # namespace scope when controller.watchNamespaces is unset (runbook
-    # relay-only-flip.md "cache scoping"); nothing to set here.
+    # NOTE: watch-namespaces — the deployment template auto-derives
+    # --watch-namespaces under namespace scope when the values key is
+    # unset, but the §8.1 render guard still requires the explicit
+    # controller.watchNamespaces when inferenceRelay.enabled=true; it is
+    # pinned in the controller block above (the #2561 "nothing to set
+    # here" note was wrong and stalled the rollout 14 reconciliations).
     # Train provenance: tag v0.34.8 @ 9aff5a9d, release run 36200254170,
     # digests from the canonical print (digest-GET-verifiable); CRD
     # unchanged from v0.34.7 (already carries secretsDelivery.relayRevision).
