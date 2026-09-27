@@ -26,6 +26,9 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: "true"
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
 
     controllers:
       main:
@@ -49,6 +52,23 @@ spec:
               - >-
                 sed "s/__THEKAO_AI_API_KEY__/$(printf '\044'){THEKAO_AI_API_KEY}/"
                 /config-template/librechat.yaml > /config-runtime/librechat.yaml
+
+        # Fixes the file-upload 500: kubelet auto-creates subPath dirs as
+        # root:root and fsGroup chowns do NOT apply to subPath mounts, so the
+        # node-user container couldn't mkdir /app/uploads/temp (EACCES).
+        # Runs as root and hands the two subPath trees to uid/gid 1000.
+        fix-perms:
+          image:
+            repository: docker.io/library/busybox
+            tag: "1.38.0"
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - >-
+              chown -R 1000:1000 /data/uploads /data/images
+              && ls -ld /data/uploads /data/images
 
         containers:
           main:
@@ -251,6 +271,11 @@ spec:
               - path: /app/uploads
                 subPath: uploads
               - path: /app/client/public/images
+                subPath: images
+            fix-perms:
+              - path: /data/uploads
+                subPath: uploads
+              - path: /data/images
                 subPath: images
       # LibreChat config: ConfigMap holds a sentinel for the API key; the
       # config-rewrite init container materializes the runtime placeholder
