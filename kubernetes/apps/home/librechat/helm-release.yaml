@@ -236,17 +236,13 @@ spec:
             registration:
               socialLogins: ['openid']
 
-            # Provider (direct-to-model) file uploads: images only. Document
-            # uploads on this path can never work — LiteLLM rejects
-            # 'file'/'input_file' content parts before they reach the model.
-            # Documents go through the RAG file-search path instead
-            # (agent must have the File Search tool enabled).
-            fileConfig:
-              endpoints:
-                The Kao Cloud:
-                  supportedMimeTypes:
-                    - "image/.*"
-
+            # NOTE: do NOT restrict fileConfig.endpoints.<name>.supportedMimeTypes
+            # here to block provider-path document uploads — the send-time
+            # filterFilesByEndpointConfig() applies it to ALL attachments
+            # (context/file-search included) and silently strips them from the
+            # message ("no documents are currently loaded"). Provider-path PDF
+            # uploads will 400 at LiteLLM instead; use File Search / Upload as
+            # text for documents.
             endpoints:
               # Single platform-wide OpenAI-compatible endpoint pointing at
               # the in-cluster LiteLLM router via its public ingress. The
