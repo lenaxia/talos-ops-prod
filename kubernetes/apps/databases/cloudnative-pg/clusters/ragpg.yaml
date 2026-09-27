@@ -1,0 +1,37 @@
+---
+# Dedicated pgvector store for LibreChat's RAG API (embeddings cache).
+# Modeled on vectorpg.yaml. Single instance, no S3 backup: the data is a
+# rebuildable cache (re-upload a file to re-index it), so backup churn to
+# MinIO buys nothing. Role/database/vector extension are provisioned by the
+# db-init Job in kubernetes/apps/home/librechat-ragapi/db-init/.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: ragpg
+  namespace: databases
+spec:
+  instances: 1
+  # Plain CNPG image — ships pgvector (see vectorpg.yaml note).
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.8
+  resources:
+    requests:
+      memory: 1Gi
+    limits:
+      memory: 2Gi
+  priorityClassName: database-protected
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 10Gi
+    storageClass: openebs-hostpath
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: postgres-superuser
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
+  monitoring:
+    enablePodMonitor: true
+  postgresql:
+    parameters:
+      max_connections: "50"
+      shared_buffers: 128MB

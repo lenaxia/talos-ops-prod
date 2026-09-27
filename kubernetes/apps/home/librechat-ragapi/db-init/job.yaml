@@ -1,0 +1,66 @@
+---
+# Provisions the `ragapi` role + database + pgvector extension on the
+# dedicated `ragpg` CloudNative-PG cluster, following the llmsafespaces
+# db-init pattern (role password sourced from the app-namespace SOPS
+# secret so only one copy of the credential exists).
+#
+# Uses the CNPG postgres image (psql available) instead of
+# onedr0p/postgres-init because the pgvector extension must also be
+# created — CREATE DATABASE / CREATE EXTENSION need superuser and
+# cannot run inside a transaction, hence the \gexec trick.
+# Re-runs are idempotent.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: librechat-ragapi-postgres-init
+  namespace: home
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: librechat-ragapi-postgres-init
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      containers:
+        - name: postgres-init
+          image: ghcr.io/cloudnative-pg/postgresql:16.8
+          env:
+            - name: DB_HOST
+              value: ragpg-rw.databases.svc.cluster.local
+            - name: SUPER_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-superuser
+                  key: password
+            - name: APP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ragapi-credentials
+                  key: postgres-password
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              psql "host=${DB_HOST} port=5432 user=postgres password=${SUPER_PASS}" \
+                -v ON_ERROR_STOP=1 -v pass="${APP_PASS}" <<'SQL'
+              DO $do$
+              BEGIN
+                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'ragapi') THEN
+                  CREATE ROLE ragapi LOGIN;
+                END IF;
+              END
+              $do$;
+              ALTER ROLE ragapi WITH LOGIN PASSWORD :'pass';
+              SELECT 'CREATE DATABASE ragapi OWNER ragapi'
+              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'ragapi')\gexec
+              SQL
+              psql "host=${DB_HOST} port=5432 dbname=ragapi user=postgres password=${SUPER_PASS}" \
+                -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS vector CASCADE;"
+              psql "host=${DB_HOST} port=5432 dbname=ragapi user=postgres password=${SUPER_PASS}" \
+                -v ON_ERROR_STOP=1 -c "GRANT USAGE, CREATE ON SCHEMA public TO ragapi;"
+              echo "ragapi role/database/pgvector ready"

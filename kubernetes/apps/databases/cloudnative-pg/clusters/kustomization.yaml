@@ -9,4 +9,5 @@ resources:
   - vectorpg-lb.yaml
   - llmsafespacespg.yaml
   - dawarich-postgis.yaml
+  - ragpg.yaml
   #- backup.yaml
