@@ -68,7 +68,7 @@ spec:
           hajimari.io/visible-groups: "kaofamily"
           hajimari.io/icon: microsoft-edge
           hajimari.io/appName: Edge Web
-          hajimari.io/group: kaofamily
+          hajimari.io/group: Home
         hosts:
           - host: &uri web.${SECRET_DEV_DOMAIN}
             paths:
