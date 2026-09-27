@@ -34,7 +34,7 @@ spec:
         node-role.kubernetes.io/worker: "true"
       containers:
         - name: postgres-init
-          image: ghcr.io/cloudnative-pg/postgresql:16.8
+          image: ghcr.io/cloudnative-pg/postgresql:16.15
           env:
             # psql reads these natively — no connection string needed.
             - name: PGHOST
