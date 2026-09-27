@@ -30,7 +30,7 @@ spec:
       # forward-auth Remote-Groups header, ?group= admin preview),
       # per-user greeting from Remote-Name/Remote-User
       repository: ghcr.io/lenaxia/hajimari
-      tag: v0.3.1-gv.15
+      tag: v0.3.1-gv.16
       pullPolicy: Always
     podSecurityContext:
       fsGroup: 101
