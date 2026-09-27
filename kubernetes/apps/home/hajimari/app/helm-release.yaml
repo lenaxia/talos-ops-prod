@@ -27,9 +27,10 @@ spec:
       app: *app
     image:
       # lenaxia fork: group-based visibility (hajimari.io/visible-groups,
-      # forward-auth Remote-Groups header, ?group= admin preview)
+      # forward-auth Remote-Groups header, ?group= admin preview),
+      # per-user greeting from Remote-Name/Remote-User
       repository: ghcr.io/lenaxia/hajimari
-      tag: v0.3.1-gv.14
+      tag: v0.3.1-gv.15
       pullPolicy: Always
     podSecurityContext:
       fsGroup: 101
