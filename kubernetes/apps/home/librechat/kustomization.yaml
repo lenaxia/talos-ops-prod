@@ -7,4 +7,6 @@ commonLabels:
 resources:
   - helm-release.yaml
   - ragapi-helm-release.yaml
+  - ocr-helm-release.yaml
+  - ocr-shim-configmap.yaml
   - secret.sops.yaml

@@ -223,6 +223,15 @@ spec:
                 use: true
                 create: true
 
+            # Local OCR for scanned PDFs: LibreChat's mistral_ocr strategy
+            # pointed at the in-cluster librechat-ocr shim (tesseract +
+            # pdftoppm, no cloud). API key is a dummy — the shim accepts
+            # anything; the service is cluster-internal only.
+            ocr:
+              strategy: mistral_ocr
+              apiKey: local-ocr-shim
+              baseURL: http://librechat-ocr.home.svc.cluster.local:8080
+
             # OIDC is the only social login we expose.
             registration:
               socialLogins: ['openid']
