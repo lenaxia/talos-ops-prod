@@ -1,5 +1,43 @@
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+# ----------------------------------------------------------------------------
+# Stage 1 — DB role + database + pgvector extension on ragpg for the
+# LibreChat RAG API. Health-check on the Job: Flux marks this
+# Kustomization Ready only when the Job completes (succeeded=True),
+# which Stage 2's dependsOn waits on.
+# ----------------------------------------------------------------------------
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-home-librechat-dbinit
+  namespace: flux-system
+  labels:
+    substitution.flux.home.arpa/enabled: "true"
+spec:
+  dependsOn:
+    # ragpg Cluster lives in this Kustomization's tree
+    - name: cluster-databases-postgres-clusters
+      namespace: flux-system
+  path: ./kubernetes/apps/home/librechat/db-init
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-kubernetes
+  healthChecks:
+    - apiVersion: batch/v1
+      kind: Job
+      name: librechat-ragapi-postgres-init
+      namespace: home
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+# ----------------------------------------------------------------------------
+# Stage 2 — LibreChat itself + its RAG API sidecar (one logical stack:
+# ragapi is LibreChat-specific, not a general-purpose service). Waits
+# for the db-init Job and the MongoDB operator group.
+# ----------------------------------------------------------------------------
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -9,10 +47,16 @@ metadata:
     substitution.flux.home.arpa/enabled: "true"
 spec:
   dependsOn:
+    - name: cluster-home-librechat-dbinit
+      namespace: flux-system
     # LibreChat needs its MongoDB instance to be reconciled first. The
     # mongodb-kubernetes operator + MongoDBCommunity instance live in
     # kubernetes/apps/databases/mongodb-kubernetes/.
     - name: cluster-databases-mongodb-instances
+      namespace: flux-system
+    # ragapi embeds via bge-m3 through the LiteLLM router.
+    - name: cluster-home-litellm
+      namespace: flux-system
   path: ./kubernetes/apps/home/librechat
   prune: true
   sourceRef:
@@ -22,6 +66,10 @@ spec:
     - apiVersion: helm.toolkit.fluxcd.io/v2beta1
       kind: HelmRelease
       name: librechat
+      namespace: home
+    - apiVersion: helm.toolkit.fluxcd.io/v2beta1
+      kind: HelmRelease
+      name: ragapi
       namespace: home
   interval: 30m
   retryInterval: 1m

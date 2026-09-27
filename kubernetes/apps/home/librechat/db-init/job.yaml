@@ -6,9 +6,16 @@
 #
 # Uses the CNPG postgres image (psql available) instead of
 # onedr0p/postgres-init because the pgvector extension must also be
-# created — CREATE DATABASE / CREATE EXTENSION need superuser and
-# cannot run inside a transaction, hence the \gexec trick.
-# Re-runs are idempotent.
+# created. CREATE DATABASE / CREATE ROLE can't run inside a transaction,
+# hence the \gexec idempotency pattern instead of DO blocks.
+#
+# FLUX SUBSTITUTION WARNING (same class of bug as the librechat
+# config-rewrite sentinel): post-build envsubst in strict mode scans the
+# ENTIRE manifest text — never write dollar-brace tokens, bare $VAR
+# references, or dollar-quoted SQL tags ($tag$) in this file. Superuser
+# credentials ride in via the standard PG* env vars, the app password
+# via printenv inside $(...) command substitution, which envsubst
+# ignores. Re-runs are idempotent.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -29,9 +36,14 @@ spec:
         - name: postgres-init
           image: ghcr.io/cloudnative-pg/postgresql:16.8
           env:
-            - name: DB_HOST
+            # psql reads these natively — no connection string needed.
+            - name: PGHOST
               value: ragpg-rw.databases.svc.cluster.local
-            - name: SUPER_PASS
+            - name: PGPORT
+              value: "5432"
+            - name: PGUSER
+              value: postgres
+            - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-superuser
@@ -46,21 +58,15 @@ spec:
             - -c
             - |
               set -euo pipefail
-              psql "host=${DB_HOST} port=5432 user=postgres password=${SUPER_PASS}" \
-                -v ON_ERROR_STOP=1 -v pass="${APP_PASS}" <<'SQL'
-              DO $do$
-              BEGIN
-                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'ragapi') THEN
-                  CREATE ROLE ragapi LOGIN;
-                END IF;
-              END
-              $do$;
+              psql -v ON_ERROR_STOP=1 -v pass="$(printenv APP_PASS)" <<'SQL'
+              SELECT 'CREATE ROLE ragapi LOGIN'
+              WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'ragapi')\gexec
               ALTER ROLE ragapi WITH LOGIN PASSWORD :'pass';
               SELECT 'CREATE DATABASE ragapi OWNER ragapi'
               WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'ragapi')\gexec
               SQL
-              psql "host=${DB_HOST} port=5432 dbname=ragapi user=postgres password=${SUPER_PASS}" \
-                -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS vector CASCADE;"
-              psql "host=${DB_HOST} port=5432 dbname=ragapi user=postgres password=${SUPER_PASS}" \
-                -v ON_ERROR_STOP=1 -c "GRANT USAGE, CREATE ON SCHEMA public TO ragapi;"
+              psql -v ON_ERROR_STOP=1 -d ragapi \
+                -c "CREATE EXTENSION IF NOT EXISTS vector CASCADE;"
+              psql -v ON_ERROR_STOP=1 -d ragapi \
+                -c "GRANT USAGE, CREATE ON SCHEMA public TO ragapi;"
               echo "ragapi role/database/pgvector ready"
