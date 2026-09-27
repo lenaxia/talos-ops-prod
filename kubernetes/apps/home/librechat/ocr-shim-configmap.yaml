@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: librechat-ocr-shim
+  namespace: home
+data:
+  # Mistral-OCR-compatible shim backed by LOCAL tools only (pdftoppm +
+  # tesseract from the paperless-ngx image). Implements exactly the four
+  # calls LibreChat v0.8.7's uploadMistralOCR makes:
+  #   POST   /files                  (multipart: purpose=ocr, file)
+  #   GET    /files/{id}/url         -> {"url": "mem://{id}", "expiry": ...}
+  #   POST   /ocr                    -> {"pages": [{"index", "markdown"}]}
+  #   DELETE /files/{id}
+  # The "signed URL" is a mem:// pseudo-URL — LibreChat never fetches it,
+  # it only hands it back to us in the /ocr body, so no real serving needed.
+  # Pure stdlib: no pip deps, runs on any python3 image.
+  shim.py: |
+    import base64
+    import json
+    import os
+    import re
+    import subprocess
+    import tempfile
+    import uuid
+    from email.parser import BytesParser
+    from email.policy import default as email_policy
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import urlparse, parse_qs
+
+    STORE_DIR = "/dev/shm/ocrshim"
+    os.makedirs(STORE_DIR, exist_ok=True)
+    FILES = {}  # id -> {"path":, "filename":, "mime":}
+
+    class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
+
+        def log_message(self, fmt, *args):
+            print("shim:", self.command, self.path, fmt % args, flush=True)
+
+        def _json(self, code, obj):
+            body = json.dumps(obj).encode()
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def _body(self):
+            length = int(self.headers.get("Content-Length") or 0)
+            return self.rfile.read(length) if length else b""
+
+        def do_GET(self):
+            m = re.match(r"^/files/([^/]+)/url$", urlparse(self.path).path)
+            if m and m.group(1) in FILES:
+                exp = (parse_qs(urlparse(self.path).query).get("expiry") or ["3600"])[0]
+                self._json(200, {"url": "mem://" + m.group(1), "expiry": exp})
+            else:
+                self._json(404, {"message": "file not found"})
+
+        def do_DELETE(self):
+            m = re.match(r"^/files/([^/]+)$", urlparse(self.path).path)
+            if m and m.group(1) in FILES:
+                rec = FILES.pop(m.group(1))
+                try:
+                    os.unlink(rec["path"])
+                except OSError:
+                    pass
+                self._json(200, {})
+            else:
+                self._json(404, {"message": "file not found"})
+
+        def do_POST(self):
+            path = urlparse(self.path).path
+            if path == "/files":
+                return self._upload()
+            if path == "/ocr" or path.endswith("/ocr"):
+                return self._ocr()
+            self._json(404, {"message": "no such route"})
+
+        def _upload(self):
+            ct = self.headers.get("Content-Type", "")
+            if "multipart/form-data" not in ct:
+                return self._json(400, {"message": "multipart required"})
+            raw = b"Content-Type: " + ct.encode() + b"\r\n\r\n" + self._body()
+            msg = BytesParser(policy=email_policy).parsebytes(raw)
+            for part in msg.iter_parts():
+                name = part.get_param("name", header="content-disposition")
+                if name != "file":
+                    continue
+                fid = uuid.uuid4().hex
+                path = os.path.join(STORE_DIR, fid)
+                with open(path, "wb") as f:
+                    f.write(part.get_payload(decode=True) or b"")
+                FILES[fid] = {
+                    "path": path,
+                    "filename": part.get_filename() or "document",
+                }
+                return self._json(200, {"id": fid, "filename": FILES[fid]["filename"]})
+            self._json(400, {"message": "missing 'file' field"})
+
+        def _ocr(self):
+            try:
+                payload = json.loads(self._body() or b"{}")
+                doc = payload.get("document") or {}
+                url = doc.get("document_url") or doc.get("image_url") or ""
+                fid = url.replace("mem://", "")
+                rec = FILES.get(fid)
+                if rec is None:
+                    return self._json(404, {"message": "unknown file id"})
+                pages = ocr_document(rec["path"], rec["filename"])
+                if not any(p.strip() for p in pages):
+                    return self._json(422, {"message": "OCR produced no text"})
+                self._json(200, {"pages": [{"index": i, "markdown": p} for i, p in enumerate(pages)]})
+            except Exception as e:
+                self._json(500, {"message": "ocr failed: %s" % e})
+
+    def ocr_document(path, filename):
+        with tempfile.TemporaryDirectory(dir=STORE_DIR) as td:
+            if (filename or "").lower().endswith((".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp", ".webp")):
+                return [run_tesseract(path)]
+            prefix = os.path.join(td, "page")
+            subprocess.run(["pdftoppm", "-r", "200", "-png", path, prefix], check=True, timeout=300)
+            pages = sorted(
+                f for f in os.listdir(td) if f.startswith("page") and f.endswith(".png")
+            )
+            return [run_tesseract(os.path.join(td, f)) for f in pages]
+
+    def run_tesseract(img):
+        out = subprocess.run(
+            ["tesseract", img, "stdout", "-l", "eng", "--psm", "4"],
+            check=True, capture_output=True, timeout=300,
+        )
+        return out.stdout.decode("utf-8", "replace")
+
+    ThreadingHTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
