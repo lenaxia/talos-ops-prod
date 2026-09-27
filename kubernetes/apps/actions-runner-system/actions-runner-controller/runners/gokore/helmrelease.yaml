@@ -55,6 +55,13 @@ spec:
               # from persisting on the ReadWriteOnce work volume between runs.
               - name: ACTIONS_RUNNER_CLEAN_WORKSPACE
                 value: "true"
+              # LLM API key for fleet-baseline/tooleval workflow env checks
+              # (repo configs expand ${OPENAI_API_KEY}). See llm-env.sops.yaml.
+              - name: OPENAI_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: gokore-llm-env
+                    key: OPENAI_API_KEY
         volumes:
           - name: work
             emptyDir: {}
