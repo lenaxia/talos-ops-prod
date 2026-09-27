@@ -53,22 +53,22 @@ spec:
                 sed "s/__THEKAO_AI_API_KEY__/$(printf '\044'){THEKAO_AI_API_KEY}/"
                 /config-template/librechat.yaml > /config-runtime/librechat.yaml
 
-        # Fixes the file-upload 500: kubelet auto-creates subPath dirs as
-        # root:root and fsGroup chowns do NOT apply to subPath mounts, so the
-        # node-user container couldn't mkdir /app/uploads/temp (EACCES).
-        # Runs as root and hands the two subPath trees to uid/gid 1000.
-        fix-perms:
-          image:
-            repository: docker.io/library/busybox
-            tag: "1.38.0"
-          securityContext:
-            runAsUser: 0
-          command:
-            - sh
-            - -c
-            - >-
-              chown -R 1000:1000 /data/uploads /data/images
-              && ls -ld /data/uploads /data/images
+          # Fixes the file-upload 500: kubelet auto-creates subPath dirs as
+          # root:root and fsGroup chowns do NOT apply to subPath mounts, so the
+          # node-user container couldn't mkdir /app/uploads/temp (EACCES).
+          # Runs as root and hands the two subPath trees to uid/gid 1000.
+          fix-perms:
+            image:
+              repository: docker.io/library/busybox
+              tag: "1.38.0"
+            securityContext:
+              runAsUser: 0
+            command:
+              - sh
+              - -c
+              - >-
+                chown -R 1000:1000 /data/uploads /data/images
+                && ls -ld /data/uploads /data/images
 
         containers:
           main:
