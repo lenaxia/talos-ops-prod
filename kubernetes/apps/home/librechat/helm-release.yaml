@@ -91,7 +91,9 @@ spec:
 
               # ── Optional services we are NOT running ─────────────────────
               SEARCH: "false"          # disables MeiliSearch dependency
-              # RAG_API_URL intentionally unset ⇒ RAG features disabled.
+              # RAG API (document upload/embeddings) — cluster-internal
+              # service deployed in librechat-ragapi/.
+              RAG_API_URL: http://ragapi.home.svc.cluster.local:8000
 
               # ── Auth: OIDC-only via Authelia ─────────────────────────────
               ALLOW_EMAIL_LOGIN: "false"
