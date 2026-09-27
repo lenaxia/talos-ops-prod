@@ -34,7 +34,6 @@ resources:
   - ./msedge-web/ks.yaml
   - ./oncall-sim/ks.yaml
   - ./librechat/ks.yaml
-  - ./librechat-ragapi/ks.yaml
   # kicad disabled 2026-09-09 (app mid-rework; empty scrape pool noise).
   # Re-enable by uncommenting. PVCs/volsync backups survive uninstall.
   # - ./kicad/ks.yaml
