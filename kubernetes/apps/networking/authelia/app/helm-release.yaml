@@ -461,6 +461,14 @@ spec:
           subject:
           - "group:administrators"
 
+        # Family services - 1 Factor (kaofamily group, admins retained)
+        - domain:
+            - "web.${SECRET_DEV_DOMAIN}"
+          policy: one_factor
+          subject:
+            - "group:kaofamily"
+            - "group:administrators"
+
         # Public services - 1 Factor
         - domain:
             #home
