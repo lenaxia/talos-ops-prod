@@ -37,15 +37,22 @@ spec:
         containers:
           app:
             # OpenAI-compatible /v1/audio/speech proxy for Microsoft Edge neural
-            # voices (zh-HK-HiuMaanNeural etc). Tiny stateless sidecar for the
-            # LiteLLM gateway — paired with mamahuhu's MODEL_TTS_CA=edge.
-            # NOTE: pin a versioned tag once the project publishes one.
+            # voices (travisvn/openai-edge-tts, GPL-3.0, personal use). Cantonese:
+            # zh-HK-HiuMaanNeural / zh-HK-WanLungNeural. Paired with LiteLLM
+            # model `edge` and mamahuhu's MODEL_TTS_CA=edge.
+            # Upstream publishes no version tags (only latest/canary) — pinned
+            # by digest; bump via Renovate/manual digest refresh.
             image:
-              repository: ghcr.io/rany2/edge-tts
-              tag: latest
+              repository: docker.io/travisvn/openai-edge-tts
+              tag: latest@sha256:af8df8fb39719623cb6c3dbcba87ab65813030d97e20ae436d3161a53d41d72a
             env:
               - name: TZ
                 value: ${TIMEZONE}
+              # any string works; must match the placeholder LiteLLM sends
+              - name: API_KEY
+                value: placeholder
+              - name: PORT
+                value: '5050'
             probes:
               liveness:
                 enabled: true
