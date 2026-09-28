@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname edge-tts
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.2.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  upgrade:
+    timeout: 15m
+    remediation:
+      retries: 3
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+
+    controllers:
+      app:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          app:
+            # OpenAI-compatible /v1/audio/speech proxy for Microsoft Edge neural
+            # voices (travisvn/openai-edge-tts, GPL-3.0, personal use). Cantonese:
+            # zh-HK-HiuMaanNeural / zh-HK-WanLungNeural. Paired with LiteLLM
+            # model `edge` and mamahuhu's MODEL_TTS_CA=edge.
+            # Upstream publishes no version tags (only latest/canary) — pinned
+            # by digest; bump via Renovate/manual digest refresh.
+            image:
+              repository: docker.io/travisvn/openai-edge-tts
+              tag: latest@sha256:af8df8fb39719623cb6c3dbcba87ab65813030d97e20ae436d3161a53d41d72a
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              # any string works; must match the placeholder LiteLLM sends
+              - name: API_KEY
+                value: placeholder
+              - name: PORT
+                value: '5050'
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 5050
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 5050
+                  initialDelaySeconds: 5
+                  periodSeconds: 15
+                  failureThreshold: 3
+                  timeoutSeconds: 5
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 5050
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  failureThreshold: 30
+                  timeoutSeconds: 5
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+
+    service:
+      app:
+        controller: app
+        primary: true
+        type: ClusterIP
+        ports:
+          http:
+            port: 5050
