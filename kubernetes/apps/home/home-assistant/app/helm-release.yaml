@@ -155,7 +155,7 @@ spec:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: home-assistant
-          hajimari.io/group: &namespace home
+          hajimari.io/group: Home
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
         hosts:
           - host: &host hass.${SECRET_DEV_DOMAIN}
@@ -179,7 +179,7 @@ spec:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: home-assistant
-          hajimari.io/group: *namespace
+          hajimari.io/group: Home
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd

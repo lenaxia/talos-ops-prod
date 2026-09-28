@@ -661,7 +661,7 @@ spec:
           hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: mdi:api
           hajimari.io/info: ChatGPT
-          hajimari.io/group: &namespace home
+          hajimari.io/group: AI
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: 

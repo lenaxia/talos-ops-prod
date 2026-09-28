@@ -44,7 +44,7 @@ spec:
           hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: mdi:sword
           hajimari.io/info: *appname
-          hajimari.io/group: Home
+          hajimari.io/group: Ragnarok
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: 

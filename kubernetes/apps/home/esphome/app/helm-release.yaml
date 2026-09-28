@@ -70,7 +70,7 @@ spec:
           hajimari.io/enable: 'true'
           hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: simple-icons:esphome
-          hajimari.io/group: &namespace home
+          hajimari.io/group: Home
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
         hosts:
           - host: &host esphome.${SECRET_DEV_DOMAIN}
