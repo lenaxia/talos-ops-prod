@@ -27,6 +27,7 @@ resources:
   - ./vllm-classifier/ks.yaml
   - ./kokoro/ks.yaml
   - ./edge-tts/ks.yaml
+  - ./mamahuhu/ks.yaml
   - ./whisper/ks.yaml
   - ./piper/ks.yaml
   - ./watersmart-scraper/ks.yaml
