@@ -606,6 +606,20 @@ spec:
                 supports_response_schema: false
                 supports_vision: false
 
+            # TTS - edge-tts (OpenAI-compatible /v1/audio/speech proxy for
+            # Microsoft Edge neural voices; Cantonese: zh-HK-HiuMaanNeural,
+            # zh-HK-WanLungNeural). Consumed by mamahuhu as MODEL_TTS_CA=edge.
+            - model_name: edge
+              litellm_params:
+                model: openai/edge
+                api_base: http://edge-tts.home.svc.cluster.local:5050/v1
+                api_key: placeholder
+              model_info:
+                supports_tool_choice: false
+                supports_function_calling: false
+                supports_response_schema: false
+                supports_vision: false
+
             # Bedrock
             # Context: 1M, Max output: 64K (source: docs.anthropic.com)
             - model_name: bedrock-claude-sonnet-4.6

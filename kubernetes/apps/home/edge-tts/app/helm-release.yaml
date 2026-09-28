@@ -2,7 +2,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &appname kokoro
+  name: &appname edge-tts
   namespace: &namespace home
 spec:
   interval: 15m
@@ -27,15 +27,6 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
-        # 2026-09-06: relocated off worker-01 — the actions-runner dind
-        # blob (3 CPU/8Gi) needs worker-01's CPU; worker-02 fits this
-        # TTS service with margin. Mirrors the live emergency patch.
-        # 2026-09-28: unpinned per owner request — any worker may host it.
-      tolerations:
-        - key: "dedicated"
-          operator: "Equal"
-          value: "special"
-          effect: "NoSchedule"
 
     controllers:
       app:
@@ -45,9 +36,13 @@ spec:
           reloader.stakater.com/auto: 'true'
         containers:
           app:
+            # OpenAI-compatible /v1/audio/speech proxy for Microsoft Edge neural
+            # voices (zh-HK-HiuMaanNeural etc). Tiny stateless sidecar for the
+            # LiteLLM gateway — paired with mamahuhu's MODEL_TTS_CA=edge.
+            # NOTE: pin a versioned tag once the project publishes one.
             image:
-              repository: ghcr.io/remsky/kokoro-fastapi-cpu
-              tag: v0.9.0
+              repository: ghcr.io/rany2/edge-tts
+              tag: latest
             env:
               - name: TZ
                 value: ${TIMEZONE}
@@ -56,48 +51,44 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /health
-                    port: 8880
-                  initialDelaySeconds: 30
+                  tcpSocket:
+                    port: 5050
+                  initialDelaySeconds: 10
                   periodSeconds: 30
                   failureThreshold: 5
-                  timeoutSeconds: 10
+                  timeoutSeconds: 5
               readiness:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /health
-                    port: 8880
-                  initialDelaySeconds: 15
+                  tcpSocket:
+                    port: 5050
+                  initialDelaySeconds: 5
                   periodSeconds: 15
                   failureThreshold: 3
-                  timeoutSeconds: 10
+                  timeoutSeconds: 5
               startup:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /health
-                    port: 8880
-                  initialDelaySeconds: 15
-                  periodSeconds: 10
+                  tcpSocket:
+                    port: 5050
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
                   failureThreshold: 30
-                  timeoutSeconds: 10
+                  timeoutSeconds: 5
             resources:
               requests:
-                cpu: "1500m"
-                memory: "2Gi"
+                cpu: 100m
+                memory: 128Mi
               limits:
-                memory: "6Gi"
+                memory: 512Mi
 
     service:
       app:
         controller: app
         primary: true
-        type: LoadBalancer
-        loadBalancerIP: ${SVC_KOKORO_ADDR}
+        type: ClusterIP
         ports:
           http:
-            port: 8880
+            port: 5050
