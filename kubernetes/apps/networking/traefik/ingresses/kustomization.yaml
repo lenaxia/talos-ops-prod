@@ -9,6 +9,7 @@ resources:
   - synology-file.yaml
   - synology-photos.yaml
   - synology-drive.yaml
+  - synology-moments.yaml
   - portainer.yaml
     #- phpmyadmin.yaml
     #- plex.yaml
