@@ -40,7 +40,7 @@ spec:
           main:
             image:
               repository: sportarr/sportarr
-              tag: 4.1.8.1118@sha256:ef94425debeb54b36fcd3481d6620d3471df0b7b2f196232152be55a03e8cbbf
+              tag: 4.1.9.1119@sha256:15f05b0e541adac3d8404b24bdfdc3210a8605969ec0765a180cca77b94ee3ef
               pullPolicy: Always
             env:
               TZ: ${TIMEZONE}
