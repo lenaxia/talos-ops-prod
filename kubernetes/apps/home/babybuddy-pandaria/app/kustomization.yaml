@@ -1,17 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 commonLabels:
   app.kubernetes.io/instance: babybuddy-pandaria
   app.kubernetes.io/name: babybuddy-pandaria
-kind: Kustomization
 namespace: home
-patches:
-- path: patches/patch-postgres.yaml
-  target:
-    group: helm.toolkit.fluxcd.io
-    kind: HelmRelease
-    name: babybuddy-pandaria
-    version: v2
+# Spun down 2026-09-28: pandaria's babybuddy instance disabled; data
+# retained for revival — config PVC below + rows in the shared external
+# postgres (DB_HOST/DB_NAME in the secret). To revive: restore
+# helm-release.yaml + patches/ and the ks healthCheck.
 resources:
-- helm-release.yaml
-- config-pvc.yaml
-- secret.sops.yaml
+  - config-pvc.yaml
+  - secret.sops.yaml

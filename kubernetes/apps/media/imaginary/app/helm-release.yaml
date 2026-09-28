@@ -72,7 +72,7 @@ spec:
       main:
         enabled: true
         annotations:
-          hajimari.io/enable: 'true'
+          hajimari.io/enable: 'false'
           hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: image-size-select-large
           hajimari.io/group: Media

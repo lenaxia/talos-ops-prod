@@ -327,7 +327,7 @@ spec:
         className: traefik
         annotations:
           hajimari.io/enable: "true"
-          hajimari.io/visible-groups: "administrators,kaofamily"
+          hajimari.io/visible-groups: "kaofamily,kaocore"
           hajimari.io/icon: chat-processing-outline
           hajimari.io/group: AI
           hajimari.io/info: AI Chat 

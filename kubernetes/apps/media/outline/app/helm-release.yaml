@@ -74,7 +74,7 @@ spec:
           hajimari.io/visible-groups: 'kaofamily'
           hajimari.io/icon: simple-icons:outline
           hajimari.io/appName: Wiki Outline
-          hajimari.io/group: Media
+          hajimari.io/group: Home
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: 

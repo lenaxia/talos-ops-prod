@@ -105,6 +105,11 @@ spec:
         className: traefik
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-production
+          hajimari.io/enable: "true"
+          hajimari.io/visible-groups: "administrators"
+          hajimari.io/icon: "mdi:calendar-check"
+          hajimari.io/appName: TinyRSVP
+          hajimari.io/group: Home
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd
