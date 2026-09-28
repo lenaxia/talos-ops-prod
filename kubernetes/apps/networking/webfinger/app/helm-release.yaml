@@ -81,7 +81,7 @@ spec:
       main:
         enabled: true
         annotations:
-          hajimari.io/enable: 'true'
+          hajimari.io/enable: 'false'
           hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: mdi:fingerprint
           hajimari.io/info: *appname

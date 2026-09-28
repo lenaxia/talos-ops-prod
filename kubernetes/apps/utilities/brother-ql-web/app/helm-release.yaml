@@ -60,7 +60,7 @@ spec:
           hajimari.io/visible-groups: 'administrators'
           hajimari.io/icon: mdi:label
           hajimari.io/info: brother-ql-web
-          hajimari.io/group: &namespace utilities
+          hajimari.io/group: Utilities
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
           traefik.ingress.kubernetes.io/router.middlewares: 
