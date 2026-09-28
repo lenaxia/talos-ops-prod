@@ -62,9 +62,9 @@ spec:
                 value: Remote-User
               - name: AUTH_NAME_HEADER
                 value: Remote-Name
-              # LLM gateway (LiteLLM) — same endpoint k8sgpt/librechat use
+              # LLM gateway (LiteLLM) — same gateway as k8sgpt/librechat (open-webui pattern)
               - name: OPENAI_API_BASE
-                value: https://ai.thekao.cloud/v1
+                value: https://ai.${SECRET_DEV_DOMAIN}/v1
               - name: OPENAI_API_KEY
                 valueFrom:
                   secretKeyRef:
@@ -127,6 +127,7 @@ spec:
     # (~300MB); /healthz only answers once listening — probes cover readiness
     persistence:
       data:
+        type: persistentVolumeClaim
         existingClaim: mamahuhu-data
         globalMounts:
           - path: /data
@@ -159,8 +160,9 @@ spec:
               - path: /
                 pathType: Prefix
                 service:
+                  identifier: app
                   port: http
         tls:
           - hosts:
               - *uri
-            secretName: mamahuhu-tls
+            secretName: *uri
