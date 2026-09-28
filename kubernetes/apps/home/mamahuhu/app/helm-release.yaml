@@ -1,0 +1,166 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname mamahuhu
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.2.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  upgrade:
+    timeout: 15m
+    remediation:
+      retries: 3
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+
+    controllers:
+      app:
+        type: deployment
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            # 馬馬虎虎 — family phrasebook: capture (text/photo/speech) → Chinese
+            # with annotations (zhuyin/jyutping), per-user lists, SRS review.
+            # https://github.com/lenaxia/mamahuhu
+            image:
+              repository: ghcr.io/lenaxia/mamahuhu
+              tag: 0.4.0
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              - name: PORT
+                value: "8787"
+              # single storage root: sqlite + photos + tts disk cache (PVC)
+              - name: DATA_DIR
+                value: /data
+              # identity comes from Authelia forward-auth headers
+              - name: TRUST_PROXY_HEADERS
+                value: "1"
+              - name: AUTH_HEADER
+                value: Remote-User
+              - name: AUTH_NAME_HEADER
+                value: Remote-Name
+              # LLM gateway (LiteLLM) — same endpoint k8sgpt/librechat use
+              - name: OPENAI_API_BASE
+                value: https://ai.thekao.cloud/v1
+              - name: OPENAI_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: mamahuhu
+                    key: litellm-api-key
+              # models: qwen chat/vision, kokoro (Mandarin TTS), edge-tts
+              # (Cantonese TTS, deployed alongside kokoro)
+              - name: MODEL_CHAT
+                value: default
+              - name: MODEL_TTS
+                value: kokoro
+              - name: TTS_VOICE
+                value: zf_xiaoxiao
+              - name: MODEL_TTS_CA
+                value: edge
+              - name: TTS_VOICE_CA
+                value: zh-HK-HiuMaanNeural
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8787
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  failureThreshold: 5
+                  timeoutSeconds: 10
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8787
+                  initialDelaySeconds: 15
+                  periodSeconds: 15
+                  failureThreshold: 3
+                  timeoutSeconds: 10
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8787
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+                  failureThreshold: 30
+                  timeoutSeconds: 10
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                memory: 1536Mi
+
+    # dictionary (CEDICT 124k + canto words.hk) loads into RAM at boot
+    # (~300MB); /healthz only answers once listening — probes cover readiness
+    persistence:
+      data:
+        existingClaim: mamahuhu-data
+        globalMounts:
+          - path: /data
+
+    service:
+      app:
+        controller: app
+        primary: true
+        type: ClusterIP
+        ports:
+          http:
+            port: 8787
+
+    ingress:
+      app:
+        enabled: true
+        className: traefik
+        annotations:
+          hajimari.io/enable: "true"
+          hajimari.io/visible-groups: administrators
+          hajimari.io/icon: translate
+          hajimari.io/info: Mamahuhu 馬馬虎虎
+          hajimari.io/group: Home
+          cert-manager.io/cluster-issuer: letsencrypt-production
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
+        hosts:
+          - host: &uri mamahuhu.${SECRET_DEV_DOMAIN}
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  port: http
+        tls:
+          - hosts:
+              - *uri
+            secretName: mamahuhu-tls
