@@ -46,11 +46,11 @@ transforms:
       if .app == "traefik" && starts_with(to_string(.message) ?? "", "{") {
         tmsg, terr = parse_json(.message)
         if terr == null && is_object(tmsg) {
-          for_each(tmsg) -> |key, value| {
-            if !contains(["app", "namespace", "node", "custom_app_name", "message"], key) {
-              set!(., [key], value)
-            }
-          }
+          del(tmsg.app)
+          del(tmsg.namespace)
+          del(tmsg.node)
+          del(tmsg.custom_app_name)
+          . = merge(., tmsg)
         }
       }
 
