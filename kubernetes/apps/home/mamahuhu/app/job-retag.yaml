@@ -10,7 +10,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: mamahuhu-retag
+  name: mamahuhu-retag-v2
   namespace: home
   labels:
     app.kubernetes.io/name: mamahuhu
