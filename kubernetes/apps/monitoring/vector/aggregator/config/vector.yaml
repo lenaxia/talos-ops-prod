@@ -39,6 +39,21 @@ transforms:
       .namespace = .kubernetes.pod_namespace
       .node = .kubernetes.pod_node_name
 
+      # Traefik access logs are JSON in .message — flatten them into
+      # first-class fields so LogsQL can group/filter without per-query
+      # parsing (e.g. stats by (RequestHost, request_Remote-User)).
+      # Only merges keys we don't already set, message is preserved.
+      if .app == "traefik" && starts_with(to_string(.message) ?? "", "{") {
+        tmsg, terr = parse_json(.message)
+        if terr == null && is_object(tmsg) {
+          for_each(tmsg) -> |key, value| {
+            if !contains(["app", "namespace", "node", "custom_app_name", "message"], key) {
+              set!(., [key], value)
+            }
+          }
+        }
+      }
+
 #  opnsense_remap:
 #    type: remap
 #    inputs:
