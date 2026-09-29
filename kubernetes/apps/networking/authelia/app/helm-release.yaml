@@ -48,6 +48,8 @@ spec:
       repository: lenaxia/authelia
       tag: 4.39.20-userbound
       pullPolicy: IfNotPresent
+      pullSecrets:
+        - ghcr-secret
 
     service:
       type: LoadBalancer
@@ -66,9 +68,6 @@ spec:
       # The 2026-09-01 zombie-pod incident left 12 stale replicas and a
       # single live pod — a second replica removes that fragility.
       replicas: 2
-      # TEMPORARY with the fork image above: pulls from private ghcr.
-      imagePullSecrets:
-        - name: ghcr-secret
 
       selectors:
         nodeSelector:
