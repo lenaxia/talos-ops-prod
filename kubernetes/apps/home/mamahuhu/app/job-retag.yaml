@@ -1,11 +1,12 @@
 ---
-# One-shot retag job: re-tags every mamahuhu entry with the current tagger
-# prompt (dist/retag.js, shipped in the image since v0.4.3).
+# One-shot retag job: re-tags EVERY user's mamahuhu entries with the current
+# tagger prompt (dist/retag.js — all-users via direct SQL since v0.4.4).
 #
 # Runs to completion and STAYS (no ttlSecondsAfterFinished — TTL-deleting the
-# Job would make Flux recreate and re-run it, burning gateway calls; Job specs
-# are immutable, so bumping means deleting + re-applying: edit, then
-# `kubectl -n home delete job mamahuhu-retag` and let Flux re-create it).
+# Job would make Flux recreate and re-run it, burning gateway calls).
+# Job specs are immutable: to ship a new retag run, bump BOTH the image here
+# AND the Job name suffix (…-v2 → …-v3) so Flux prunes the completed Job and
+# creates the new one — no manual kubectl needed.
 # FORCE=0 would only fill untagged entries; default re-tags everything.
 apiVersion: batch/v1
 kind: Job
@@ -41,7 +42,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: retag
-          image: ghcr.io/lenaxia/mamahuhu:0.4.3
+          image: ghcr.io/lenaxia/mamahuhu:0.4.4
           command: ["node", "dist/retag.js"]
           env:
             - name: DATA_DIR
