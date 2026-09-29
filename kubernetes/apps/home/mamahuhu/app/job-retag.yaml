@@ -1,0 +1,71 @@
+---
+# One-shot retag job: re-tags every mamahuhu entry with the current tagger
+# prompt (dist/retag.js, shipped in the image since v0.4.3).
+#
+# Runs to completion and STAYS (no ttlSecondsAfterFinished — TTL-deleting the
+# Job would make Flux recreate and re-run it, burning gateway calls; Job specs
+# are immutable, so bumping means deleting + re-applying: edit, then
+# `kubectl -n home delete job mamahuhu-retag` and let Flux re-create it).
+# FORCE=0 would only fill untagged entries; default re-tags everything.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mamahuhu-retag
+  namespace: home
+  labels:
+    app.kubernetes.io/name: mamahuhu
+    app.kubernetes.io/instance: mamahuhu
+    app.kubernetes.io/component: retag
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mamahuhu
+        app.kubernetes.io/component: retag
+    spec:
+      restartPolicy: Never
+      # the PVC is RWO — pin to whatever node runs the app pod so both can
+      # mount it (sqlite WAL handles the two-process access)
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: mamahuhu
+                  app.kubernetes.io/component: app
+              topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: retag
+          image: ghcr.io/lenaxia/mamahuhu:0.4.3
+          command: ["node", "dist/retag.js"]
+          env:
+            - name: DATA_DIR
+              value: /data
+            - name: OPENAI_API_BASE
+              value: https://ai.${SECRET_DEV_DOMAIN}/v1
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mamahuhu
+                  key: litellm-api-key
+            - name: MODEL_CHAT
+              value: default
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mamahuhu-data
