@@ -50,7 +50,10 @@ transforms:
           del(tmsg.namespace)
           del(tmsg.node)
           del(tmsg.custom_app_name)
-          . = merge(., tmsg)
+          merged, merr = merge(., tmsg)
+          if merr == null {
+            . = merged
+          }
         }
       }
 
