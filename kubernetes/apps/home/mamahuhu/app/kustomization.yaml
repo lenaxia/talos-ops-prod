@@ -9,3 +9,4 @@ resources:
   - helm-release.yaml
   - pvc-data.yaml
   - secret.sops.yaml
+  - job-retag.yaml
