@@ -108,8 +108,44 @@ spec:
     
       ## Options are totp, webauthn, mobile_push.
       default_2fa_method: "mobile_push"
-    
+
       theme: light
+
+      ##
+      ## Server Configuration
+      ##
+      ## forward-auth is the only authz endpoint this cluster uses (Traefik
+      ## middleware middlewares-authelia). The Authelia default authn_strategies
+      ## for it include HeaderAuthorization (basic scheme); any request carrying
+      ## an Authorization header with a foreign scheme (e.g. Jellyfin web's
+      ## `MediaBrowser Token="..."`) then hard-fails with 401 +
+      ## `WWW-Authenticate: Basic` — the browser shows a native basic-auth popup
+      ## instead of the Authelia portal redirect. Restrict forward-auth to
+      ## cookie sessions so such headers are ignored. authz config here
+      ## disables automatic_authz_implementations, so the other standard
+      ## endpoints are pinned to their documented defaults explicitly.
+      server:
+        endpoints:
+          authz:
+            forward-auth:
+              implementation: 'ForwardAuth'
+              authn_strategies:
+                - name: 'CookieSession'
+            auth-request:
+              implementation: 'AuthRequest'
+              authn_strategies:
+                - name: 'HeaderAuthRequestProxyAuthorization'
+                  schemes:
+                    - 'Basic'
+                - name: 'CookieSession'
+            ext-authz:
+              implementation: 'ExtAuthz'
+              authn_strategies:
+                - name: 'HeaderAuthorization'
+                  schemes:
+                    - 'Basic'
+                - name: 'CookieSession'
+
     
       ##
       ## TOTP Configuration
