@@ -1,6 +1,9 @@
 ---
-# Drawdown gate / decision engine (trade.py): -5% stop and +15% target exit
-# checks before entries, Mon-Fri shortly after the US open (13:30 UTC).
+# Drawdown gate (dd_screen.py): TradingAgents deep-dive on trade.py buy
+# candidates, veto-only. dd_screen needs the TradingAgents venv, which the
+# base ai4trade image does not carry — the DD gate runs workspace-side until
+# a TA-enabled image lands (this CronJob's image field may then differ from
+# the rest of the stack). Suspended so the schedule exists but does not fire.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -11,6 +14,7 @@ metadata:
 spec:
   schedule: '45 13 * * 1-5'
   timeZone: UTC
+  suspend: true
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

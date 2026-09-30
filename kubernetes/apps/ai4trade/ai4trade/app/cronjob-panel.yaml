@@ -1,6 +1,7 @@
 ---
-# Monthly full-universe snapshot panel (marketdata.py) — liquid mega-caps,
-# ETFs, and the momentum extras from universe.txt.
+# AIHF panel (aihf_panel.py) — stub for now (prints a pending note, exit 0)
+# until FINANCIAL_DATASETS_API_KEY + mandate wiring land; kept so the
+# monthly schedule exists.
 apiVersion: batch/v1
 kind: CronJob
 metadata:

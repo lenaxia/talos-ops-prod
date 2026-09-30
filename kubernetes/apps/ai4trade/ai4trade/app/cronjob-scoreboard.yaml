@@ -1,8 +1,9 @@
 ---
-# Forward-tracker scoreboard (forward/forward.py): refetch daily OHLC, replay
-# all out-of-sample variants, print the comparison JSON. 21:30 UTC Mon-Fri
-# per forward/NOTES.md (after the US close, outside the 5-bar revision
-# window's partial-bar risk).
+# Scoreboard (forward/forward.py) AND the CONTROL buy-and-hold clone
+# (control.py): refetch daily OHLC, replay all out-of-sample variants,
+# print the comparison JSON, then mark the control group to market.
+# 21:30 UTC Mon-Fri per forward/NOTES.md (after the US close, outside the
+# 5-bar revision window's partial-bar risk).
 apiVersion: batch/v1
 kind: CronJob
 metadata:
