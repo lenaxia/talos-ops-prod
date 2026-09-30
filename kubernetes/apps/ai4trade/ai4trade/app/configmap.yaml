@@ -1,0 +1,58 @@
+---
+# Runtime config for the ai4trade CronJobs. The universe and sleeve files are
+# mounted as files at /etc/ai4trade (the entrypoint copies them over the
+# baked-in copies in the image). Only TZ is a valid env-var key, so envFrom
+# configMapRef effectively injects TZ; the two dotted keys are skipped by the
+# kubelet (harmless) and consumed via the volume mount instead.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai4trade-config
+  namespace: ai4trade
+  labels:
+    app.kubernetes.io/name: ai4trade
+data:
+  TZ: UTC
+  universe.txt: |
+    # Liquid US equity universe for the ai4trade engine (~110 names).
+    # Union'd into every marketdata.py snapshot automatically.
+    # Benchmarks SPY/QQQ are always added by marketdata.py itself.
+    AAPL ABBV ABT ACN ADBE AMD AMGN AMT AMZN AVGO AXP BA BAC BK BKNG BLK BMY BRK-B C CAT CHTR CL CMCSA COF COP COST CRM CSCO CVS CVX DE DHR DIS DUK EMR ETN F FDX GD GE GEV GILD GOOG GOOGL GS HD HON IBM INTC INTU ISRG JNJ JPM KHC KO LIN LLY LMT LOW MA MCD MDLZ MDT MET META MMM MO MRK MS MSFT NEE NFLX NKE NVDA ORCL PEP PFE PG PLTR PM PYPL QCOM RTX SBUX SCHW SO SPG T TGT TMO TMUS TSLA TXN UNH UNP UPS V VST VZ WFC WMT XOM
+    # momentum-relevant extras seen in feed/research
+    MU WDC PGR ODFL CRWD PANW ANET SMCI CEG APP NET DASH
+  personal_sleeve.json: |
+    {
+      "as_of": "2026-09-29",
+      "source": "Portfolio_Positions_Sep-29-2026.csv",
+      "rsu_excluded": true,
+      "investable_total_usd": 894019.47,
+      "weights_pct": {
+        "VOO": 22.42,
+        "VTI": 18.7,
+        "VXUS": 10.58,
+        "BND": 9.34,
+        "SPYG": 7.44,
+        "VEA": 6.66,
+        "XLK": 6.33,
+        "NVDA": 5.17,
+        "QQQ": 4.58,
+        "AAPL": 4.16,
+        "SPAXX**": 2.7,
+        "FIW": 1.1,
+        "SPY": 0.44,
+        "DAL": 0.28,
+        "CORE**": 0.1
+      },
+      "cash_pct_of_investable": 0.93,
+      "notes": {
+        "VTI": "FSKAX",
+        "VEA": "FOSFX",
+        "XLK": "FSPTX+FTEC",
+        "SPYG": "FSPGX+401k SSGA LC growth",
+        "VOO": "VANG500+55% T2050",
+        "VXUS": "30% T2050",
+        "BND": "FTBFX+15% T2050",
+        "QQQ": "QQQ+QQQJ",
+        "AMZN": "EXCLUDED (unvested RSUs, owner decision)"
+      }
+    }

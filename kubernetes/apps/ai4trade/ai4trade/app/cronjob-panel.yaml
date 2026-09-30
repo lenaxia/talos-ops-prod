@@ -1,0 +1,60 @@
+---
+# Monthly full-universe snapshot panel (marketdata.py) — liquid mega-caps,
+# ETFs, and the momentum extras from universe.txt.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ai4trade-panel
+  namespace: ai4trade
+  labels:
+    app.kubernetes.io/name: ai4trade
+spec:
+  schedule: '0 15 1 * *'
+  timeZone: UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: ai4trade
+        spec:
+          restartPolicy: Never
+          nodeSelector:
+            node-role.kubernetes.io/worker: 'true'
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          containers:
+            - name: panel
+              image: ghcr.io/lenaxia/ai4trade:1.0.0
+              args: ['panel']
+              envFrom:
+                - secretRef:
+                    name: ai4trade-secret
+                - configMapRef:
+                    name: ai4trade-config
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  memory: 1Gi
+              volumeMounts:
+                - name: state
+                  mountPath: /workspace/ai4trade
+                - name: config
+                  mountPath: /etc/ai4trade
+                  readOnly: true
+          volumes:
+            - name: state
+              persistentVolumeClaim:
+                claimName: ai4trade-state
+            - name: config
+              configMap:
+                name: ai4trade-config

@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./pvc.yaml
+  - ./configmap.yaml
+  - ./cronjob-heartbeat.yaml
+  - ./cronjob-ddgate.yaml
+  - ./cronjob-daily.yaml
+  - ./cronjob-scoreboard.yaml
+  - ./cronjob-panel.yaml
+# NOTE: ai4trade-secret.example.yaml is a TEMPLATE only (placeholders). It is
+# intentionally not listed here — copy it to secret.sops.yaml, fill in real
+# values, and sops-encrypt it before merge per repo policy (.sops.yaml
+# creation rules only match kubernetes/.*\.sops\.ya?ml).
