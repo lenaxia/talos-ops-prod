@@ -1,0 +1,60 @@
+---
+# Drawdown gate / decision engine (trade.py): -5% stop and +15% target exit
+# checks before entries, Mon-Fri shortly after the US open (13:30 UTC).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ai4trade-ddgate
+  namespace: ai4trade
+  labels:
+    app.kubernetes.io/name: ai4trade
+spec:
+  schedule: '45 13 * * 1-5'
+  timeZone: UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: ai4trade
+        spec:
+          restartPolicy: Never
+          nodeSelector:
+            node-role.kubernetes.io/worker: 'true'
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          containers:
+            - name: ddgate
+              image: ghcr.io/lenaxia/ai4trade:1.0.0
+              args: ['ddgate']
+              envFrom:
+                - secretRef:
+                    name: ai4trade-secret
+                - configMapRef:
+                    name: ai4trade-config
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+              volumeMounts:
+                - name: state
+                  mountPath: /workspace/ai4trade
+                - name: config
+                  mountPath: /etc/ai4trade
+                  readOnly: true
+          volumes:
+            - name: state
+              persistentVolumeClaim:
+                claimName: ai4trade-state
+            - name: config
+              configMap:
+                name: ai4trade-config
