@@ -1,7 +1,10 @@
 ---
-# Daily CONTROL mark-to-market (control.py): buy-and-hold clone of the real
-# portfolio, anchored at 100,000. Idempotent per UTC day; skips weekends on
-# its own, so the every-day schedule is intentional.
+# Daily workflow (daily_run.py, no LLM): marketdata snapshot -> trade
+# decision -> execute exits then two-layer-gated entries (DD veto from
+# dd_verdicts.json + headline screen; max 2 trades/day) -> one platform
+# post -> state/log. daily_run keeps its state under /data, so the same PVC
+# is mounted twice: /workspace/ai4trade (legacy scripts) and /data (state
+# root) — one volume, one source of truth.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -49,6 +52,8 @@ spec:
               volumeMounts:
                 - name: state
                   mountPath: /workspace/ai4trade
+                - name: state
+                  mountPath: /data
                 - name: config
                   mountPath: /etc/ai4trade
                   readOnly: true
