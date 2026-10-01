@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.4.0/charts/library/common/values.schema.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -7,488 +7,99 @@ metadata:
   namespace: &namespace home
 spec:
   interval: 15m
-  chart:
-    spec:
-      chart: app-template
-      version: 5.2.1
-      sourceRef:
-        kind: HelmRepository
-        name: bjw-s
-        namespace: flux-system
+  chartRef:
+    kind: OCIRepository
+    name: direwolf-operator
+    # same namespace as this HelmRelease (see ../app/repository.yaml)
+  driftDetection:
+    mode: enabled
   maxHistory: 3
   install:
-    createNamespace: true
-    timeout: 15m
+    # CRDs vendored under ../crds (fork 29eb075 versions, newer than chart's)
+    crds: Skip
     remediation:
       retries: 3
   upgrade:
+    crds: Skip
     cleanupOnFail: true
-    timeout: 15m
     remediation:
       retries: 3
   values:
     # ──────────────────────────────────────────────────────────────────────
-    # Games on Whales — Wolf (Moonlight game streaming server)
+    # games-on-whales — via the Fenrir/direwolf operator
     # ──────────────────────────────────────────────────────────────────────
-    # Streams games to Moonlight clients on the LAN from worker-04's spare
-    # RTX 3090 (#3). Wolf itself is a thin streaming broker: when a client
-    # launches an app (Steam, RetroArch, custom), Wolf spawns that app as a
-    # container on-demand and tears it down when the session ends.
+    # Architecture (replaces the 2026-10-01 wolf+podman-sidecar attempt,
+    # which could not get GL/EGL working for app containers spawned through
+    # a nested runtime): the direwolf operator manages everything as native
+    # k8s resources —
     #
-    # Architecture (no Docker on Talos nodes — the only host mounts are the
-    # read-only node-root driver tree and the /dev, /run/udev device paths):
+    #   direwolf-operator  reconcile App/User CRs into session pods:
+    #                      each session = one pod (wolf + wolf-agent
+    #                      sidecars + the app container from the App CR),
+    #                      GPU via runtimeClassName: nvidia (no nested
+    #                      runtime, no CDI-in-pod, no lib mounts).
+    #   moonlight-proxy    fronts HTTP/HTTPS for pairing + app launch;
+    #                      video/audio/control flow peer-to-peer to the
+    #                      session service, which shares the LB VIP with
+    #                      the proxy via the Cilium LBIPAM sharing key.
     #
-    #   ┌─────────────────────────── pod (privileged) ─────────────────────┐
-    #   │  wolf (ghcr.io/games-on-whales/wolf:stable)                     │
-    #   │    - Moonlight HTTPS/RTSP/RTP endpoints (LB VIP ${SVC_GOW_ADDR})│
-    #   │    - spawns app containers through the podman API socket        │
-    #   │    - GPU: spare 3090 #3 via NVIDIA_VISIBLE_DEVICES UUID pin     │
-    #   │                                                                 │
-    #   │  podman (quay.io/podman/stable, privileged, glibc/ubi)          │
-    #   │    - `podman system service` exposing a docker-API-compatible   │
-    #   │      unix socket in a shared emptyDir (WOLF_DOCKER_SOCKET)      │
-    #   │    - image store on the 200Gi runtime-data PVC                  │
-    #   │                                                                 │
-    #   │  cdi-generator (initContainer: wolf image + node's nvidia-ctk)  │
-    #   │    - writes the CDI spec the podman sidecar resolves GPUs from  │
-    #   └─────────────────────────────────────────────────────────────────┘
-    #
-    # ── How the inner (spawned) containers get the GPU — VERIFIED LIVE ───
-    # Validated 2026-10-01 on worker-04 with an integration-test pod:
-    # `podman run --rm --device nvidia.com/gpu=all nvidia/cuda… nvidia-smi`
-    # listed all 4 GPUs inside the inner container. Recipe:
-    #
-    #   1. cdi-generator runs the NODE's static nvidia-ctk (1.19.1, from
-    #      the Talos nvidia-container-toolkit extension, read-only mount of
-    #      /usr/local/bin) in a wolf-image container with all GPUs injected
-    #      (NVIDIA_VISIBLE_DEVICES=all):
-    #        nvidia-ctk cdi generate \
-    #          --nvidia-cdi-hook-path /nvidia-root/usr/local/bin/nvidia-cdi-hook \
-    #          --library-search-path /nvidia-root/usr/local/lib \
-    #          --output /var/run/cdi/nvidia.yaml
-    #   2. sed rewrites the spec: every non-/dev hostPath gets the
-    #      /nvidia-root prefix (the node root, mounted read-only into the
-    #      podman sidecar), /usr/bin/nvidia* symlinks and debian-multiarch
-    #      lib paths are normalised to the node's real layout, and
-    #      containerPaths keep canonical locations. /dev/* stays bare —
-    #      the privileged sidecar sees the host device nodes.
-    #   3. /var/run/cdi is an emptyDir shared with podman, which reads CDI
-    #      specs natively. Wolf apps set (Wolf UI / config.toml):
-    #        devices = ["nvidia.com/gpu=GPU-755d8528-..."]  (or =all)
-    #
-    # WHY PODMAN, NOT docker:dind: the CDI spec's create-symlinks/ldcache
-    # hooks exec nvidia-cdi-hook — a glibc-dynamic node binary. docker's
-    # dind images are alpine/musl: hook exec fails with ENOENT (verified
-    # live). quay.io/podman/stable is ubi/glibc and runs the hooks fine;
-    # Wolf officially accepts a podman socket (upstream quickstart).
-    # If this CDI path ever breaks, fall back to a kicad-style single
-    # Sunshine desktop pod (pattern: home/kicad/app/helm-release.yaml,
-    # image built in lenaxia/containers) with the same GPU/LB/storage
-    # layout.
-    #
-    # ── Verified facts used below (probed on worker-04, 2026-10-01) ──────
-    #   GPU-755d8528-c8c7-5fd4-f441-f061368f4547 = PCI 46:00.0 = 3090 #3
-    #     → render node /dev/dri/renderD130 (WOLF_RENDER_NODE)
-    #   nvidia_drm modeset already Y; driver 595.91.07, toolkit 1.19.1;
-    #   node /usr/local/{bin,lib} nvidia tree == what the runtime injects.
-    #   GPU previously referenced by comfyui (replicas: 0) — note added there.
-    #
-    # ── Privilege model ──────────────────────────────────────────────────
-    # Both containers run privileged. Upstream Wolf is unprivileged +
-    # `--device-cgroup-rule "c 13:* rmw"`, but Kubernetes has no
-    # device-cgroup-rule equivalent; privileged is the working substitute
-    # (host device access for the runtime sidecar). The pod is confined to
-    # worker-04 via nodeSelector + the dedicated=special:NoSchedule taint.
-    #
-    # ── Input devices limitation ─────────────────────────────────────────
-    # No uinput/uhid: the Talos kernel (6.18.48-talos) does not ship those
-    # modules (verified 2026-10-01). Moonlight mouse + keyboard streaming
-    # only; virtual gamepads unavailable. See the note in
-    # kubernetes/bootstrap/talos/patches/nvidia/gpu-worker-patch.yaml.
-    #
-    # Docs: https://games-on-whales.github.io/wolf/stable/user/quickstart.html
+    # Images are the cogito-ops "known-good" set (their Amnesia cluster:
+    # Talos 1.13 + NVIDIA 595 open modules + Steam video/audio/gameplay
+    # proven 2026-09-30, plans/fenrir-upstream-findings.md):
+    #   operator/proxy: timblakely's builds of shrinedogg/fenrir@29eb075
+    #     (multi-user fork + dial-timeout/app-selection/AddApp/runner
+    #     fixes on top)
+    #   wolf/wolf-agent: shrinedogg's wolf fork images (carry wolf#466-era
+    #     fixes; the #465 start_audio_server bug is patched at runtime by
+    #     the wolf-root-entrypoint ConfigMap in ../sessions).
     # ──────────────────────────────────────────────────────────────────────
-    defaultPodOptions:
-      nodeSelector:
-        kubernetes.io/hostname: worker-04
-      tolerations:
-        - key: "dedicated"
-          operator: "Equal"
-          value: "special"
-          effect: "NoSchedule"
-      securityContext:
-        # Wolf apps run as UID/GID 1000 (upstream default); the config PVC
-        # is chowned via fsGroup. podman overrides to root per-container.
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
     controllers:
-      main:
-        type: deployment
-        replicas: 1
-        # Recreate: single-replica app with two RWO Longhorn PVCs.
-        strategy: Recreate
-        annotations:
-          reloader.stakater.com/auto: "true"
-        pod:
-          # containerd default runtime on GPU workers is nvidia
-          # (kubernetes/bootstrap/talos/patches/nvidia/nvidia-default-runtimeclass.yaml)
-          runtimeClassName: nvidia
-        initContainers:
-          # Generate the CDI spec the podman sidecar (and every Wolf-spawned
-          # app container) uses to address the GPUs. Uses the node's static
-          # nvidia-ctk — the wolf image does NOT ship it. See the CDI
-          # section in the header comment.
-          cdi-generator:
-            image:
-              repository: ghcr.io/games-on-whales/wolf
-              # tag: stable — Renovate: digest pin, keep tag in comment
-              tag: stable@sha256:b0ef253739f9bd49b71eba7e150c955fd05990c0d409e666d89236995351551a
-            command: ["/bin/bash", "-c"]
-            args:
-              - |
-                set -euo pipefail
-                mkdir -p /var/run/cdi
-                /ctk/nvidia-ctk cdi generate \
-                  --nvidia-cdi-hook-path /nvidia-root/usr/local/bin/nvidia-cdi-hook \
-                  --library-search-path /nvidia-root/usr/local/lib \
-                  --output /var/run/cdi/nvidia.yaml
-                # host-side: prefix every non-/dev hostPath with /nvidia-root
-                # (the node root as mounted read-only into the sidecar).
-                sed -i \
-                  -e 's|hostPath: /dev/|hostPath: /DEVKEEP/|' \
-                  -e 's|hostPath: /|hostPath: /nvidia-root/|' \
-                  -e 's|hostPath: /DEVKEEP/|hostPath: /dev/|' \
-                  -e 's|hostPath: /nvidia-root/nvidia-root/|hostPath: /nvidia-root/|' \
-                  -e 's|hostPath: /nvidia-root/usr/bin/nvidia|hostPath: /nvidia-root/usr/local/bin/nvidia|' \
-                  -e 's|hostPath: /nvidia-root/usr/lib/x86_64-linux-gnu/libnvidia-|hostPath: /nvidia-root/usr/local/lib/libnvidia-|' \
-                  /var/run/cdi/nvidia.yaml
-                # container-side: strip /nvidia-root so inner containers see
-                # libs at their canonical /usr/local/lib paths.
-                sed -i -e 's|containerPath: /nvidia-root/|containerPath: /|' /var/run/cdi/nvidia.yaml
-                # Fail loudly if any hostPath is unresolvable from the pod.
-                miss=0
-                while read -r p; do
-                  [ -e "$p" ] || { echo "WARN: CDI hostPath missing: $p"; miss=1; }
-                done < <(grep -oP '(?<=hostPath: ).*' /var/run/cdi/nvidia.yaml | sort -u)
-                echo "CDI spec ready ($(grep -c 'name: gpu' /var/run/cdi/nvidia.yaml) device entries, miss=$miss)"
-            env:
-              - name: NVIDIA_VISIBLE_DEVICES
-                # all → enumerate every GPU so Wolf apps can pick the spare
-                # 3090 by UUID instead of by volatile index.
-                value: "all"
-              - name: NVIDIA_DRIVER_CAPABILITIES
-                value: "utility"
-            securityContext:
-              runAsUser: 0
-              privileged: true
+      direwolf_operator:
         containers:
-          wolf:
+          operator:
             image:
-              repository: ghcr.io/games-on-whales/wolf
-              # tag: stable — Renovate: digest pin, keep tag in comment
-              tag: stable@sha256:b0ef253739f9bd49b71eba7e150c955fd05990c0d409e666d89236995351551a
-            env:
-              - name: TZ
-                value: ${TIMEZONE}
-              # Pin Wolf to the spare 3090 #3 (comfyui is scaled to 0 and
-              # has a note pointing here). Precedent: vllm-classifier.
-              - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547" # 3090 #3 (spare)
-              - name: NVIDIA_DRIVER_CAPABILITIES
-                value: "all"
-              # Tear app containers down when the streaming session ends.
-              - name: WOLF_STOP_CONTAINER_ON_EXIT
-                value: "TRUE"
-              # Multi-GPU node: point at the spare 3090's DRM render node.
-              # GPU-755d8528-… = PCI 46:00.0 → renderD130 (verified
-              # 2026-10-01; re-verify after any GPU reshuffle with
-              # `ls -l /sys/class/drm/renderD*/device`).
-              - name: WOLF_RENDER_NODE
-                value: /dev/dri/renderD130
-              # podman's docker-API socket lives in a shared emptyDir (see
-              # persistence `runtime-sock`) — upstream default is
-              # /var/run/docker.sock; tcp is not supported.
-              - name: WOLF_DOCKER_SOCKET
-                value: /var/run/dind/podman.sock
-              # App state must resolve inside the sidecar filesystem too (the
-              # inner daemon bind-mounts /etc/wolf/profile_data/… into app
-              # containers), so the config PVC is mounted at the SAME path
-              # in both containers and the path is pinned explicitly
-              # instead of letting Wolf auto-detect a CSI host path.
-              - name: HOST_APPS_STATE_FOLDER
-                value: /etc/wolf
-              # Pulse/Wayland sockets land on the shared `runtime`
-              # emptyDir so app containers can bind-mount them from podman.
-              - name: XDG_RUNTIME_DIR
-                value: /var/run/wolf
-            securityContext:
-              # Wolf's entrypoint starts as root (chowns state, then drops
-              # privileges for app containers itself via
-              # WOLF_DEFAULT_RUN_UID/GID = 1000). Pod-level runAsUser 1000
-              # breaks its startup chmod — verified live 2026-10-01.
-              runAsUser: 0
-              privileged: true
-            probes:
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: 47989
-                  periodSeconds: 15
-                  failureThreshold: 10
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: 47989
-                  initialDelaySeconds: 30
-                  periodSeconds: 30
-                  failureThreshold: 5
-            resources:
-              requests:
-                cpu: 2
-                memory: 4Gi
-                nvidia.com/gpu: "1"
-              limits:
-                memory: 8Gi
-                nvidia.com/gpu: "1"
-          # Inner container runtime. podman (NOT docker:dind): the CDI hooks
-          # exec a glibc binary from the node, which fails on alpine/musl
-          # dind images — see header. Exposes a docker-API-compatible unix
-          # socket for Wolf (WOLF_DOCKER_SOCKET, tcp not supported upstream).
-          podman:
-            image:
-              repository: quay.io/podman/stable
-              # tag: v5.4.0 — Renovate: digest pin, keep tag in comment
-              tag: v5.4.0@sha256:220fce4a743c2f47b066c71a4344bef9883007735e939b1015bc6d1d0f9d3d89
-            command: ["/bin/bash", "-c"]
+              repository: ghcr.io/timblakely/fenrir-operator
+              # tag: 29eb075…agentdial3s-appregister-runner — Renovate:
+              # digest pin, keep tag in comment
+              tag: 29eb075afe1ab61490196a7272fd21b5b6313cfc-agentdial3s-appregister-runner-36438304890@sha256:7a73d32318a048bb6e4475b0b95540ea58b4dc236a4a03285288c3ee489ad199
+              pullPolicy: IfNotPresent
             args:
-              - |
-                set -euo pipefail
-                mkdir -p /var/run/dind
-                exec podman system service --time=0 unix:///var/run/dind/podman.sock
-            securityContext:
-              runAsUser: 0
-              privileged: true
-            resources:
-              requests:
-                cpu: 100m
-                memory: 256Mi
-    # ── Services ────────────────────────────────────────────────────────────
-    # One LoadBalancer VIP (${SVC_GOW_ADDR}, Cilium reserved pool) carries
-    # every Moonlight port — mirrors kicad's sunshine service block.
-    # Moonlight pairing + video/audio traffic must NEVER traverse Traefik.
+              # Cilium LBIPAM: session Services share the proxy's VIP,
+              # distinguished by port tuple.
+              - --lb-sharing-key=games-on-whales
+              - --proxy-service-name=direwolf
+            env:
+              AGENT_IMAGE: docker.io/shrinedogg/wolf-agent@sha256:f51e52cee40645dd6a4cb8d216dcf94f9c35257e2a884be35eaceccc2bb966bc
+              WOLF_IMAGE: docker.io/shrinedogg/wolf@sha256:9d062c45ed7533ba5949db3d739448a83aa6c85a712a41193c496d4b6c1158f8
+      moonlight_proxy:
+        containers:
+          proxy:
+            image:
+              repository: ghcr.io/timblakely/fenrir-moonlight-proxy
+              # tag: 29eb075…-36366361406 — Renovate: digest pin
+              tag: 29eb075afe1ab61490196a7272fd21b5b6313cfc-36366361406@sha256:9c8576cc92cfcbf20ddc8e2e34b9c198958cdc51dae00e6c07b89bd0433b340c
+              pullPolicy: IfNotPresent
     service:
-      main:
-        controller: main
-        primary: true
+      app:
+        controller: moonlight_proxy
         type: LoadBalancer
-        loadBalancerIP: ${SVC_GOW_ADDR}
-        labels:
-          cilium.io/l2-ip-pool: reserved
         externalTrafficPolicy: Cluster
-        ports:
-          https:
-            port: 47984
-            targetPort: 47984
-            protocol: TCP
-          http:
-            port: 47989
-            targetPort: 47989
-            protocol: TCP
-            primary: true
-          rtsp:
-            port: 48010
-            targetPort: 48010
-            protocol: TCP
-          control:
-            port: 47999
-            targetPort: 47999
-            protocol: UDP
-          video:
-            port: 48100
-            targetPort: 48100
-            protocol: UDP
-          audio:
-            port: 48200
-            targetPort: 48200
-            protocol: UDP
-    # ── Optional HTTP UI ingress (Wolf PIN page / status) ───────────────────
-    # Disabled by default: PIN entry works fine against ${SVC_GOW_ADDR}:47989
-    # directly, and this keeps the app off Authelia until the streaming path
-    # is proven. Enable only for the HTTP UI — never for the streaming ports.
-    # ingress:
-    #   main:
-    #     enabled: true
-    #     className: traefik
-    #     annotations:
-    #       cert-manager.io/cluster-issuer: letsencrypt-production
-    #       traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    #       traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kubernetescrd
-    #     hosts:
-    #       - host: &uri wolf.${SECRET_DEV_DOMAIN}
-    #         paths:
-    #           - path: /
-    #             pathType: Prefix
-    #             service:
-    #               identifier: main
-    #               port: http
-    #     tls:
-    #       - hosts:
-    #           - *uri
-    #         secretName: *uri
-    # ── Persistence ──────────────────────────────────────────────────────────
-    persistence:
-      # Wolf config, paired-client certs, per-profile app state.
-      # Mounted at the SAME path in wolf AND podman so the inner runtime can
-      # bind-mount /etc/wolf/profile_data/… into app containers
-      # (HOST_APPS_STATE_FOLDER above).
-      config:
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 5Gi
-        storageClass: longhorn
-        retain: true
-        annotations:
-          longhorn.io/numberOfReplicas: "1"
         labels:
-          snapshot.home.arpa/enabled: "true"
-        advancedMounts:
-          main:
-            wolf:
-              - path: /etc/wolf
-            podman:
-              - path: /etc/wolf
-      # podman image + container storage (Steam, RetroArch, … images are
-      # pulled through the inner runtime on first launch — big).
-      runtime-data:
-        type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 200Gi
-        storageClass: longhorn
-        retain: true
+          # LBIPAM pool membership is label-selected in this cluster
+          # (192.168.5.0/25 reserved block).
+          cilium.io/l2-ip-pool: reserved
         annotations:
-          longhorn.io/numberOfReplicas: "1"
-        advancedMounts:
-          main:
-            podman:
-              - path: /var/lib/containers
-      # CDI spec shared between cdi-generator and the podman sidecar.
-      cdi:
-        type: emptyDir
-        advancedMounts:
-          main:
-            cdi-generator:
-              - path: /var/run/cdi
-            podman:
-              - path: /var/run/cdi
-      # podman's API socket, shared with wolf (WOLF_DOCKER_SOCKET).
-      runtime-sock:
-        type: emptyDir
-        advancedMounts:
-          main:
-            podman:
-              - path: /var/run/dind
-            wolf:
-              - path: /var/run/dind
-      # Pulse/Wayland/wolf-API sockets shared with app containers.
-      runtime:
-        type: emptyDir
-        advancedMounts:
-          main:
-            wolf:
-              - path: /var/run/wolf
-            podman:
-              - path: /var/run/wolf
-      # SHM for the GStreamer zero-copy encode pipeline (kicad precedent).
-      shm:
-        type: emptyDir
-        medium: Memory
-        sizeLimit: 4Gi
-        globalMounts:
-          - path: /dev/shm
-      # Read-only mount of the node root — the CDI spec's rewritten
-      # hostPaths (/nvidia-root/usr/local/lib/…, /nvidia-root/etc/vulkan/…,
-      # /nvidia-root/run/nvidia-persistenced/…) resolve against this tree
-      # inside the podman sidecar. Read-only: nothing writes through it.
-      nvidia-root:
-        type: hostPath
-        hostPath: /
-        hostPathType: Directory
-        advancedMounts:
-          main:
-            cdi-generator:
-              - path: /nvidia-root
-                readOnly: true
-            podman:
-              - path: /nvidia-root
-                readOnly: true
-      # The node's nvidia-container-toolkit binaries (static nvidia-ctk) —
-      # the wolf image does not ship the CLI.
-      host-ctk:
-        type: hostPath
-        hostPath: /usr/local/bin
-        hostPathType: Directory
-        advancedMounts:
-          main:
-            cdi-generator:
-              - path: /ctk
-                readOnly: true
-      # udev database — Wolf watches input device hotplug events.
-      udev:
-        type: hostPath
-        hostPath: /run/udev
-        hostPathType: Directory
-        advancedMounts:
-          main:
-            wolf:
-              - path: /run/udev
-      # DRM devices for the render node (WOLF_RENDER_NODE = renderD130).
-      # Verified present on worker-04; the nvidia runtime does NOT inject
-      # /dev/dri, so it must be mounted explicitly.
-      dri:
-        type: hostPath
-        hostPath: /dev/dri
-        hostPathType: Directory
-        advancedMounts:
-          main:
-            wolf:
-              - path: /dev/dri
-      # Virtual input devices — DISABLED: this Talos kernel (6.18.48-talos)
-      # does not ship uinput/uhid modules (probed 2026-10-01), so the char
-      # devices cannot exist and a CharDevice hostPath would block the pod
-      # with FailedMount. Wolf runs WSL2-style: mouse + keyboard only, no
-      # virtual gamepads. Re-enable BOTH entries if a future Talos kernel
-      # ships the modules (see gpu-worker-patch.yaml note).
-      # uinput:
-      #   type: hostPath
-      #   hostPath: /dev/uinput
-      #   hostPathType: CharDevice
-      #   advancedMounts:
-      #     main:
-      #       wolf:
-      #         - path: /dev/uinput
-      # uhid:
-      #   type: hostPath
-      #   hostPath: /dev/uhid
-      #   hostPathType: CharDevice
-      #   advancedMounts:
-      #     main:
-      #       wolf:
-      #         - path: /dev/uhid
-      # Optional: NAS game files, read-only, mounted into Wolf apps via the
-      # per-app `mounts` list in the Wolf UI / config.toml.
-      # gamevault:
-      #   type: nfs
-      #   server: ${NAS_ADDR}
-      #   path: ${NFS_GAMEVAULT_FILES}
-      #   advancedMounts:
-      #     main:
-      #       wolf:
-      #         - path: /mnt/gamevault
-      #       podman:
-      #         - path: /mnt/gamevault
+          # Reuse the VIP previously held by the wolf+podman deployment.
+          lbipam.cilium.io/ips: "${SVC_GOW_ADDR}"
+          lbipam.cilium.io/sharing-key: games-on-whales
+        # The proxy listens plain HTTP on 47989 and HTTPS on 47984. The
+        # chart's default port names are REVERSED (upstream bug; cogito-ops
+        # PR#176) — the User controller builds the public PIN URL from the
+        # port named http, so the names must match reality.
+        ports:
+          http:
+            protocol: TCP
+            port: 47989
+          https:
+            protocol: TCP
+            port: 47984
