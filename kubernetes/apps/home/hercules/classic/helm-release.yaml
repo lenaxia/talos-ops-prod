@@ -27,7 +27,7 @@ spec:
             args:
               - |
                 apt-get update && apt-get install -y curl &&
-                curl https://s3.thekao.cloud/public/ragnarok/ro-herc-classic-sql.tar.gz -o sql-files.tar.gz &&
+                curl https://s3.${SECRET_DEV_DOMAIN}/public/ragnarok/ro-herc-classic-sql.tar.gz -o sql-files.tar.gz &&
                 tar -xzf sql-files.tar.gz -C /docker-entrypoint-initdb.d/ &&
                 rm sql-files.tar.gz
                 ls -la /docker-entrypoint-initdb.d

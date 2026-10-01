@@ -260,7 +260,7 @@ spec:
               custom:
                 - name: 'The Kao Cloud'
                   apiKey: __THEKAO_AI_API_KEY__
-                  baseURL: 'https://ai.thekao.cloud/v1'
+                  baseURL: 'https://ai.${SECRET_DEV_DOMAIN}/v1'
                   models:
                     # Pull the live model list from /v1/models on every page
                     # load so adding a model in LiteLLM surfaces here without

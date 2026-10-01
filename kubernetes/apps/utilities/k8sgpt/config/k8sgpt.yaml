@@ -8,7 +8,7 @@ spec:
     enabled: true
     model: default
     backend: openai
-    baseUrl: https://ai.thekao.cloud/v1
+    baseUrl: https://ai.${SECRET_DEV_DOMAIN}/v1
     secret:
       name: k8sgpt
       key: litellm-api-key

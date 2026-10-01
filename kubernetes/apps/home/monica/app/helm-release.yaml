@@ -66,7 +66,7 @@ spec:
               - name: APP_ENV
                 value: production
               - name: APP_URL
-                value: https://monica.thekao.cloud
+                value: https://monica.${SECRET_DEV_DOMAIN}
               - name: APP_TRUSTED_PROXIES
                 value: '*'
               - name: DB_CONNECTION
@@ -191,7 +191,7 @@ spec:
           hajimari.io/group: Home
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
         hosts:
-          - host: monica.thekao.cloud
+          - host: monica.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix
@@ -199,8 +199,8 @@ spec:
                   port: http
         tls:
           - hosts:
-              - monica.thekao.cloud
-            secretName: monica.thekao.cloud
+              - monica.${SECRET_DEV_DOMAIN}
+            secretName: monica.${SECRET_DEV_DOMAIN}
       #meilisearch:
       #  enabled: true
       #  annotations:
@@ -210,7 +210,7 @@ spec:
       #    hajimari.io/group: Home
       #    traefik.ingress.kubernetes.io/router.entrypoints: websecure
       #  hosts:
-      #    - host: monica-meilisearch.thekao.cloud
+      #    - host: monica-meilisearch.${SECRET_DEV_DOMAIN}
       #      paths:
       #        - path: /
       #          service:
@@ -218,5 +218,5 @@ spec:
       #            port: meilisearch
       #  tls:
       #    - hosts:
-      #        - monica-meilisearch.thekao.cloud
-      #      secretName: monica-meilisearch.thekao.cloud
+      #        - monica-meilisearch.${SECRET_DEV_DOMAIN}
+      #      secretName: monica-meilisearch.${SECRET_DEV_DOMAIN}

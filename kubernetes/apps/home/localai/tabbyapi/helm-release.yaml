@@ -130,7 +130,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares: 
             networking-chain-authelia@kubernetescrd
         hosts:
-          - host: &uri tabby.thekao.cloud
+          - host: &uri tabby.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix

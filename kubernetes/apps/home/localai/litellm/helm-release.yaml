@@ -170,17 +170,17 @@ spec:
                     key: DATABASE_URL
               # SSO / OIDC
               - name: PROXY_BASE_URL
-                value: "https://ai.thekao.cloud"
+                value: "https://ai.${SECRET_DEV_DOMAIN}"
               - name: GENERIC_CLIENT_ID
                 value: "litellm"
               - name: GENERIC_CLIENT_SECRET
                 value: "${SECRET_LITELLM_OAUTH_CLIENT_SECRET}"
               - name: GENERIC_AUTHORIZATION_ENDPOINT
-                value: "https://authelia.thekao.cloud/api/oidc/authorization"
+                value: "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/authorization"
               - name: GENERIC_TOKEN_ENDPOINT
-                value: "https://authelia.thekao.cloud/api/oidc/token"
+                value: "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/token"
               - name: GENERIC_USERINFO_ENDPOINT
-                value: "https://authelia.thekao.cloud/api/oidc/userinfo"
+                value: "https://authelia.${SECRET_DEV_DOMAIN}/api/oidc/userinfo"
               - name: GENERIC_SCOPE
                 value: "openid profile email groups"
               - name: GENERIC_USER_ID_ATTRIBUTE
@@ -191,7 +191,7 @@ spec:
                 value: "name"
               # UI Settings
               - name: UI_LOGO_PATH
-                value: "https://s3.thekao.cloud/public/customlogo.png"
+                value: "https://s3.${SECRET_DEV_DOMAIN}/public/customlogo.png"
               - name: STORE_MODEL_IN_DB
                 value: "true"
               # Production Best Practices
@@ -668,7 +668,7 @@ spec:
             networking-chain-authelia@kubernetescrd
         hosts:
           #- host: &uri ai.${SECRET_DEV_DOMAIN}
-          - host: &uri ai.thekao.cloud
+          - host: &uri ai.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix

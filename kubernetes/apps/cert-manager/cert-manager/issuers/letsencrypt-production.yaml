@@ -22,3 +22,4 @@ spec:
             - ${SECRET_DEV_DOMAIN}
             - ${SECRET_SAFESPACES_DOMAIN}
             - ${SECRET_LENAXIA_DOMAIN}
+            - ${SECRET_PROD_DOMAIN_KF}
