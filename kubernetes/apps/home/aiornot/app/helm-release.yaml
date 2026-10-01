@@ -49,7 +49,7 @@ spec:
               ROA_DB_URL: file:/app/data/ai-or-not.db
               ROA_IMAGES_DIR: /app/images
               ROA_S3_BUCKET: ai-or-not
-              ROA_S3_ENDPOINT: https://s3.thekao.cloud
+              ROA_S3_ENDPOINT: https://s3.${SECRET_DEV_DOMAIN}
               ROA_S3_REGION: local
               ROA_S3_PREFIX_AI: ai/
               ROA_S3_PREFIX_REAL: real/

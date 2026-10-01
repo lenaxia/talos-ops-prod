@@ -62,7 +62,7 @@ spec:
           traefik.ingress.kubernetes.io/router.middlewares:
             networking-chain-authelia-kasm@kubernetescrd
         hosts:
-          - host: &uri fmd.thekao.cloud
+          - host: &uri fmd.${SECRET_DEV_DOMAIN}
             paths:
               - path: /
                 pathType: Prefix

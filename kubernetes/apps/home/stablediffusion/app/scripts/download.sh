@@ -22,11 +22,11 @@ download_if_not_exists() {
 }
 
 # Stable-diffusion models
-download_if_not_exists "/data/models/Stable-diffusion" "https://s3.thekao.cloud/public/sd/forgottenmixAnimation_v10.safetensors" "forgottenmixAnimation_v10.safetensors"
+download_if_not_exists "/data/models/Stable-diffusion" "https://s3.${SECRET_DEV_DOMAIN}/public/sd/forgottenmixAnimation_v10.safetensors" "forgottenmixAnimation_v10.safetensors"
 download_if_not_exists "/data/models/Stable-diffusion" "https://civitai.com/api/download/models/75" "anythingV3_fp16.safetensors"
 download_if_not_exists "/data/models/Stable-diffusion" "https://civitai.com/api/download/models/290640?type=Model&format=SafeTensor&size=pruned&fp=fp16" "ponyDiffusionV6XL.safetensors"
 download_if_not_exists "/data/models/Stable-diffusion" "https://civitai.com/api/download/models/490254" "zavyChromaXL_v70.safetensors"
-download_if_not_exists "/data/models/Stable-diffusion" "https://s3.thekao.cloud/public/sd/f222.ckpt" "f222.ckpt"
+download_if_not_exists "/data/models/Stable-diffusion" "https://s3.${SECRET_DEV_DOMAIN}/public/sd/f222.ckpt" "f222.ckpt"
 download_if_not_exists "/data/models/Stable-diffusion" "https://civitai.com/api/download/models/471120" "juggernautXL_RunDiffusion_Hyper.safetensors"
 download_if_not_exists "/data/models/Stable-diffusion" "https://civitai.com/api/download/models/425083?type=Model&format=SafeTensor&size=full&fp=fp32" "revAnimated_V2Rebirth.safetensors"
 

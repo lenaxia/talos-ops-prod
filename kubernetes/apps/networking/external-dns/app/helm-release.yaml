@@ -47,6 +47,7 @@ spec:
 
     domainFilters:
       - "${SECRET_DEV_DOMAIN}"
+      - "${SECRET_PROD_DOMAIN_KF}"
 
     txtPrefix: "k8s."
     txtOwnerId: "homelab"

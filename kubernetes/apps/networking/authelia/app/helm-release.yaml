@@ -681,7 +681,7 @@ spec:
           timeout: 5s
           username: ${SECRET_AWS_SMTP_USERNAME}
           sender: ${SECRET_AWS_SMTP_FROM_ADDR}
-          identifier: thekao.cloud
+          identifier: ${SECRET_DEV_DOMAIN}
           subject: "[TheKaoCloud] {title}"
 
           password:

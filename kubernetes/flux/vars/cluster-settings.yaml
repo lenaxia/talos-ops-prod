@@ -8,12 +8,6 @@ data:
   APP_UID: "568"
   APP_GID: "568"
 
-  # Secondary/public-facing domain for the gradual thekao.cloud → kao.family
-  # migration. New and migrated ingresses should use ${DOMAIN_FAMILY}; legacy
-  # hosts keep ${SECRET_DEV_DOMAIN} until their per-app cutover (see
-  # docs/kao-family-domain-migration-runbook.md).
-  DOMAIN_FAMILY: "kao.family"
-
   NAS_ADDR: "192.168.0.120"
   ADGUARD_ADDR: "192.168.0.5"
   TIMEZONE: "America/Los_Angeles"

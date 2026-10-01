@@ -31,7 +31,7 @@ PAPERLESS_HOST = os.getenv(
     "PAPERLESS_HOST", "http://paperless.storage.svc.cluster.local:80/api"
 )
 PAPERLESS_API_KEY = os.getenv("PAPERLESS_APIKEY")
-OPENAI_API_ENDPOINT = os.getenv("OPENAI_API_ENDPOINT", "https://ai.thekao.cloud")
+OPENAI_API_ENDPOINT = os.getenv("OPENAI_API_ENDPOINT", "https://ai.${SECRET_DEV_DOMAIN}")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Model — single env var; VISION_MODEL / TEXT_MODEL kept for backward compat

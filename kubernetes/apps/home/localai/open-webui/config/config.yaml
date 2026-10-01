@@ -57,8 +57,8 @@ whitelistImportDomains:
   - cdn.discordapp.com
   - files.catbox.moe
   - raw.githubusercontent.com
-  - thekao.cloud
-  - silly.thekao.cloud
+  - ${SECRET_DEV_DOMAIN}
+  - silly.${SECRET_DEV_DOMAIN}
 # API request overrides (for KoboldAI and Text Completion APIs)
 ## Note: host includes the port number if it's not the default (80 or 443)
 ## Format is an array of objects:
