@@ -22,6 +22,11 @@ data:
           "rel": "http://webfinger.net/rel/profile-page",
           "type": "text/html",
           "href": "https://kao.family/"
+        },
+        {
+          "rel": "http://openid.net/specs/connect/1.0/issuer",
+          "type": "application/json",
+          "href": "https://authelia.thekao.cloud"
         }
       ]
     }
