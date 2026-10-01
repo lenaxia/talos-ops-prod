@@ -1,4 +1,11 @@
 ---
+# Tailscale (SaaS tailnet) — idempotent bring-up:
+#   - fresh node: requires tailscale_authkey (preauth key from admin console)
+#   - already-running node: applies routes/exit-node prefs via `tailscale set`
+#
+# tailscaled installs and manages its own netfilter rules; the only host-level
+# prerequisite is net.ipv4.ip_forward (vpn_enable_forwarding: true).
+
 - name: Ensure Tailscale GPG key is present (Debian/Ubuntu)
   ansible.builtin.get_url:
     url: https://pkgs.tailscale.com/stable/{{ ansible_distribution | lower }}/{{ ansible_distribution_release | lower }}/no-pkg-check-repo.tailscale-keyring.gpg
@@ -24,17 +31,56 @@
     state: started
     enabled: true
 
-- name: Configure Tailscale with advertised routes
+- name: Read Tailscale backend state
+  ansible.builtin.command:
+    cmd: tailscale status --peers=false --json
+  register: ts_state
+  changed_when: false
+  failed_when: false
+
+- name: Set Tailscale login fact
+  ansible.builtin.set_fact:
+    ts_needs_login: "{{ ts_state.rc != 0 or (ts_state.stdout | default('') | from_json).BackendState | default('NeedsLogin') != 'Running' }}"
+
+- name: Require an auth key for first login
+  ansible.builtin.fail:
+    msg: >-
+      Tailscale on {{ inventory_hostname }} is not logged in. Generate a preauth
+      key at https://login.tailscale.com/admin/settings/keys and re-run with
+      --extra-vars "tailscale_authkey=tskey-auth-..."
+  when:
+    - ts_needs_login
+    - tailscale_authkey | length == 0
+
+- name: Configure Tailscale (first login)
   ansible.builtin.command:
     cmd: >
       tailscale up
+      --hostname={{ inventory_hostname }}
       {% if tailscale_advertise_exit_node %}--advertise-exit-node{% endif %}
       {% if tailscale_advertise_routes | length > 0 %}--advertise-routes={{ tailscale_advertise_routes | join(',') }}{% endif %}
       --accept-routes
       --accept-dns=false
+      --auth-key={{ tailscale_authkey }}
   register: ts_up
-  changed_when: "'Success' in ts_up.stdout or ts_up.rc == 0"
-  failed_when: false
+  changed_when: ts_up.rc == 0
+  failed_when: ts_up.rc != 0
+  when: ts_needs_login
+  no_log: true
+
+- name: Configure Tailscale (already running)
+  ansible.builtin.command:
+    cmd: >
+      tailscale set
+      --hostname={{ inventory_hostname }}
+      {% if tailscale_advertise_exit_node %}--advertise-exit-node{% endif %}
+      {% if tailscale_advertise_routes | length > 0 %}--advertise-routes={{ tailscale_advertise_routes | join(',') }}{% endif %}
+      --accept-routes
+      --accept-dns=false
+  register: ts_set
+  changed_when: ts_set.rc == 0 and ts_set.stdout | length > 0
+  failed_when: ts_set.rc != 0
+  when: not ts_needs_login
 
 - name: Enable auto-update
   ansible.builtin.command:
