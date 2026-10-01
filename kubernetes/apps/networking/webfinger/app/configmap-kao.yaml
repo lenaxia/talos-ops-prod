@@ -1,0 +1,27 @@
+---
+# Public WebFinger JRD for the kao.family identity domain.
+# WebFinger responses are public identity data — plain ConfigMap, no SOPS.
+# Edit the JSON below to point links where you want them (fediverse profile,
+# nostr, OpenPGP WKD, etc.) and commit; kubelet syncs ConfigMap volumes
+# in-place, so httpd serves the new content within ~a minute, no restart.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webfinger-kao
+  namespace: networking
+data:
+  webfinger.json: |
+    {
+      "subject": "acct:mike@kao.family",
+      "aliases": [
+        "https://kao.family/",
+        "mailto:mike@kao.family"
+      ],
+      "links": [
+        {
+          "rel": "http://webfinger.net/rel/profile-page",
+          "type": "text/html",
+          "href": "https://kao.family/"
+        }
+      ]
+    }
