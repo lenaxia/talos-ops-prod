@@ -46,7 +46,7 @@ spec:
             # https://github.com/lenaxia/mamahuhu
             image:
               repository: ghcr.io/lenaxia/mamahuhu
-              tag: 0.4.6
+              tag: 0.4.7
             env:
               - name: TZ
                 value: ${TIMEZONE}
@@ -74,6 +74,9 @@ spec:
               # (Cantonese TTS, deployed alongside kokoro)
               - name: MODEL_CHAT
                 value: default
+              # retry chat calls on this model when the primary fails
+              - name: MODEL_CHAT_FALLBACK
+                value: classifier
               - name: MODEL_TTS
                 value: kokoro
               - name: TTS_VOICE
