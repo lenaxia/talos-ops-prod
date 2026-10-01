@@ -1,8 +1,3 @@
----
-# The streaming User. WARNING (cogito-ops finding): each App's PVC carries a
-# controller owner reference to THIS User — deleting it garbage-collects the
-# Steam library PVC. The sessions Flux Kustomization runs with prune:false
-# partly for this reason. Take independent backups before ever replacing.
 apiVersion: direwolf.games-on-whales.github.io/v1alpha1
 kind: User
 metadata:
@@ -14,29 +9,25 @@ spec:
     requests:
       memory: 4Gi
   volumes:
-    - name: wolf-root-entrypoint
-      configMap:
-        name: wolf-root-entrypoint
-        defaultMode: 0755
-    - name: udev-data
-      emptyDir: {}
+  - name: wolf-root-entrypoint
+    configMap:
+      name: wolf-root-entrypoint
+      defaultMode: 493
+  - name: udev-data
+    emptyDir: {}
   sidecarPolicies:
     wolf:
       env:
-        - name: NVIDIA_DRIVER_CAPABILITIES
-          value: all
-        # Multi-GPU node: pin wolf (compositor + NVENC) to the spare 3090.
-        # NOTE: no nvidia.com/gpu resource request on this sidecar — only
-        # one free GPU share exists on worker-04 (the app container takes
-        # it); the nvidia runtime injects per this env regardless.
-        - name: NVIDIA_VISIBLE_DEVICES
-          value: GPU-755d8528-c8c7-5fd4-f441-f061368f4547
-        - name: GBM_BACKENDS_PATH
-          value: /usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
+      - name: NVIDIA_DRIVER_CAPABILITIES
+        value: all
+      - name: NVIDIA_VISIBLE_DEVICES
+        value: GPU-755d8528-c8c7-5fd4-f441-f061368f4547
+      - name: GBM_BACKENDS_PATH
+        value: /data/nv71/lib/gbm:/usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
       volumeMounts:
-        - name: wolf-root-entrypoint
-          mountPath: /entrypoint.sh
-          subPath: entrypoint.sh
+      - name: wolf-root-entrypoint
+        mountPath: /entrypoint.sh
+        subPath: entrypoint.sh
       securityContext:
         runAsUser: 0
         runAsGroup: 0
@@ -46,14 +37,11 @@ spec:
           memory: 1Gi
         limits:
           memory: 4Gi
-      # squat.ai/uinput: "1"  ← re-enable once the Talos uinput extension
-      # is applied on worker-04 (see gpu-worker-patch.yaml note) — the
-      # device plugin advertises no shares until /dev/uinput exists, and
-      # the session pod would not schedule.
     wolfAgent:
       volumeMounts:
-        - name: udev-data
-          mountPath: /run/udev
+      - name: udev-data
+        mountPath: /run/udev
       securityContext:
         capabilities:
-          add: [NET_ADMIN]
+          add:
+          - NET_ADMIN
