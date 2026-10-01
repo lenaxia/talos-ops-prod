@@ -61,7 +61,7 @@ spec:
           tailscale:
             image:
               repository: docker.io/tailscale/tailscale
-              tag: 1.102.4
+              tag: v1.102.4
             env:
               TS_HOSTNAME: dnslb-k8s
               TS_AUTHKEY: ${SECRET_TAILSCALE_PREAUTH_KEY}
