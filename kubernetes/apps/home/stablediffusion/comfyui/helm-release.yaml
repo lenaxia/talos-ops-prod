@@ -44,6 +44,9 @@ spec:
               tag: cu124-slim-20251127@sha256:0ce1e0c5ed53888e94ba1e551516fa7e60f0bed701e39af0d96393a33e987dc8
             env:
               - name: NVIDIA_VISIBLE_DEVICES
+                # 3090 #3 (spare) — GPU now owned by games-on-whales (Wolf,
+                # ./home/games-on-whales/). This app must stay at
+                # replicas: 0 unless Wolf is scaled down/re-homed first.
                 value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547" # 3090 #3 (spare)
               - name: PORT
                 value: "8188"
