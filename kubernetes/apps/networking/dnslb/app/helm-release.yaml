@@ -66,13 +66,21 @@ spec:
             env:
               TS_HOSTNAME: dnslb-k8s
               TS_AUTHKEY: ${SECRET_TAILSCALE_PREAUTH_KEY}
-              TS_AUTH_ONCE: 'true'
-              TS_USERSPACE: 'false'
-              TS_STATE_DIR: /var/lib/tailscale
               TS_EXTRA_ARGS: >-
                 --advertise-routes=192.168.0.0/20
                 --advertise-exit-node
                 --accept-dns=false
+            # Bypass containerboot: it insists on Kubernetes RBAC for a state
+            # Secret. State lives on the PVC; drive tailscaled directly.
+            command:
+              - /bin/sh
+              - -c
+              - |
+                tailscaled --tun=tailscale0 --state=/var/lib/tailscale/tailscaled.state &
+                until tailscale up --authkey="${TS_AUTHKEY}" --hostname="${TS_HOSTNAME}" ${TS_EXTRA_ARGS}; do
+                  sleep 5
+                done
+                wait
             securityContext:
               capabilities:
                 add: ['NET_ADMIN', 'NET_RAW']
