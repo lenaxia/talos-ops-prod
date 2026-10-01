@@ -64,23 +64,16 @@ spec:
               repository: docker.io/tailscale/tailscale
               tag: v1.102.4
             env:
-              TS_HOSTNAME: dnslb-k8s
               TS_AUTHKEY: ${SECRET_TAILSCALE_PREAUTH_KEY}
-              TS_EXTRA_ARGS: >-
-                --advertise-routes=192.168.0.0/20
-                --advertise-exit-node
-                --accept-dns=false
-            # Bypass containerboot: it insists on Kubernetes RBAC for a state
-            # Secret. State lives on the PVC; drive tailscaled directly.
+            # Bypass containerboot (insists on kube RBAC). $$ escapes Flux
+            # envsubst so the shell expands it at runtime, not Flux.
             command:
               - /bin/sh
               - -c
               - |
-                # Talos workers ship without a /dev/net/tun node — create it
-                # in the container (requires privileged).
                 mknod /dev/net/tun c 10 200 2>/dev/null || true
                 tailscaled --tun=tailscale0 --state=/var/lib/tailscale/tailscaled.state &
-                until tailscale up --authkey="${TS_AUTHKEY}" --hostname="${TS_HOSTNAME}" ${TS_EXTRA_ARGS}; do
+                until tailscale up --authkey="$${TS_AUTHKEY}" --hostname=dnslb-k8s --advertise-routes=192.168.0.0/20 --advertise-exit-node --accept-dns=false; do
                   sleep 5
                 done
                 wait
