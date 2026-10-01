@@ -23,6 +23,10 @@ spec:
     controllers:
       main:
         strategy: Recreate
+        annotations:
+          # JRD is subPath-mounted from the ConfigMap — subPath volumes do not
+          # hot-sync, so Reloader must restart the pod on content changes.
+          reloader.stakater.com/auto: "true"
         containers:
           main:
             image:
