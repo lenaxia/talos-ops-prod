@@ -1,0 +1,84 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname blocky
+  namespace: networking
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.2.1
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+      securityContext:
+        capabilities:
+          add: ['NET_BIND_SERVICE']
+    controllers:
+      main:
+        replicas: 2
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        containers:
+          main:
+            image:
+              repository: ghcr.io/0xerr0r/blocky
+              tag: v0.24
+            env:
+              TZ: ${TIMEZONE}
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 53
+                  periodSeconds: 30
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 53
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: 192.168.5.53
+        annotations:
+          cilium.io/l2-ip-pool: reserved
+        ports:
+          dns-tcp:
+            enabled: true
+            port: 53
+            protocol: TCP
+          dns-udp:
+            enabled: true
+            port: 53
+            protocol: UDP
+          http:
+            enabled: true
+            port: 4000
+            protocol: TCP
+    persistence:
+      config:
+        enabled: true
+        type: configMap
+        name: blocky-config
+        globalMounts:
+          - path: /app/config.yml
+            subPath: config.yml

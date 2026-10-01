@@ -9,3 +9,4 @@ resources:
   - ./webfinger/ks.yaml
   - ./external-dns/ks.yaml
   - ./tailscale-subnet/ks.yaml
+  - ./blocky/ks.yaml
