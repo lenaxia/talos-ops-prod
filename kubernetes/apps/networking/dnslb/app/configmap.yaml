@@ -37,6 +37,8 @@ data:
       customTTL: 1h
       filterUnmappedTypes: true
       mapping:
+        # In-cluster dnslb itself
+        dnslb-k8s: 192.168.5.53
         # DNS resolvers (Pis — retained during migration, remove at cutover)
         dns01: 192.168.0.5
         dns02: 192.168.0.6
