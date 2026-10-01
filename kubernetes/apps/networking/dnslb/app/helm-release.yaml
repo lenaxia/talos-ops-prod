@@ -17,6 +17,7 @@ spec:
         namespace: flux-system
   values:
     defaultPodOptions:
+      automountServiceAccountToken: true
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
     controllers:
