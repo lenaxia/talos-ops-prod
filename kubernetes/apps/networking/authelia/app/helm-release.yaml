@@ -443,6 +443,11 @@ spec:
             - "request.${SECRET_DEV_DOMAIN}"
             - "office.${SECRET_DEV_DOMAIN}"
             - "hub.${SECRET_DEV_DOMAIN}"
+            # Jellyfin: native apps (Android/iOS/TV/Kodi) cannot complete the
+            # forward-auth portal flow, so external app access requires bypass;
+            # Jellyfin's own login (LDAP plugin, plexaccess group) is the gate.
+            # Removed from the one_factor list below 2026-09-30.
+            - "jelly.${SECRET_DEV_DOMAIN}"
             #synology
             - "drive.${SECRET_DEV_DOMAIN}"
             - "file.${SECRET_DEV_DOMAIN}"
@@ -523,7 +528,6 @@ spec:
             #media
             - "library.${SECRET_DEV_DOMAIN}"
             - "plex.${SECRET_DEV_DOMAIN}"
-            - "jelly.${SECRET_DEV_DOMAIN}"
             # AI
             - "memgpt.${SECRET_DEV_DOMAIN}"
             #storage
