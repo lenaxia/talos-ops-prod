@@ -1,0 +1,20 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/source.toolkit.fluxcd.io/ocirepository_v1beta2.json
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: &app direwolf-operator
+  # namespace set to `home` by the kustomization — must match the
+  # HelmRelease's chartRef resolution namespace.
+spec:
+  interval: 30m
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy
+  ref:
+    # Upstream direwolf-operator chart (SNAPSHOT builds — pin by digest).
+    # This is the digest validated by cogito-ops (games-on-whales/fenrir
+    # fork 29eb075 era). Chart bundles older CRDs — we vendor our own and
+    # use install.crds: Skip.
+    digest: sha256:d097c1549f5350ed3405ddf4c5323fabb5465df11ae6c17c81e3a3df1d9fdbae
+  url: oci://ghcr.io/games-on-whales/charts/direwolf-operator

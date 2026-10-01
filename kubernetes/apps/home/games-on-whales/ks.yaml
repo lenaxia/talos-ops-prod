@@ -9,12 +9,11 @@ metadata:
     substitution.flux.home.arpa/enabled: "true"
 spec:
   dependsOn:
-    # cert-manager issues the Traefik TLS cert for wolf.${SECRET_DEV_DOMAIN}.
-    # (The ingress is shipped commented out until the streaming path is
-    # proven stable — see app/helm-release.yaml.)
+    # CRDs must be established before the chart (install.crds: Skip).
+    - name: cluster-home-games-on-whales-crds
+    # The chart mints the proxy TLS cert via cert-manager.
     - name: cert-manager-issuers
-    # Both the Wolf config PVC (5Gi) and the dind runtime PVC (200Gi) are
-    # Longhorn volumes.
+    # Steam library PVC (App volumeClaimTemplate) is Longhorn.
     - name: cluster-storage-longhorn
   path: ./kubernetes/apps/home/games-on-whales/app
   prune: true

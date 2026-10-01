@@ -40,7 +40,9 @@ resources:
   # Re-enable by uncommenting. PVCs/volsync backups survive uninstall.
   # - ./kicad/ks.yaml
   - ./opengist/ks.yaml
+  - ./games-on-whales/ks-crds.yaml
   - ./games-on-whales/ks.yaml
+  - ./games-on-whales/ks-sessions.yaml
   - ./aiornot/ks.yaml
   - ./ansible-runner/ks.yaml
   - ./mini4wd/ks.yaml

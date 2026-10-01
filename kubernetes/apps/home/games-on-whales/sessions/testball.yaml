@@ -1,0 +1,34 @@
+---
+# Synthetic test source — the fastest end-to-end validation of the
+# pairing → session → operator → wolf → video path (no app container).
+apiVersion: direwolf.games-on-whales.github.io/v1alpha1
+kind: App
+metadata:
+  name: testball
+spec:
+  title: Test Ball
+  id: 1
+  isHDRSupported: false
+  appAssetWebP: UklGRhwBAABXRUJQVlA4IBABAADQHACdASosAZABPm02mUmkIqKhICgAgA2JaW7hd2EbQAnsA99snIe+2Yy09snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPekAAD+/9O4f/1K366KRn9B8NO3tyIAAAAAAAAAAAAAAAAAAA==
+  template:
+    spec:
+      runtimeClassName: nvidia
+      nodeSelector:
+        kubernetes.io/hostname: worker-04
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "special"
+          effect: "NoSchedule"
+      containers: []
+  wolfConfig:
+    runtimeVariables:
+      renderNode: /dev/dri/card2
+    startAudioServer: false
+    startVirtualCompositor: false
+    audio:
+      source: 'audiotestsrc wave=ticks is-live=true'
+    video:
+      source: |
+        videotestsrc pattern=ball flip=true is-live=true !
+        video/x-raw, framerate={fps}/1

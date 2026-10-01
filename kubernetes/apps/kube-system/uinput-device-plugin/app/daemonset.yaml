@@ -1,0 +1,68 @@
+---
+# squat.ai/uinput device plugin — advertises /dev/uinput shares to the
+# wolf session pods (virtual gamepad/keyboard/mouse creation).
+#
+# PREREQUISITE (2026-10-01, worker-04): the Talos base kernel ships no
+# uinput module. The official `siderolabs/uinput` system extension must be
+# added to the node's image-factory schematic (worker-04 is on Talos
+# v1.13.10 → ghcr.io/siderolabs/uinput:v1.13.10) and the node upgraded —
+# see kubernetes/bootstrap/talos/patches/nvidia/gpu-worker-patch.yaml note
+# and the games-on-whales runbook. Until then this DaemonSet crash-loops
+# harmlessly and advertises zero shares; the User CR's
+# `squat.ai/uinput: "1"` request stays commented out so session pods
+# schedule.
+# Pattern + image pin from cogito-ops (kubernetes/apps/cluster-infra/
+# uinput-device-plugin).
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: uinput-device-plugin
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: uinput-device-plugin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: uinput-device-plugin
+    spec:
+      priorityClassName: system-node-critical
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: worker-04
+      tolerations:
+        - operator: Exists
+          effect: NoSchedule
+        - operator: Exists
+          effect: NoExecute
+      containers:
+        - name: plugin
+          image: ghcr.io/squat/generic-device-plugin:2cc50b0@sha256:dc192e164c69b03f156765793a1be62ca437709ae477b27ca7d8f3dcf5021576
+          imagePullPolicy: IfNotPresent
+          args:
+            - --domain=squat.ai
+            - --device
+            - '{"name":"uinput","groups":[{"count":2,"paths":[{"path":"/dev/uinput"}]}]}'
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: device-plugins
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: dev
+              mountPath: /dev
+      volumes:
+        - name: device-plugins
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+            type: Directory
+        - name: dev
+          hostPath:
+            path: /dev
+            type: Directory

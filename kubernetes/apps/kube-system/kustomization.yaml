@@ -15,5 +15,6 @@ resources:
   - ./intel-device-plugin/ks.yaml
   - ./node-feature-discovery/ks.yaml
   - ./nvidia-device-plugin/ks.yaml
+  - ./uinput-device-plugin/ks.yaml
   - ./nvidia-power-limit/ks.yaml
   - ./multus/ks.yaml
