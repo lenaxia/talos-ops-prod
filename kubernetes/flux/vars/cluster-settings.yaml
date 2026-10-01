@@ -8,6 +8,12 @@ data:
   APP_UID: "568"
   APP_GID: "568"
 
+  # Secondary/public-facing domain for the gradual thekao.cloud → kao.family
+  # migration. New and migrated ingresses should use ${DOMAIN_FAMILY}; legacy
+  # hosts keep ${SECRET_DEV_DOMAIN} until their per-app cutover (see
+  # docs/kao-family-domain-migration-runbook.md).
+  DOMAIN_FAMILY: "kao.family"
+
   NAS_ADDR: "192.168.0.120"
   ADGUARD_ADDR: "192.168.0.5"
   TIMEZONE: "America/Los_Angeles"
@@ -36,6 +42,13 @@ data:
   # TURN LoadBalancer — coturn signalling (3478) + relay ports for WebRTC
   # media traversal. Browser WebRTC uses TURN to relay UDP through NAT.
   SVC_KICAD_TURN_ADDR: "192.168.5.19"
+
+  # Games on Whales (Wolf) — Moonlight game streaming from worker-04's
+  # spare RTX 3090. One LoadBalancer VIP carries every Wolf port
+  # (TCP 47984/47989/48010 + UDP 47999/48100/48200); Moonlight pairing,
+  # video and audio traffic must stay off Traefik. Next free IP in the
+  # 192.168.5.0/25 reserved pool after kicad's .18/.19.
+  SVC_GOW_ADDR: "192.168.5.20"
 
   SVC_MARIADB_PRIMARY_ADDR: "192.168.5.15"
   SVC_MARIADB_SECONDARY_ADDR: "192.168.5.16"

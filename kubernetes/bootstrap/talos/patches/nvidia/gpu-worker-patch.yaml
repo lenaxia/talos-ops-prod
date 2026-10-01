@@ -4,7 +4,23 @@ machine:
       - name: nvidia
       - name: nvidia_uvm
       - name: nvidia_drm
+        # KMS framebuffer handoff — required by Games on Whales (Wolf) and
+        # any DRM render-node consumer. Verified already Y on worker-04
+        # (2026-10-01); pinned here so it survives node upgrades/resets.
+        parameters:
+          - nvidia_drm_modeset=1
       - name: nvidia_modeset
+      # NOTE — Games on Whales virtual input devices: do NOT add uinput/uhid
+      # module entries here. Verified live on worker-04 (2026-10-01, kernel
+      # 6.18.48-talos): CONFIG_INPUT_UINPUT=m / CONFIG_UHID=m in the kernel
+      # config, but the .ko files are NOT shipped in /lib/modules (no
+      # drivers/input/ in the module tree) — Talos's kernel package omits
+      # them, so `modprobe uinput` fails and a machine.kernel.modules entry
+      # would error at boot. Wolf therefore runs without /dev/uinput and
+      # /dev/uhid: Moonlight mouse + keyboard streaming only, no virtual
+      # gamepads. Revisit when Talos ships these modules (or via a custom
+      # kernel sysext), then re-enable the uinput/uhid hostPaths in
+      # kubernetes/apps/home/games-on-whales/app/helm-release.yaml.
   sysctls:
     net.core.bpf_jit_harden: 1
 
