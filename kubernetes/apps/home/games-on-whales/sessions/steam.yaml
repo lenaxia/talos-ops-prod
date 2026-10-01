@@ -42,7 +42,7 @@ spec:
           runAsGroup: 0
         env:
         - name: GBM_BACKENDS_PATH
-          value: /usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
+          value: /data/nv71/lib/gbm:/usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
         - name: VK_DRIVER_FILES
           value: /etc/vulkan/icd.d/nvidia_icd.json
         - name: RUN_GAMESCOPE
@@ -56,7 +56,14 @@ spec:
         command:
         - /bin/bash
         - -ec
-        - "until [ -S \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\" ] && [ -S \"$XDG_RUNTIME_DIR/pulse-socket\"\
+        - "echo '=== lib diagnostics ==='\n              echo \"LDLP=$LD_LIBRARY_PATH\
+          \ GBM=$GBM_BACKENDS_PATH\"\n              ls -la /usr/local/nvidia/lib64/\
+          \ 2>&1 | grep -E \"allocator|EGL_nvidia\" | head -4\n              echo\
+          \ \"lib64-count: $(ls /usr/local/nvidia/lib64 2>/dev/null | wc -l)\"\nmkdir\
+          \ -p /usr/local/nvidia/lib64 && cp -a /home/retro/.nv71libs/. /usr/local/nvidia/lib64/\
+          \ && echo LIBCOPY-OK || echo LIBCOPY-FAILED; ls /home/retro/.nv71libs >/dev/null\
+          \ 2>&1 && echo SRC-VISIBLE || echo SRC-MISSING\n              until [ -S\
+          \ \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\" ] && [ -S \"$XDG_RUNTIME_DIR/pulse-socket\"\
           \ ]; do\n  echo 'Waiting for Wayland and Pulse sockets'\n  sleep 1\ndone\n\
           # The operator mounts a fresh per-app subdirectory of the PVC.\nchown -R\
           \ \"${PUID:-1000}:${PGID:-1000}\" /home/retro\nexec /entrypoint.sh\n"
@@ -70,6 +77,7 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 4Gi
+      initContainers: []
   wolfConfig:
     runtimeVariables:
       renderNode: /dev/dri/card2

@@ -1,13 +1,19 @@
 apiVersion: v1
 data:
   entrypoint.sh: "#!/usr/bin/env bash\nset -e\nsource /opt/gow/bash-lib/utils.sh\n\
-    export UNAME=root PUID=0 PGID=0 HOME=/root\nfor init_script in /etc/cont-init.d/*.sh;\
-    \ do\n  gow_log \"[ $${init_script}: executing... ]\"\n  source \"$${init_script}\"\
-    \ndone\n# wolf#465: force start_audio_server=true on the retained Steam entry\n\
-    config=/mnt/data/wolf/cfg/config.toml\nif [[ -f \"$${config}\" ]]; then\n  python3\
-    \ - \"$${config}\" <<'PY'\nfrom pathlib import Path\nimport sys\n\npath = Path(sys.argv[1])\n\
-    config = path.read_text()\nold = \"    start_audio_server = false\\n    start_virtual_compositor\
-    \ = true\\n    title = 'Steam'\"\nif config.count(old) == 1:\n    path.write_text(config.replace(old,\
+    # .71 graphics-libs overlay (see helm-release header): the operator's own\n  \
+    \  # LD_LIBRARY_PATH leads with /usr/local/nvidia/lib64 \u2014 populate it from\n\
+    \    # the shared wolf-data PVC before wolf starts.\n    mkdir -p /usr/local/nvidia/lib64\n\
+    \    cp -a /mnt/data/wolf/state/steam/.nv71libs/. /usr/local/nvidia/lib64/ &&\
+    \ echo LIBCOPY-OK || echo LIBCOPY-FAILED; ls /mnt/data/wolf/state/steam/ >/dev/null\
+    \ 2>&1 && echo SRC-VISIBLE || echo SRC-MISSING\n\nexport UNAME=root PUID=0 PGID=0\
+    \ HOME=/root\nfor init_script in /etc/cont-init.d/*.sh; do\n  gow_log \"[ $${init_script}:\
+    \ executing... ]\"\n  source \"$${init_script}\"\ndone\n# wolf#465: force start_audio_server=true\
+    \ on the retained Steam entry\nconfig=/mnt/data/wolf/cfg/config.toml\nif [[ -f\
+    \ \"$${config}\" ]]; then\n  python3 - \"$${config}\" <<'PY'\nfrom pathlib import\
+    \ Path\nimport sys\n\npath = Path(sys.argv[1])\nconfig = path.read_text()\nold\
+    \ = \"    start_audio_server = false\\n    start_virtual_compositor = true\\n\
+    \    title = 'Steam'\"\nif config.count(old) == 1:\n    path.write_text(config.replace(old,\
     \ old.replace('false', 'true', 1), 1))\nPY\nfi\nchmod +x /opt/gow/startup.sh\n\
     exec /opt/gow/startup.sh\n"
 kind: ConfigMap
