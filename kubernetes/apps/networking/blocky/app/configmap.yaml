@@ -1,0 +1,60 @@
+---
+# Ported from ansible/roles/dns/templates/blocky-config.yml.j2 (Pis dns01/dns02).
+# Once LAN DNS cutover to the 192.168.5.53 VIP is proven, this ConfigMap
+# becomes the source of truth and the ansible dns role is retired with the Pis.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blocky-config
+  namespace: networking
+data:
+  config.yml: |
+    upstream:
+      default:
+        - https://security.cloudflare-dns.com/dns-query
+        - https://dns10.quad9.net/dns-query
+        - https://dns.cloudflare.com/dns-query
+    bootstrapDns:
+      - 9.9.9.10
+      - 149.112.112.10
+      - 2620:fe::10
+      - 2620:fe::fe:10
+
+    blocking:
+      blackLists:
+        ads:
+          - https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
+          - https://adaway.org/hosts.txt
+          - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+      clientGroupsBlock:
+        default:
+          - ads
+
+    port: 53
+    httpPort: 4000
+
+    customDNS:
+      customTTL: 1h
+      filterUnmappedTypes: true
+      mapping:
+        # DNS resolvers (Pis — retained during migration, remove at cutover)
+        dns01: 192.168.0.5
+        dns02: 192.168.0.6
+        # Kubernetes VIP (Talos control plane)
+        kube-vip: 192.168.3.30
+        # Kubernetes - Prod CP
+        cp-00.local: 192.168.3.10
+        cp-01.local: 192.168.3.11
+        cp-02.local: 192.168.3.12
+        # Kubernetes - Prod Workers
+        worker-00.local: 192.168.3.20
+        worker-01.local: 192.168.3.21
+        worker-02.local: 192.168.3.22
+        worker-04.local: 192.168.3.24
+        # Admin
+        lumiere.local: 192.168.3.1
+        # DNS rewrites
+        adguard.lan: 192.168.0.5
+        mqtt.lan: 192.168.5.6
+        sonoff.lan: 192.168.0.7
+        lumiere.mikegoes.online: 192.168.3.7
