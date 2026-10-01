@@ -103,10 +103,10 @@ spec:
         type: configMap
         name: webfinger-kao
         globalMounts:
-          # Serve the JRD at /.well-known/webfinger (DirectoryIndex) AND at
-          # /.well-known/webfinger/webfinger.json to match the thekao.cloud
-          # sibling's URL shape.
-          - path: /usr/local/apache2/htdocs/.well-known/webfinger/index.html
+          # Serve the JRD at the exact RFC 7033 path /.well-known/webfinger
+          # (mounted as a FILE — avoids Apache's directory 301) plus a
+          # human-friendly /.well-known/webfinger.json variant.
+          - path: /usr/local/apache2/htdocs/.well-known/webfinger
             subPath: webfinger.json
-          - path: /usr/local/apache2/htdocs/.well-known/webfinger/webfinger.json
+          - path: /usr/local/apache2/htdocs/.well-known/webfinger.json
             subPath: webfinger.json
