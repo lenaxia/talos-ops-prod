@@ -72,6 +72,14 @@ spec:
               - -c
               - |
                 mknod /dev/net/tun c 10 200 2>/dev/null || true
+                sysctl -w net.ipv4.ip_forward=1 2>/dev/null || true
+                # Talos is nft-only; default iptables (legacy) can't see the
+                # kernel tables. Repoint to the nft backend first.
+                mkdir -p /usr/local/sbin
+                for b in iptables iptables-save iptables-restore ip6tables ip6tables-save ip6tables-restore; do
+                  [ -x /usr/sbin/$${b}-nft ] && ln -sf /usr/sbin/$${b}-nft /usr/local/sbin/$$b
+                done
+                export PATH=/usr/local/sbin:$$PATH
                 tailscaled --tun=tailscale0 --state=/var/lib/tailscale/tailscaled.state &
                 until tailscale up --authkey="$${TS_AUTHKEY}" --hostname=dnslb-k8s --advertise-routes=192.168.0.0/20 --advertise-exit-node --accept-dns=false; do
                   sleep 5
