@@ -35,8 +35,10 @@ spec:
         requests:
           cpu: 200m
           memory: 1Gi
+          squat.ai/uinput: '1'
         limits:
           memory: 4Gi
+          squat.ai/uinput: '1'
     wolfAgent:
       volumeMounts:
       - name: udev-data
