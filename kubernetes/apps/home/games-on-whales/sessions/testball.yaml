@@ -23,7 +23,7 @@ spec:
       containers: []
   wolfConfig:
     runtimeVariables:
-      renderNode: /dev/dri/card2
+      renderNode: /dev/dri/renderD130
     startAudioServer: false
     startVirtualCompositor: false
     audio:
