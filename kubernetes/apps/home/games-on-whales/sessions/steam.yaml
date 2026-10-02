@@ -47,7 +47,14 @@ spec:
         command:
         - /bin/bash
         - -ec
-        - "until [ -S \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\" ] && [ -S \"$XDG_RUNTIME_DIR/pulse-socket\"\
+        - "# Multi-GPU node: the operator injects NVIDIA_VISIBLE_DEVICES=all, so gamescope\n\
+          \              # allocates on GPU0 while wolf composites on the spare (46:00.0)\
+          \ \u2014 cross-GPU\n              # NVKMS import fails (nvidia_drm nvkms_prime_dup;\
+          \ see pop-os/cosmic-comp#2768).\n              # Hide every GPU except ours\
+          \ (46:00.0 = /dev/nvidia2) before anything starts.\n              rm -f\
+          \ /dev/nvidia0 /dev/nvidia1 /dev/nvidia3 2>/dev/null || true\n         \
+          \     echo \"visible GPUs: $(ls /dev/nvidia* | tr '\\n' ' ')\"\nuntil [\
+          \ -S \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\" ] && [ -S \"$XDG_RUNTIME_DIR/pulse-socket\"\
           \ ]; do\n  echo 'Waiting for Wayland and Pulse sockets'\n  sleep 1\ndone\n\
           # The operator mounts a fresh per-app subdirectory of the PVC.\nchown -R\
           \ \"${PUID:-1000}:${PGID:-1000}\" /home/retro\nexec /entrypoint.sh\n"
