@@ -20,15 +20,10 @@ spec:
       runtimeClassName: nvidia
       nodeSelector:
         kubernetes.io/hostname: worker-04
-      tolerations:
-      - key: dedicated
-        operator: Equal
-        value: special
-        effect: NoSchedule
       hostIPC: true
       containers:
       - name: app
-        image: ghcr.io/lenaxia/games-on-whales-steam@sha256:1d04d6345631f83407df1e109f076614819ab14b62f7bc398caf5941cc94bf96
+        image: ghcr.io/games-on-whales/steam@sha256:4f88a5e363c783791fbbe432661d70d6775629fa8c74038b21622477cf20e0ab
         resources:
           requests:
             nvidia.com/gpu: '1'
@@ -42,31 +37,20 @@ spec:
           runAsGroup: 0
         env:
         - name: GBM_BACKENDS_PATH
-          value: /data/nv71/lib/gbm:/usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
+          value: /usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
         - name: VK_DRIVER_FILES
           value: /etc/vulkan/icd.d/nvidia_icd.json
         - name: RUN_GAMESCOPE
           value: 'true'
         - name: STEAM_STARTUP_FLAGS
           value: -bigpicture
-        - name: WLR_DRM_NO_MODIFIERS
-          value: '1'
-        - name: GAMESCOPE_DISABLE_MODIFIERS
-          value: '1'
         command:
         - /bin/bash
         - -ec
-        - "echo '=== lib diagnostics ==='\n              echo \"LDLP=$LD_LIBRARY_PATH\
-          \ GBM=$GBM_BACKENDS_PATH\"\n              ls -la /usr/local/nvidia/lib64/\
-          \ 2>&1 | grep -E \"allocator|EGL_nvidia\" | head -4\n              echo\
-          \ \"lib64-count: $(ls /usr/local/nvidia/lib64 2>/dev/null | wc -l)\"\nmkdir\
-          \ -p /nvalloc && cp /opt/nv71/libnvidia-allocator.so* /nvalloc/ && export\
-          \ LD_LIBRARY_PATH=/nvalloc:$LD_LIBRARY_PATH  # .91 EGL + .71 allocator hybrid\n\
-          \              until [ -S \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\" ] && [ -S\
-          \ \"$XDG_RUNTIME_DIR/pulse-socket\" ]; do\n  echo 'Waiting for Wayland and\
-          \ Pulse sockets'\n  sleep 1\ndone\n# The operator mounts a fresh per-app\
-          \ subdirectory of the PVC.\nchown -R \"${PUID:-1000}:${PGID:-1000}\" /home/retro\n\
-          exec /entrypoint.sh\n"
+        - "until [ -S \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\" ] && [ -S \"$XDG_RUNTIME_DIR/pulse-socket\"\
+          \ ]; do\n  echo 'Waiting for Wayland and Pulse sockets'\n  sleep 1\ndone\n\
+          # The operator mounts a fresh per-app subdirectory of the PVC.\nchown -R\
+          \ \"${PUID:-1000}:${PGID:-1000}\" /home/retro\nexec /entrypoint.sh\n"
         volumeMounts:
         - name: dshm
           mountPath: /dev/shm
@@ -77,7 +61,11 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 4Gi
-      initContainers: []
+      tolerations:
+      - key: dedicated
+        operator: Equal
+        value: special
+        effect: NoSchedule
   wolfConfig:
     runtimeVariables:
-      renderNode: /dev/dri/card2
+      renderNode: /dev/dri/renderD128
