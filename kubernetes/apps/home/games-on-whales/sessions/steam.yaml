@@ -28,7 +28,7 @@ spec:
       hostIPC: true
       containers:
       - name: app
-        image: ghcr.io/games-on-whales/steam@sha256:4f88a5e363c783791fbbe432661d70d6775629fa8c74038b21622477cf20e0ab
+        image: ghcr.io/lenaxia/games-on-whales-steam@sha256:2c681a78b0efa54c083745231ad3b35546ec0ccb4d9b65b860272f0f6050f2d8
         resources:
           requests:
             nvidia.com/gpu: '1'
@@ -59,14 +59,13 @@ spec:
         - "echo '=== lib diagnostics ==='\n              echo \"LDLP=$LD_LIBRARY_PATH\
           \ GBM=$GBM_BACKENDS_PATH\"\n              ls -la /usr/local/nvidia/lib64/\
           \ 2>&1 | grep -E \"allocator|EGL_nvidia\" | head -4\n              echo\
-          \ \"lib64-count: $(ls /usr/local/nvidia/lib64 2>/dev/null | wc -l)\"\nmkdir\
-          \ -p /usr/local/nvidia/lib64 && cp -a /home/retro/.nv71libs/. /usr/local/nvidia/lib64/\
-          \ && echo LIBCOPY-OK || echo LIBCOPY-FAILED; ls /home/retro/.nv71libs >/dev/null\
-          \ 2>&1 && echo SRC-VISIBLE || echo SRC-MISSING\n              until [ -S\
-          \ \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\" ] && [ -S \"$XDG_RUNTIME_DIR/pulse-socket\"\
-          \ ]; do\n  echo 'Waiting for Wayland and Pulse sockets'\n  sleep 1\ndone\n\
-          # The operator mounts a fresh per-app subdirectory of the PVC.\nchown -R\
-          \ \"${PUID:-1000}:${PGID:-1000}\" /home/retro\nexec /entrypoint.sh\n"
+          \ \"lib64-count: $(ls /usr/local/nvidia/lib64 2>/dev/null | wc -l)\"\nexport\
+          \ LD_LIBRARY_PATH=/opt/nv71:$LD_LIBRARY_PATH  # .71 graphics overlay baked\
+          \ into the image\n              until [ -S \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\"\
+          \ ] && [ -S \"$XDG_RUNTIME_DIR/pulse-socket\" ]; do\n  echo 'Waiting for\
+          \ Wayland and Pulse sockets'\n  sleep 1\ndone\n# The operator mounts a fresh\
+          \ per-app subdirectory of the PVC.\nchown -R \"${PUID:-1000}:${PGID:-1000}\"\
+          \ /home/retro\nexec /entrypoint.sh\n"
         volumeMounts:
         - name: dshm
           mountPath: /dev/shm

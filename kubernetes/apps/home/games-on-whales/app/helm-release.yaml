@@ -70,7 +70,7 @@ spec:
               - --proxy-service-name=direwolf
             env:
               AGENT_IMAGE: docker.io/shrinedogg/wolf-agent@sha256:f51e52cee40645dd6a4cb8d216dcf94f9c35257e2a884be35eaceccc2bb966bc
-              WOLF_IMAGE: docker.io/shrinedogg/wolf@sha256:9d062c45ed7533ba5949db3d739448a83aa6c85a712a41193c496d4b6c1158f8
+              WOLF_IMAGE: ghcr.io/lenaxia/games-on-whales-wolf@sha256:a8db2d348332f9c3c111f2e086dad82a6134cad323a77027b860ac07691dfd49
       moonlight_proxy:
         containers:
           proxy:
