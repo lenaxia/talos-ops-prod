@@ -159,7 +159,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:c9ce4f1fee26686003d2c860b047fd0c683fc4fda57a53fa8b570c4f5c46ce7f
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:4eb73a8b9b489272a9c952cbd36cd8b682de5e54f96ddeca1ded9f431dc1b862
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
