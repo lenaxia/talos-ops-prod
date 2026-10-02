@@ -68,4 +68,4 @@ spec:
         effect: NoSchedule
   wolfConfig:
     runtimeVariables:
-      renderNode: /dev/dri/renderD128
+      renderNode: /dev/dri/renderD130
