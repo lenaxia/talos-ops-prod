@@ -12,8 +12,8 @@ machine:
       - name: nvidia_modeset
       # Games on Whales virtual input devices. The module ships via the
       # `siderolabs/uinput` system extension (schematic 465efb88…, active on
-      # worker-04 since 2026-10-02) — the machine-config entry below loads
-      # it at boot. Required for inputtino virtual gamepads/keyboards;
+      # worker-04 since 2026-10-02, node on v1.13.11) — the machine-config
+      # entry below loads it at boot. Required for inputtino virtual gamepads/keyboards;
       # feeds the kube-system/uinput-device-plugin (squat.ai/uinput).      - name: uinput
 
   sysctls:
