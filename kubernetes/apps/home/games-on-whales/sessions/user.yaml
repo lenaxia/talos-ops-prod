@@ -23,7 +23,7 @@ spec:
       - name: NVIDIA_VISIBLE_DEVICES
         value: GPU-755d8528-c8c7-5fd4-f441-f061368f4547
       - name: GBM_BACKENDS_PATH
-        value: /data/nv71/lib/gbm:/usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
+        value: /usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
       volumeMounts:
       - name: wolf-root-entrypoint
         mountPath: /entrypoint.sh
