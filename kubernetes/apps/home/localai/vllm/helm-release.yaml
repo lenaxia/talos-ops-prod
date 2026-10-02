@@ -43,7 +43,7 @@ spec:
               repository: vllm/vllm-openai
               # renovate: depName=vllm/vllm-openai
               tag:
-                v0.27.1-cu129-ubuntu2404@sha256:0e1ee52750c67718a596ba63176034aa18b439c4a69896ac5a0a8393919aa4df
+                v0.30.0-cu129-ubuntu2404@sha256:b1f6748bd166f2d45421256df56200dc3462a70c70a7ab1fb6a0fcbae7143a57
             command: ["/bin/sh", "-c"]
             args:
               - |
