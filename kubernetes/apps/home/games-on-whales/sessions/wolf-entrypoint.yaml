@@ -1,7 +1,8 @@
 apiVersion: v1
 data:
   entrypoint.sh: "#!/usr/bin/env bash\nset -e\nsource /opt/gow/bash-lib/utils.sh\n\
-    export UNAME=root PUID=0 PGID=0 HOME=/root\nfor init_script in /etc/cont-init.d/*.sh;\
+    export UNAME=root PUID=0 PGID=0 HOME=/root\n    # upstream-evidence capture: driver-side\
+    \ EGL diagnostics\n    export EGL_LOG_LEVEL=debug\nfor init_script in /etc/cont-init.d/*.sh;\
     \ do\n  gow_log \"[ $${init_script}: executing... ]\"\n  source \"$${init_script}\"\
     \ndone\n# The pinned Wolf fork predates games-on-whales/wolf#466: apps registered\n\
     # through /api/v1/apps/add persist start_audio_server=false. The Steam\n# entry\
