@@ -183,3 +183,52 @@ spec:
                 port: 8000
                 targetPort: 8000
                 protocol: TCP
+      # Per-replica ClusterIP services for per-REQUEST load balancing via the
+      # LiteLLM router. kube-proxy balances the shared service per TCP
+      # connection; litellm's keep-alive pool pinned essentially all fleet
+      # traffic to one pod (31,289 vs 3 POSTs, 2026-10-02). LiteLLM now lists
+      # vllm-classifier-a and vllm-classifier-b as two deployments of the
+      # `classifier` model. The shared LoadBalancer service stays for external
+      # probe traffic.
+      svc-a:
+        enabled: true
+        forceRename: vllm-classifier-a
+        manifest:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            labels:
+              app.kubernetes.io/name: vllm-classifier
+              app.kubernetes.io/instance: vllm-classifier
+          spec:
+            type: ClusterIP
+            selector:
+              app.kubernetes.io/name: vllm-classifier
+              app.kubernetes.io/instance: vllm-classifier
+              app.kubernetes.io/controller: a
+            ports:
+              - name: http
+                port: 8000
+                targetPort: 8000
+                protocol: TCP
+      svc-b:
+        enabled: true
+        forceRename: vllm-classifier-b
+        manifest:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            labels:
+              app.kubernetes.io/name: vllm-classifier
+              app.kubernetes.io/instance: vllm-classifier
+          spec:
+            type: ClusterIP
+            selector:
+              app.kubernetes.io/name: vllm-classifier
+              app.kubernetes.io/instance: vllm-classifier
+              app.kubernetes.io/controller: b
+            ports:
+              - name: http
+                port: 8000
+                targetPort: 8000
+                protocol: TCP

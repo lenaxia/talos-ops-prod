@@ -368,15 +368,36 @@ spec:
                 supports_function_calling: true
                 supports_response_schema: true
                 supports_vision: false
+            # classifier: TWO deployments (one per GPU-pinned vLLM pod) so the
+            # LiteLLM router balances per REQUEST. The shared
+            # vllm-classifier service is balanced by kube-proxy per TCP
+            # connection, and litellm's keep-alive pool pinned nearly all
+            # fleet traffic to a single pod (31,289 vs 3 POSTs observed
+            # 2026-10-02; pod-b saturated at Running:48/Waiting:55 while
+            # pod-a idled). Both entries must stay identical.
             - model_name: classifier
               litellm_params:
                 model: openai/classifier
-                api_base: http://vllm-classifier.home.svc.cluster.local:8000/v1
+                api_base: http://vllm-classifier-a.home.svc.cluster.local:8000/v1
                 api_key: doesnotmatter
               model_info:
                 input_cost_per_token: 0.00001
                 output_cost_per_token: 0.00001
                 # vLLM max_model_len=16384; reserve 1024 for output
+                max_input_tokens: 15360
+                max_tokens: 1024
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
+            - model_name: classifier
+              litellm_params:
+                model: openai/classifier
+                api_base: http://vllm-classifier-b.home.svc.cluster.local:8000/v1
+                api_key: doesnotmatter
+              model_info:
+                input_cost_per_token: 0.00001
+                output_cost_per_token: 0.00001
                 max_input_tokens: 15360
                 max_tokens: 1024
                 supports_tool_choice: true
