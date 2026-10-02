@@ -10,20 +10,12 @@ machine:
         parameters:
           - nvidia_drm_modeset=1
       - name: nvidia_modeset
-      # NOTE — Games on Whales virtual input devices: the base Talos kernel
-      # (6.18.48, verified live 2026-10-01) ships no uinput/uhid .ko, so
-      # machine.kernel.modules entries for them would fail at boot. The
-      # OFFICIAL fix is the `siderolabs/uinput` system extension (image
-      # factory catalog, matched to the Talos minor — v1.13.10 for
-      # worker-04): build a new schematic at factory.talos.dev with the
-      # node's current extensions + siderolabs/uinput, then
-      #   task talos:upgrade-node HOSTNAME=worker-04
-      # (reads TALOS_SCHEMATIC_ID from the node annotation — update it to
-      # the new schematic first). After the reboot: /dev/uinput exists, the
-      # kube-system/uinput-device-plugin DaemonSet advertises
-      # squat.ai/uinput shares, and the games-on-whales User CR's
-      # `squat.ai/uinput: "1"` request can be re-enabled for virtual
-      # gamepads. Until then Wolf streams mouse+keyboard only.
+      # Games on Whales virtual input devices. The module ships via the
+      # `siderolabs/uinput` system extension (schematic 465efb88…, active on
+      # worker-04 since 2026-10-02) — the machine-config entry below loads
+      # it at boot. Required for inputtino virtual gamepads/keyboards;
+      # feeds the kube-system/uinput-device-plugin (squat.ai/uinput).      - name: uinput
+
   sysctls:
     net.core.bpf_jit_harden: 1
 
