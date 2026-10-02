@@ -3,7 +3,7 @@ data:
   entrypoint.sh: "#!/usr/bin/env bash\nset -e\nsource /opt/gow/bash-lib/utils.sh\n\
     # RTP egress diagnostics: capture all UDP to the LAN client.\n    (apt-get update\
     \ && apt-get install -y tcpdump) >/dev/null 2>&1 || true\n    setsid nohup tcpdump\
-    \ -ni any \"host 192.168.0.5 and (udp or port 48010 or port 47989)\" -U -w /tmp/rtp.pcap\
+    \ -ni any \"net 192.168.0.0/16 and (udp or port 48010 or port 47989)\" -U -w /tmp/rtp.pcap\
     \ </dev/null >/dev/null 2>&1 &\nexport UNAME=root PUID=0 PGID=0 HOME=/root\n \
     \   # upstream-evidence capture: driver-side EGL diagnostics\n    export EGL_LOG_LEVEL=debug\n\
     for init_script in /etc/cont-init.d/*.sh; do\n  gow_log \"[ $${init_script}: executing...\
