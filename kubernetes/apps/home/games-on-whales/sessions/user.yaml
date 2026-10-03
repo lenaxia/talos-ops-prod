@@ -32,6 +32,14 @@ spec:
         # UUIDs: 01:00.0=GPU-6726851a-d64e-09c8-a938-1537593e3106 (minor 3)
         #        46:00.0=GPU-755d8528-...f4547 (minor 2, ours)
         value: GPU-6726851a-d64e-09c8-a938-1537593e3106,GPU-755d8528-c8c7-5fd4-f441-f061368f4547
+      - name: CUDA_DEVICE_ORDER
+        # CUDA enumerates fastest-first (4090=device0) unlike nvidia-smi/procfs
+        # PCI order. wolf derives its ordinal from PCI-sorted procfs; without
+        # this the context lands on the wrong GPU -> waylanddisplaysrc panics
+        # "Failed to create CUDA image from EGLImage: CUDA_ERROR_INVALID_DEVICE"
+        # (proved in gow-wolftest, 2026-10-03). PCI order + two-GPU pin makes
+        # CUDA device 1 == 46:00.0 deterministically.
+        value: PCI_BUS_ID
       - name: GBM_BACKENDS_PATH
         value: /usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
       volumeMounts:
