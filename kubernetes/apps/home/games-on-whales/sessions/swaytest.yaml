@@ -21,7 +21,7 @@ spec:
       hostIPC: true
       containers:
       - name: app
-        image: ghcr.io/games-on-whales/steam@sha256:4f88a5e363c783791fbbe432661d70d6775629fa8c74038b21622477cf20e0ab
+        image: ghcr.io/games-on-whales/steam@sha256:9b6105be7ad072a38bca221853bc1980e1403a2598fd4915f79131a21ddf2b77
         resources:
           requests:
             nvidia.com/gpu: '1'
