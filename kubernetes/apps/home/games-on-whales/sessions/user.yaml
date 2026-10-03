@@ -21,7 +21,17 @@ spec:
       - name: NVIDIA_DRIVER_CAPABILITIES
         value: all
       - name: NVIDIA_VISIBLE_DEVICES
-        value: GPU-755d8528-c8c7-5fd4-f441-f061368f4547
+        # Multi-GPU CUDA ordinal fix (proven 2026-10-03): wolf maps renderD130
+        # (0000:46:00.0) to CUDA ordinal 1 = its index among the FOUR GPUs in
+        # /proc/driver/nvidia/gpus (global procfs, ignores container masking).
+        # With a single pinned GPU, CUDA only exposes ordinal 0 -> context
+        # creation fails -> capture path emits BLACK frames (YAVG=16 flat on
+        # every frame, all apps incl. testball). Expose 01:00.0 as ordinal 0
+        # (PCI-sorts before 46:00.0 in every CUDA ordering) so ordinal 1 =
+        # 46:00.0 = what wolf requests.
+        # UUIDs: 01:00.0=GPU-6726851a-d64e-09c8-a938-1537593e3106 (minor 3)
+        #        46:00.0=GPU-755d8528-...f4547 (minor 2, ours)
+        value: GPU-6726851a-d64e-09c8-a938-1537593e3106,GPU-755d8528-c8c7-5fd4-f441-f061368f4547
       - name: GBM_BACKENDS_PATH
         value: /usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
       volumeMounts:
