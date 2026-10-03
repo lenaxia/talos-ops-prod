@@ -42,6 +42,8 @@ spec:
           value: /etc/vulkan/icd.d/nvidia_icd.json
         - name: RUN_GAMESCOPE
           value: 'true'
+        - name: WAYLAND_DEBUG
+          value: '1'
         - name: STEAM_STARTUP_FLAGS
           value: -bigpicture
         command:
