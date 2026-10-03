@@ -25,9 +25,8 @@ spec:
     startVirtualCompositor: true
     audio:
       source: audiotestsrc wave=ticks is-live=true
-    video:
-      source: 'videotestsrc pattern=ball flip=true is-live=true !
-
-        video/x-raw, framerate={fps}/1
-
-        '
+    # 2026-10-03: video.source override REMOVED. With a synthetic source
+    # (videotestsrc) wolf never starts waylanddisplaysrc -> no wayland socket
+    # -> the runner wait times out at 5s -> wolf aborts the session (the
+    # "4-second kill"). Real producer = socket = stable session.
+    video: {}
