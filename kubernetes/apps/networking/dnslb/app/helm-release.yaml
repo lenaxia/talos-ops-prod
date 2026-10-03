@@ -62,7 +62,7 @@ spec:
           tailscale:
             image:
               repository: docker.io/tailscale/tailscale
-              tag: v1.102.4
+              tag: v1.102.5
             env:
               TS_AUTHKEY: ${SECRET_TAILSCALE_PREAUTH_KEY}
             # Bypass containerboot (insists on kube RBAC). $$ escapes Flux
