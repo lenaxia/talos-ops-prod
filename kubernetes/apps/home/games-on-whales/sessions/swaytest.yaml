@@ -81,5 +81,3 @@ spec:
   wolfConfig:
     runtimeVariables:
       renderNode: /dev/dri/renderD130
-    startAudioServer: false
-    startVirtualCompositor: true
