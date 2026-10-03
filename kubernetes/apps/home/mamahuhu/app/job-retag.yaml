@@ -42,7 +42,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: retag
-          image: ghcr.io/lenaxia/mamahuhu:0.4.4
+          image: ghcr.io/lenaxia/mamahuhu:0.4.7
           command: ["node", "dist/retag.js"]
           env:
             - name: DATA_DIR
