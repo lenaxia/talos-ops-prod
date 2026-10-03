@@ -57,17 +57,17 @@ spec:
           # Hide every GPU except ours before anything starts.
           # NB: literal bash dollars are doubled ($$) to survive Flux post-build
           # envsubst, matching the wolf-root-entrypoint ConfigMap convention.
-          rm -f /dev/nvidia1 /dev/nvidia2 /dev/nvidia3 2>/dev/null || true
+          rm -f /dev/nvidia0 /dev/nvidia1 /dev/nvidia3 2>/dev/null || true
           # Fail fast if the GPU↔node mapping drifted (Talos upgrades can reshuffle
           # indices). Verified mapping on worker-04 as of 2026-10-03:
-          #   0000:c1:00.0 (4090, minor 0) = renderD128 (proved via
+          #   0000:46:00.0 = renderD130 (proved via
           #   /proc/driver/nvidia/gpus + /sys/class/drm inside the pod).
-          dev=$$(readlink -f /sys/class/drm/renderD128/device 2>/dev/null || true)
-          if [[ "$$dev" != *0000:c1:00.0* ]]; then
-            echo "FATAL: renderD128 maps to '$$dev', expected 0000:c1:00.0 — refusing to start on the wrong GPU" >&2
+          dev=$$(readlink -f /sys/class/drm/renderD130/device 2>/dev/null || true)
+          if [[ "$$dev" != *0000:46:00.0* ]]; then
+            echo "FATAL: renderD130 maps to '$$dev', expected 0000:46:00.0 — refusing to start on the wrong GPU" >&2
             exit 1
           fi
-          minor=$$(grep -h 'Device Minor' /proc/driver/nvidia/gpus/0000:c1:00.0/information 2>/dev/null | grep -o '[0-9]*' | head -1)
+          minor=$$(grep -h 'Device Minor' /proc/driver/nvidia/gpus/0000:46:00.0/information 2>/dev/null | grep -o '[0-9]*' | head -1)
           if [[ -z "$$minor" || ! -e /dev/nvidia$$minor ]]; then
             echo "FATAL: 46:00.0 is device minor '$$minor' but /dev/nvidia$$minor is missing" >&2
             exit 1
@@ -102,4 +102,4 @@ spec:
         effect: NoSchedule
   wolfConfig:
     runtimeVariables:
-      renderNode: /dev/dri/renderD128
+      renderNode: /dev/dri/renderD130

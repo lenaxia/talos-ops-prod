@@ -31,13 +31,11 @@ spec:
         # 46:00.0 = what wolf requests.
         # UUIDs: 01:00.0=GPU-6726851a-d64e-09c8-a938-1537593e3106 (minor 3)
         #        46:00.0=GPU-755d8528-...f4547 (minor 2, ours)
-        # 2026-10-03 (v2): TEST on the RTX 4090 (c1:00.0) — Ampere 3090 fails
-        # vkGetPhysicalDeviceFormatProperties2 with zero modifiers for 8-bit
-        # ARGB (gamescope can't present dmabufs -> black screen). All four
-        # GPUs in PCI order so wolf's computed ordinal (3 for c1:00.0 among
-        # procfs-sorted GPUs) exists; CUDA_DEVICE_ORDER=PCI_BUS_ID pins it.
-        # REVERT to the 3090 pair if the 4090 test is inconclusive.
-        value: GPU-6726851a-d64e-09c8-a938-1537593e3106,GPU-755d8528-c8c7-5fd4-f441-f061368f4547,GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337,GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93
+        # 2026-10-03 (v3): back to the spare 3090 (46:00.0) — the 4090 test
+        # proved the modifier failure is driver-wide, not silicon; the working
+        # sway path is GPU-agnostic and producer caps were proven on renderD130.
+        # Frees the 4090 for vLLM.
+        value: GPU-6726851a-d64e-09c8-a938-1537593e3106,GPU-755d8528-c8c7-5fd4-f441-f061368f4547
       - name: CUDA_DEVICE_ORDER
         # CUDA enumerates fastest-first (4090=device0) unlike nvidia-smi/procfs
         # PCI order. wolf derives its ordinal from PCI-sorted procfs; without
