@@ -47,17 +47,40 @@ spec:
         command:
         - /bin/bash
         - -ec
-        - "# Multi-GPU node: the operator injects NVIDIA_VISIBLE_DEVICES=all, so gamescope\n\
-          \              # allocates on GPU0 while wolf composites on the spare (46:00.0)\
-          \ \u2014 cross-GPU\n              # NVKMS import fails (nvidia_drm nvkms_prime_dup;\
-          \ see pop-os/cosmic-comp#2768).\n              # Hide every GPU except ours\
-          \ (46:00.0 = /dev/nvidia2) before anything starts.\n              rm -f\
-          \ /dev/nvidia0 /dev/nvidia1 /dev/nvidia3 2>/dev/null || true\n         \
-          \     echo \"visible GPUs: $(ls /dev/nvidia* | tr '\\n' ' ')\"\nuntil [\
-          \ -S \"$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\" ] && [ -S \"$XDG_RUNTIME_DIR/pulse-socket\"\
-          \ ]; do\n  echo 'Waiting for Wayland and Pulse sockets'\n  sleep 1\ndone\n\
-          # The operator mounts a fresh per-app subdirectory of the PVC.\nchown -R\
-          \ \"${PUID:-1000}:${PGID:-1000}\" /home/retro\nexec /entrypoint.sh\n"
+        - |
+          # Multi-GPU node: the operator injects NVIDIA_VISIBLE_DEVICES=all, so gamescope
+          # would allocate on GPU0 while wolf composites on the spare (46:00.0) — cross-GPU
+          # NVKMS import fails (nvidia_drm nvkms_prime_dup; see pop-os/cosmic-comp#2768,
+          # UNRESOLVED upstream — cross-GPU is our leading hypothesis, NOT proven).
+          # Hide every GPU except ours before anything starts.
+          rm -f /dev/nvidia0 /dev/nvidia1 /dev/nvidia3 2>/dev/null || true
+          # Fail fast if the GPU↔node mapping drifted (Talos upgrades can reshuffle
+          # indices). Verified mapping on worker-04 as of 2026-10-03:
+          #   0000:46:00.0 = /dev/nvidia2 = renderD130 (proved via
+          #   /proc/driver/nvidia/gpus + /sys/class/drm/by-path inside the pod).
+          dev=$(readlink -f /sys/class/drm/renderD130/device 2>/dev/null || true)
+          if [[ "$dev" != *0000:46:00.0* ]]; then
+            echo "FATAL: renderD130 maps to ${dev:-nothing}, expected 0000:46:00.0 — refusing to start on the wrong GPU" >&2
+            exit 1
+          fi
+          minor=$(grep -h 'Device Minor' /proc/driver/nvidia/gpus/0000:46:00.0/information 2>/dev/null | grep -o '[0-9]*' | head -1)
+          if [[ -z "$minor" || ! -e "/dev/nvidia${minor}" ]]; then
+            echo "FATAL: 46:00.0 is device minor ${minor:-?} but /dev/nvidia${minor} is missing" >&2
+            exit 1
+          fi
+          nvis=$(ls /dev/nvidia[0-9]* 2>/dev/null | wc -l)
+          if [[ "$nvis" != 1 ]]; then
+            echo "FATAL: expected exactly 1 visible GPU, see $(ls /dev/nvidia[0-9]* 2>/dev/null | tr '\n' ' ')" >&2
+            exit 1
+          fi
+          echo "visible GPUs: $(ls /dev/nvidia* | tr '\n' ' ')"
+          until [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ] && [ -S "$XDG_RUNTIME_DIR/pulse-socket" ]; do
+            echo 'Waiting for Wayland and Pulse sockets'
+            sleep 1
+          done
+          # The operator mounts a fresh per-app subdirectory of the PVC.
+          chown -R "${PUID:-1000}:${PGID:-1000}" /home/retro
+          exec /entrypoint.sh
         volumeMounts:
         - name: dshm
           mountPath: /dev/shm
