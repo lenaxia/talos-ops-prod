@@ -100,6 +100,15 @@ task kubernetes:kubeconform    # validate all manifests against schemas
 flux check --pre               # check Flux prerequisites
 ```
 
+### 6. NEVER Delete All K8s Deploys
+
+**This is a production cluster. Never delete, prune, or scale to zero all
+deployments (or all resources of any kind) cluster-wide or in a namespace.**
+
+- No `kubectl delete deploy --all`, `kubectl delete -n <ns> --all`, or equivalent Flux suspend/prune actions that would take out every workload at once.
+- Destructive operations are one-at-a-time, targeted, and confirmed by the user first.
+- When debugging, prefer adding debug sidecars/captures over tearing down workloads.
+
 ---
 
 ## Repository Structure
