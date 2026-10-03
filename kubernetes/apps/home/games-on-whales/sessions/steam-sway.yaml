@@ -1,0 +1,105 @@
+apiVersion: direwolf.games-on-whales.github.io/v1alpha1
+kind: App
+metadata:
+  name: steam-sway
+spec:
+  title: Steam (Sway)
+  id: 98
+  isHDRSupported: false
+  appAssetWebP: UklGRhwBAABXRUJQVlA4IBABAADQHACdASosAZABPm02mUmkIqKhICgAgA2JaW7hd2EbQAnsA99snIe+2Yy09snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPfbJyHvtk5D32ych77ZOQ99snIe+2TkPekAAD+/9O4f/1K366KRn9B8NO3tyIAAAAAAAAAAAAAAAAAAA==
+  volumeClaimTemplate:
+    spec:
+      storageClassName: openebs-hostpath
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 200Gi
+  template:
+    spec:
+      runtimeClassName: nvidia
+      nodeSelector:
+        kubernetes.io/hostname: worker-04
+      hostIPC: true
+      containers:
+      - name: app
+        image: ghcr.io/games-on-whales/steam@sha256:4f88a5e363c783791fbbe432661d70d6775629fa8c74038b21622477cf20e0ab
+        resources:
+          requests:
+            nvidia.com/gpu: '1'
+            memory: 2Gi
+          limits:
+            nvidia.com/gpu: '1'
+            memory: 24Gi
+        securityContext:
+          privileged: true
+          runAsUser: 0
+          runAsGroup: 0
+        env:
+        - name: GBM_BACKENDS_PATH
+          value: /usr/local/lib/gbm:/usr/lib/x86_64-linux-gnu/gbm
+        - name: VK_DRIVER_FILES
+          value: /etc/vulkan/icd.d/nvidia_icd.json
+        - name: RUN_SWAY
+          value: 'true'
+        - name: WAYLAND_DEBUG
+          value: '1'
+        - name: STEAM_STARTUP_FLAGS
+          value: -bigpicture
+        command:
+        - /bin/bash
+        - -ec
+        - |
+          # Multi-GPU node: the operator injects NVIDIA_VISIBLE_DEVICES=all, so gamescope
+          # would allocate on GPU0 while wolf composites on the spare (46:00.0) — cross-GPU
+          # NVKMS import fails (nvidia_drm nvkms_prime_dup; see pop-os/cosmic-comp#2768,
+          # UNRESOLVED upstream — cross-GPU is our leading hypothesis, NOT proven).
+          # Hide every GPU except ours before anything starts.
+          # NB: literal bash dollars are doubled ($$) to survive Flux post-build
+          # envsubst, matching the wolf-root-entrypoint ConfigMap convention.
+          rm -f /dev/nvidia1 /dev/nvidia2 /dev/nvidia3 2>/dev/null || true
+          # Fail fast if the GPU↔node mapping drifted (Talos upgrades can reshuffle
+          # indices). Verified mapping on worker-04 as of 2026-10-03:
+          #   0000:c1:00.0 (4090, minor 0) = renderD128 (proved via
+          #   /proc/driver/nvidia/gpus + /sys/class/drm inside the pod).
+          dev=$$(readlink -f /sys/class/drm/renderD128/device 2>/dev/null || true)
+          if [[ "$$dev" != *0000:c1:00.0* ]]; then
+            echo "FATAL: renderD128 maps to '$$dev', expected 0000:c1:00.0 — refusing to start on the wrong GPU" >&2
+            exit 1
+          fi
+          minor=$$(grep -h 'Device Minor' /proc/driver/nvidia/gpus/0000:c1:00.0/information 2>/dev/null | grep -o '[0-9]*' | head -1)
+          if [[ -z "$$minor" || ! -e /dev/nvidia$$minor ]]; then
+            echo "FATAL: 46:00.0 is device minor '$$minor' but /dev/nvidia$$minor is missing" >&2
+            exit 1
+          fi
+          nvis=$$(ls /dev/nvidia[0-9]* 2>/dev/null | wc -l)
+          if [[ "$$nvis" != 1 ]]; then
+            echo "FATAL: expected exactly 1 visible GPU, saw: $$(ls /dev/nvidia[0-9]* 2>/dev/null | tr '\n' ' ')" >&2
+            exit 1
+          fi
+          echo "visible GPUs: $$(ls /dev/nvidia* | tr '\n' ' ')"
+          until [ -S "$$XDG_RUNTIME_DIR/$$WAYLAND_DISPLAY" ] && [ -S "$$XDG_RUNTIME_DIR/pulse-socket" ]; do
+            echo 'Waiting for Wayland and Pulse sockets'
+            sleep 1
+          done
+          # The operator mounts a fresh per-app subdirectory of the PVC.
+          chown -R "$${PUID:-1000}:$${PGID:-1000}" /home/retro
+          exec /entrypoint.sh
+        volumeMounts:
+        - name: dshm
+          mountPath: /dev/shm
+        - name: udev-data
+          mountPath: /run/udev
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 4Gi
+      tolerations:
+      - key: dedicated
+        operator: Equal
+        value: special
+        effect: NoSchedule
+  wolfConfig:
+    runtimeVariables:
+      renderNode: /dev/dri/renderD128
