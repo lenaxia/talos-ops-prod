@@ -71,7 +71,9 @@ Talos upgrades):
 ## 5. Known limitations & ops
 
 - **No resume** — operator deletes sessions ~1 min after disconnect; relaunch
-  instead (Steam persists login on the PVC). Upstream feature needed.
+  instead (Steam persists login on the PVC). Upstream: file/PR at
+  **github.com/games-on-whales/fenrir** (open source, active — the operator
+  AND proxy both live there; images publish under ghcr.io/timblakely/*).
 - **App titles invisible** in Moonlight on the .20 host (proxy applist bug) —
   entries are in list order; fix pending.
 - Port errors for UDP 47998/48000 in Moonlight are **expected noise** (legacy
