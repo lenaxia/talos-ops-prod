@@ -1,7 +1,7 @@
 # GOW / wolf runbook — known-good setup for worker-04 (2026-10-03)
 
 Everything needed to rebuild streaming from scratch, in order. Derived from
-the postmortem (`docs/gow-wolf-postmortem.md`); deviations from this recipe
+the postmortem (`kubernetes/apps/home/games-on-whales/docs/gow-wolf-postmortem.md`); deviations from this recipe
 are how every bug in that document happened.
 
 ## 1. Node: worker-04 image + sysctls
@@ -83,4 +83,4 @@ Talos upgrades):
   (kernel log tail), `gow-wolftest`/`gow-steamtest` (persistent wolf/steam
   image pods for standalone gst-launch/gamescope probes),
   `scripts/moonlight-pcap-analyze.py` (offline RTP/HEVC forensics).
-- Evidence trail: `docs/gow-wolf-postmortem.md`, `docs/gow-wolf-debugging.md`.
+- Evidence trail: `kubernetes/apps/home/games-on-whales/docs/gow-wolf-postmortem.md`, `kubernetes/apps/home/games-on-whales/docs/gow-wolf-debugging.md`.
