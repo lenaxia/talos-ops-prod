@@ -25,6 +25,8 @@ spec:
     remediation:
       retries: 3
   values:
+    imagePullSecrets:
+      - name: ghcr-lenaxia
     # ──────────────────────────────────────────────────────────────────────
     # games-on-whales — via the Fenrir/direwolf operator
     # ──────────────────────────────────────────────────────────────────────
@@ -75,9 +77,9 @@ spec:
         containers:
           proxy:
             image:
-              repository: ghcr.io/timblakely/fenrir-moonlight-proxy
+              repository: ghcr.io/lenaxia/fenrir-moonlight-proxy
               # tag: 29eb075…-36366361406 — Renovate: digest pin
-              tag: 29eb075afe1ab61490196a7272fd21b5b6313cfc-36366361406@sha256:9c8576cc92cfcbf20ddc8e2e34b9c198958cdc51dae00e6c07b89bd0433b340c
+              tag: resume-fix
               pullPolicy: IfNotPresent
     service:
       app:
