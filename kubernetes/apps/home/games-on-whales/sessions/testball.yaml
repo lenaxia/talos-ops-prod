@@ -25,8 +25,9 @@ spec:
     startVirtualCompositor: true
     audio:
       source: audiotestsrc wave=ticks is-live=true
-    # 2026-10-03: video.source override REMOVED. With a synthetic source
-    # (videotestsrc) wolf never starts waylanddisplaysrc -> no wayland socket
-    # -> the runner wait times out at 5s -> wolf aborts the session (the
-    # "4-second kill"). Real producer = socket = stable session.
-    video: {}
+    # 2026-10-03: no video.source override. A synthetic source (videotestsrc)
+    # prevented waylanddisplaysrc from starting -> no wayland socket -> the
+    # runner wait timed out at 5s -> wolf aborted the session (the "4-second
+    # kill"). Real producer = socket = stable session.
+    video:
+      sink: ''
