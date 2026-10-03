@@ -42,6 +42,12 @@ spec:
           value: /etc/vulkan/icd.d/nvidia_icd.json
         - name: RUN_GAMESCOPE
           value: 'true'
+        - name: GAMESCOPE_MODE
+          # 2026-10-03: NVIDIA 595.x on this node returns ZERO dmabuf modifiers
+          # for 8-bit ARGB (AB24/XB24) -> gamescope never attaches a buffer ->
+          # BLACK SCREEN. The 10-bit/HDR composite path allocates fine (proved:
+          # --hdr-enabled composites fully under headless sway). This forces it.
+          value: '--hdr-enabled -b'
         - name: WAYLAND_DEBUG
           value: '1'
         - name: STEAM_STARTUP_FLAGS
