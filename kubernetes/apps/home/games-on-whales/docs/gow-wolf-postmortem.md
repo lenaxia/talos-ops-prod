@@ -2,7 +2,7 @@
 
 Complete chronicle. Every claim here is backed by captured evidence (pcaps,
 WAYLAND_DEBUG traces, wolf/gamescope logs, kernel watcher) — see
-`docs/gow-wolf-debugging.md` for the earlier mid-flight evidence detail and
+`kubernetes/apps/home/games-on-whales/docs/gow-wolf-debugging.md` for the earlier mid-flight evidence detail and
 `/tmp/opencode/gow/*` artifacts (session lifetime; re-capture from pods if
 needed).
 
