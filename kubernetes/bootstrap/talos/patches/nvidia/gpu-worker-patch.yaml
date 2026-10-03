@@ -19,3 +19,9 @@ machine:
   sysctls:
     net.core.bpf_jit_harden: 1
 
+# Steam (and flatpak-style sandboxes) require user namespaces. Talos ships
+# max_user_namespaces=0; set at runtime 2026-10-03 via privileged pod and
+# persisted here for future applies/reboots.
+machine:
+  sysctls:
+    user.max_user_namespaces: "15000"
