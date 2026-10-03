@@ -70,7 +70,10 @@ spec:
               - --proxy-service-name=direwolf
             env:
               AGENT_IMAGE: docker.io/shrinedogg/wolf-agent@sha256:f51e52cee40645dd6a4cb8d216dcf94f9c35257e2a884be35eaceccc2bb966bc
-              WOLF_IMAGE: ghcr.io/lenaxia/games-on-whales-wolf@sha256:9df50178aacbb21e4cf837f72ff1f1c5602db803ecba558476f85f99c8e4041b
+              # TEMP DEBUG BISECT (2026-10-03): upstream wolf image to split
+              # fork-vs-environment for the testball 4s kill. REVERT AFTER.
+              # Was: ghcr.io/lenaxia/games-on-whales-wolf@sha256:9df50178aacbb21e4cf837f72ff1f1c5602db803ecba558476f85f99c8e4041b
+              WOLF_IMAGE: ghcr.io/games-on-whales/wolf:stable
       moonlight_proxy:
         containers:
           proxy:
