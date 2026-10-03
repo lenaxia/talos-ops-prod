@@ -7,4 +7,5 @@ resources:
   - ./user.yaml
   - ./testball.yaml
   - ./steam.yaml
+  - ./steam-sway.yaml
   - ./swaytest.yaml
