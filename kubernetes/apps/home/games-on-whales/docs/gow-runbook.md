@@ -111,6 +111,19 @@ pairing, Steam — all confirmed working end-to-end from the NVIDIA Shield.
   client, re-pair via the upstream proxy's username PIN page
   (`http://192.168.5.20:47989/pin/#<hash-from-proxy-logs>`).
 
+### Operator wedge (recurring; ~30s fix)
+Symptom: launches fail with `client rate limiter Wait returned an error`, or
+`failed to launch app` 500s; operator log shows hot `Reconciling session` /
+`deployment not ready (0/1)` / `no route to host` loops.
+```
+kubectl -n home delete session <name-from-operator-logs>
+kubectl -n home delete deploy <mike-steam-sway|...> --ignore-not-found
+kubectl -n home rollout restart deploy direwolf-operator
+```
+Root: fenrir operator requeues without backoff when a session pod's deployment
+status lags; the loop saturates client-go's rate limiter. Upstream bug worth
+filing (bounded backoff).
+
 ### Pairing runbook (upstream proxy)
 1. Client: Add Host `192.168.5.20`
 2. Grab the fresh hash: `kubectl -n home logs deploy/moonlight-proxy | grep "Insert pin"`
