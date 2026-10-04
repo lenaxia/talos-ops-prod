@@ -89,6 +89,23 @@ needed).
   `gow-framecheck`, `moonlight-client`) may linger in namespace `home` —
   safe to delete individually.
 
+## Final resolution (2026-10-04)
+
+End state: ALL UPSTREAM proxy, RL-era configuration, full input restored.
+The fork was withdrawn — see the runbook's "Resolution addendum" for the
+fork lesson (public fenrir repo lags the deployed image; fork broke pairing
+user-assignment and the applist, cascading into a client-side input wedge
+cured by reinstalling Moonlight on the Shield).
+
+Because we are on the UPSTREAM proxy, note these limitations are back:
+- App tiles show icons WITHOUT titles (upstream applist XML)
+- Launch timeout is 25s (premature 500s on cold starts — session usually
+  completes behind it; just reconnect)
+- Resume relaunches without the clean stop-first (occasional "failed to
+  resume" — retry the launch)
+All three have working reference fixes documented (rebase onto the deployed
+upstream source before rebuilding any fork).
+
 ## Open items
 
 - **Resume**: not supported by this fenrir operator build — on client
