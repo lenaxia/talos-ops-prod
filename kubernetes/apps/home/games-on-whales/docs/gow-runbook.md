@@ -86,3 +86,33 @@ Talos upgrades):
   image pods for standalone gst-launch/gamescope probes),
   `scripts/moonlight-pcap-analyze.py` (offline RTP/HEVC forensics).
 - Evidence trail: `kubernetes/apps/home/games-on-whales/docs/gow-wolf-postmortem.md`, `kubernetes/apps/home/games-on-whales/docs/gow-wolf-debugging.md`.
+
+
+## Resolution addendum (2026-10-04, final)
+
+**Working configuration = everything above with the UPSTREAM proxy**
+(`ghcr.io/timblakely/fenrir-moonlight-proxy@sha256:9c8576…`). Input, video,
+pairing, Steam — all confirmed working end-to-end from the NVIDIA Shield.
+
+### The fork lesson (do not repeat casually)
+- The public `games-on-whales/fenrir` repo is BEHIND the deployed upstream
+  image (missing the username pairing page). A fork built from it:
+  - pairs clients WITHOUT user assignment → `user not found` 401s
+  - broke the app list XML (`<AppID>` vs the client-parsed `<ID>`) → grey tiles
+  - the resulting client-side chaos wedged the Shield Moonlight app so it
+    stopped sending input entirely (fresh app install + upstream pairing fixed)
+- Any future fork must be rebased on the ACTUAL deployed source. Fork images
+  remain at `ghcr.io/lenaxia/fenrir-moonlight-proxy` (tags resume-fix digests)
+  — treat as reference implementations only: resume=stop-then-relaunch,
+  applist ID fix, LAUNCH_TIMEOUT_SECONDS.
+- Client-side wedge symptom signature: video works, server receives ZERO input
+  packets during deliberate presses (verified via wolf log + WAYLAND_DEBUG),
+  mouse-from-another-client works. Fix: clear data + reinstall Moonlight on the
+  client, re-pair via the upstream proxy's username PIN page
+  (`http://192.168.5.20:47989/pin/#<hash-from-proxy-logs>`).
+
+### Pairing runbook (upstream proxy)
+1. Client: Add Host `192.168.5.20`
+2. Grab the fresh hash: `kubectl -n home logs deploy/moonlight-proxy | grep "Insert pin"`
+3. Open `http://192.168.5.20:47989/pin/#<hash>`, enter USERNAME + the client PIN
+   (the username field is REQUIRED — it is what assigns userReference)
