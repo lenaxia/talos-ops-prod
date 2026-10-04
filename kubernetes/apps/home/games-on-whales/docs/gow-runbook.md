@@ -123,6 +123,10 @@ kubectl -n home rollout restart deploy direwolf-operator
 Root: fenrir operator requeues without backoff when a session pod's deployment
 status lags; the loop saturates client-go's rate limiter. Upstream bug worth
 filing (bounded backoff).
+IMPORTANT: before deleting a session/deployment, have the user EXIT MOONLIGHT
+CLEANLY on the client first. An unclean stream kill (pod deleted mid-session)
+wedges the Shield Moonlight app's input (video works, zero input packets sent;
+verified twice). Fix: Force Stop Moonlight on the Shield, relaunch.
 
 ### Pairing runbook (upstream proxy)
 1. Client: Add Host `192.168.5.20`
