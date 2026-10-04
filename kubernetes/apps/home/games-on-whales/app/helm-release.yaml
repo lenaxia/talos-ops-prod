@@ -79,7 +79,7 @@ spec:
             image:
               repository: ghcr.io/lenaxia/fenrir-moonlight-proxy
               # tag: 29eb075…-36366361406 — Renovate: digest pin
-              tag: resume-fix@sha256:913f0c869d5fe6beae074b98a561c3798cba40e5b4cb78ebf3ba2907f2599ce7
+              tag: resume-fix@sha256:7b7ebc46657e76c30f70e3f01e19dc73c6f2bcd095ad3db2d9acb42fcb4775af
               pullPolicy: IfNotPresent
     service:
       app:
