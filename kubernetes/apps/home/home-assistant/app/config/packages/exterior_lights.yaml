@@ -1,0 +1,190 @@
+# =============================================================================
+# Exterior lights package — occupancy-aware night shutoff + motion lights
+# =============================================================================
+# Covers the three exterior lights (front door, garage, deck):
+#   switch.on_off_switch    lights.front_door.exterior
+#   switch.s2_on_off_switch lights.garage.exterior
+#   switch.exterior_lights_2 lights.deck.exterior
+# and the legacy group switch.exterior_lights (contains all three).
+#
+# Rules:
+#   1. AFTER 22:00, when EVERYONE who is home (per person trackers) has been
+#      in bed CONTIGUOUSLY for >= 20 min -> all exterior lights off.
+#      - "everyone home asleep" covers both-in-bed AND the solo-occupant
+#        case (only Mike or only Serena home) uniformly.
+#      - Suppressed while guests are over (guest_mode_active); the midnight
+#        cutoff still applies.
+#      - Floor-mattress nights: Mike's mat reads off, so the rule can't
+#        fire -> midnight fallback applies (known, accepted).
+#      - A dead/unavailable bed sensor (Serena's mat was offline a full
+#        week in Sep 2026) also falls through to midnight.
+#   2. AT 00:00 all exterior lights off, unconditionally (hard cutoff).
+#   3. MOTION LIGHTS (front door + garage only; no deck camera exists):
+#      camera motion -> that light on; light off again after 2 min without
+#      motion (re-triggered motion resets the timer). Armed only between
+#      sunset and sunrise.
+#
+# Coexists with the UI automation "Exterior Lights: Sunset & Sunrise"
+# (dusk-on baseline at sunset-30m, all-off at sunrise+15m). Edge case:
+# motion lights killed by a bed/midnight shutoff at 00:00 while someone is
+# outside stay dark unless motion re-edges (documented, accepted).
+#
+# Tuning:
+#   - Bed shutoff window: edit the two time conditions in rule 1.
+#   - Bed debounce: the 00:20:00 "for" values AND the 1200s in the
+#     everyone-asleep template (keep them equal).
+#   - Motion hold: the 00:02:00 "for" on the off-triggers.
+# =============================================================================
+
+exterior_lights:
+
+  automation:
+    # -------------------------------------------------------------------------
+    - id: exterior_lights_out_everyone_asleep
+      alias: "EXTERIOR: Lights out — everyone home asleep (after 22:00)"
+      description: >
+        After 22:00 (or overnight), turn all exterior lights off once every
+        person who is home has been in bed continuously for 20 minutes.
+        Covers both-in-bed and solo-occupant nights uniformly. Skipped
+        while guests are over; the midnight cutoff still applies.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.master_bedroom_mikewithings_in_bed
+          to: "on"
+          for: "00:20:00"
+          id: mike_bed
+        - trigger: state
+          entity_id: binary_sensor.master_bedroom_serenawithings_in_bed
+          to: "on"
+          for: "00:20:00"
+          id: serena_bed
+        # re-arm: a bed trigger may complete before the 22:00 window opens
+        # (in-bed state triggers fire once per continuous on-period)
+        - trigger: time
+          at: "22:00:00"
+          id: rearm
+      conditions:
+        - condition: or
+          conditions:
+            - condition: time
+              after: "22:00:00"
+            - condition: time
+              before: "07:00:00"
+        - condition: state
+          entity_id: input_boolean.guest_mode_active
+          state: "off"
+        # everyone-asleep: at least one person home, and every person who
+        # IS home is in bed with last_changed >= 20 min ago (contiguity).
+        - condition: template
+          value_template: >
+            {% set ns = namespace(anyone=False, allAsleep=True) %}
+            {% if is_state('person.mike_kao', 'home') %}
+              {% set ns.anyone = True %}
+              {% if not (is_state('binary_sensor.master_bedroom_mikewithings_in_bed', 'on')
+                         and (now() - states.binary_sensor.master_bedroom_mikewithings_in_bed.last_changed)
+                             .total_seconds() >= 1200) %}
+                {% set ns.allAsleep = False %}
+              {% endif %}
+            {% endif %}
+            {% if is_state('person.serena', 'home') %}
+              {% set ns.anyone = True %}
+              {% if not (is_state('binary_sensor.master_bedroom_serenawithings_in_bed', 'on')
+                         and (now() - states.binary_sensor.master_bedroom_serenawithings_in_bed.last_changed)
+                             .total_seconds() >= 1200) %}
+                {% set ns.allAsleep = False %}
+              {% endif %}
+            {% endif %}
+            {{ ns.anyone and ns.allAsleep }}
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.exterior_lights
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: exterior_lights_out_midnight
+      alias: "EXTERIOR: Lights out — midnight cutoff"
+      description: Hard cutoff — all exterior lights off at midnight, no conditions.
+      triggers:
+        - trigger: time
+          at: "00:00:00"
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.exterior_lights
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: exterior_motion_light_front_door_on
+      alias: "EXTERIOR: Motion light on — front door"
+      description: >
+        Front door camera motion turns the front door exterior light on.
+        Armed between sunset and sunrise only.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.front_door_motion
+          to: "on"
+      conditions:
+        - condition: sun
+          after: sunset
+        - condition: sun
+          before: sunrise
+      actions:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.on_off_switch
+      mode: single
+
+    - id: exterior_motion_light_front_door_off
+      alias: "EXTERIOR: Motion light off — front door"
+      description: >
+        Front door light off after 2 minutes without motion; re-triggered
+        motion resets the timer (the for-timer restarts on each new
+        motion event).
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.front_door_motion
+          to: "off"
+          for: "00:02:00"
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.on_off_switch
+      mode: single
+
+    # -------------------------------------------------------------------------
+    - id: exterior_motion_light_garage_on
+      alias: "EXTERIOR: Motion light on — garage"
+      description: >
+        North garage camera motion turns the garage exterior light on.
+        Armed between sunset and sunrise only.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.north_garage_motion
+          to: "on"
+      conditions:
+        - condition: sun
+          after: sunset
+        - condition: sun
+          before: sunrise
+      actions:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.s2_on_off_switch
+      mode: single
+
+    - id: exterior_motion_light_garage_off
+      alias: "EXTERIOR: Motion light off — garage"
+      description: >
+        Garage light off after 2 minutes without motion; re-triggered
+        motion resets the timer.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.north_garage_motion
+          to: "off"
+          for: "00:02:00"
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.s2_on_off_switch
+      mode: single
