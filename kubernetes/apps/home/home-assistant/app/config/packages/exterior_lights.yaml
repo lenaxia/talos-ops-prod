@@ -96,9 +96,14 @@ exterior_lights:
             {% endif %}
             {{ ns.anyone and ns.allAsleep }}
       actions:
+        # explicit switch list (not the legacy group) so shutoffs are immune
+        # to stale group membership; matches the baseline sunset automation
         - action: switch.turn_off
           target:
-            entity_id: switch.exterior_lights
+            entity_id:
+              - switch.on_off_switch
+              - switch.s2_on_off_switch
+              - switch.exterior_lights_2
       mode: single
 
     # -------------------------------------------------------------------------
@@ -111,7 +116,10 @@ exterior_lights:
       actions:
         - action: switch.turn_off
           target:
-            entity_id: switch.exterior_lights
+            entity_id:
+              - switch.on_off_switch
+              - switch.s2_on_off_switch
+              - switch.exterior_lights_2
       mode: single
 
     # -------------------------------------------------------------------------
@@ -125,9 +133,11 @@ exterior_lights:
           entity_id: binary_sensor.front_door_motion
           to: "on"
       conditions:
+        # single condition on purpose: HA only OR-s the midnight wrap when
+        # after/before live in ONE sun condition; as two AND-ed conditions
+        # the window is never true (see sun/condition.py, HA 2026.9.3)
         - condition: sun
           after: sunset
-        - condition: sun
           before: sunrise
       actions:
         - action: switch.turn_on
@@ -163,9 +173,11 @@ exterior_lights:
           entity_id: binary_sensor.north_garage_motion
           to: "on"
       conditions:
+        # single condition on purpose: HA only OR-s the midnight wrap when
+        # after/before live in ONE sun condition; as two AND-ed conditions
+        # the window is never true (see sun/condition.py, HA 2026.9.3)
         - condition: sun
           after: sunset
-        - condition: sun
           before: sunrise
       actions:
         - action: switch.turn_on
