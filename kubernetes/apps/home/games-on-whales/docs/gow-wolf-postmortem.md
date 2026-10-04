@@ -119,3 +119,20 @@ upstream source before rebuilding any fork).
   operator (NVD=all injection; session linger; applist titles).
 - Gamepads: not addressed (needs uinput-based virtual pads — uinput extension
   now present, so wolf's pads may work; untested).
+
+
+## Postscript: the recurring wedge chain (2026-10-04)
+
+Final failure mode of the night, now fully mapped:
+fenrir operator requeues deployment-not-ready WITHOUT backoff (status lag on
+healthy pods) -> rate limiter saturates -> launches 500 -> cleanup kills a
+LIVE session pod -> Shield Moonlight app wedges input on the unclean
+disconnect (video fine, zero input packets — verified twice) -> Force Stop +
+clean relaunch fixes.
+
+Missing pieces (ranked):
+- fenrir operator: bounded backoff (upstream bug to file)
+- moonlight-android/Shield: input thread dies on unclean stream kill (file)
+- cluster: no alerting on operator error rate (PrometheusRule TODO)
+- operational rule (now in runbook): clean client exit before cleanup;
+  never delete deployments whose pods are actually Running

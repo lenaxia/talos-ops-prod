@@ -128,6 +128,23 @@ CLEANLY on the client first. An unclean stream kill (pod deleted mid-session)
 wedges the Shield Moonlight app's input (video works, zero input packets sent;
 verified twice). Fix: Force Stop Moonlight on the Shield, relaunch.
 
+### Prevention (the full chain + what breaks each link)
+Wedge chain: operator status-lag -> hot requeue -> rate-limiter saturation
+-> (cleanup kills live pod) -> unclean client disconnect -> Shield input wedge.
+
+1. OPERATOR: never delete a deployment whose pods are actually 4/4 Running
+   just because the deployment *status* says 0/1 — that is status lag.
+   First try: restart ONLY direwolf-operator (it re-lists fresh). Delete the
+   session/deployment only if pods are genuinely dead.
+2. CLIENT: always exit Moonlight cleanly BEFORE any session cleanup
+   (see IMPORTANT above).
+3. MONITORING (todo): alert on direwolf-operator error-log rate — the hot
+   requeue loop is visible minutes before launches fail. A PrometheusRule on
+   the operator container matching `error syncing` > 5/min would flag it.
+4. UPSTREAM (todo, text ready in postmortem): file fenrir operator
+   requeue-without-backoff bug and the moonlight-android Shield
+   input-wedge-on-unclean-disconnect bug.
+
 ### Pairing runbook (upstream proxy)
 1. Client: Add Host `192.168.5.20`
 2. Grab the fresh hash: `kubectl -n home logs deploy/moonlight-proxy | grep "Insert pin"`
