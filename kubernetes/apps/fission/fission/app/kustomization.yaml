@@ -4,6 +4,9 @@ kind: Kustomization
 resources:
   - ./helmrelease.yaml
   - ./ingress.yaml
-  - ../environments
-  - ../functions
-  - ../httptriggers
+  # ../environments, ../functions, ../httptriggers are intentionally NOT
+  # accumulated here: each is the direct build target of its own Flux
+  # Kustomization (fission-environments/-functions/-triggers in ../ks.yaml,
+  # chained via dependsOn). Double-ownership raced flux build ks's in-place
+  # kustomization.yaml rewrites in CI (intermittent "kustomization.yaml is
+  # empty" Flux Diff failures) and is a prune-flap hazard in-cluster.
