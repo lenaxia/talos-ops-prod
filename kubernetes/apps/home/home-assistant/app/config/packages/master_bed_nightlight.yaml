@@ -72,7 +72,8 @@ master_bed_nightlight:
               before: sunrise
             - condition: numeric_state
               entity_id: cover.master_blinds
-              below: 20
+              attribute: current_position   # cover state is a string; position is an attribute
+              below: 21                      # <= 20 (mostly drawn)
       variables:
         # --- segment map (future Mike Ground: append to mike_segments) ---
         serena_segments:
@@ -141,6 +142,16 @@ master_bed_nightlight:
                   data:
                     brightness_pct: 30
                     rgb_color: [255, 160, 0]
+            # default: evening scene. Covers the summer edge where sunrise is
+            # before 05:00 (dawn bucket cannot match) and a blinds-dark
+            # morning falls through -- light warm rather than nothing.
+          default:
+            - action: light.turn_on
+              target:
+                entity_id: "{{ targets }}"
+              data:
+                brightness_pct: 30
+                rgb_color: [255, 160, 0]
       mode: restart
 
     # -------------------------------------------------------------------------
@@ -172,6 +183,7 @@ master_bed_nightlight:
           id: mike_asleep
         - trigger: numeric_state
           entity_id: cover.master_blinds
+          attribute: current_position   # position attribute, not the string state
           above: 50
           id: blinds_open
       conditions:
