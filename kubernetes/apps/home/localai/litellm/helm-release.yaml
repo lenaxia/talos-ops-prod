@@ -291,9 +291,15 @@ spec:
               enable_auto_tool_choice: true
               tool_call_parser: openai
 
-              # Production Best Practices
-              disable_spend_logs: True # turn off writing each transaction to the db for better performance
-              disable_error_logs: True # turn off writing LLM Exceptions to DB
+              # Spend + error logs ENABLED (2026-10-05) for per-key
+              # attribution/observability. The LiteLLM "production
+              # best practices" snippet had disabled both for DB write
+              # performance, which made it impossible to attribute
+              # which virtual key called which model (e.g. the OpenAI
+              # "no credits" errors could not be traced to a key).
+              # Writes are batched (proxy_batch_write_at: 60).
+              disable_spend_logs: False
+              disable_error_logs: False
 
             # MCP Gateway: register hass-mcp (running as a sibling pod with
             # supergateway exposing SSE). LiteLLM reads tools from this server
