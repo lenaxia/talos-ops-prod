@@ -5,9 +5,8 @@
 # interleavings (asleep timer arriving while the partner is legitimately
 # up and lit).
 # =============================================================================
-from homeassistant.core import HomeAssistant
-
 from .conftest import (
+    MAIN_LIGHTS,
     MIKE_MAT,
     PIR,
     SEG_MIKE_HB,
@@ -18,14 +17,8 @@ from .conftest import (
     local,
     seed_room,
     tick,
+    targets,
 )
-
-
-def _targets(call) -> set[str]:
-    eid = call.data["entity_id"]
-    if isinstance(eid, str):
-        eid = [eid]
-    return set(eid)
 
 
 async def test_mat_flap_rapid_cycles_never_light_sleeper(hass, nightlight, freezer):
@@ -44,7 +37,7 @@ async def test_mat_flap_rapid_cycles_never_light_sleeper(hass, nightlight, freez
     await hass.async_block_till_done()
     # serena's last flip was 'off' 8 s ago -> still IN; mike OUT -> his side
     assert len(nightlight["on"]) == 1
-    assert _targets(nightlight["on"][0]) == {SEG_MIKE_HB}
+    assert targets(nightlight["on"][0]) == {SEG_MIKE_HB}
 
 
 async def test_mat_unknown_state_counts_as_out(hass, nightlight, freezer):
@@ -53,7 +46,7 @@ async def test_mat_unknown_state_counts_as_out(hass, nightlight, freezer):
     seed_room(hass, serena_mat="unknown", mike_mat="on")
     fire_motion(hass)
     await hass.async_block_till_done()
-    assert _targets(nightlight["on"][0]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
+    assert targets(nightlight["on"][0]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
 
 
 async def test_pir_unavailable_then_recovered(hass, nightlight, freezer):
@@ -71,7 +64,7 @@ async def test_pir_unavailable_then_recovered(hass, nightlight, freezer):
 
     fire_motion(hass)
     await hass.async_block_till_done()
-    assert _targets(nightlight["on"][0]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
+    assert targets(nightlight["on"][0]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
 
 
 async def test_rapid_retrigger_restart_stays_consistent(hass, nightlight, freezer):
@@ -91,7 +84,7 @@ async def test_rapid_retrigger_restart_stays_consistent(hass, nightlight, freeze
     await hass.async_block_till_done()
 
     # last run wins: everything lit for both-out
-    assert _targets(nightlight["on"][-1]) == {SEG_SERENA_HB, SEG_SERENA_GROUND, SEG_MIKE_HB}
+    assert targets(nightlight["on"][-1]) == {SEG_SERENA_HB, SEG_SERENA_GROUND, SEG_MIKE_HB}
 
     hass.states.async_set(PIR, "off")
     await hass.async_block_till_done()
@@ -123,7 +116,7 @@ async def test_asleep_timer_arrives_while_partner_active(hass, nightlight, freez
     await tick(hass, freezer, 5)
     fire_motion(hass)
     await hass.async_block_till_done()
-    assert _targets(nightlight["on"][-1]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
+    assert targets(nightlight["on"][-1]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
 
     # mike's asleep trigger fires at 5 min; gate sees serena still out -> stop
     await tick(hass, freezer, 70)
@@ -140,15 +133,15 @@ async def test_nightlight_relights_after_main_lights_cycle(hass, nightlight, fre
     await hass.async_block_till_done()
     assert nightlight["on"]
 
-    hass.states.async_set("light.master_bedroom_lights", "on")
+    hass.states.async_set(MAIN_LIGHTS, "on")
     await hass.async_block_till_done()
     assert nightlight["off"]
 
     hass.states.async_set(PIR, "off")
     await hass.async_block_till_done()
-    hass.states.async_set("light.master_bedroom_lights", "off")
+    hass.states.async_set(MAIN_LIGHTS, "off")
     await hass.async_block_till_done()
     await tick(hass, freezer, 5)
     fire_motion(hass)
     await hass.async_block_till_done()
-    assert _targets(nightlight["on"][-1]) == {SEG_SERENA_HB, SEG_SERENA_GROUND, SEG_MIKE_HB}
+    assert targets(nightlight["on"][-1]) == {SEG_SERENA_HB, SEG_SERENA_GROUND, SEG_MIKE_HB}

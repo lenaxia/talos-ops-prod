@@ -1,13 +1,15 @@
 # Harness semantic-parity audit
 
 The harness pins HA **2026.2.3** (newest published to PyPI) while the cluster
-runs **2026.9.3** (`ghcr.io/lenaxia/home-assistant`). This audit verifies the
-HA behaviors the test suite depends on are identical between the two, so
-version skew cannot silently invalidate test results.
+runs **2026.9.4** (`ghcr.io/lenaxia/home-assistant`, helm-release.yaml). This
+audit verifies the HA behaviors the test suite depends on are identical
+between the two, so version skew cannot silently invalidate test results.
 
-Audit date: 2026-10-05. **Re-run this audit whenever either version changes.**
-Method: fetch the deployed tag's source from `home-assistant/core` and diff
-against the installed harness copy.
+Audit date: 2026-10-05, performed against tag **2026.9.4** (all five audited
+files are also byte-identical between 2026.9.3 and 2026.9.4, so conclusions
+carry across patch releases in that series). **Re-run this audit whenever
+either version changes.** Method: fetch the deployed tag's source from
+`home-assistant/core` and diff against the installed harness copy.
 
 | # | Semantic | File(s) | 2026.2.3 | 2026.9.3 | Verdict |
 |---|---|---|---|---|---|
