@@ -16,19 +16,24 @@
 #     deep night (23:00-05:00) 10% deep red   [255,40,0]
 #     dawn (05:00-sunrise)     20% warm white [255,190,140]
 #   OFF: motion clear 3 min / main lights on / both back in bed 5 min /
-#        blinds opened past 50%.
+#        blinds opened past 50% / PIR stuck on 30 min (watchdog). The
+#        asleep triggers only fire the fade when BOTH mats read in bed.
+#   - A mat ENTITY that disappears entirely (typo/removal) evaluates as
+#     in-bed (side stays dark) rather than out — distinct from the
+#     unavailable/unknown state handling above.
 #
 # Bed-sensor semantics (Withings mats, ~1 s register, can bounce on
 # roll-overs):
-#   - A person is "OUT" if their mat has been off >= side_debounce (15 s).
-#     The room PIR cannot see someone under covers, so the motion trigger
-#     itself is the primary roll-over guard; the 15 s side-debounce only
-#     closes the narrow window where a sleeper's mat bounces at the same
-#     moment the partner walks. Drop to 0 when bedside PIR/mmWave sensors
-#     are added under the nightstands.
-#   - An unavailable mat (Serena's was offline for a week in Sep 2026)
-#     counts as OUT: worst case the dead side lights dim red, rather than
-#     leaving a real night walker in the dark.
+#   - A person is "OUT" if their mat has been off for >= side_debounce
+#     (15 s), or the mat is unavailable/unknown (dead sensor never leaves
+#     a real walker in the dark). Consequences of the debounce: a mat that
+#     bounced off < 15 s ago (roll-over) counts as IN BED, so the sleeper's
+#     side stays dark; a REAL get-up is also "in bed" for the first 15 s,
+#     so their side starts dark and lights on the next PIR re-trigger
+#     (PIR fires repeatedly while walking). Drop side_debounce to 0 when
+#     bedside PIR/mmWave sensors are added under the nightstands.
+#   - The room PIR cannot see someone under covers, so the motion trigger
+#     itself is the primary roll-over guard.
 #   - "Unknown mover": motion while BOTH mats read in-bed (debounced)
 #     lights nothing — protects sleepers from pet/false triggers. A real
 #     get-up resolves in seconds: the mat flips, continued motion
@@ -84,15 +89,15 @@ master_bed_nightlight:
         side_debounce: 15
         # -------------------------------------------------------------------
         serena_out: >
-          {{ not is_state('binary_sensor.master_bedroom_serenawithings_in_bed', 'on')
-             or ((now() - states.binary_sensor.master_bedroom_serenawithings_in_bed.last_changed)
-                 .total_seconds() >= side_debounce
-                 if is_state('binary_sensor.master_bedroom_serenawithings_in_bed', 'off') else false) }}
+          {% set mat = states.binary_sensor.master_bedroom_serenawithings_in_bed %}
+          {{ (mat.state == 'off'
+              and (now() - mat.last_changed).total_seconds() >= side_debounce)
+             or mat.state in ['unavailable', 'unknown'] }}
         mike_out: >
-          {{ not is_state('binary_sensor.master_bedroom_mikewithings_in_bed', 'on')
-             or ((now() - states.binary_sensor.master_bedroom_mikewithings_in_bed.last_changed)
-                 .total_seconds() >= side_debounce
-                 if is_state('binary_sensor.master_bedroom_mikewithings_in_bed', 'off') else false) }}
+          {% set mat = states.binary_sensor.master_bedroom_mikewithings_in_bed %}
+          {{ (mat.state == 'off'
+              and (now() - mat.last_changed).total_seconds() >= side_debounce)
+             or mat.state in ['unavailable', 'unknown'] }}
       actions:
         # unknown mover: both in bed (debounced) -> light nothing
         - if:
@@ -159,8 +164,10 @@ master_bed_nightlight:
       alias: "MASTER BED: Nightlight off"
       description: >
         Fade the nightlight out when motion has been clear for 3 minutes,
-        the main lights come on, everyone is back in bed for 5 minutes, or
-        the blinds open (morning).
+        the main lights come on, everyone is back in bed for 5 minutes,
+        the blinds open (morning), or the PIR is stuck on for 30 minutes
+        (watchdog). The asleep triggers only turn the lights off if BOTH
+        mats read in bed — the partner still being up stops the run.
       triggers:
         - trigger: state
           entity_id: binary_sensor.motion_sensor_gen2_motion_detection
@@ -186,27 +193,44 @@ master_bed_nightlight:
           attribute: current_position   # position attribute, not the string state
           above: 50
           id: blinds_open
+        # watchdog: a PIR stuck ON (no clear edge) for 30 min kills the
+        # nightlight — a stuck-on Z-Wave PIR would otherwise keep it lit
+        # all night (the motion-clear trigger can never fire). A healthy
+        # PIR always clears minutes after last motion, so 30 min of
+        # continuous 'on' without a single off-edge is the failure
+        # signature; real occupancy keeps producing edges and never trips
+        # this.
+        - trigger: state
+          entity_id: binary_sensor.motion_sensor_gen2_motion_detection
+          to: "on"
+          for: "00:30:00"
+          id: watchdog
       conditions:
         - condition: state
           entity_id: input_boolean.master_bed_nightlight_auto
           state: "on"
       actions:
-        # only "everyone back in bed" turns things off; the other triggers
-        # are unconditional stoppers
+        # asleep-class triggers stop here unless everyone is back in bed;
+        # every other trigger falls through to the fade. (A condition
+        # inside a then-branch only stops that branch, so the gate must
+        # live in the if-list.)
         - if:
             - condition: trigger
               id:
                 - serena_asleep
                 - mike_asleep
-          then:
-            - condition: and
+            - condition: not
               conditions:
-                - condition: state
-                  entity_id: binary_sensor.master_bedroom_serenawithings_in_bed
-                  state: "on"
-                - condition: state
-                  entity_id: binary_sensor.master_bedroom_mikewithings_in_bed
-                  state: "on"
+                - condition: and
+                  conditions:
+                    - condition: state
+                      entity_id: binary_sensor.master_bedroom_serenawithings_in_bed
+                      state: "on"
+                    - condition: state
+                      entity_id: binary_sensor.master_bedroom_mikewithings_in_bed
+                      state: "on"
+          then:
+            - stop: "partner still up — leave the nightlight on"
         - action: light.turn_off
           target:
             entity_id:
