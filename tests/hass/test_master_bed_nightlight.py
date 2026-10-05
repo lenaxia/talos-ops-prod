@@ -26,14 +26,8 @@ from .conftest import (
     seed_room,
     setup_nightlight,
     tick,
+    targets,
 )
-
-
-def _targets(call) -> set[str]:
-    eid = call.data["entity_id"]
-    if isinstance(eid, str):
-        eid = [eid]
-    return set(eid)
 
 
 # ---------------------------------------------------------------------------
@@ -87,7 +81,7 @@ async def test_serena_out_mike_asleep_lights_serena_side_only(hass, nightlight, 
     fire_motion(hass)
     await hass.async_block_till_done()
     assert len(nightlight["on"]) == 1
-    assert _targets(nightlight["on"][0]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
+    assert targets(nightlight["on"][0]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
 
 
 async def test_mike_out_serena_asleep_lights_mike_side_only(hass, nightlight, freezer):
@@ -97,7 +91,7 @@ async def test_mike_out_serena_asleep_lights_mike_side_only(hass, nightlight, fr
     fire_motion(hass)
     await hass.async_block_till_done()
     assert len(nightlight["on"]) == 1
-    assert _targets(nightlight["on"][0]) == {SEG_MIKE_HB}
+    assert targets(nightlight["on"][0]) == {SEG_MIKE_HB}
 
 
 async def test_everyone_out_lights_all_segments(hass, nightlight, freezer):
@@ -106,7 +100,7 @@ async def test_everyone_out_lights_all_segments(hass, nightlight, freezer):
     await tick(hass, freezer, 30)
     fire_motion(hass)
     await hass.async_block_till_done()
-    assert _targets(nightlight["on"][0]) == set(ALL_SEGMENTS)
+    assert targets(nightlight["on"][0]) == set(ALL_SEGMENTS)
 
 
 async def test_regression_debounce_bounce_does_not_light_sleeper(hass, nightlight, freezer):
@@ -130,7 +124,7 @@ async def test_dead_mat_counts_as_out(hass, nightlight, freezer):
     seed_room(hass, serena_mat="unavailable", mike_mat="on")
     fire_motion(hass)
     await hass.async_block_till_done()
-    assert _targets(nightlight["on"][0]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
+    assert targets(nightlight["on"][0]) == {SEG_SERENA_HB, SEG_SERENA_GROUND}
 
 
 # ---------------------------------------------------------------------------
