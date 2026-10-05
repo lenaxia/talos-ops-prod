@@ -40,3 +40,4 @@ wiki
 config.*.yaml
 venv
 .tmp
+.pytest_cache/
