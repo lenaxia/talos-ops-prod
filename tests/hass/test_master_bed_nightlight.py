@@ -217,13 +217,16 @@ async def test_regression_asleep_gate_partner_up_keeps_lights_on(hass, nightligh
     """REGRESSION (PR #2649 bug 2): mike back in bed 5 min while Serena is
     still UP must NOT kill the nightlight."""
     freezer.move_to(local(23, 30))
-    seed_room(hass, serena_mat="off", mike_mat="on")
+    seed_room(hass, serena_mat="off", mike_mat="off")
     await tick(hass, freezer, 30)
     fire_motion(hass)
     await hass.async_block_till_done()
     assert nightlight["on"]
 
+    # real off->on transition (a state-identical write emits no
+    # state_changed and never arms the for-timer — harness lesson)
     hass.states.async_set(MIKE_MAT, "on")
+    await hass.async_block_till_done()
     await tick(hass, freezer, 301)
     assert nightlight["off"] == []
 
