@@ -1,0 +1,35 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: "HASS Automations"
+# Behavioral tests for GitOps-managed Home Assistant packages, using an
+# in-process HA (pytest-homeassistant-custom-component). No cluster needed.
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "kubernetes/apps/home/home-assistant/app/config/packages/**"
+      - "tests/hass/**"
+      - "requirements-dev.txt"
+      - ".github/workflows/hass-automations.yaml"
+
+jobs:
+  hass-automations:
+    name: HASS automations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install test harness
+        run: pip install -r requirements-dev.txt
+
+      - name: Run package tests
+        run: python -m pytest tests/hass -q
