@@ -87,6 +87,14 @@ def fire_motion(hass: HomeAssistant) -> None:
     hass.states.async_set(PIR, "on")
 
 
+def targets(call: ServiceCall) -> set[str]:
+    """Entity-id set targeted by a recorded service call."""
+    eid = call.data["entity_id"]
+    if isinstance(eid, str):
+        eid = [eid]
+    return set(eid)
+
+
 @pytest.fixture
 def light_calls(hass: HomeAssistant):
     """Record light.turn_on / light.turn_off service calls."""
