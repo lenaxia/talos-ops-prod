@@ -16,7 +16,11 @@
 #     deep night (23:00-05:00) 10% deep red   [255,40,0]
 #     dawn (05:00-sunrise)     20% warm white [255,190,140]
 #   OFF: motion clear 3 min / main lights on / both back in bed 5 min /
-#        blinds opened past 50%.
+#        blinds opened past 50% / PIR stuck on 30 min (watchdog). The
+#        asleep triggers only fire the fade when BOTH mats read in bed.
+#   - A mat ENTITY that disappears entirely (typo/removal) evaluates as
+#     in-bed (side stays dark) rather than out — distinct from the
+#     unavailable/unknown state handling above.
 #
 # Bed-sensor semantics (Withings mats, ~1 s register, can bounce on
 # roll-overs):
@@ -160,8 +164,10 @@ master_bed_nightlight:
       alias: "MASTER BED: Nightlight off"
       description: >
         Fade the nightlight out when motion has been clear for 3 minutes,
-        the main lights come on, everyone is back in bed for 5 minutes, or
-        the blinds open (morning).
+        the main lights come on, everyone is back in bed for 5 minutes,
+        the blinds open (morning), or the PIR is stuck on for 30 minutes
+        (watchdog). The asleep triggers only turn the lights off if BOTH
+        mats read in bed — the partner still being up stops the run.
       triggers:
         - trigger: state
           entity_id: binary_sensor.motion_sensor_gen2_motion_detection
@@ -187,15 +193,15 @@ master_bed_nightlight:
           attribute: current_position   # position attribute, not the string state
           above: 50
           id: blinds_open
-        # watchdog: a segment stuck on 30+ min with the PIR quiet or dead
-        # (stuck-on Z-Wave PIR would otherwise keep the nightlight on all
-        # night). Genuine continuous presence keeps the PIR re-triggering,
-        # so the for-5-min-off condition stays false and lights persist.
+        # watchdog: a PIR stuck ON (no clear edge) for 30 min kills the
+        # nightlight — a stuck-on Z-Wave PIR would otherwise keep it lit
+        # all night (the motion-clear trigger can never fire). A healthy
+        # PIR always clears minutes after last motion, so 30 min of
+        # continuous 'on' without a single off-edge is the failure
+        # signature; real occupancy keeps producing edges and never trips
+        # this.
         - trigger: state
-          entity_id:
-            - light.master_bedroom_wled_master_bed_segment_1
-            - light.master_bedroom_wled_master_bed_segment_2
-            - light.master_bedroom_wled_master_bed_segment_3
+          entity_id: binary_sensor.motion_sensor_gen2_motion_detection
           to: "on"
           for: "00:30:00"
           id: watchdog
@@ -204,22 +210,27 @@ master_bed_nightlight:
           entity_id: input_boolean.master_bed_nightlight_auto
           state: "on"
       actions:
-        # only "everyone back in bed" turns things off; the other triggers
-        # are unconditional stoppers
+        # asleep-class triggers stop here unless everyone is back in bed;
+        # every other trigger falls through to the fade. (A condition
+        # inside a then-branch only stops that branch, so the gate must
+        # live in the if-list.)
         - if:
             - condition: trigger
               id:
                 - serena_asleep
                 - mike_asleep
-          then:
-            - condition: and
+            - condition: not
               conditions:
-                - condition: state
-                  entity_id: binary_sensor.master_bedroom_serenawithings_in_bed
-                  state: "on"
-                - condition: state
-                  entity_id: binary_sensor.master_bedroom_mikewithings_in_bed
-                  state: "on"
+                - condition: and
+                  conditions:
+                    - condition: state
+                      entity_id: binary_sensor.master_bedroom_serenawithings_in_bed
+                      state: "on"
+                    - condition: state
+                      entity_id: binary_sensor.master_bedroom_mikewithings_in_bed
+                      state: "on"
+          then:
+            - stop: "partner still up — leave the nightlight on"
         - action: light.turn_off
           target:
             entity_id:
