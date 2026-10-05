@@ -20,23 +20,50 @@
 #        week in Sep 2026) also falls through to midnight.
 #   2. AT 00:00 all exterior lights off, unconditionally (hard cutoff).
 #   3. MOTION LIGHTS (front door + garage only; no deck camera exists):
-#      camera motion -> that light on; light off again after 2 min without
-#      motion (re-triggered motion resets the timer). Armed only between
-#      sunset and sunrise.
+#      armed ONLY once the exterior lights have gone out for the night —
+#      bed shutoff, midnight cutoff, or manual (latched by
+#      exterior_motion_lights_arm when all three lights are off between
+#      sunset and sunrise). While armed: camera motion -> that light on;
+#      light off again after 2 min without motion (re-triggered motion
+#      resets the timer). Per-light latches (exterior_motion_front_door/
+#      garage_armed) clear at sunrise or when all three lights come back
+#      on (dusk baseline / manual full re-light).
+#   4. MANUAL OVERRIDE per light: a MANUAL turn-on of the front door or
+#      garage light disarms motion management for JUST that light for
+#      the rest of the night. Detected via context — service calls made
+#      by automations/scripts/scenes carry a parent context id, manual
+#      flips (physical Z-Wave switch, UI toggle, voice) do not — so
+#      motion-on and the garage-door flash pulse cannot disarm
+#      themselves. Re-armed by the next all-out arm event.
 #
 # Coexists with the UI automation "Exterior Lights: Sunset & Sunrise"
-# (dusk-on baseline at sunset-30m, all-off at sunrise+15m). Edge case:
-# motion lights killed by a bed/midnight shutoff at 00:00 while someone is
-# outside stay dark unless motion re-edges (documented, accepted).
+# (dusk-on baseline at sunset-30m, all-off at sunrise+15m). The latch is
+# what keeps the motion rules from fighting that baseline (2026-10-04
+# bug: motion-off kept killing the dusk-on lights all evening). Edge
+# cases (documented, accepted): a motion-lit light killed by a later
+# shutoff while someone is outside stays dark unless motion re-edges;
+# a light turned on by ANOTHER automation (not manual) stays under
+# motion management.
 #
 # Tuning:
 #   - Bed shutoff window: edit the two time conditions in rule 1.
 #   - Bed debounce: the 00:20:00 "for" values AND the 1200s in the
 #     everyone-asleep template (keep them equal).
 #   - Motion hold: the 00:02:00 "for" on the off-triggers.
+#   - Motion arming: the arm/disarm/manual-override automations below —
+#     the latches are derivable from switch states + context; don't
+#     toggle them by hand.
 # =============================================================================
 
 exterior_lights:
+
+  input_boolean:
+    exterior_motion_front_door_armed:
+      name: Exterior Motion Front Door Armed
+      icon: mdi:motion-sensor
+    exterior_motion_garage_armed:
+      name: Exterior Motion Garage Armed
+      icon: mdi:motion-sensor
 
   automation:
     # -------------------------------------------------------------------------
@@ -123,16 +150,148 @@ exterior_lights:
       mode: single
 
     # -------------------------------------------------------------------------
+    - id: exterior_motion_lights_arm
+      alias: "EXTERIOR: Motion lights arm — lights out for the night"
+      description: >
+        Latch the motion-light rules on once ALL three exterior lights are
+        off during the sunset-sunrise window — regardless of why they went
+        out: midnight cutoff, everyone-asleep shutoff, or manual. The
+        latches stay on while motion re-lights individual fixtures (arming
+        is one-way precisely so motion-on cannot disarm it).
+      triggers:
+        - trigger: state
+          entity_id:
+            - switch.on_off_switch
+            - switch.s2_on_off_switch
+            - switch.exterior_lights_2
+          to: "off"
+      conditions:
+        # single condition on purpose: HA only OR-s the midnight wrap when
+        # after/before live in ONE sun condition (same quirk as the
+        # motion-on rules below)
+        - condition: sun
+          after: sunset
+          before: sunrise
+        - condition: state
+          entity_id: switch.on_off_switch
+          state: "off"
+        - condition: state
+          entity_id: switch.s2_on_off_switch
+          state: "off"
+        - condition: state
+          entity_id: switch.exterior_lights_2
+          state: "off"
+      actions:
+        - action: input_boolean.turn_on
+          target:
+            entity_id:
+              - input_boolean.exterior_motion_front_door_armed
+              - input_boolean.exterior_motion_garage_armed
+      mode: single
+
+    - id: exterior_motion_lights_disarm
+      alias: "EXTERIOR: Motion lights disarm"
+      description: >
+        Clear both latches at sunrise, or when all three lights are back
+        on (dusk baseline or a deliberate manual full re-light) — the
+        motion rules must never manage lights that are on for the
+        evening. A single fixture on (e.g. motion-lit, or the garage-door
+        flash pulse) does NOT disarm here: only all three on, sunrise, or
+        the per-light manual override do.
+      triggers:
+        - trigger: sun
+          event: sunrise
+        - trigger: state
+          entity_id:
+            - switch.on_off_switch
+            - switch.s2_on_off_switch
+            - switch.exterior_lights_2
+          to: "on"
+      conditions:
+        - condition: or
+          conditions:
+            # daytime: any sunrise/on-trigger outside the night window
+            # clears a stale latch
+            - condition: sun
+              after: sunrise
+              before: sunset
+            - condition: and
+              conditions:
+                - condition: state
+                  entity_id: switch.on_off_switch
+                  state: "on"
+                - condition: state
+                  entity_id: switch.s2_on_off_switch
+                  state: "on"
+                - condition: state
+                  entity_id: switch.exterior_lights_2
+                  state: "on"
+      actions:
+        - action: input_boolean.turn_off
+          target:
+            entity_id:
+              - input_boolean.exterior_motion_front_door_armed
+              - input_boolean.exterior_motion_garage_armed
+      mode: single
+
+    - id: exterior_motion_manual_override_front_door
+      alias: "EXTERIOR: Motion manual override — front door"
+      description: >
+        A MANUAL turn-on of the front door light — physical Z-Wave
+        switch, UI toggle, voice — disarms motion management for just
+        that light for the rest of the night. Automation-caused changes
+        (motion-on, garage flash pulse, scenes) carry a parent context id
+        and are ignored, so nothing can disarm itself. Re-armed by the
+        next all-out arm event.
+      triggers:
+        - trigger: state
+          entity_id: switch.on_off_switch
+          to: "on"
+      conditions:
+        - condition: template
+          value_template: "{{ trigger.to_state.context.parent_id is none }}"
+      actions:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.exterior_motion_front_door_armed
+      mode: single
+
+    - id: exterior_motion_manual_override_garage
+      alias: "EXTERIOR: Motion manual override — garage"
+      description: >
+        A MANUAL turn-on of the garage light — physical Z-Wave switch, UI
+        toggle, voice — disarms motion management for just that light for
+        the rest of the night. Automation-caused changes carry a parent
+        context id and are ignored. Re-armed by the next all-out arm
+        event.
+      triggers:
+        - trigger: state
+          entity_id: switch.s2_on_off_switch
+          to: "on"
+      conditions:
+        - condition: template
+          value_template: "{{ trigger.to_state.context.parent_id is none }}"
+      actions:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.exterior_motion_garage_armed
+      mode: single
+
+    # -------------------------------------------------------------------------
     - id: exterior_motion_light_front_door_on
       alias: "EXTERIOR: Motion light on — front door"
       description: >
         Front door camera motion turns the front door exterior light on.
-        Armed between sunset and sunrise only.
+        Only while armed (lights out for the night) and between sunset
+        and sunrise.
       triggers:
         - trigger: state
           entity_id: binary_sensor.front_door_motion
           to: "on"
       conditions:
+        - condition: state
+          entity_id: input_boolean.exterior_motion_front_door_armed
+          state: "on"
         # single condition on purpose: HA only OR-s the midnight wrap when
         # after/before live in ONE sun condition; as two AND-ed conditions
         # the window is never true (see sun/condition.py, HA 2026.9.3)
@@ -150,12 +309,16 @@ exterior_lights:
       description: >
         Front door light off after 2 minutes without motion; re-triggered
         motion resets the timer (the for-timer restarts on each new
-        motion event).
+        motion event). Latch-only: the latch is only ever on at night.
       triggers:
         - trigger: state
           entity_id: binary_sensor.front_door_motion
           to: "off"
           for: "00:02:00"
+      conditions:
+        - condition: state
+          entity_id: input_boolean.exterior_motion_front_door_armed
+          state: "on"
       actions:
         - action: switch.turn_off
           target:
@@ -167,12 +330,16 @@ exterior_lights:
       alias: "EXTERIOR: Motion light on — garage"
       description: >
         North garage camera motion turns the garage exterior light on.
-        Armed between sunset and sunrise only.
+        Only while armed (lights out for the night) and between sunset
+        and sunrise.
       triggers:
         - trigger: state
           entity_id: binary_sensor.north_garage_motion
           to: "on"
       conditions:
+        - condition: state
+          entity_id: input_boolean.exterior_motion_garage_armed
+          state: "on"
         # single condition on purpose: HA only OR-s the midnight wrap when
         # after/before live in ONE sun condition; as two AND-ed conditions
         # the window is never true (see sun/condition.py, HA 2026.9.3)
@@ -189,12 +356,17 @@ exterior_lights:
       alias: "EXTERIOR: Motion light off — garage"
       description: >
         Garage light off after 2 minutes without motion; re-triggered
-        motion resets the timer.
+        motion resets the timer. Latch-only: the latch is only ever on
+        at night.
       triggers:
         - trigger: state
           entity_id: binary_sensor.north_garage_motion
           to: "off"
           for: "00:02:00"
+      conditions:
+        - condition: state
+          entity_id: input_boolean.exterior_motion_garage_armed
+          state: "on"
       actions:
         - action: switch.turn_off
           target:
