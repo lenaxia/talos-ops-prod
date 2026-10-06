@@ -1,8 +1,8 @@
 ---
 # SSD -> HDD aging: moves filled, idle volume files matching COLLECTION_PATTERN
-# from the ssd dataDir to the hdd dataDir. Ships SUSPENDED - enable with:
-#   kubectl patch cronjob seaweedfs-tier-move -n storage -p '{"spec":{"suspend":false}}'
-# (and commit the equivalent change here).
+# from the ssd dataDir to the hdd dataDir. Ships SUSPENDED - enable by
+# committing `suspend: false` plus your COLLECTION_PATTERN here (a plain
+# `kubectl patch` would be reverted by the next Flux reconcile).
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -10,7 +10,7 @@ metadata:
   namespace: storage
 spec:
   schedule: "0 4 * * *"
-  timeZone: America/Los_Angeles
+  timeZone: ${TIMEZONE}
   suspend: true
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -40,4 +40,4 @@ spec:
               command: ["/bin/sh", "-c"]
               args:
                 - |
-                  echo "volume.tier.move -fromDiskType=ssd -toDiskType=hdd -collectionPattern=${COLLECTION_PATTERN} -fullPercent=${FULL_PERCENT} -quietFor=${QUIET_FOR}" | weed shell -master=seaweedfs-master.storage.svc.cluster.local:9333
+                  echo "volume.tier.move -fromDiskType=ssd -toDiskType=hdd -collectionPattern=$${COLLECTION_PATTERN} -fullPercent=$${FULL_PERCENT} -quietFor=$${QUIET_FOR}" | weed shell -master=seaweedfs-master.storage.svc.cluster.local:9333

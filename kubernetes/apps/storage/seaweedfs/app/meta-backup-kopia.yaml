@@ -35,6 +35,9 @@ metadata:
   namespace: storage
 spec:
   replicas: 1
+  # RWO Longhorn PVC: a rolling update would strand the volume on another node.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: seaweedfs-meta-backup-kopia

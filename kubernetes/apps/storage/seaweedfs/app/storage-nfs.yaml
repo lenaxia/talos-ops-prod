@@ -1,21 +1,20 @@
 ---
 # Static NFS storage for SeaweedFS, following the repo's minio-nfs pattern:
-# fake "nfs" provisioner StorageClass + hand-made PV bound by name/size/modes.
-# Sizes are nominal (1Mi) - real capacity is the free space of each Synology
-# volume, which SeaweedFS watches via minFreeSpacePercent.
+# hand-made PVs bound to claims purely by storageClassName match. No
+# StorageClass objects are created (same as minio-nfs) - the names below
+# reference nothing dynamic; binding is purely static. Sizes are nominal
+# (1Mi) - real capacity is the free space of each Synology volume, which
+# SeaweedFS watches via minFreeSpacePercent.
+#
+# The ssd/hdd PVs are ReadWriteOnce because the chart's StatefulSet
+# volumeClaimTemplates request ReadWriteOnce (a PV must advertise every mode
+# the claim asks for; single volume-server replica makes RWO correct).
+# The meta PV is ReadWriteMany to match its hand-written RWX claim.
 #
 # Tiers:
 #   /volume3/s3-ssd  -> SSD pool (Synology volume3)
 #   /volume1/s3-hdd  -> HDD pool (Synology volume1, SHR2)
 #   /volume1/backups/seaweedfs -> filer catalog backup #2 (NFS copy)
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: seaweedfs-ssd-nfs
-provisioner: nfs
-parameters:
-  archiveOnDelete: "false"
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -25,7 +24,7 @@ spec:
   capacity:
     storage: 1Mi # Size does not matter
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   storageClassName: seaweedfs-ssd-nfs
   persistentVolumeReclaimPolicy: Retain
   nfs:
@@ -37,14 +36,6 @@ spec:
     - hard
     - noatime
 ---
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: seaweedfs-hdd-nfs
-provisioner: nfs
-parameters:
-  archiveOnDelete: "false"
----
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -53,7 +44,7 @@ spec:
   capacity:
     storage: 1Mi # Size does not matter
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   storageClassName: seaweedfs-hdd-nfs
   persistentVolumeReclaimPolicy: Retain
   nfs:
@@ -64,14 +55,6 @@ spec:
     - nconnect=8
     - hard
     - noatime
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: seaweedfs-meta-nfs
-provisioner: nfs
-parameters:
-  archiveOnDelete: "false"
 ---
 apiVersion: v1
 kind: PersistentVolume

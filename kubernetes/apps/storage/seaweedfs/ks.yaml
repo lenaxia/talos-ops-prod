@@ -13,6 +13,8 @@ spec:
   sourceRef:
     kind: GitRepository
     name: home-kubernetes
+  dependsOn:
+    - name: cluster-storage-longhorn
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease

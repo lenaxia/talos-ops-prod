@@ -78,13 +78,17 @@ kubectl get pvc -n storage seaweedfs-meta-backup-kopia --show-labels
 
 ## Migration
 
+Edit `app/rclone-migrate-job.yaml` to `suspend: false` and commit - do NOT
+`kubectl patch` it (Flux re-applies every 30m and would revert the patch,
+killing an in-flight migration). Watch:
+
 ```sh
-kubectl patch job seaweedfs-rclone-migrate -n storage -p '{"spec":{"suspend":false}}'
 kubectl logs -n storage job/seaweedfs-rclone-migrate -f
 ```
 
-Copies the 12 kept buckets and verifies checksums (`rclone check`). Re-run by
-deleting the Job object (Flux re-creates it suspended).
+Copies the 12 kept buckets and verifies checksums (`rclone check`). When done,
+commit `suspend: true` again (or delete the Job object - Flux re-creates it
+suspended). Aborted runs resume; `rclone copy` is idempotent.
 
 ## Cutover (separate PR)
 

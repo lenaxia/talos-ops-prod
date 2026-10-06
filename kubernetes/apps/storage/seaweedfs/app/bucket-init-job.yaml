@@ -13,6 +13,8 @@ metadata:
   namespace: storage
 spec:
   backoffLimit: 20
+  # Bound the wait-for-cluster loop so a wedged deploy can't spin forever.
+  activeDeadlineSeconds: 3600
   template:
     spec:
       restartPolicy: OnFailure
@@ -37,12 +39,12 @@ spec:
               configure() {
                 bucket=$1
                 disk=$2
-                echo "--- bucket ${bucket} -> ${disk}"
-                if ! echo "s3.bucket.create -name ${bucket}" | weed shell -master="$MASTER" -filer="$FILER"; then
+                echo "--- bucket $${bucket} -> $${disk}"
+                if ! echo "s3.bucket.create -name $${bucket}" | weed shell -master="$MASTER" -filer="$FILER"; then
                   echo "(create failed - assuming bucket already exists)"
                 fi
-                if ! echo "fs.configure -locationPrefix=/buckets/${bucket}/ -disk=${disk} -apply" | weed shell -master="$MASTER" -filer="$FILER"; then
-                  echo "ERROR: fs.configure failed for ${bucket}"
+                if ! echo "fs.configure -locationPrefix=/buckets/$${bucket}/ -disk=$${disk} -apply" | weed shell -master="$MASTER" -filer="$FILER"; then
+                  echo "ERROR: fs.configure failed for $${bucket}"
                   failures=$((failures+1))
                 fi
               }
@@ -63,4 +65,4 @@ spec:
               echo "=== resulting path-specific settings ==="
               echo "fs.configure -ls" | weed shell -master="$MASTER" -filer="$FILER" || true
 
-              exit $failures
+              exit $((failures))

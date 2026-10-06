@@ -1,8 +1,11 @@
 ---
 # Manual-run migration: copies the 12 kept buckets MinIO -> SeaweedFS, then
-# verifies checksums. SUSPENDED by default; trigger when ready:
-#   kubectl patch job seaweedfs-rclone-migrate -n storage -p '{"spec":{"suspend":false}}'
-# Re-run after any code change: delete + re-create the Job via Flux.
+# verifies checksums. SUSPENDED by default; run by committing `suspend: false`
+# here (NOT `kubectl patch` - Flux re-applies this manifest every 30m and
+# would revert the patch and kill an in-flight migration mid-run). After the
+# job completes, commit `suspend: true` again, or delete the Job object
+# (Flux re-creates it suspended). `rclone copy` is idempotent, so aborted
+# runs resume where they left off.
 # Buckets NOT migrated (left on the old MinIO share as dormant archive):
 #   docbuddy-tpfs3, nextcloud-oh7iqq, loki-dev
 apiVersion: batch/v1
