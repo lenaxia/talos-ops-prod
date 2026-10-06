@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonLabels:
+  app.kubernetes.io/name: &app seaweedfs
+  app.kubernetes.io/instance: *app
+resources:
+  - storage-nfs.yaml
+  - secret.sops.yaml
+  - helm-release.yaml
+  - meta-backup-kopia.yaml
+  - meta-backup-nfs.yaml
+  - bucket-init-job.yaml
+  - tier-move-cronjob.yaml
+  - rclone-migrate-job.yaml

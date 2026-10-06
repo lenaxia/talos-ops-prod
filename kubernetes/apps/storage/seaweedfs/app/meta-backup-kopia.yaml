@@ -1,0 +1,75 @@
+---
+# Catalog backup #1: continuously streams every filer metadata change into a
+# second catalog on this PVC. The snapshot.home.arpa label enrolls the PVC in
+# the existing Kyverno + Kopia backup regime (Longhorn snapshot -> Kopia repo).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: seaweedfs-meta-backup-config
+  namespace: storage
+data:
+  backup.toml: |
+    [leveldb2]
+    enabled = true
+    dir = "/backup"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seaweedfs-meta-backup-kopia
+  namespace: storage
+  labels:
+    snapshot.home.arpa/enabled: "true"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seaweedfs-meta-backup-kopia
+  namespace: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-meta-backup-kopia
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-meta-backup-kopia
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      containers:
+        - name: meta-backup
+          image: chrislusf/seaweedfs:4.48
+          args:
+            - filer.meta.backup
+            - -filer=seaweedfs-filer.storage.svc.cluster.local:8888
+            - -restart # full copy on start, then continuous incremental
+            - -config=/etc/seaweedfs/backup.toml
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 10m
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/seaweedfs/backup.toml
+              subPath: backup.toml
+              readOnly: true
+            - name: backup
+              mountPath: /backup
+      volumes:
+        - name: config
+          configMap:
+            name: seaweedfs-meta-backup-config
+        - name: backup
+          persistentVolumeClaim:
+            claimName: seaweedfs-meta-backup-kopia

@@ -1,0 +1,66 @@
+---
+# One-shot: creates the migrated buckets and pins each bucket's tier
+# (where NEW volume files for that bucket are created):
+#   ssd: paperless, outline
+#   hdd: cnpg-5wxuej, restic, ragnarok, nemo-herc-ws, forgejo-k8s,
+#        ai-or-not, tftp, private, public, iceberg
+# Waits for the SeaweedFS cluster to come up first (Flux applies this Job at
+# the same time as the HelmRelease, which may not be ready yet).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seaweedfs-bucket-init
+  namespace: storage
+spec:
+  backoffLimit: 20
+  template:
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      containers:
+        - name: bucket-init
+          image: chrislusf/seaweedfs:4.48
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              MASTER=seaweedfs-master.storage.svc.cluster.local:9333
+              FILER=seaweedfs-filer.storage.svc.cluster.local:8888
+
+              echo "waiting for seaweedfs cluster..."
+              until echo "volume.list" | weed shell -master="$MASTER" -filer="$FILER" >/dev/null 2>&1; do
+                sleep 15
+              done
+              echo "cluster is up"
+
+              failures=0
+              configure() {
+                bucket=$1
+                disk=$2
+                echo "--- bucket ${bucket} -> ${disk}"
+                if ! echo "s3.bucket.create -name ${bucket}" | weed shell -master="$MASTER" -filer="$FILER"; then
+                  echo "(create failed - assuming bucket already exists)"
+                fi
+                if ! echo "fs.configure -locationPrefix=/buckets/${bucket}/ -disk=${disk} -apply" | weed shell -master="$MASTER" -filer="$FILER"; then
+                  echo "ERROR: fs.configure failed for ${bucket}"
+                  failures=$((failures+1))
+                fi
+              }
+
+              configure paperless ssd
+              configure outline ssd
+              configure cnpg-5wxuej hdd
+              configure restic hdd
+              configure ragnarok hdd
+              configure nemo-herc-ws hdd
+              configure forgejo-k8s hdd
+              configure ai-or-not hdd
+              configure tftp hdd
+              configure private hdd
+              configure public hdd
+              configure iceberg hdd
+
+              echo "=== resulting path-specific settings ==="
+              echo "fs.configure -ls" | weed shell -master="$MASTER" -filer="$FILER" || true
+
+              exit $failures

@@ -1,0 +1,93 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app seaweedfs
+  namespace: storage
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: seaweedfs
+      version: 4.48.0
+      sourceRef:
+        kind: HelmRepository
+        name: seaweedfs-charts
+        namespace: flux-system
+      interval: 30m
+  install:
+    remediation:
+      retries: 5
+  upgrade:
+    remediation:
+      retries: 5
+    cleanupOnFail: true
+  values:
+    master:
+      replicas: 3
+      # Sealed volume-file size; also the granularity of tier moves.
+      volumeSizeLimitMB: 1000
+      # No replication copies - single volume server, data protected by the
+      # NAS (SHR2 / RAID) beneath the NFS shares instead.
+      defaultReplication: "000"
+      nodeSelector: |
+        node-role.kubernetes.io/worker: "true"
+      # Raft/cluster state on local replicated storage, never on NFS.
+      data:
+        type: persistentVolumeClaim
+        size: 2Gi
+        storageClass: longhorn
+      logs:
+        type: emptyDir
+
+    volume:
+      replicas: 1
+      nodeSelector: |
+        node-role.kubernetes.io/worker: "true"
+      # Tags the two dataDirs (comma-ordered) as ssd/hdd tiers so the master
+      # can steer per-bucket placement and `volume.tier.move` can age data.
+      extraArgs:
+        - -disk=ssd,hdd
+      dataDirs:
+        - name: ssd
+          type: persistentVolumeClaim
+          size: 1Mi # nominal; binds the static NFS PV seaweedfs-ssd
+          storageClass: seaweedfs-ssd-nfs
+          maxVolumes: 0
+        - name: hdd
+          type: persistentVolumeClaim
+          size: 1Mi # nominal; binds the static NFS PV seaweedfs-hdd
+          storageClass: seaweedfs-hdd-nfs
+          maxVolumes: 0
+      # Volume index files on local replicated storage, never on NFS.
+      idx:
+        type: persistentVolumeClaim
+        size: 2Gi
+        storageClass: longhorn
+      logs:
+        type: emptyDir
+      # No resize hook - the NFS claims are nominal-size static PVs.
+      resizeHook:
+        enabled: false
+
+    filer:
+      replicas: 2
+      nodeSelector: |
+        node-role.kubernetes.io/worker: "true"
+      # Object catalog (names -> volume/offset) on local replicated storage.
+      data:
+        type: persistentVolumeClaim
+        size: 5Gi
+        storageClass: longhorn
+      logs:
+        type: emptyDir
+
+    s3:
+      enabled: true
+      replicas: 2
+      enableAuth: true
+      # Secret with key `seaweedfs_s3_config` (JSON identities) managed in
+      # app/secret.sops.yaml - one identity per consumer app.
+      existingConfigSecret: seaweedfs-s3-config
+      nodeSelector: |
+        node-role.kubernetes.io/worker: "true"

@@ -1,0 +1,49 @@
+---
+# Catalog backup #2: same continuous metadata stream, written to a plain
+# directory on the NAS (/volume1/backups/seaweedfs). Survives total cluster
+# loss; readable directly from the Synology.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seaweedfs-meta-backup-nfs
+  namespace: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-meta-backup-nfs
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-meta-backup-nfs
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      containers:
+        - name: meta-backup
+          image: chrislusf/seaweedfs:4.48
+          args:
+            - filer.meta.backup
+            - -filer=seaweedfs-filer.storage.svc.cluster.local:8888
+            - -restart # full copy on start, then continuous incremental
+            - -config=/etc/seaweedfs/backup.toml
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 10m
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/seaweedfs/backup.toml
+              subPath: backup.toml
+              readOnly: true
+            - name: backup
+              mountPath: /backup
+      volumes:
+        - name: config
+          configMap:
+            name: seaweedfs-meta-backup-config
+        - name: backup
+          persistentVolumeClaim:
+            claimName: seaweedfs-meta-nfs

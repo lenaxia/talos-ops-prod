@@ -1,0 +1,81 @@
+---
+# Manual-run migration: copies the 12 kept buckets MinIO -> SeaweedFS, then
+# verifies checksums. SUSPENDED by default; trigger when ready:
+#   kubectl patch job seaweedfs-rclone-migrate -n storage -p '{"spec":{"suspend":false}}'
+# Re-run after any code change: delete + re-create the Job via Flux.
+# Buckets NOT migrated (left on the old MinIO share as dormant archive):
+#   docbuddy-tpfs3, nextcloud-oh7iqq, loki-dev
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seaweedfs-rclone-migrate
+  namespace: storage
+spec:
+  suspend: true
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      containers:
+        - name: rclone
+          image: rclone/rclone:1.75.1
+          env:
+            # Source: MinIO
+            - name: RCLONE_CONFIG_SRC_TYPE
+              value: s3
+            - name: RCLONE_CONFIG_SRC_ENDPOINT
+              value: http://minio.storage.svc.cluster.local:9000
+            - name: RCLONE_CONFIG_SRC_REGION
+              value: us-east-1
+            - name: RCLONE_CONFIG_SRC_FORCE_PATH_STYLE
+              value: "true"
+            - name: RCLONE_CONFIG_SRC_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: minio
+                  key: MINIO_ROOT_USER
+            - name: RCLONE_CONFIG_SRC_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio
+                  key: MINIO_ROOT_PASSWORD
+            # Destination: SeaweedFS S3 gateway
+            - name: RCLONE_CONFIG_DST_TYPE
+              value: s3
+            - name: RCLONE_CONFIG_DST_ENDPOINT
+              value: http://seaweedfs-s3.storage.svc.cluster.local:8333
+            - name: RCLONE_CONFIG_DST_REGION
+              value: us-east-1
+            - name: RCLONE_CONFIG_DST_FORCE_PATH_STYLE
+              value: "true"
+            - name: RCLONE_CONFIG_DST_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: seaweedfs-s3-config
+                  key: admin_access_key_id
+            - name: RCLONE_CONFIG_DST_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: seaweedfs-s3-config
+                  key: admin_secret_access_key
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              BUCKETS="paperless outline cnpg-5wxuej restic ragnarok nemo-herc-ws forgejo-k8s ai-or-not tftp private public iceberg"
+              echo "=== copying ==="
+              for b in $BUCKETS; do
+                echo ">>> $b"
+                rclone copy "src:$b" "dst:$b" \
+                  --transfers 8 --checkers 8 \
+                  --stats-one-line --stats 30s
+              done
+              echo "=== verifying checksums ==="
+              rc=0
+              for b in $BUCKETS; do
+                echo ">>> check $b"
+                rclone check "src:$b" "dst:$b" --one-way || rc=1
+              done
+              exit $rc

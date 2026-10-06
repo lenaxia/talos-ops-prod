@@ -18,3 +18,4 @@ resources:
   - overseerr-oidc2.yaml
   - pikvm.yaml
   - unifi.yaml
+  - seaweedfs-s3.yaml
