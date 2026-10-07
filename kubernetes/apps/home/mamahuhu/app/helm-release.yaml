@@ -70,6 +70,11 @@ spec:
                   secretKeyRef:
                     name: mamahuhu
                     key: litellm-api-key
+              # OCR ladder: deterministic RapidOCR first, LLM fallback
+              - name: OCR_LADDER
+                value: "1"
+              - name: OCR_HTTP_URL
+                value: http://mamahuhu-ocr.home.svc.cluster.local:8000
               # models: qwen chat/vision, kokoro (Mandarin TTS), edge-tts
               # (Cantonese TTS, deployed alongside kokoro)
               - name: MODEL_CHAT
