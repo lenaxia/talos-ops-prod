@@ -1,7 +1,7 @@
 <user-mapping>
 
     <authorize
-        username="mike">
+        username="mikek">
 
         <!-- First authorized connection -->
         <connection name="HoshinoRuri">
