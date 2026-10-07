@@ -1,0 +1,93 @@
+---
+# Static NFS storage for SeaweedFS, following the repo's minio-nfs pattern:
+# hand-made PVs bound to claims purely by storageClassName match. No
+# StorageClass objects are created (same as minio-nfs) - the names below
+# reference nothing dynamic; binding is purely static. Sizes are nominal
+# (1Mi) - real capacity is the free space of each Synology volume, which
+# SeaweedFS watches via minFreeSpacePercent.
+#
+# The ssd/hdd PVs are ReadWriteOnce because the chart's StatefulSet
+# volumeClaimTemplates request ReadWriteOnce (a PV must advertise every mode
+# the claim asks for; single volume-server replica makes RWO correct).
+# The meta PV is ReadWriteMany to match its hand-written RWX claim.
+#
+# Tiers:
+#   /volume3/s3-ssd  -> SSD pool (Synology volume3)
+#   /volume1/s3-hdd  -> HDD pool (Synology volume1, SHR2)
+#   /volume1/backups/seaweedfs -> filer catalog backup #2 (NFS copy)
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: seaweedfs-ssd
+spec:
+  capacity:
+    storage: 1Mi # Size does not matter
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: seaweedfs-ssd-nfs
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: ${NAS_ADDR}
+    path: ${NFS_SEAWEED_SSD}
+  mountOptions:
+    - nfsvers=3
+    - nconnect=8
+    - hard
+    - noatime
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: seaweedfs-hdd
+spec:
+  capacity:
+    storage: 1Mi # Size does not matter
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: seaweedfs-hdd-nfs
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: ${NAS_ADDR}
+    path: ${NFS_SEAWEED_HDD}
+  mountOptions:
+    - nfsvers=3
+    - nconnect=8
+    - hard
+    - noatime
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: seaweedfs-meta
+spec:
+  capacity:
+    storage: 1Mi # Size does not matter
+  accessModes:
+    - ReadWriteMany
+  storageClassName: seaweedfs-meta-nfs
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: ${NAS_ADDR}
+    path: ${NFS_SEAWEED_META}
+  mountOptions:
+    - nfsvers=3
+    - nconnect=8
+    - hard
+    - noatime
+---
+# Claim for the NFS catalog backup pod (meta-backup-nfs.yaml).
+# The ssd/hdd tier claims are created by the chart's StatefulSet
+# (volumeClaimTemplates) and bind to the PVs above.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seaweedfs-meta-nfs
+  namespace: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: seaweedfs-meta-nfs
+  resources:
+    requests:
+      storage: 1Mi # Size does not matter
