@@ -112,7 +112,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.34.17"
+        tag: "0.34.18"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -143,7 +143,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.34.17"
+        tag: "0.34.18"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -159,7 +159,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:55f22223aaf852db9f7d5e71328b852e5b8f0ca9d303a6049962b4e9524f5688
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:e3b591503910fb68c58689e7b90769f8f1825c78b96183e35566fb223b69d8c3
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
@@ -167,7 +167,7 @@ spec:
       # OpencodeVerified condition). Render fails without it — by design.
       # Digest source: release v0.34.17 — canonical index digest; digest-GET verified 200.
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:97c1b89dcadee241bdca501a14bce0a10c83855f7f460a341ea1cf367184819d
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:3b37863c6b1738c059e1aac7b002836245c83d3ab66c9dba79c2e8472744d4ee
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -187,7 +187,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.34.17"
+            tag: "0.34.18"
       # ── v0.34.8 render guard (design 0061 §8.1 residual) ───────────────────
       # The v0.34.8 chart hard-FAILS the render when
       # controller.inferenceRelay.enabled=true under rbac.scope=namespace
@@ -303,7 +303,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.34.17"
+        tag: "0.34.18"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
