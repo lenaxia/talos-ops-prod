@@ -1,0 +1,43 @@
+---
+# SSD -> HDD aging: moves filled, idle volume files matching COLLECTION_PATTERN
+# from the ssd dataDir to the hdd dataDir. Ships SUSPENDED - enable by
+# committing `suspend: false` plus your COLLECTION_PATTERN here (a plain
+# `kubectl patch` would be reverted by the next Flux reconcile).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: seaweedfs-tier-move
+  namespace: storage
+spec:
+  schedule: "0 4 * * *"
+  timeZone: ${TIMEZONE}
+  suspend: true
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            node-role.kubernetes.io/worker: "true"
+          containers:
+            - name: tier-move
+              image: chrislusf/seaweedfs:4.48
+              env:
+                # Comma-separated bucket/collection names with * and ? wildcards.
+                # Example: "paperless,outline" or "paperless*"
+                - name: COLLECTION_PATTERN
+                  value: "*"
+                # Only move volumes at least this full (percent).
+                - name: FULL_PERCENT
+                  value: "95"
+                # Only move volumes idle for at least this long.
+                - name: QUIET_FOR
+                  value: "1h"
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  echo "volume.tier.move -fromDiskType=ssd -toDiskType=hdd -collectionPattern=$${COLLECTION_PATTERN} -fullPercent=$${FULL_PERCENT} -quietFor=$${QUIET_FOR}" | weed shell -master=seaweedfs-master.storage.svc.cluster.local:9333

@@ -7,5 +7,6 @@ resources:
   - ./longhorn/ks.yaml
   - ./minio/ks.yaml
   - ./paperless/ks.yaml
+  - ./seaweedfs/ks.yaml
   - ./volsync/ks.yaml
   - ./snapshot-controller/ks.yaml
