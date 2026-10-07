@@ -51,8 +51,10 @@ spec:
       containers:
         - name: meta-backup
           image: chrislusf/seaweedfs:4.48
-          # Longhorn volumes are root-owned; the image's default user cannot
-          # create the leveldb store there.
+          # The image's default entrypoint drops privileges to an unprivileged
+          # user, which cannot write the root-owned Longhorn volume. The chart
+          # always invokes /usr/bin/weed explicitly for the same reason.
+          command: ["/usr/bin/weed"]
           securityContext:
             runAsUser: 0
           args:
