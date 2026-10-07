@@ -91,3 +91,7 @@ spec:
       existingConfigSecret: seaweedfs-s3-config
       nodeSelector: |
         node-role.kubernetes.io/worker: "true"
+      # Talos has no writable /storage; the chart's default hostPath log dir
+      # makes container creation fail outright.
+      logs:
+        type: emptyDir

@@ -11,9 +11,10 @@
 # the claim asks for; single volume-server replica makes RWO correct).
 # The meta PV is ReadWriteMany to match its hand-written RWX claim.
 #
-# Tiers:
-#   /volume3/s3-ssd  -> SSD pool (Synology volume3)
-#   /volume1/s3-hdd  -> HDD pool (Synology volume1, SHR2)
+# Tiers (inside DSM-exported shared folders - root-level volume paths are
+# NOT NFS-exported by the Synology and mount with "access denied"):
+#   /volume3/k8s-nfs/s3-ssd  -> SSD pool (Synology volume3)
+#   /volume1/backups/s3-hdd  -> HDD pool (Synology volume1, SHR2)
 #   /volume1/backups/seaweedfs -> filer catalog backup #2 (NFS copy)
 ---
 apiVersion: v1

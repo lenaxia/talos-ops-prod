@@ -51,6 +51,10 @@ spec:
       containers:
         - name: meta-backup
           image: chrislusf/seaweedfs:4.48
+          # Longhorn volumes are root-owned; the image's default user cannot
+          # create the leveldb store there.
+          securityContext:
+            runAsUser: 0
           args:
             - filer.meta.backup
             - -filer=seaweedfs-filer.storage.svc.cluster.local:8888
