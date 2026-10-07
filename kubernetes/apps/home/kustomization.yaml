@@ -28,6 +28,7 @@ resources:
   - ./kokoro/ks.yaml
   - ./edge-tts/ks.yaml
   - ./mamahuhu/ks.yaml
+  - ./mamahuhu-ocr/ks.yaml
   - ./whisper/ks.yaml
   - ./piper/ks.yaml
   - ./watersmart-scraper/ks.yaml
