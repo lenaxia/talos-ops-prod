@@ -10,6 +10,7 @@ metadata:
 spec:
   dependsOn:
     - name: cluster-storage-longhorn
+    - name: cluster-home-mamahuhu-ocr
   path: ./kubernetes/apps/home/mamahuhu/app
   prune: true
   sourceRef:
