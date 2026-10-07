@@ -11,8 +11,8 @@ Replaces MinIO (upstream maintenance-mode). Apache-2.0, official Helm chart.
 | s3 gateway | 2 | none (stateless) |
 | volume server | 1 | two NFS dataDirs + Longhorn 2Gi index |
 
-- **SSD tier**: `/volume3/s3-ssd` on the Synology (static NFS PV `seaweedfs-ssd`)
-- **HDD tier**: `/volume1/s3-hdd` on the Synology (static NFS PV `seaweedfs-hdd`)
+- **SSD tier**: `/volume3/k8s-nfs/s3-ssd` on the Synology (static NFS PV `seaweedfs-ssd`)
+- **HDD tier**: `/volume1/backups/s3-hdd` on the Synology (static NFS PV `seaweedfs-hdd`)
 - **Catalog backup #1**: PVC `seaweedfs-meta-backup-kopia` (labeled `snapshot.home.arpa/enabled: "true"` -> existing Kyverno/Kopia backups)
 - **Catalog backup #2**: NFS dir `/volume1/backups/seaweedfs` (PV `seaweedfs-meta`)
 - **Shadow endpoint**: `https://s3-shadow.<domain>` (MinIO keeps `s3.<domain>` until cutover)
@@ -60,9 +60,9 @@ mc mb sw/placement-test-ssd  # then:
 kubectl exec -n storage statefulset/seaweedfs-volume -- \
   sh -c 'echo "fs.configure -locationPrefix=/buckets/placement-test-ssd/ -disk=ssd -apply" | weed shell -master=seaweedfs-master:9333'
 echo hello | mc pipe sw/placement-test-ssd/test.txt
-# new 1GB-ish volume file must appear under /volume3/s3-ssd on the NAS,
-# nothing under /volume1/s3-hdd:
-ls -la /volume1/s3-hdd /volume3/s3-ssd   # on the Synology
+# new volume file must appear under /volume3/k8s-nfs/s3-ssd on the NAS,
+# nothing under /volume1/backups/s3-hdd:
+ls -la /volume1/backups/s3-hdd /volume3/k8s-nfs/s3-ssd   # on the Synology
 # repeat with -disk=hdd for placement-test-hdd, expect the file on volume1
 mc cat sw/placement-test-ssd/test.txt   # read back through S3
 
