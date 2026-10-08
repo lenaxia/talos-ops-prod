@@ -46,7 +46,7 @@ spec:
             # https://github.com/lenaxia/mamahuhu
             image:
               repository: ghcr.io/lenaxia/mamahuhu
-              tag: 0.5.2
+              tag: 0.6.0
             env:
               - name: TZ
                 value: ${TIMEZONE}
@@ -72,6 +72,9 @@ spec:
                     key: litellm-api-key
               # OCR ladder: deterministic RapidOCR first, LLM fallback
               - name: OCR_LADDER
+                value: "1"
+              # OCR fusion rung: LLM text+structure x classical boxes (0.6.0)
+              - name: OCR_FUSION
                 value: "1"
               - name: OCR_HTTP_URL
                 value: http://mamahuhu-ocr.home.svc.cluster.local:8000
