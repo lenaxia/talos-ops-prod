@@ -112,7 +112,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.34.20"
+        tag: "0.35.0"
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
@@ -143,7 +143,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.34.20"
+        tag: "0.35.0"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -154,20 +154,20 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.34.20 — canonical index digest, verified by authenticated digest-GET (200):
+      # Digest source: release v0.35.0 — canonical index digest, verified by authenticated digest-GET (200):
       # verified by authenticated digest-GET (200).
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:d518d2d450084fde8cee9e5bbfc1c895026c0848da248bdf598f6cce25eac435
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:c990c2df4ac07ea0339dd86e56261f191190e95c24fad9a2aafdbd5c36846f53
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.34.20 — canonical index digest; digest-GET verified 200.
+      # Digest source: release v0.35.0 — canonical index digest; digest-GET verified 200.
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:adf8b5866070d9506eee067bb6e6da501c47bcfcd5e9aeedbb07b4ef81f54591
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:94d08ecb7e282dd6264bc81f7adb9e0e2e1de89dc156342749d7c1b890264ad5
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -187,7 +187,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.34.20"
+            tag: "0.35.0"
       # ── v0.34.8 render guard (design 0061 §8.1 residual) ───────────────────
       # The v0.34.8 chart hard-FAILS the render when
       # controller.inferenceRelay.enabled=true under rbac.scope=namespace
@@ -303,7 +303,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.34.20"
+        tag: "0.35.0"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
