@@ -46,7 +46,7 @@ spec:
             # https://github.com/lenaxia/mamahuhu
             image:
               repository: ghcr.io/lenaxia/mamahuhu
-              tag: 0.8.5
+              tag: 0.8.6
             env:
               - name: TZ
                 value: ${TIMEZONE}
