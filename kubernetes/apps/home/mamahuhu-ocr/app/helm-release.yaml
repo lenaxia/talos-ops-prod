@@ -42,7 +42,7 @@ spec:
             # gpu.intel.com/i915 limits (frigate pattern) once measured.
             image:
               repository: ghcr.io/lenaxia/mamahuhu-ocr
-              tag: bb74d77509ec96f3d4cf39d3def0148d339a97b7
+              fa21169fc357612e97fe2605084b0bde607613f5
             env:
               - name: TZ
                 value: ${TIMEZONE}

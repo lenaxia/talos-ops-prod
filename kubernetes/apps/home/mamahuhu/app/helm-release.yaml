@@ -46,7 +46,7 @@ spec:
             # https://github.com/lenaxia/mamahuhu
             image:
               repository: ghcr.io/lenaxia/mamahuhu
-              tag: 0.4.0
+              tag: 0.9.0
             env:
               - name: TZ
                 value: ${TIMEZONE}
@@ -74,8 +74,14 @@ spec:
               - name: OCR_LADDER
                 value: "1"
               # OCR fusion rung: LLM text+structure x classical boxes (0.6.0)
+              # (fallback rung inside OCR_LADDER when pipeline2 is off/unavailable)
               - name: OCR_FUSION
                 value: "1"
+              # pipeline v2: det quads → rectify → per-crop reads (0.9.0)
+              - name: OCR_PIPELINE
+                value: "2"
+              - name: OCR_DET_URL
+                value: http://mamahuhu-ocr.home.svc.cluster.local:8000/det
               - name: OCR_HTTP_URL
                 value: http://mamahuhu-ocr.home.svc.cluster.local:8000
               # models: qwen chat/vision, kokoro (Mandarin TTS), edge-tts
