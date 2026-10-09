@@ -522,6 +522,7 @@ spec:
             - "baby*.${SECRET_DEV_DOMAIN}"
             - "chat.${SECRET_DEV_DOMAIN}"
             - "chat2.${SECRET_DEV_DOMAIN}"
+            - "mamahuhu.${SECRET_DEV_DOMAIN}"
             - "mealie.${SECRET_DEV_DOMAIN}"
             # monitoring
             - "grafana.${SECRET_DEV_DOMAIN}"
