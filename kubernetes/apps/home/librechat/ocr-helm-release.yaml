@@ -41,7 +41,7 @@ spec:
             # Mistral-OCR-compatible shim (see ocr-shim-configmap.yaml).
             image:
               repository: ghcr.io/paperless-ngx/paperless-ngx
-              tag: 3.2.1
+              tag: 3.3.0
             command:
               - python3
               - /shim/shim.py
