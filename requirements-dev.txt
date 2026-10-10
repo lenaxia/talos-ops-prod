@@ -4,6 +4,6 @@
 # and supports every feature the packages use). Keep the cluster HA image
 # and this pin within the same major feature set when bumping.
 # pytest comes pinned transitively via pytest-homeassistant-custom-component
-pytest-homeassistant-custom-component==0.13.316
+pytest-homeassistant-custom-component==0.13.371
 homeassistant==2026.2.3
 PyYAML==6.0.3
