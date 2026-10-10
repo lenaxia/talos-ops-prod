@@ -5,5 +5,5 @@
 # and this pin within the same major feature set when bumping.
 # pytest comes pinned transitively via pytest-homeassistant-custom-component
 pytest-homeassistant-custom-component==0.13.316
-homeassistant==2026.2.3
+homeassistant==2026.10.1
 PyYAML==6.0.3
