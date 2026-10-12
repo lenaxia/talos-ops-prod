@@ -52,6 +52,14 @@ spec:
         replicas: 1
         annotations:
           reloader.stakater.com/auto: "true"
+        initContainers:
+          prepare-scripts:
+            image:
+              repository: docker.io/library/alpine
+              tag: "3.21"
+            command: ["/bin/sh", "-c"]
+            args:
+              - cp /prestart/*.sh /root/user-scripts/ && chmod +x /root/user-scripts/*.sh && ls -l /root/user-scripts
         pod:
           runtimeClassName: nvidia
           tolerations:
@@ -148,24 +156,23 @@ spec:
     persistence:
       # Boot-time self-update hook for the comfyui-boot image (the image
       # bakes ComfyUI at build time — v0.3.75, too old for Krea 2).
-      # The entrypoint sources /root/user-scripts/pre-start.sh before
-      # starting ComfyUI; set-proxy.sh is mounted as a no-op because the
-      # entrypoint would otherwise try to copy into this read-only mount.
-      # NOTE: v5 inline-configMap reference — use `identifier` (the
-      # configMaps key), the chart resolves the resource name itself.
+      # The entrypoint chmod+x'es and sources /root/user-scripts/*.sh,
+      # so they must be WRITABLE — a ConfigMap mount is always read-only.
+      # initContainer copies them from the ConfigMap into an emptyDir.
       user-scripts:
-        type: configMap
-        identifier: prestart
-        defaultMode: 0755
+        type: emptyDir
         advancedMounts:
           comfyui:
-            app:
-              - path: /root/user-scripts/pre-start.sh
-                subPath: pre-start.sh
-                readOnly: true
-              - path: /root/user-scripts/set-proxy.sh
-                subPath: set-proxy.sh
-                readOnly: true
+            prepare-scripts: &usscriptsmount
+              - path: /root/user-scripts
+            app: *usscriptsmount
+      prestart-cm:
+        type: configMap
+        identifier: prestart
+        advancedMounts:
+          comfyui:
+            prepare-scripts:
+              - path: /prestart
       models:
         type: nfs
         server: ${NAS_ADDR}
