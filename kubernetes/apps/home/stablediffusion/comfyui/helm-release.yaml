@@ -22,9 +22,12 @@ spec:
     controllers:
       comfyui:
         type: deployment
-        # scaled to 0 2026-08-21: unschedulable — all 4 GPUs on worker-04
-        # allocated to vllm pods and node memory requests at 95%
-        replicas: 0
+        # 2026-08-21: scaled to 0 — all 4 GPUs on worker-04 allocated
+        # (3x vLLM + games-on-whales spare 3090).
+        # 2026-10-12: back to 1 — GOW operator scaled to 0, GPU
+        # GPU-755d8528 reclaimed. Switched primary model to Krea 2
+        # Turbo fp8 (see models/diffusion_models on the NFS share).
+        replicas: 1
         annotations:
           reloader.stakater.com/auto: "true"
         pod:
@@ -44,10 +47,10 @@ spec:
               tag: cu124-slim-20251127@sha256:0ce1e0c5ed53888e94ba1e551516fa7e60f0bed701e39af0d96393a33e987dc8
             env:
               - name: NVIDIA_VISIBLE_DEVICES
-                # 3090 #3 (spare) — GPU now owned by games-on-whales (Wolf,
-                # ./home/games-on-whales/). This app must stay at
-                # replicas: 0 unless Wolf is scaled down/re-homed first.
-                value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547" # 3090 #3 (spare)
+                # 3090 #3 — reclaimed from games-on-whales 2026-10-12
+                # (direwolf operator scaled to 0). Must stay at replicas: 0
+                # for GOW sessions while this runs.
+                value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547" # 3090 #3
               - name: PORT
                 value: "8188"
               - name: CLI_ARGS
@@ -63,9 +66,11 @@ spec:
               requests:
                 nvidia.com/gpu: 1
                 cpu: 2000m
-                memory: 4Gi
+                memory: 8Gi
               limits:
-                memory: 4Gi
+                # Krea 2 Turbo fp8 (~13G) + Qwen3-VL 4B fp8 (~5G) weights
+                # are mmap'd through RAM before/during GPU upload.
+                memory: 24Gi
                 nvidia.com/gpu: 1
     service:
       app:
