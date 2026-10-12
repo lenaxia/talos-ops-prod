@@ -19,6 +19,27 @@ spec:
       retries: 4
       strategy: rollback
   values:
+    configMaps:
+      prestart:
+        data:
+          pre-start.sh: |
+            #!/bin/sh
+            # Keep ComfyUI current at boot (baked copy is v0.3.75 / 2025-11).
+            # NOTE: no `git clean` — custom_nodes/ is an NFS mountpoint.
+            echo "[pre-start] Updating ComfyUI from origin/master..."
+            cd /root/ComfyUI
+            if git fetch --quiet origin master \
+               && git reset --hard --quiet origin/master; then
+              echo "[pre-start] ComfyUI now at: $(git rev-parse --short HEAD) $(git log -1 --format=%cs)"
+            else
+              echo "[pre-start] WARN: git update failed, using baked version"
+            fi
+            # requirements.txt excludes torch/torchvision — delta install only
+            pip install --quiet --root-user-action=ignore -r requirements.txt \
+              || echo "[pre-start] WARN: pip install failed"
+          set-proxy.sh: |
+            #!/bin/sh
+            # no-op — mounted read-only from ConfigMap
     controllers:
       comfyui:
         type: deployment
@@ -103,6 +124,24 @@ spec:
               - *uri
             secretName: *uri
     persistence:
+      # Boot-time self-update hook for the comfyui-boot image (the image
+      # bakes ComfyUI at build time — v0.3.75, too old for Krea 2).
+      # The entrypoint sources /root/user-scripts/pre-start.sh before
+      # starting ComfyUI; set-proxy.sh is mounted as a no-op because the
+      # entrypoint would otherwise try to copy into this read-only mount.
+      user-scripts:
+        type: configMap
+        name: comfyui-prestart
+        defaultMode: 0755
+        advancedMounts:
+          comfyui:
+            app:
+              - path: /root/user-scripts/pre-start.sh
+                subPath: pre-start.sh
+                readOnly: true
+              - path: /root/user-scripts/set-proxy.sh
+                subPath: set-proxy.sh
+                readOnly: true
       models:
         type: nfs
         server: ${NAS_ADDR}
