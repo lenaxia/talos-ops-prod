@@ -151,9 +151,11 @@ spec:
       # The entrypoint sources /root/user-scripts/pre-start.sh before
       # starting ComfyUI; set-proxy.sh is mounted as a no-op because the
       # entrypoint would otherwise try to copy into this read-only mount.
+      # NOTE: v5 inline-configMap reference — use `identifier` (the
+      # configMaps key), the chart resolves the resource name itself.
       user-scripts:
         type: configMap
-        name: comfyui-prestart
+        identifier: prestart
         defaultMode: 0755
         advancedMounts:
           comfyui:
