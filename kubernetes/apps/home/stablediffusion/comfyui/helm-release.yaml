@@ -84,6 +84,27 @@ spec:
             securityContext:
               runAsUser: 0
               privileged: false
+            probes:
+              # Slow boot by design: pre-start.sh git-updates ComfyUI +
+              # pip installs before the HTTP server binds :8188. Without
+              # this probe the helm rollout wait times out mid-boot.
+              startup:
+                enabled: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8188
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+              readiness:
+                enabled: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8188
+                  periodSeconds: 30
+                  timeoutSeconds: 5
             resources:
               requests:
                 nvidia.com/gpu: 1
