@@ -231,7 +231,7 @@ spec:
     # mode: 7 consecutive zero-fallback days fleet-wide + gate green.
     relayOnlyKeyDelivery:
       enabled: true
-      fallbackMode: migration
+      fallbackMode: strict
     # NOTE: inferenceRelay.enabled stays true — v0.34.8 ships the
     # always-created inferencerelays-watch ClusterRole (design 0061 §8.1),
     # so namespace posture + router coexist; no pre-gate disable needed.
