@@ -20,7 +20,10 @@ spec:
     maxRunners: 10
     runnerScaleSetName: thekaocloud-org
     # Label workflows consume: runs-on: thekaocloud-runner
-    labels:
+    # (NOT `labels:` — in gha-runner-scale-set 0.15.0 that key is resource
+    # metadata labels and must be a mapping; GitHub-visible runner labels
+    # belong in `scaleSetLabels`.)
+    scaleSetLabels:
       - thekaocloud-runner
     containerMode:
       type: kubernetes-novolume
@@ -42,6 +45,12 @@ spec:
         containers:
           - name: runner
             image: ghcr.io/home-operations/actions-runner:2.338.0@sha256:c867ecdf82d4e8537ea8a41acc6addae09f069daec137e5614b87e4678a953e8
+            # Eviction protection (lenaxia-dind posture): org pool runners
+            # must not be first-victim BestEffort on shared workers.
+            resources:
+              requests:
+                cpu: 250m
+                memory: 512Mi
             command:
               - /home/runner/run.sh
             env:
