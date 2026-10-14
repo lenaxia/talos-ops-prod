@@ -1,0 +1,54 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app thekaocloud-org-runner
+  namespace: actions-runner-system
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: gha-runner-scale-set
+    namespace: actions-runner-system
+  values:
+    # Org-level pool: serves EVERY repo in TheKaoCloud (access via org runner group)
+    githubConfigUrl: https://github.com/TheKaoCloud
+    # Secret 'thekaocloud-org-runner' in actions-runner-system must contain a PAT
+    # (fine-grained, org TheKaoCloud, Administration: Read/Write) — sops-encrypted per repo policy.
+    githubConfigSecret: *app
+    minRunners: 0
+    maxRunners: 10
+    runnerScaleSetName: thekaocloud-org
+    # Label workflows consume: runs-on: thekaocloud-runner
+    labels:
+      - thekaocloud-runner
+    containerMode:
+      type: kubernetes-novolume
+    controllerServiceAccount:
+      name: actions-runner-controller
+      namespace: actions-runner-system
+    template:
+      spec:
+        automountServiceAccountToken: true
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io/worker
+                      operator: In
+                      values:
+                        - "true"
+        containers:
+          - name: runner
+            image: ghcr.io/home-operations/actions-runner:2.338.0@sha256:c867ecdf82d4e8537ea8a41acc6addae09f069daec137e5614b87e4678a953e8
+            command:
+              - /home/runner/run.sh
+            env:
+              - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
+                value: "false"
+              - name: ACTIONS_RUNNER_CLEAN_WORKSPACE
+                value: "true"
+        volumes:
+          - name: work
+            emptyDir: {}
