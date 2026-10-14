@@ -14,10 +14,6 @@ spec:
     githubConfigUrl: https://github.com/lenaxia/ai-trading
     githubConfigSecret: *app
     minRunners: 0
-    runnerScaleSetName: ai-trading
-    # Label workflows consume: runs-on: ai-trading-runner
-    labels:
-      - ai-trading-runner
     maxRunners: 3
     containerMode:
       type: kubernetes-novolume
@@ -26,8 +22,6 @@ spec:
       namespace: actions-runner-system
     template:
       spec:
-        # Mount the runner pod's SA token (parity with sibling runner sets).
-        automountServiceAccountToken: true
         affinity:
           nodeAffinity:
             requiredDuringSchedulingIgnoredDuringExecution:
