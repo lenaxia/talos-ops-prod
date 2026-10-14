@@ -316,9 +316,18 @@ spec:
                 transport: http
                 description: Home Assistant control via voska/hass-mcp
                 allow_all_keys: true
+              # opengist-mcp still runs supergateway (image 0.1.0) which serves
+              # SSE-only at /sse — /mcp 404s. Registering it as streamable-http
+              # (9bb98235, 2026-07-31) silently dropped its tools from the
+              # gateway ever since; LiteLLM fails registration lazily and kept
+              # serving only hass+fireflyiii. Switched back to SSE now that
+              # litellm is v1.83.14 (the concurrent-connection SSE crash that
+              # motivated 9bb98235 was seen on v1.83.7). Long-term fix: publish
+              # opengist-mcp with native streamable-http at /mcp (like
+              # hass-mcp's --http mode) and bump the tag.
               opengist:
-                url: http://opengist-mcp.home.svc.cluster.local:8000/mcp
-                transport: http
+                url: http://opengist-mcp.home.svc.cluster.local:8000/sse
+                transport: sse
                 description: Opengist CRUD via lenaxia/opengist-mcp
                 allow_all_keys: true
               # Firefly III MCP (daften/fireflyiii-mcp) in HTTP PAT-only mode:
