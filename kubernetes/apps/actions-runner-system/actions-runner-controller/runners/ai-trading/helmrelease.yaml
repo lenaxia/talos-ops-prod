@@ -1,0 +1,55 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app ai-trading-runner
+  namespace: actions-runner-system
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: gha-runner-scale-set
+    namespace: actions-runner-system
+  values:
+    githubConfigUrl: https://github.com/lenaxia/ai-trading
+    githubConfigSecret: *app
+    minRunners: 0
+    maxRunners: 3
+    containerMode:
+      type: kubernetes-novolume
+    controllerServiceAccount:
+      name: actions-runner-controller
+      namespace: actions-runner-system
+    template:
+      spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io/worker
+                      operator: In
+                      values:
+                        - "true"
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: kubernetes.io/hostname
+            whenUnsatisfiable: ScheduleAnyway
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: *app
+        containers:
+          - name: runner
+            image: ghcr.io/home-operations/actions-runner:2.338.0@sha256:c867ecdf82d4e8537ea8a41acc6addae09f069daec137e5614b87e4678a953e8
+            command:
+              - /home/runner/run.sh
+            env:
+              - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
+                value: "false"
+              # Force clean checkout on every job — prevents stale cached files
+              # from persisting on the ReadWriteOnce work volume between runs.
+              - name: ACTIONS_RUNNER_CLEAN_WORKSPACE
+                value: "true"
+        volumes:
+          - name: work
+            emptyDir: {}
