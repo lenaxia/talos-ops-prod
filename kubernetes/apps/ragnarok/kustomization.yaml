@@ -7,5 +7,5 @@ resources:
   - ./roskills/ks.yaml
   #- ./openkore/ks.yaml
   - ./robrowserlegacy/ks.yaml
-  - ./gokore/ks.yaml
+    #- ./gokore/ks.yaml
   - ./gokore-portal/ks.yaml
