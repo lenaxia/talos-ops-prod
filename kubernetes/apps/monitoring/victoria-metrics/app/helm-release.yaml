@@ -151,7 +151,9 @@ spec:
         # apiserver plus TooManyScrapeErrors/TooManyLogs on vmagent. 64MiB
         # gives ~3x headroom over the observed 21MB payload.
         extraArgs:
-          promscrape.maxScrapeSize: 67108864
+          # value MUST be a string — VMAgent CRD extraArgs is map[string]string;
+          # an int breaks helm server-side apply (typed patch rejects it).
+          promscrape.maxScrapeSize: "67108864"
         # No hostname pin. Request sized from observed 7d peak (~2.9GiB) so
         # the scheduler doesn't overpack a node — see vmsingle note.
         resources:
