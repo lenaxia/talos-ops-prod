@@ -48,7 +48,7 @@ spec:
           main:
             image:
               repository: ghcr.io/recyclarr/recyclarr
-              tag: 8.7.3
+              tag: 8.8.0
             envFrom:
               - secretRef:
                   name: recyclarr
