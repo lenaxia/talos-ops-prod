@@ -56,7 +56,7 @@ spec:
           prepare-scripts:
             image:
               repository: docker.io/library/alpine
-              tag: "3.21"
+              tag: "3.24"
             command: ["/bin/sh", "-c"]
             args:
               - cp /prestart/*.sh /root/user-scripts/ && chmod +x /root/user-scripts/*.sh && ls -l /root/user-scripts
