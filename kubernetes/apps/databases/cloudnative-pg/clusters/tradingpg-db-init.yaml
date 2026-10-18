@@ -1,53 +1,64 @@
 ---
 # One-shot Job: provision role `trading` + database `trading` on tradingpg
-# (same db-init pattern as librechat-ragapi, referenced in ragpg.yaml).
+# (same db-init pattern as home/librechat/db-init/job.yaml for ragpg).
 #
 # Requires two secrets in ns databases (both sops-managed):
 #   postgres-superuser  — existing CNPG superuser secret (key: password)
 #   tradingpg-app       — this repo's secret template, encrypted; key: PASSWORD
 #
-# Idempotent: CREATE ROLE / CREATE DATABASE are guarded by existence checks.
+# FLUX SUBSTITUTION WARNING: post-build envsubst in strict mode scans the
+# ENTIRE manifest text — never write dollar-brace tokens, bare $VAR
+# references, or dollar-quoted SQL tags in this file. Superuser
+# credentials ride in via the standard PG* env vars (psql reads them
+# natively), the app password via printenv inside $(...) command
+# substitution, which envsubst ignores. Re-runs are idempotent (ALTER
+# rotates the role password to the current secret value).
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: tradingpg-db-init
   namespace: databases
 spec:
+  ttlSecondsAfterFinished: 86400
   backoffLimit: 2
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tradingpg-db-init
     spec:
-      restartPolicy: Never
+      restartPolicy: OnFailure
       nodeSelector:
         node-role.kubernetes.io/worker: "true"
       containers:
         - name: psql
           image: ghcr.io/cloudnative-pg/postgresql:16.8
-          command: ["/bin/sh", "-ec"]
-          args:
+          command:
+            - /bin/bash
+            - -c
             - |
-              HOST=tradingpg-rw.databases.svc.cluster.local
-              psql() { command psql -h "$HOST" -U postgres -d postgres "$@"; }
-              if [ -z "$APP_PASSWORD" ]; then echo "APP_PASSWORD empty" >&2; exit 1; fi
-              if ! psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='trading'" | grep -q 1; then
-                psql -c "CREATE ROLE trading LOGIN PASSWORD '$APP_PASSWORD';"
-                echo "role trading created"
-              else
-                psql -c "ALTER ROLE trading PASSWORD '$APP_PASSWORD';"
-                echo "role trading already exists (password rotated)"
-              fi
-              if ! psql -tAc "SELECT 1 FROM pg_database WHERE datname='trading'" | grep -q 1; then
-                psql -c "CREATE DATABASE trading OWNER trading;"
-                echo "database trading created"
-              else
-                echo "database trading already exists"
-              fi
+              set -euo pipefail
+              [ -n "$(printenv APP_PASS)" ] || { echo "APP_PASS empty" >&2; exit 1; }
+              psql -v ON_ERROR_STOP=1 -v pass="$(printenv APP_PASS)" <<'SQL'
+              SELECT 'CREATE ROLE trading LOGIN'
+              WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'trading')\gexec
+              ALTER ROLE trading WITH LOGIN PASSWORD :'pass';
+              SELECT 'CREATE DATABASE trading OWNER trading'
+              WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'trading')\gexec
+              SQL
           env:
+            # psql reads these natively — no connection string needed.
+            - name: PGHOST
+              value: tradingpg-rw.databases.svc.cluster.local
+            - name: PGPORT
+              value: "5432"
+            - name: PGUSER
+              value: postgres
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-superuser
                   key: password
-            - name: APP_PASSWORD
+            - name: APP_PASS
               valueFrom:
                 secretKeyRef:
                   name: tradingpg-app
