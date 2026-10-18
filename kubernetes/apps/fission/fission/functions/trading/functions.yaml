@@ -1,0 +1,219 @@
+---
+# Fission Functions for the trading system.
+#
+# All newdeploy (matriarch convention). MinScale 0: steps cold-start on
+# trigger; the morning chain tolerates it (debate budget 40 min).
+#
+# functionTimeout values (seconds) cover the step budgets:
+#   debate 2400 (40 min LLM) | decide 480 | execute 300 | score 900 |
+#   digest 120 | morning-chain 3480 (sum + slack) | afternoon-chain 1140
+#
+# Each function mounts its own least-privilege secret (see
+# secret-trading.yaml.template for the key matrix).
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: debate
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: debate
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading-debate
+      namespace: fission
+  functionTimeout: 2400
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: decide
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: decide
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading-decide
+      namespace: fission
+  functionTimeout: 480
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: execute
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: execute
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading-execute
+      namespace: fission
+  functionTimeout: 300
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: score
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: score
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading-score
+      namespace: fission
+  functionTimeout: 900
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: digest
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: digest
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading-digest
+      namespace: fission
+  functionTimeout: 120
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: morning-chain
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: morning-chain
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading-morning-chain
+      namespace: fission
+  functionTimeout: 3480
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: afternoon-chain
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: afternoon-chain
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading-afternoon-chain
+      namespace: fission
+  functionTimeout: 1140
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: trading-seed
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: trading-seed
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading-trading-seed
+      namespace: fission
+  functionTimeout: 300
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240

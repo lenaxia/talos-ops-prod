@@ -11,6 +11,8 @@ resources:
   - ./imaizumi-timer.yaml
   # Generic violetscans triggers — one directory per series.
   - ./violetscans
+  # Trading chain (shadow mode): HTTP routes + weekday TimeTriggers.
+  - ./trading
   # Disabled 2026-08-07: corresponding functions are broken (404 fetching
   # package / missing env). See ../functions/kustomization.yaml.
   # - ./job-scraper-stripe.yaml

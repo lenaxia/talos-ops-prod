@@ -1,0 +1,9 @@
+---
+# Trading chain triggers: HTTP routes (manual/ops) + weekday TimeTriggers.
+# morning-chain 13:45 UTC, afternoon-chain 22:30 UTC (shadow comparison
+# week vs the ai-trading GHA workflow).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: fission
+resources:
+  - ./triggers.yaml
