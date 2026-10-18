@@ -8,8 +8,8 @@
 #   debate 2400 (40 min LLM) | decide 480 | execute 300 | score 900 |
 #   digest 120 | morning-chain 3480 (sum + slack) | afternoon-chain 1140
 #
-# Each function mounts its own least-privilege secret (see
-# secret-trading.yaml.template for the key matrix).
+# All functions mount the single shared `trading` secret (one sops
+# file; see secret-trading.yaml.template).
 apiVersion: fission.io/v1
 kind: Function
 metadata:
@@ -25,7 +25,7 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading-debate
+    - name: trading
       namespace: fission
   functionTimeout: 2400
   InvokeStrategy:
@@ -51,7 +51,7 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading-decide
+    - name: trading
       namespace: fission
   functionTimeout: 480
   InvokeStrategy:
@@ -77,7 +77,7 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading-execute
+    - name: trading
       namespace: fission
   functionTimeout: 300
   InvokeStrategy:
@@ -103,7 +103,7 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading-score
+    - name: trading
       namespace: fission
   functionTimeout: 900
   InvokeStrategy:
@@ -129,7 +129,7 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading-digest
+    - name: trading
       namespace: fission
   functionTimeout: 120
   InvokeStrategy:
@@ -155,7 +155,7 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading-morning-chain
+    - name: trading
       namespace: fission
   functionTimeout: 3480
   InvokeStrategy:
@@ -181,7 +181,7 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading-afternoon-chain
+    - name: trading
       namespace: fission
   functionTimeout: 1140
   InvokeStrategy:
@@ -207,7 +207,7 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading-trading-seed
+    - name: trading
       namespace: fission
   functionTimeout: 300
   InvokeStrategy:
