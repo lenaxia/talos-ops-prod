@@ -1,6 +1,6 @@
 # trading/ — Fission port of the ai-trading system (shadow mode)
 
-Staged from `lenaxia/functions` `deploy/trading/` (tag `*-0.1.0` releases).
+Staged from `lenaxia/functions` `deploy/trading/` (release zips `<fn>-<version>`, currently 0.1.1).
 Full architecture + caveats: `README-TRADING.md` in that repo.
 
 ## What lands with this directory
