@@ -27,6 +27,14 @@ spec:
   enableSuperuserAccess: true
   superuserSecret:
     name: postgres-superuser
+  bootstrap:
+    initdb:
+      database: trading
+      # tradingpg-app sops secret (ns databases): username + password.
+      # CNPG creates the role from the secret's username and makes it
+      # owner of the database at first boot — no db-init Job needed.
+      secret:
+        name: tradingpg-app
   affinity:
     nodeSelector:
       node-role.kubernetes.io/worker: "true"
