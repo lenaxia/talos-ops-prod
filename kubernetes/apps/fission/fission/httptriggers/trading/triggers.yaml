@@ -1,0 +1,140 @@
+---
+# HTTP routes (manual/ops invocation, imaizumi style) + TimeTriggers.
+#
+# Schedules (UTC, weekdays — mirror the ai-trading GHA cadence with the
+# mission's offsets):
+#   morning-chain   13:45 (debate -> decide -> execute, just after US open)
+#   afternoon-chain 22:30 (score -> digest, after the US close + scoreboard)
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: debate
+  namespace: fission
+spec:
+  functionref:
+    name: debate
+    type: name
+  relativeurl: /debate
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: decide
+  namespace: fission
+spec:
+  functionref:
+    name: decide
+    type: name
+  relativeurl: /decide
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: execute
+  namespace: fission
+spec:
+  functionref:
+    name: execute
+    type: name
+  relativeurl: /execute
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: score
+  namespace: fission
+spec:
+  functionref:
+    name: score
+    type: name
+  relativeurl: /score
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: digest
+  namespace: fission
+spec:
+  functionref:
+    name: digest
+    type: name
+  relativeurl: /digest
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: morning-chain
+  namespace: fission
+spec:
+  functionref:
+    name: morning-chain
+    type: name
+  relativeurl: /morning-chain
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: afternoon-chain
+  namespace: fission
+spec:
+  functionref:
+    name: afternoon-chain
+    type: name
+  relativeurl: /afternoon-chain
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: trading-seed
+  namespace: fission
+spec:
+  functionref:
+    name: trading-seed
+    type: name
+  relativeurl: /trading-seed
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: TimeTrigger
+metadata:
+  name: morning-chain-weekdays
+  namespace: fission
+spec:
+  cron: "45 13 * * 1-5"
+  functionref:
+    name: morning-chain
+    type: name
+---
+apiVersion: fission.io/v1
+kind: TimeTrigger
+metadata:
+  name: afternoon-chain-weekdays
+  namespace: fission
+spec:
+  cron: "30 22 * * 1-5"
+  functionref:
+    name: afternoon-chain
+    type: name

@@ -4,3 +4,4 @@ kind: Kustomization
 namespace: fission
 resources:
   - ./python3-manga-updater.yaml
+  - ./python3-trading.yaml

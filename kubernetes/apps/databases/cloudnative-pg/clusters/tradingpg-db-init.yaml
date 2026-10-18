@@ -1,0 +1,54 @@
+---
+# One-shot Job: provision role `trading` + database `trading` on tradingpg
+# (same db-init pattern as librechat-ragapi, referenced in ragpg.yaml).
+#
+# Requires two secrets in ns databases (both sops-managed):
+#   postgres-superuser  — existing CNPG superuser secret (key: password)
+#   tradingpg-app       — this repo's secret template, encrypted; key: PASSWORD
+#
+# Idempotent: CREATE ROLE / CREATE DATABASE are guarded by existence checks.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tradingpg-db-init
+  namespace: databases
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      containers:
+        - name: psql
+          image: ghcr.io/cloudnative-pg/postgresql:16.8
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              HOST=tradingpg-rw.databases.svc.cluster.local
+              psql() { command psql -h "$HOST" -U postgres -d postgres "$@"; }
+              if [ -z "$APP_PASSWORD" ]; then echo "APP_PASSWORD empty" >&2; exit 1; fi
+              if ! psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='trading'" | grep -q 1; then
+                psql -c "CREATE ROLE trading LOGIN PASSWORD '$APP_PASSWORD';"
+                echo "role trading created"
+              else
+                psql -c "ALTER ROLE trading PASSWORD '$APP_PASSWORD';"
+                echo "role trading already exists (password rotated)"
+              fi
+              if ! psql -tAc "SELECT 1 FROM pg_database WHERE datname='trading'" | grep -q 1; then
+                psql -c "CREATE DATABASE trading OWNER trading;"
+                echo "database trading created"
+              else
+                echo "database trading already exists"
+              fi
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-superuser
+                  key: password
+            - name: APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tradingpg-app
+                  key: PASSWORD

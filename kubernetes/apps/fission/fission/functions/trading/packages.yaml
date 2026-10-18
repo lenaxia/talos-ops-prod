@@ -1,0 +1,107 @@
+---
+# Fission Packages for the trading functions.
+# URLs pin the 0.1.0 release zips from this repo's releases (per-function
+# release model; version bumps here pair with config.yaml bumps).
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: debate
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/debate-0.1.0/debate-0.1.0.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: decide
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/decide-0.1.0/decide-0.1.0.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: execute
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/execute-0.1.0/execute-0.1.0.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: score
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/score-0.1.0/score-0.1.0.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: digest
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/digest-0.1.0/digest-0.1.0.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: morning-chain
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/morning-chain-0.1.0/morning-chain-0.1.0.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: afternoon-chain
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/afternoon-chain-0.1.0/afternoon-chain-0.1.0.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: trading-seed
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/trading-seed-0.1.0/trading-seed-0.1.0.zip

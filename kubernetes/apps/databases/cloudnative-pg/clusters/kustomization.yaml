@@ -10,4 +10,9 @@ resources:
   - llmsafespacespg.yaml
   - dawarich-postgis.yaml
   - ragpg.yaml
+  # Trading state DB (fission shadow-mode port). db-init is a run-once
+  # Job: uncomment AFTER tradingpg-app.sops.yaml exists, re-comment once
+  # the Job completes (Jobs are immutable; Flux flags drift otherwise).
+  - tradingpg.yaml
+  #- tradingpg-db-init.yaml
   #- backup.yaml

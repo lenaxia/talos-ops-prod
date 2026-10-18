@@ -12,6 +12,9 @@ resources:
   # Generic violetscans Package + per-series Function CRs.
   # See ./violetscans/README.md for how to add a new series.
   - ./violetscans
+  # Trading system (shadow mode). Secrets must be sops-encrypted into
+  # ./trading/ and uncommented there before this wires functions live.
+  - ./trading
   # Disabled 2026-08-07: broken. crowdstrike/stripe/vanta return 404 fetching
   # package from github.com/lenaxia/functions/releases; snowflake references the
   # non-existent `python3-playwright` environment. Secrets kept below so
