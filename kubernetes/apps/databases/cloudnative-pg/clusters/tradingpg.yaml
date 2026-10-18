@@ -1,0 +1,38 @@
+---
+# Trading state database — CloudNativePG cluster `tradingpg` (ns databases).
+# Modeled on ragpg.yaml (single instance, no S3 backup). The data is small
+# and rebuildable (trading-seed re-seeds from the ai-trading git state; the
+# comparison-week journals also live in the ai-trading repo), so backup churn
+# buys nothing in shadow mode. BEFORE CUTTING OVER TO LIVE EXECUTION, add a
+# ScheduledBackup + barmanObjectStore block (see llmsafespacespg.yaml) —
+# fills/events become the authoritative record at that point.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: tradingpg
+  namespace: databases
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.8
+  resources:
+    requests:
+      memory: 1Gi
+    limits:
+      memory: 2Gi
+  priorityClassName: database-protected
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 10Gi
+    storageClass: openebs-hostpath
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: postgres-superuser
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/worker: "true"
+  monitoring:
+    enablePodMonitor: true
+  postgresql:
+    parameters:
+      max_connections: "50"
+      shared_buffers: 128MB
