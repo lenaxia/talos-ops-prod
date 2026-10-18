@@ -1,0 +1,24 @@
+---
+# Python environment for the trading functions (debate/decide/execute/
+# score/digest/chains/trading-seed).
+#
+# Stock fission python env images, pinned by tag (README-LLM Rule 3: no
+# floating versions or `latest`) to the current stable environments
+# release, 1.35.0 (Python 3.13.13, matches the deployed fission 1.27.0
+# chart era). The functions declare `runtime: python312` in their
+# config.yaml as the minimum language level and are tested on 3.12;
+# bump the tag here deliberately, never back to `latest`. Runtime deps
+# come from each function's pinned requirements.txt (psycopg); LLM
+# calls go over plain HTTP.
+apiVersion: fission.io/v1
+kind: Environment
+metadata:
+  name: python3-trading
+  namespace: fission
+spec:
+  version: 3
+  runtime:
+    image: ghcr.io/fission/python-env:1.35.0
+  builder:
+    image: ghcr.io/fission/python-builder:1.35.0
+    command: build
