@@ -1,14 +1,51 @@
 ---
-- name: Set static IP on ethernet interface
+# "both" mode: static IP on ethernet AND a configured WiFi profile.
+# Shares the ethernet logic/fixes with mode-ethernet.yaml (dynamic NM
+# connection-name resolution for Trixie's netplan-backed profiles, plus
+# the duplicate-IP guard).
+
+- name: Require an explicit static IP in inventory
+  ansible.builtin.assert:
+    that:
+      - hostvars[inventory_hostname]['network_ip'] is defined
+      - network_ip | length > 0
+    fail_msg: >-
+      No explicit network_ip set for {{ inventory_hostname }}. Define
+      network_ip in inventory before assigning a static IP.
+    success_msg: "network_ip for {{ inventory_hostname }} = {{ network_ip }}"
+
+- name: Verify the target static IP is not already claimed by another host
+  ansible.builtin.include_tasks: assert-ip-available.yaml
+
+- name: Find the NM connection bound to the ethernet interface
+  ansible.builtin.command:
+    cmd: "nmcli -t -g GENERAL.CONNECTION device show {{ network_ethernet_interface }}"
+  register: nm_eth_conn
+  changed_when: false
+
+- name: Fail if no active connection is bound to the ethernet interface
+  ansible.builtin.fail:
+    msg: >-
+      No NetworkManager connection is bound to
+      {{ network_ethernet_interface }} on {{ inventory_hostname }}
+      (nmcli returned '{{ nm_eth_conn.stdout | trim }}').
+  when: nm_eth_conn.stdout | trim | length == 0 or nm_eth_conn.stdout | trim == '--'
+
+- name: Set ethernet connection name fact
+  ansible.builtin.set_fact:
+    network_ethernet_connection: "{{ nm_eth_conn.stdout | trim }}"
+
+- name: Set static IP on ethernet connection
   ansible.builtin.command:
     cmd: >-
-      nmcli connection modify {{ network_ethernet_interface }}
+      nmcli connection modify "{{ network_ethernet_connection }}"
       ipv4.method manual
       ipv4.addresses {{ network_ip }}/{{ network_cidr }}
       ipv4.gateway {{ network_gateway }}
       ipv4.dns {{ network_dns_servers | join(',') }}
       ipv4.dns-search ""
-  changed_when: false
+  register: nm_both_modify
+  changed_when: nm_both_modify.rc == 0
 
 - name: Configure WiFi connection profile
   ansible.builtin.command:
@@ -29,6 +66,6 @@
 
 - name: Apply ethernet changes
   ansible.builtin.command:
-    cmd: "nmcli connection up {{ network_ethernet_interface }}"
+    cmd: "nmcli connection up \"{{ network_ethernet_connection }}\""
   changed_when: false
   failed_when: false

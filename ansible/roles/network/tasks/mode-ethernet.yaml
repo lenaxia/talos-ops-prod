@@ -1,8 +1,52 @@
 ---
-- name: Set static IP on ethernet interface
+# network_ip defaults to "{{ ansible_host }}" in role defaults. That default
+# is a footgun during a cutover: if a host has no explicit network_ip and you
+# connect over its DHCP lease, we'd pin the static IP to the DHCP address.
+# Require network_ip to be set EXPLICITLY per host in inventory. (It is fine
+# for network_ip to equal ansible_host — that is the normal steady-state
+# reconcile where the host is already at its static address.)
+- name: Require an explicit static IP in inventory
+  ansible.builtin.assert:
+    that:
+      - hostvars[inventory_hostname]['network_ip'] is defined
+      - network_ip | length > 0
+    fail_msg: >-
+      No explicit network_ip set for {{ inventory_hostname }}. Define
+      network_ip in inventory (host_vars/hosts.yaml) before assigning a
+      static IP — refusing to fall back to the connection address.
+    success_msg: "network_ip for {{ inventory_hostname }} = {{ network_ip }}"
+
+- name: Verify the target static IP is not already claimed by another host
+  ansible.builtin.include_tasks: assert-ip-available.yaml
+
+# NetworkManager profile names are NOT guaranteed to equal the device name.
+# On Debian Trixie the NM connection is backed by netplan and auto-named
+# "netplan-eth0"; on other images it may be "Wired connection 1", etc.
+# Resolve the active connection bound to the device instead of assuming
+# the profile is literally named after the interface.
+- name: Find the NM connection bound to the ethernet interface
+  ansible.builtin.command:
+    cmd: "nmcli -t -g GENERAL.CONNECTION device show {{ network_ethernet_interface }}"
+  register: nm_eth_conn
+  changed_when: false
+
+- name: Fail if no active connection is bound to the interface
+  ansible.builtin.fail:
+    msg: >-
+      No NetworkManager connection is bound to
+      {{ network_ethernet_interface }} on {{ inventory_hostname }}
+      (nmcli returned '{{ nm_eth_conn.stdout | trim }}'). Cannot set a
+      static IP.
+  when: nm_eth_conn.stdout | trim | length == 0 or nm_eth_conn.stdout | trim == '--'
+
+- name: Set ethernet connection name fact
+  ansible.builtin.set_fact:
+    network_ethernet_connection: "{{ nm_eth_conn.stdout | trim }}"
+
+- name: Set static IP on ethernet connection
   ansible.builtin.command:
     cmd: >-
-      nmcli connection modify {{ network_ethernet_interface }}
+      nmcli connection modify "{{ network_ethernet_connection }}"
       ipv4.method manual
       ipv4.addresses {{ network_ip }}/{{ network_cidr }}
       ipv4.gateway {{ network_gateway }}
@@ -13,7 +57,7 @@
 
 - name: Apply ethernet changes
   ansible.builtin.command:
-    cmd: "nmcli connection up {{ network_ethernet_interface }}"
+    cmd: "nmcli connection up \"{{ network_ethernet_connection }}\""
   changed_when: false
   failed_when: false
 

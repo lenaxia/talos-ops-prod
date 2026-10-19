@@ -6,6 +6,11 @@
 # network_mode: ethernet | wifi | both
 network_mode: ethernet
 
+# Safety: arping the target static IP before assigning it and abort if a
+# different host already answers (duplicate-address guard). Set to false
+# only for deliberate takeovers where you KNOW the old holder is gone.
+network_assert_ip_available: true
+
 network_ethernet_interface: eth0
 network_wifi_interface: wlan0
 # Alias used by templates/handlers — resolves to the active interface by mode
