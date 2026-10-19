@@ -9,14 +9,7 @@ namespace: fission
 resources:
   - ./packages.yaml
   - ./functions.yaml
-  # Uncomment after encrypting each per-function secret (see
+  # Uncomment after encrypting the shared secret (see
   # secret-trading.yaml.template + README.md). Functions stay unspecialized
-  # (pods fail) until their secret exists:
-  # - ./secret-debate.sops.yaml
-  # - ./secret-decide.sops.yaml
-  # - ./secret-execute.sops.yaml
-  # - ./secret-score.sops.yaml
-  # - ./secret-digest.sops.yaml
-  # - ./secret-morning-chain.sops.yaml
-  # - ./secret-afternoon-chain.sops.yaml
-  # - ./secret-trading-seed.sops.yaml
+  # (pods fail) until it exists:
+  # - ./secret-trading.sops.yaml
