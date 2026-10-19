@@ -31,11 +31,12 @@ servers:
           fallthrough in-addr.arpa ip6.arpa
       - name: forward
         #parameters: . /etc/resolv.conf
-        # Upstream order (policy sequential = strict priority):
-        #   192.168.0.5  dns01  (Blocky on Pi, primary)
-        #   192.168.0.6  dns02  (Blocky on Pi, secondary)
-        #   192.168.5.53 dnslb  (in-cluster Blocky VIP, last-resort failover)
-        parameters: . 192.168.0.5 192.168.0.6 192.168.5.53
+        # Upstream order (policy sequential = strict priority). IPs come from
+        # Flux postBuild substitution (kubernetes/flux/vars/cluster-settings.yaml):
+        #   ${ADGUARD_ADDR}   192.168.0.5   dns01  (Blocky on Pi, primary)
+        #   ${SVC_DNS02_ADDR} 192.168.0.6   dns02  (Blocky on Pi, secondary)
+        #   ${SVC_DNSLB_ADDR} 192.168.5.53  dnslb  (in-cluster Blocky VIP, last-resort)
+        parameters: . ${ADGUARD_ADDR} ${SVC_DNS02_ADDR} ${SVC_DNSLB_ADDR}
         configBlock: |-
           policy sequential
           health_check 5s
