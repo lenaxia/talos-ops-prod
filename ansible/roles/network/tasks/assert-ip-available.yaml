@@ -27,13 +27,16 @@
   when: network_assert_ip_available | default(true)
 
 # Duplicate Address Detection: arping -D exits 0 if the address is free (or
-# only this host would claim it), non-zero if another host replies.
+# only this host would claim it), 1 if another host replies. Any OTHER exit
+# code means the probe itself failed (missing interface, no CAP_NET_RAW,
+# arping not installed, ...) — fail loudly rather than fall through and
+# report the IP as "free", which would defeat the guard.
 - name: Probe whether the target IP is already claimed on the LAN
   ansible.builtin.command:
     cmd: "arping -D -q -c 2 -w 3 -I {{ network_ethernet_interface }} {{ network_ip }}"
   register: network_arp_probe
   changed_when: false
-  failed_when: false
+  failed_when: network_arp_probe.rc not in [0, 1]
   when: network_assert_ip_available | default(true)
 
 # Something replied — find WHO. Run WITHOUT -q so the responder MAC is
@@ -61,17 +64,16 @@
 - name: Refuse to assign an IP already owned by a different host
   ansible.builtin.fail:
     msg: >-
-      Target static IP {{ network_ip }} is already in use on the LAN by a
-      different host (responder MAC(s):
-      {{ network_responder_macs | default([]) | join(', ') }}). Refusing to
-      create a duplicate address. Free the IP or fix network_ip for
-      {{ inventory_hostname }} before re-running (override with
+      Target static IP {{ network_ip }} is already in use on the LAN
+      (arping DAD saw a reply; responder MAC(s):
+      {{ network_responder_macs | default([]) | join(', ') | default('unknown', true) }}).
+      Refusing to create a duplicate address. Free the IP or fix network_ip
+      for {{ inventory_hostname }} before re-running (override with
       -e network_assert_ip_available=false only for a deliberate takeover
       where the old holder is provably gone).
   when:
     - network_assert_ip_available | default(true)
     - network_arp_probe.rc != 0
-    - network_responder_macs | default([]) | length > 0
 
 - name: IP availability check passed
   ansible.builtin.debug:

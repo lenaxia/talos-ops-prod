@@ -47,10 +47,24 @@
   register: nm_both_modify
   changed_when: nm_both_modify.rc == 0
 
+- name: Find the NM connection bound to the wifi interface (if any)
+  ansible.builtin.command:
+    cmd: "nmcli -t -g GENERAL.CONNECTION device show {{ network_wifi_interface }}"
+  register: nm_both_wifi_conn
+  changed_when: false
+  failed_when: false
+
+- name: Choose wifi connection name (active profile, else SSID for first join)
+  ansible.builtin.set_fact:
+    network_wifi_connection: >-
+      {{ nm_both_wifi_conn.stdout | trim
+         if (nm_both_wifi_conn.stdout | trim | length > 0 and nm_both_wifi_conn.stdout | trim != '--')
+         else network_wifi_ssid }}
+
 - name: Configure WiFi connection profile
   ansible.builtin.command:
     cmd: >-
-      nmcli connection modify "{{ network_wifi_ssid }}"
+      nmcli connection modify "{{ network_wifi_connection }}"
       ipv4.method manual
       ipv4.addresses {{ network_wifi_ip }}/{{ network_cidr }}
       ipv4.gateway {{ network_gateway }}
