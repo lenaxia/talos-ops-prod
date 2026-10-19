@@ -35,6 +35,13 @@ spec:
   version: 3
   runtime:
     image: ghcr.io/lenaxia/python-env-trading:1.35.0-psyc3213@sha256:812ab938ce98299a83144110e460f5f5bc4a6d0f003eca37fa3c04cdf189f9c0
+  # ghcr package is private (no admin:packages token available to flip it
+  # public); pods pull with this docker-registry secret in ns fission.
+  # NOTE: the Secret itself was created out-of-band from the workstation
+  # docker credential (same ghcr PAT used to push the image) and is NOT
+  # in git. To adopt: SOPS-encrypt a dockerconfigjson Secret manifest
+  # next to the fission chart values and delete the manual one.
+  imagepullsecret: ghcr-lenaxia
   builder:
     image: ghcr.io/fission/python-builder:1.35.0
     command: build
