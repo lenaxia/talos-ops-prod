@@ -18,7 +18,12 @@ Full architecture + caveats: `README-TRADING.md` in that repo.
   the `tradingpg-app` sops secret (username+password) makes CNPG create
   the `trading` role + database at first boot. **No db-init Job.**
 
-## REQUIRED before merge (sops key holder) — TWO files
+## REQUIRED before first live use — AFTER merging this PR, BEFORE any cluster delete/recreate (sops key holder) — TWO files
+
+This PR merges first and deliberately defers both sops files to the
+follow-up (functions stay unspecialized; no cluster regression until
+then). Do NOT start any `delete cluster tradingpg` before both files
+below are encrypted, uncommented, and reconciled.
 
 1. `openssl rand -base64 24` for the password.
 2. Fill + encrypt `secret-trading.yaml.template` into:
