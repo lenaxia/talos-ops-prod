@@ -14,12 +14,23 @@ spec:
     spec:
       restartPolicy: Never
       activeDeadlineSeconds: 600
+      serviceAccountName: ansible-runner
       containers:
         - name: ansible
           image: python:3.14-slim
           workingDir: /workspace
           command: ["/bin/bash", "/scripts/entrypoint.sh"]
           env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # Pushover (high-priority deploy-failure alerts) — injected via
+            # Flux postBuild substitution from cluster-secrets.
+            - name: PUSHOVER_TOKEN
+              value: "${SECRET_PUSHOVER_PROD_TOKEN}"
+            - name: PUSHOVER_USER_KEY
+              value: "${SECRET_PUSHOVER_USER_KEY}"
             - name: CLOUDFLARE_API_TOKEN
               valueFrom:
                 secretKeyRef:

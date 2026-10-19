@@ -26,31 +26,74 @@ data:
     PLAYBOOK="$${PLAYBOOK:-site.yaml}"
     REPO_URL="$${REPO_URL:-https://github.com/lenaxia/talos-ops-prod.git}"
     REPO_BRANCH="$${REPO_BRANCH:-main}"
+    # Last-known-good state (Layer 4). Persisted in a ConfigMap in this ns
+    # via a least-privilege ServiceAccount; see rbac.yaml.
+    LKG_CM="$${LKG_CONFIGMAP:-ansible-last-good}"
+    LKG_NS="$${POD_NAMESPACE:-home}"
+    ROLLBACK_ENABLED="$${ROLLBACK_ENABLED:-true}"
 
     echo "=== Ansible Fleet Runner ==="
     echo "Playbook: $${PLAYBOOK}"
     echo "Revision: $${ANSIBLE_REVISION:-unknown}"
     echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-    # Install dependencies
+    # Install dependencies (kubectl for LKG state, rest as before)
     echo "=== Installing dependencies ==="
-    apt-get update -qq && apt-get install -y -qq openssh-client git sshpass >/dev/null 2>&1
+    apt-get update -qq && apt-get install -y -qq openssh-client git sshpass curl ca-certificates >/dev/null 2>&1
     pip install --no-cache-dir ansible-core dnspython >/dev/null 2>&1
+    if ! command -v kubectl >/dev/null 2>&1; then
+      curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl 2>/dev/null \
+        && chmod +x /usr/local/bin/kubectl || echo "WARN: kubectl install failed; LKG tracking/rollback disabled"
+    fi
 
     # Set up SSH key
     cp /secret/SSH_PRIVATE_KEY /tmp/id_ed25519
     chmod 600 /tmp/id_ed25519
     export ANSIBLE_PRIVATE_KEY_FILE=/tmp/id_ed25519
 
+    # --- Pushover high-priority alert helper (best-effort, never fatal) ---
+    # Credentials injected as env via Flux substitution from cluster-secrets.
+    pushover_alert() {
+      local title="$1" message="$2"
+      if [ -z "$${PUSHOVER_TOKEN:-}" ] || [ -z "$${PUSHOVER_USER_KEY:-}" ]; then
+        echo "WARN: Pushover creds unset; skipping alert: $title"
+        return 0
+      fi
+      curl -s --max-time 15 \
+        --form-string "token=$${PUSHOVER_TOKEN}" \
+        --form-string "user=$${PUSHOVER_USER_KEY}" \
+        --form-string "priority=1" \
+        --form-string "title=$title" \
+        --form-string "message=$message" \
+        https://api.pushover.net/1/messages.json >/dev/null \
+        || echo "WARN: Pushover alert failed: $title"
+    }
+
+    # --- Last-known-good helpers (no-op if kubectl/RBAC unavailable) ---
+    lkg_get() {
+      kubectl -n "$${LKG_NS}" get configmap "$${LKG_CM}" \
+        -o jsonpath='{.data.sha}' 2>/dev/null || true
+    }
+    lkg_set() {
+      local sha="$1"
+      kubectl -n "$${LKG_NS}" create configmap "$${LKG_CM}" \
+        --from-literal=sha="$sha" \
+        --from-literal=updated="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+        --dry-run=client -o yaml 2>/dev/null | kubectl apply -f - >/dev/null 2>&1 \
+        || echo "WARN: could not update last-known-good ConfigMap"
+    }
+
     # Clone repo
     echo "=== Cloning repo ==="
-    git clone --depth 1 --branch "$${REPO_BRANCH}" "$${REPO_URL}" /workspace
+    git clone --branch "$${REPO_BRANCH}" "$${REPO_URL}" /workspace
+    CURRENT_SHA="$(git -C /workspace rev-parse HEAD)"
+    LKG_SHA="$(lkg_get)"
+    echo "Current SHA: $${CURRENT_SHA}"
+    echo "Last-known-good SHA: $${LKG_SHA:-<none recorded>}"
 
-    # Install collections from repo requirements
     ansible-galaxy collection install -r /workspace/ansible/requirements.yml
 
-    # Run ansible (pass Cloudflare creds through when present)
-    echo "=== Running ansible ==="
+    # Cloudflare creds passthrough (unchanged)
     CF_ARGS=""
     if [ -n "$${CLOUDFLARE_API_TOKEN:-}" ]; then
       CF_ARGS="--extra-vars cf_api_token=$${CLOUDFLARE_API_TOKEN}"
@@ -58,21 +101,62 @@ data:
         CF_ARGS="$CF_ARGS --extra-vars cf_account_id=$${CLOUDFLARE_ACCOUNT_ID}"
       fi
     fi
-    cd /workspace/ansible
+
+    run_playbook() {
+      local sha="$1"
+      git -C /workspace checkout -q "$sha"
+      ( cd /workspace/ansible && \
+        ansible-playbook "playbooks/$${PLAYBOOK}" -i inventory/hosts.yaml $${CF_ARGS} \
+          --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'" )
+    }
+
+    echo "=== Running ansible (HEAD $${CURRENT_SHA}) ==="
     set +e
-    ansible-playbook "playbooks/$${PLAYBOOK}" -i inventory/hosts.yaml $${CF_ARGS} --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ConnectTimeout=10'"
+    run_playbook "$${CURRENT_SHA}"
     RC=$?
     set -e
-    # RC 4 = run completed but some hosts were unreachable (Pis powered
-    # off). That is expected fleet state — treat as success.
-    if [ "$RC" -eq 4 ]; then
-      echo "=== Done (warning: some hosts unreachable) rc=$RC ==="
-    elif [ "$RC" -ne 0 ]; then
-      echo "=== ansible-playbook failed rc=$RC ==="
-      exit "$RC"
-    else
-      echo "=== Done ==="
+
+    # RC 4 = completed but some hosts unreachable (Pis powered off) = expected.
+    if [ "$RC" -eq 0 ] || [ "$RC" -eq 4 ]; then
+      [ "$RC" -eq 4 ] && echo "=== Run OK (warning: some hosts unreachable) ===" || echo "=== Run OK ==="
+      lkg_set "$${CURRENT_SHA}"
+      echo "=== Recorded last-known-good: $${CURRENT_SHA} ==="
+      exit 0
     fi
+
+    # --- Failure path: alert + auto-rollback to last-known-good ------------
+    echo "=== ansible-playbook FAILED rc=$RC ==="
+    pushover_alert "Ansible deploy FAILED (rc=$RC)" \
+      "Playbook $${PLAYBOOK} failed at $${CURRENT_SHA} (health checks did not pass). Namespace $${LKG_NS}. Attempting rollback to last-known-good $${LKG_SHA:-<none>}."
+
+    if [ "$${ROLLBACK_ENABLED}" != "true" ]; then
+      echo "Rollback disabled; leaving fleet as-is."; exit "$RC"
+    fi
+    if [ -z "$${LKG_SHA:-}" ]; then
+      echo "No last-known-good recorded; cannot roll back."
+      pushover_alert "Ansible rollback SKIPPED" "No last-known-good SHA recorded; manual intervention required."
+      exit "$RC"
+    fi
+    if [ "$${LKG_SHA}" = "$${CURRENT_SHA}" ]; then
+      echo "Last-known-good equals current failing SHA; not rolling back to itself."
+      exit "$RC"
+    fi
+
+    echo "=== Rolling back to last-known-good $${LKG_SHA} ==="
+    set +e
+    run_playbook "$${LKG_SHA}"
+    RB_RC=$?
+    set -e
+    if [ "$RB_RC" -eq 0 ] || [ "$RB_RC" -eq 4 ]; then
+      echo "=== Rollback to $${LKG_SHA} succeeded ==="
+      pushover_alert "Ansible rolled back OK" \
+        "Fleet restored to last-known-good $${LKG_SHA} after $${CURRENT_SHA} failed. Investigate the bad change before re-applying."
+      exit "$RC"
+    fi
+    echo "=== ROLLBACK FAILED rb_rc=$RB_RC ==="
+    pushover_alert "Ansible ROLLBACK FAILED" \
+      "Rollback to $${LKG_SHA} ALSO failed (rc=$RB_RC) after $${CURRENT_SHA} failed. Fleet may be degraded — manual intervention required NOW."
+    exit "$RB_RC"
 
   update-entrypoint.sh: |
     #!/bin/bash
@@ -81,7 +165,24 @@ data:
     echo "=== Ansible Fleet Monthly Update ==="
     echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-    apt-get update -qq && apt-get install -y -qq openssh-client git sshpass >/dev/null 2>&1
+    # Pushover high-priority alert (best-effort). Creds injected via Flux
+    # substitution from cluster-secrets.
+    pushover_alert() {
+      local title="$1" message="$2"
+      if [ -z "$${PUSHOVER_TOKEN:-}" ] || [ -z "$${PUSHOVER_USER_KEY:-}" ]; then
+        echo "WARN: Pushover creds unset; skipping alert: $title"; return 0
+      fi
+      curl -s --max-time 15 \
+        --form-string "token=$${PUSHOVER_TOKEN}" \
+        --form-string "user=$${PUSHOVER_USER_KEY}" \
+        --form-string "priority=1" \
+        --form-string "title=$title" \
+        --form-string "message=$message" \
+        https://api.pushover.net/1/messages.json >/dev/null \
+        || echo "WARN: Pushover alert failed: $title"
+    }
+
+    apt-get update -qq && apt-get install -y -qq openssh-client git sshpass curl ca-certificates >/dev/null 2>&1
     pip install --no-cache-dir ansible-core dnspython >/dev/null 2>&1
 
     cp /secret/SSH_PRIVATE_KEY /tmp/id_ed25519
@@ -103,6 +204,8 @@ data:
       echo "=== Update complete (warning: some hosts unreachable) rc=$RC ==="
     elif [ "$RC" -ne 0 ]; then
       echo "=== Update failed rc=$RC ==="
+      pushover_alert "Ansible monthly update FAILED (rc=$RC)" \
+        "playbooks/update.yaml failed during the scheduled fleet apt update. Check the ansible-update job logs; a Pi may be mid-reboot or degraded."
       exit "$RC"
     else
       echo "=== Update complete ==="

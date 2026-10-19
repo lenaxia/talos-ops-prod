@@ -1,0 +1,19 @@
+---
+# Shared deployment-safety defaults.
+
+# Deep health check: node classes decide which probes run. Set per-host or
+# per-play via the `safety_node_class` var. Known classes: "dns", "generic".
+safety_node_class: generic
+
+# Health probe tuning
+safety_health_timeout: 5
+safety_health_dns_name: cloudflare.com
+# Resolvers to prove functional DNS for a "dns" class node. Defaults to the
+# node's own address; override to also assert cluster-side reachability.
+safety_health_dns_servers: []
+
+# Dead-man's switch: when arming a lockout-class change (firewall/network),
+# a systemd timer reverts to a known-good state after this many seconds
+# UNLESS the play disarms it after a passing health check.
+safety_deadman_seconds: 300
+safety_deadman_unit: ansible-deadman

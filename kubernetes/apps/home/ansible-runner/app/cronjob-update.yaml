@@ -16,10 +16,18 @@ spec:
         spec:
           restartPolicy: Never
           activeDeadlineSeconds: 900
+          serviceAccountName: ansible-runner
           containers:
             - name: ansible
               image: python:3.14-slim
               command: ["/bin/bash", "/scripts/update-entrypoint.sh"]
+              env:
+                # Pushover high-priority alert on update failure — injected
+                # via Flux postBuild substitution from cluster-secrets.
+                - name: PUSHOVER_TOKEN
+                  value: "${SECRET_PUSHOVER_PROD_TOKEN}"
+                - name: PUSHOVER_USER_KEY
+                  value: "${SECRET_PUSHOVER_USER_KEY}"
               volumeMounts:
                 - name: scripts
                   mountPath: /scripts

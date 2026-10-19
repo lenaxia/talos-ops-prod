@@ -1,0 +1,49 @@
+---
+# Dead-man's switch — ARM.
+#
+# Schedules a transient systemd timer on the TARGET host that will run a
+# revert command after safety_deadman_seconds UNLESS the play disarms it
+# first (deadman-disarm.yaml) following a passing health check.
+#
+# Purpose: protect lockout-class changes (firewall, network) where a bad
+# apply can sever the controller's SSH connection, making normal rescue
+# impossible. If we lose the host, the timer still fires locally and
+# restores access without needing console intervention.
+#
+# Caller MUST pass:
+#   safety_deadman_revert_cmd : shell command that restores a known-good,
+#                               reachable state (e.g. flush firewall to
+#                               ACCEPT, bring the NM connection back up).
+#
+# systemd-run --on-active schedules a one-shot transient unit; we give it a
+# stable name so disarm can stop it deterministically.
+
+- name: "Deadman: assert a revert command was provided"
+  ansible.builtin.assert:
+    that:
+      - safety_deadman_revert_cmd is defined
+      - safety_deadman_revert_cmd | length > 0
+    fail_msg: "deadman-arm requires safety_deadman_revert_cmd"
+
+- name: "Deadman: clear any stale timer from a previous run"
+  ansible.builtin.command:
+    cmd: "systemctl stop {{ safety_deadman_unit }}.timer"
+  changed_when: false
+  failed_when: false
+
+- name: "Deadman: arm self-revert timer ({{ safety_deadman_seconds }}s)"
+  ansible.builtin.command:
+    cmd: >-
+      systemd-run --unit={{ safety_deadman_unit }}
+      --on-active={{ safety_deadman_seconds }}
+      --timer-property=AccuracySec=1s
+      /bin/sh -c "{{ safety_deadman_revert_cmd }}"
+  register: _deadman_arm
+  changed_when: _deadman_arm.rc == 0
+
+- name: "Deadman: armed"
+  ansible.builtin.debug:
+    msg: >-
+      Dead-man's switch armed on {{ inventory_hostname }}: reverts in
+      {{ safety_deadman_seconds }}s unless disarmed. Revert cmd:
+      {{ safety_deadman_revert_cmd }}
