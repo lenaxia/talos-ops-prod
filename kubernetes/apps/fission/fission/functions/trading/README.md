@@ -1,7 +1,8 @@
 # trading/ — Fission port of the ai-trading system (shadow mode)
 
 Staged from `lenaxia/functions` `deploy/trading/` (release zips
-`<fn>-<version>`, currently 0.1.1 / trading-seed 0.1.2).
+`<fn>-<version>`, all currently 0.1.2 — matching the packages.yaml
+pins in this PR).
 Full architecture + caveats: `README-TRADING.md` in that repo.
 
 ## What lands with this directory
@@ -29,8 +30,15 @@ Full architecture + caveats: `README-TRADING.md` in that repo.
 
 Bootstrap runs only at cluster init. If `tradingpg` already came up
 before `tradingpg-app` existed, delete the empty cluster (pre-seed =
-zero data loss) and let Flux recreate it:
-`kubectl -n databases delete cluster tradingpg` (+ its PVC).
+zero data loss) and let Flux recreate it — **ordering matters**: land
+both sops secrets FIRST (encrypt + uncomment their kustomization slots),
+then `kubectl -n databases delete cluster tradingpg` (+ its PVC).
+Recreating before `tradingpg-app` exists leaves initdb incomplete and
+the cluster degraded (self-recovers once the secret lands, but red
+until then). Same transient applies if the cluster is created at merge
+time before the sops follow-up merges. Note: password rotation is now
+manual (bootstrap consumes the secret once) — rotate via psql when
+ever needed.
 
 ## After merge (Flux reconciles)
 
