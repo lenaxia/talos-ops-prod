@@ -11,10 +11,8 @@ resources:
   - dawarich-postgis.yaml
   - ragpg.yaml
   # Trading state DB (fission shadow-mode port). tradingpg-app.sops.yaml
-  # (role PASSWORD) must be encrypted + uncommented together with the
-  # db-init run-once Job (which consumes it); re-comment the Job entry
-  # once it completes (Jobs are immutable; Flux flags drift otherwise).
+  # (username+password) feeds bootstrap.initdb.secret — CNPG creates the
+  # role+database at first boot; uncomment it alongside tradingpg.yaml.
   - tradingpg.yaml
   #- tradingpg-app.sops.yaml
-  #- tradingpg-db-init.yaml
   #- backup.yaml
