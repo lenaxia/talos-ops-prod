@@ -14,5 +14,5 @@ resources:
   # (username+password) feeds bootstrap.initdb.secret — CNPG creates the
   # role+database at first boot; uncomment it alongside tradingpg.yaml.
   - tradingpg.yaml
-  #- tradingpg-app.sops.yaml
+  - tradingpg-app.sops.yaml
   #- backup.yaml

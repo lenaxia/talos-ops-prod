@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: tradingpg-app
+    namespace: databases
+type: kubernetes.io/basic-auth
+stringData:
+    username: ENC[AES256_GCM,data:+35stDAldQ==,iv:pqgcZgSJME6zKKD1lyvcZHCkUnZD2KlaqBB+r9h6oq4=,tag:LYZNHFfAnClcIj4sOjaQCA==,type:str]
+    password: ENC[AES256_GCM,data:8GYtzPhdjCBLMS3i0TleafePhqAzr6p+ePdi2MZBjHc=,iv:XsRCzJALo8/kJGEwA1enUxPf9mDiRpOpgKNTHPVu1bE=,tag:AQtJka5qi+KdyUeWEnf7Og==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBYZHV5aHVGRFZKV3NvN1M5
+            RjRnbVVyMWhRRlMydkZ4VUtKRWtMYlp1MjF3ClFaL0VTQW00dCtLU004TXF6dy9T
+            bzBmVVQwaEJsOVBKR0JZR290R3YySlUKLS0tIHh6TVFXa2xpMDhxSVBMUk5jQVJ0
+            djRKaHdPYjE4VmROQTh3YTEwVjB4ejAKV+1YEpXel5dP078PFJc+cS01grppeBKA
+            sJptYCf7hXKbs66MWGFSdp95Azmo7BaSMZfWIiH7YdYGY6b8kKBAjQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1rr569v9jm7ck70q4wpnspfhdvt4y5m6s604tx0ygs0a65qkt7g4qdszk6k
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-19T05:38:27Z"
+    mac: ENC[AES256_GCM,data:U5Gw/OymiMzwS/aIc0mSSNqRiEWtTMefBSjR90qRyISJVbhR4sjWkRPS5Z1YTnLaQaZ/G5aFx+TOypFI5z7+mhEIgucVLQLs4B2S7CSZepWjufrt9+MZTbivUIqY/tSDEHEHZcRVRffAOqhZrPZYJchzMASpURhvaQxpLczaly0=,iv:/YrXwAyWOHJPffiJbRz9ARdZGgYzEmDACug6+WBy5JA=,tag:tKhto4PkUHSpYnjpQQdi+A==,type:str]
+    version: 3.13.3

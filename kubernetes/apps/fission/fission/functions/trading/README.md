@@ -26,7 +26,7 @@ then). Do NOT start any `delete cluster tradingpg` before both files
 below are encrypted, uncommented, and reconciled.
 
 1. `openssl rand -base64 24` for the password.
-2. Fill + encrypt `secret-trading.yaml.template` into:
+2. The two sops'd secrets (rotation: `sops edit <file>`):
    - `databases/cloudnative-pg/clusters/tradingpg-app.sops.yaml`
      (username+password) — uncomment it in `clusters/kustomization.yaml`
    - `functions/trading/secret-trading.sops.yaml` (shared, ns fission,
