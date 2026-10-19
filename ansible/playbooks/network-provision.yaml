@@ -1,0 +1,35 @@
+---
+# Phase 1 of bringing up (or recovering) a static-IP node — e.g. a freshly
+# re-flashed DNS Pi that currently has a DHCP lease and must become its
+# permanent static address (dns01 -> 192.168.0.5).
+#
+# This runs ONLY the network role, which:
+#   1. Refuses to proceed unless an explicit `network_ip` is set for the host.
+#   2. arpings the target IP and aborts if a DIFFERENT host already owns it
+#      (duplicate-address guard).
+#   3. Sets the static IP on the device's NetworkManager connection
+#      (connection name resolved dynamically — works on Trixie's
+#      netplan-backed `netplan-eth0` profiles).
+#
+# The connection is reconfigured to the new address, so the SSH session you
+# launched against the OLD (DHCP) address will DROP mid-run. That is
+# expected: target the current/DHCP address with -e, and after the run the
+# host lives at its static IP.
+#
+# USAGE (two-phase, explicit):
+#   # Phase 1 — assign the static IP (connect over the current DHCP addr):
+#   ansible-playbook playbooks/network-provision.yaml \
+#       --limit dns01 -e ansible_host=192.168.0.212
+#
+#   # Phase 2 — configure the service now that it's at its static IP:
+#   ansible-playbook playbooks/dns.yaml --limit dns01
+#
+# Always use --limit to a single host for an IP cutover.
+- name: Provision static networking (IP cutover)
+  hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: network
+      tags: [network]
+  tags: [network, provision]

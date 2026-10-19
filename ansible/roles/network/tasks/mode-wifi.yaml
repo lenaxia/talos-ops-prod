@@ -1,8 +1,47 @@
 ---
+# WiFi static-IP configuration.
+#
+# Like the ethernet path, the NetworkManager profile name is NOT guaranteed
+# to equal the SSID. On Trixie's netplan-backed NM the wifi profile is
+# auto-named e.g. "netplan-wlan0-<ssid>". Resolve the connection bound to
+# the wifi device when one is already active; fall back to the SSID for a
+# first-time join (where no profile exists yet).
+
+- name: Require an explicit static IP in inventory
+  ansible.builtin.assert:
+    that:
+      - hostvars[inventory_hostname]['network_wifi_ip'] is defined
+      - network_wifi_ip | length > 0
+    fail_msg: >-
+      No explicit network_wifi_ip set for {{ inventory_hostname }}. Define
+      it in inventory before assigning a static wifi IP.
+    success_msg: "network_wifi_ip for {{ inventory_hostname }} = {{ network_wifi_ip }}"
+
+- name: Verify the target static IP is not already claimed by another host
+  ansible.builtin.include_tasks: assert-ip-available.yaml
+  vars:
+    # Reuse the shared guard, but probe over the wifi interface + wifi IP.
+    network_ip: "{{ network_wifi_ip }}"
+    network_ethernet_interface: "{{ network_wifi_interface }}"
+
+- name: Find the NM connection bound to the wifi interface (if any)
+  ansible.builtin.command:
+    cmd: "nmcli -t -g GENERAL.CONNECTION device show {{ network_wifi_interface }}"
+  register: nm_wifi_conn
+  changed_when: false
+  failed_when: false
+
+- name: Choose wifi connection name (active profile, else SSID for first join)
+  ansible.builtin.set_fact:
+    network_wifi_connection: >-
+      {{ nm_wifi_conn.stdout | trim
+         if (nm_wifi_conn.stdout | trim | length > 0 and nm_wifi_conn.stdout | trim != '--')
+         else network_wifi_ssid }}
+
 - name: Configure WiFi connection profile
   ansible.builtin.command:
     cmd: >-
-      nmcli connection modify "{{ network_wifi_ssid }}"
+      nmcli connection modify "{{ network_wifi_connection }}"
       ipv4.method manual
       ipv4.addresses {{ network_wifi_ip }}/{{ network_cidr }}
       ipv4.gateway {{ network_gateway }}
@@ -20,7 +59,7 @@
 - name: Connect to WiFi network
   ansible.builtin.command:
     cmd: >-
-      nmcli connection up "{{ network_wifi_ssid }}"
+      nmcli connection up "{{ network_wifi_connection }}"
   changed_when: false
   failed_when: false
 
