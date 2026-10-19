@@ -2,14 +2,30 @@
 # Python environment for the trading functions (debate/decide/execute/
 # score/digest/chains/trading-seed).
 #
-# Stock fission python env images, pinned by tag (README-LLM Rule 3: no
-# floating versions or `latest`) to the current stable environments
-# release, 1.35.0 (Python 3.13.13, matches the deployed fission 1.27.0
-# chart era). The functions declare `runtime: python312` in their
-# config.yaml as the minimum language level and are tested on 3.12;
-# bump the tag here deliberately, never back to `latest`. Runtime deps
-# come from each function's pinned requirements.txt (psycopg); LLM
-# calls go over plain HTTP.
+# Derived runtime image: stock fission python-env 1.35.0 (Python 3.13,
+# Alpine/musl) + a musl cp313 build of psycopg-c 3.2.13 + libpq 18.
+#
+# Why not stock 1.35.0: the function release zips (lenaxia/functions 0.1.2)
+# vendor `psycopg[binary]==3.2.13` as GLIBC cp312 wheels (built on Ubuntu
+# per runtime.txt `python3.12`). Those .so files cannot load on musl or on
+# Python 3.13, and stock fission env images ship no libpq for the ctypes
+# fallback — every trading function died at import with
+# "ImportError: no pq wrapper available". Stock fission tags have no
+# Python 3.12 image at all (1.34.x = 3.11.9, 1.35.0 = 3.13), so the fix is
+# this derived image: `psycopg_c` lives in site-packages where the
+# function archives never shadow it, and their vendored psycopg 3.2.13
+# pure-python code picks the "c" impl first.
+#
+# Image: ghcr.io/lenaxia/python-env-trading — Dockerfile is the comment
+# block below; build with docker buildx --platform linux/amd64.
+# Pinned by digest (README-LLM Rule 3). When a function release bumps the
+# pinned psycopg version in requirements.txt, rebuild with the matching
+# `psycopg-c==<version>` and bump the tag + digest together.
+#
+# Builder stays stock (packages are prebuilt release-zip `deployment: url`
+# artifacts; the builder is unused for them — note buildermgr v1.27.0
+# currently fails any source-type package build with a confusing
+# "package not found" status-update error, tracked separately).
 apiVersion: fission.io/v1
 kind: Environment
 metadata:
@@ -18,7 +34,18 @@ metadata:
 spec:
   version: 3
   runtime:
-    image: ghcr.io/fission/python-env:1.35.0
+    image: ghcr.io/lenaxia/python-env-trading:1.35.0-psyc3213@sha256:812ab938ce98299a83144110e460f5f5bc4a6d0f003eca37fa3c04cdf189f9c0
   builder:
     image: ghcr.io/fission/python-builder:1.35.0
     command: build
+# Dockerfile:
+#   FROM ghcr.io/fission/python-env:1.35.0 AS build
+#   RUN apk add --no-cache gcc musl-dev postgresql17-dev && \
+#       pip3 wheel --no-cache-dir --no-binary psycopg-c --wheel-dir /wheels \
+#         "psycopg-c==3.2.13" "psycopg==3.2.13"
+#   FROM ghcr.io/fission/python-env:1.35.0
+#   COPY --from=build /wheels /wheels
+#   RUN apk add --no-cache libpq && \
+#       pip3 install --no-cache-dir --no-index --find-links=/wheels \
+#         "psycopg==3.2.13" "psycopg-c==3.2.13" && \
+#       rm -rf /wheels
