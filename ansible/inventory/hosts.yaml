@@ -46,3 +46,4 @@ all:
           ansible_host: 192.168.0.208
           ansible_user: root
           network_mode: ethernet
+          network_ip: 192.168.0.208

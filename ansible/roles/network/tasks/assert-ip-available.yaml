@@ -1,0 +1,83 @@
+---
+# Guard against assigning a static IP that is already live on the LAN.
+#
+# Assigning a duplicate IP is silent and destructive: two hosts answering
+# for the same address breaks connectivity for both in ways that are hard
+# to diagnose. Before we set {{ network_ip }} we run Duplicate Address
+# Detection (arping -D) from the target host and refuse to proceed if a
+# DIFFERENT host already answers for it.
+#
+# Behaviour by case (verified on the live fleet):
+#   - Address is free              -> arping -D rc=0        -> allowed.
+#   - This host already holds it    -> arping -D rc=0 too    -> allowed
+#     (a host does not reply to a DAD probe for its own address sent from
+#     itself; the kernel suppresses it, so re-applies look "free").
+#   - A DIFFERENT host holds it     -> arping -D rc!=0, and a follow-up
+#     probe returns that host's MAC -> abort.
+#
+# arping is used (not ping) because a host can answer ARP even when it
+# drops ICMP/!IP traffic behind a firewall (exactly the dns01 failure we
+# hit). ARP operates below the firewall, so it is the honest test for
+# "is this L3 address claimed by someone else on this L2 segment".
+
+- name: Install iputils-arping (provides arping)
+  ansible.builtin.package:
+    name: iputils-arping
+    state: present
+  when: network_assert_ip_available | default(true)
+
+# Duplicate Address Detection: arping -D exits 0 if the address is free (or
+# only this host would claim it), 1 if another host replies. Any OTHER exit
+# code means the probe itself failed (missing interface, no CAP_NET_RAW,
+# arping not installed, ...) — fail loudly rather than fall through and
+# report the IP as "free", which would defeat the guard.
+- name: Probe whether the target IP is already claimed on the LAN
+  ansible.builtin.command:
+    cmd: "arping -D -q -c 2 -w 3 -I {{ network_ethernet_interface }} {{ network_ip }}"
+  register: network_arp_probe
+  changed_when: false
+  failed_when: network_arp_probe.rc not in [0, 1]
+  when: network_assert_ip_available | default(true)
+
+# Something replied — find WHO. Run WITHOUT -q so the responder MAC is
+# printed ("Unicast reply from <ip> [AA:BB:...]") for us to parse.
+- name: Identify the responder MAC (only if the probe saw a reply)
+  ansible.builtin.command:
+    cmd: "arping -c 2 -w 3 -I {{ network_ethernet_interface }} {{ network_ip }}"
+  register: network_arp_who
+  changed_when: false
+  failed_when: false
+  when:
+    - network_assert_ip_available | default(true)
+    - network_arp_probe.rc != 0
+
+- name: Extract responder MACs from arping output
+  ansible.builtin.set_fact:
+    network_responder_macs: >-
+      {{ (network_arp_who.stdout | default('') ~ ' ' ~ network_arp_who.stderr | default(''))
+         | regex_findall('([0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5})')
+         | map('lower') | list }}
+  when:
+    - network_assert_ip_available | default(true)
+    - network_arp_probe.rc != 0
+
+- name: Refuse to assign an IP already owned by a different host
+  ansible.builtin.fail:
+    msg: >-
+      Target static IP {{ network_ip }} is already in use on the LAN
+      (arping DAD saw a reply; responder MAC(s):
+      {{ network_responder_macs | default([]) | join(', ') | default('unknown', true) }}).
+      Refusing to create a duplicate address. Free the IP or fix network_ip
+      for {{ inventory_hostname }} before re-running (override with
+      -e network_assert_ip_available=false only for a deliberate takeover
+      where the old holder is provably gone).
+  when:
+    - network_assert_ip_available | default(true)
+    - network_arp_probe.rc != 0
+
+- name: IP availability check passed
+  ansible.builtin.debug:
+    msg: >-
+      {{ network_ip }} is free to assign on {{ inventory_hostname }}
+      (arping DAD rc={{ network_arp_probe.rc }}).
+  when: network_assert_ip_available | default(true)

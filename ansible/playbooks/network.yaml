@@ -1,4 +1,14 @@
 ---
+# Steady-state network reconcile. Run against hosts that are ALREADY at
+# their static IP (inventory ansible_host == network_ip) to converge NM
+# connection settings — DNS servers, gateway, wifi radio state, etc.
+#
+# This is idempotent: the network role's duplicate-IP guard sees the
+# address answering from THIS host's own MAC and allows the re-apply.
+#
+# For the first-time IP cutover of a DHCP node onto its static address,
+# use playbooks/network-provision.yaml instead (same role, but run against
+# the temporary DHCP address and expect the connection to move).
 - name: Configure fleet networking
   hosts: all
   gather_facts: true
