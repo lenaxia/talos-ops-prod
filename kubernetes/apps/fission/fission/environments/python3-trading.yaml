@@ -43,6 +43,8 @@ spec:
     # exists in the runtime container. Remove when the functions release
     # creates its data dir (forward.py makedirs bug fixed upstream).
     container:
+      # name is required by the CRD even though fission overrides it
+      name: python3-trading
       env:
         - name: TRADING_FORWARD_DATA_DIR
           value: /tmp
