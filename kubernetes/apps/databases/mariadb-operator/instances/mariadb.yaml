@@ -10,7 +10,6 @@ spec:
     key: root-password
   
   image: mariadb:13.0.2
-  mariadbAutoUpgradeEnabled: true
   
   port: 3306
 
