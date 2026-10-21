@@ -58,7 +58,7 @@ spec:
           main:
             image:
               repository: fireflyiii/core
-              tag: version-6.6.6
+              tag: version-6.7.9
             env:
               TZ: ${TIMEZONE}
               APP_ENV: production
