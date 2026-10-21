@@ -63,12 +63,12 @@ spec:
           main:
             image:
               repository: supercorp/supergateway
-              # Pinned to digest of supercorp/supergateway:3.4.3-uvx
-              # verified 2026-05-15 from Docker Hub.
+              # Pinned to digest of supercorp/supergateway:4.2.0-uvx
+              # verified 2026-10-21 from Docker Hub.
               # NOTE: used only for its bundled uv/uvx runtime, NOT for
               # supergateway itself (we run hass-mcp --http directly).
               tag: 
-                3.4.3-uvx@sha256:2ffee900c18d8375096b392c8be15cd344535a05b753a5b182da227ab6306a15
+                4.2.0-uvx@sha256:f5289d1f4c8925f6a7c9666368af5bd3b19ecb3c50ab08325f991124166b8b62
               pullPolicy: IfNotPresent
             command:
               - uvx
