@@ -167,7 +167,7 @@ spec:
       # OpencodeVerified condition). Render fails without it — by design.
       # Digest source: release v0.38.0 — canonical index digest; digest-GET verified 200.
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:89a42c43c57c5ca0de17bffbcd6a84f31dd85930bbd9216771f8fe0cb837f0c8
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:c9737c2dfd797b0dc2ef3459e1b93ca122de564c75f48afffc34db4ad8fda7b0
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
