@@ -30,7 +30,7 @@ spec:
           main:
             image:
               repository: docker.io/vividboarder/vaultwarden_ldap
-              tag: latest
+              tag: "2.2.1"
             env:
               TZ: ${TIMEZONE}
               CONFIG_PATH: /config.toml
