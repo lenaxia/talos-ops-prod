@@ -566,6 +566,27 @@ spec:
                 allowed_fails_policy:
                   RateLimitErrorAllowedFails: 0
                 cooldown_time: 300
+            # GLM-5.3-Flash: first natively multimodal model in the GLM-5
+            # series (320B total / 18B active). 1M context, 128K max output
+            # (source: docs.z.ai/guides/vlm/glm-5.3-flash). Native zai
+            # provider for the same reasons as glm-5.3 above.
+            - model_name: glm-5.3-flash
+              litellm_params:
+                model: zai/glm-5.3-flash
+                api_base: https://api.z.ai/api/coding/paas/v4
+                api_key: os.environ/ZAI_API_KEY
+                max_parallel_requests: 2
+                rpm: 30
+              model_info:
+                max_input_tokens: 1000000
+                max_tokens: 131072
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: true
+                allowed_fails_policy:
+                  RateLimitErrorAllowedFails: 0
+                cooldown_time: 300
             # Claude Code bait: exposes "claude-opus-4-5" as a model_name so that
             # claude code selects it, but the actual backend is Z.AI glm-5.2.
             # Uses the native zai provider for the same reasons as glm-5.2 above.
