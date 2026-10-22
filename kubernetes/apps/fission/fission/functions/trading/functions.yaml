@@ -8,6 +8,15 @@
 #   debate 2400 (40 min LLM) | decide 480 | execute 300 | score 900 |
 #   digest 120 | morning-chain 3480 (sum + slack) | afternoon-chain 1140
 #
+# idletimeout (seconds) must EXCEED functionTimeout: the newdeploy idle
+# reaper (pkg/executor/reaper/idle, default 2m) scales deployments to
+# MinScale when no NEW request taps the function for idletimeout — it
+# does NOT track in-flight requests. A single long-running chain request
+# (>2m) was being reaped mid-flight on 10/20 + 10/21 (debate/decide ran,
+# execute never invoked). idletimeout = functionTimeout + 120s buffer so
+# a max-length request can never be reaped while still running; pods
+# still scale to zero afterwards.
+#
 # All functions mount the single shared `trading` secret (one sops
 # file; see secret-trading.yaml.template).
 apiVersion: fission.io/v1
@@ -28,6 +37,7 @@ spec:
     - name: trading
       namespace: fission
   functionTimeout: 2400
+  idletimeout: 2520
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
@@ -54,6 +64,7 @@ spec:
     - name: trading
       namespace: fission
   functionTimeout: 480
+  idletimeout: 600
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
@@ -80,6 +91,7 @@ spec:
     - name: trading
       namespace: fission
   functionTimeout: 300
+  idletimeout: 420
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
@@ -106,6 +118,7 @@ spec:
     - name: trading
       namespace: fission
   functionTimeout: 900
+  idletimeout: 1020
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
@@ -132,6 +145,7 @@ spec:
     - name: trading
       namespace: fission
   functionTimeout: 120
+  idletimeout: 240
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
@@ -158,6 +172,7 @@ spec:
     - name: trading
       namespace: fission
   functionTimeout: 3480
+  idletimeout: 3600
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
@@ -184,6 +199,7 @@ spec:
     - name: trading
       namespace: fission
   functionTimeout: 1140
+  idletimeout: 1260
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
@@ -210,6 +226,7 @@ spec:
     - name: trading
       namespace: fission
   functionTimeout: 300
+  idletimeout: 420
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
