@@ -40,7 +40,7 @@ permissions:
 
 jobs:
   analyze-prs:
-    uses: lenaxia/ai-workflows/.github/workflows/renovate-analysis.yml@v0.2.23
+    uses: lenaxia/ai-workflows/.github/workflows/renovate-analysis.yml@v0.2.24
     secrets: inherit
     with:
       project_name: talos-ops-prod
