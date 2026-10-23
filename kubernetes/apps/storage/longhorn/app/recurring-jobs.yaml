@@ -19,7 +19,13 @@ metadata:
   name: default-snapshot
   namespace: longhorn-system
 spec:
-  cron: "0 1 * * 8"
+  # Daily 01:00, matching the dailySnapshot label. Was "0 1 * * 8" — dow
+  # 8 is outside the valid 0-7 range (missed Shift on `*`), so Longhorn's
+  # parser rejected the job and scheduled snapshots never ran (#1905).
+  # NOTE: this file is intentionally disabled in kustomization.yaml —
+  # prod backups run on Kopia (kyverno snapshot-cronjob-controller),
+  # not Longhorn; do not re-enable (owner ruling 2026-10-23).
+  cron: "0 1 * * *"
   task: "snapshot"
   groups:
   - default
