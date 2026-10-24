@@ -1,0 +1,209 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname llamacpp
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    timeout: 60m
+    remediation:
+      retries: 2
+  upgrade:
+    timeout: 60m
+    remediation:
+      retries: 2
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "special"
+          effect: "NoSchedule"
+    controllers:
+      app:
+        type: deployment
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        initContainers:
+          # 83.6 GB total: IQ3_S core 54.8 GB (2-part split GGUF) + shared 28.8 GB
+          # PLE n-gram table (part 2). Resumable; subsequent pod starts just HEAD
+          # both files. mmproj (vision) intentionally skipped — text-only serving.
+          model-download:
+            image:
+              repository: python
+              tag: 3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e89e19dfb86704
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                pip install --quiet huggingface_hub
+                python - <<'EOF'
+                from huggingface_hub import snapshot_download
+                snapshot_download(
+                    repo_id="ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+                    allow_patterns=["IQ3_S/*"],
+                    local_dir="/models",
+                    max_workers=4,
+                )
+                EOF
+            envFrom:
+              - secretRef:
+                  name: *appname
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
+        containers:
+          app:
+            image:
+              repository: ghcr.io/ggml-org/llama.cpp
+              # renovate: depName=ggml-org/llama.cpp
+              tag:
+                server-cuda-b11669@sha256:e4cfff28678327b0ae7eda129e700e56a0fa55aa23db2f016256ea155c15c2b5
+            args:
+              - -m
+              - /models/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf
+              - --host
+              - 0.0.0.0
+              - --port
+              - "8080"
+              - --alias
+              - qwen38-flash-next
+              # --- device split ---
+              # All weights fit VRAM (54.8 GB core on 3x24 GB): no expert paging
+              # to RAM, so decode is GPU-bandwidth-bound. Layer split = 16 layers
+              # per 3090, sequential per layer, zero collectives — NVLink not
+              # required. vLLM TP3 is impossible on this model: 2 KV heads and
+              # moe_intermediate_size 640 are both indivisible by 3.
+              - --n-gpu-layers
+              - "999"
+              - --split-mode
+              - layer
+              # --- context ---
+              # Native 262144; YaRN 2x to reach the 512k target (attention
+              # quality degrades beyond ~512k — deliberate ceiling, not a
+              # benchmark). 2 parallel slots x 262k each covers p50 prompt
+              # (191k) with one slot to spare; bigger prompts fall back to
+              # cloud via LiteLLM. Raise --parallel to 4 only if CI queueing
+              # hurts more than the 131k/slot coverage loss.
+              - --ctx-size
+              - "524288"
+              - --parallel
+              - "2"
+              - --rope-scaling
+              - yarn
+              - --rope-scale
+              - "2.0"
+              - --yarn-orig-ctx
+              - "262144"
+              # --- KV cache ---
+              # ~14 KB/token fp8 incl. QSA indexer => 7.3 GB for 524288 total.
+              # Budget: 54.8 weights + 7.3 KV + ~5 buffers/activations = ~67 GB
+              # on ~71 GB usable. If V-quant is rejected by the qwen4_exp FA
+              # kernel on first boot, drop only --cache-type-v (costs ~3.7 GB).
+              - --flash-attn
+              - "on"
+              - --cache-type-k
+              - q8_0
+              - --cache-type-v
+              - q8_0
+              # --- serving ---
+              # --jinja enables the model's native tool-call template (agentic
+              # CI is the whole point; gate LiteLLM routing on a tool-call smoke
+              # test). --metrics exposes /metrics for Prometheus.
+              - --jinja
+              - --metrics
+              - --threads
+              - "16"
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              # PLE table (28.8 GB) is mmap'd from /models and read on demand;
+              # it must NOT be pulled into RAM (worker-04 has 128 GiB shared
+              # with everything else) — default mmap behaviour is correct, do
+              # not pass --mlock or --no-mmap.
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337,GPU-6726851a-d64e-09c8-a938-1537593e3106,GPU-755d8528-c8c7-5fd4-f441-f061368f4547" # 3x 3090 24GB
+            envFrom:
+              - secretRef:
+                  name: *appname
+            probes:
+              # IQ3_S load from openebs hostpath to 3 GPUs runs a few minutes;
+              # startup probe owns that window (20 min), readiness/liveness
+              # gate on startup success. /health returns 503 until the model
+              # is loaded, 200 when serving.
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  periodSeconds: 30
+                  failureThreshold: 40
+                  timeoutSeconds: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  successThreshold: 1
+                  failureThreshold: 5
+                  timeoutSeconds: 10
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 15
+                  periodSeconds: 15
+                  successThreshold: 1
+                  failureThreshold: 5
+                  timeoutSeconds: 10
+            resources:
+              # Weights live in VRAM; host RSS is KV staging + mmap page cache
+              # (reclaimable under pressure, so the limit is safe).
+              requests:
+                cpu: 2
+                memory: 8Gi
+                nvidia.com/gpu: "3"
+              limits:
+                memory: 16Gi
+                nvidia.com/gpu: "3"
+
+    persistence:
+      models:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: openebs-hostpath
+        accessMode: ReadWriteOnce
+        size: 150Gi
+        globalMounts:
+          - path: /models
+    service:
+      app:
+        ports:
+          http:
+            port: 8080
+        primary: true
+        type: LoadBalancer
