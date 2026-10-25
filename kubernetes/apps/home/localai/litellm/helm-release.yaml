@@ -419,6 +419,27 @@ spec:
                 supports_function_calling: true
                 supports_response_schema: true
                 supports_vision: true
+            # qwen38-flash-next: Qwen3.8-Flash-Next 125B-A6B (MoE) served by
+            # llama.cpp on 3x 3090 (IQ3_S GSQ-RCO, PLE on disk). Pilot tier for
+            # long-context/ambitious agentic work; 27B-FP8 (`default`) remains
+            # the fast lane. 2x262k slots — concurrent long prompts will queue.
+            # QFN emits long reasoning per tool call: give it headroom.
+            - model_name: qwen38-flash-next
+              litellm_params:
+                model: openai/qwen38-flash-next
+                api_base: http://llamacpp.home.svc.cluster.local:8080/v1
+                api_key: doesnotmatter
+                timeout: 1800
+              model_info:
+                input_cost_per_token: 0.00001
+                output_cost_per_token: 0.00001
+                max_input_tokens: 262144
+                max_tokens: 32768
+                supports_tool_choice: true
+                supports_function_calling: true
+                supports_response_schema: true
+                supports_vision: false
+
             # Note: deepseek-chat and deepseek-reasoner aliases were deprecated
             # 2026-07-24 and now map to deepseek-v4-flash (284B, 13B active).
             # No versioned V3/R1 endpoint is available on DeepSeek's API.
