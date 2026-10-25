@@ -41,6 +41,18 @@ spec:
           # 83.6 GB total: IQ3_S core 54.8 GB (2-part split GGUF) + shared 28.8 GB
           # PLE n-gram table (part 2). Resumable; subsequent pod starts just HEAD
           # both files. mmproj (vision) intentionally skipped — text-only serving.
+          #
+          # LANDMINE: a cold download takes ~24 min, but Deployment
+          # progressDeadlineSeconds defaults to 600s and app-template does not
+          # expose it. The deployment controller flips Progressing=False, helm
+          # -controller declares the install stalled, and the uninstall
+          # remediation tears the release down (looping the download). The live
+          # deployment is patched to 7200 (kubectl patch deploy llamacpp
+          # --type merge -p '{"spec":{"progressDeadlineSeconds":7200}}').
+          # On any fresh-PVC reinstall, re-apply that patch within 10 min of
+          # pod creation — with `retain: true` the PVC survives remediation,
+          # so at worst the first install fails once and the retry passes the
+          # init in seconds.
           model-download:
             image:
               repository: python
@@ -198,6 +210,9 @@ spec:
         storageClass: openebs-hostpath
         accessMode: ReadWriteOnce
         size: 150Gi
+        # Renders helm.sh/resource-policy: keep. REQUIRED: if an install ever
+        # fails, flux's uninstall remediation must not wipe the 84 GB model.
+        retain: true
         globalMounts:
           - path: /models
     service:
