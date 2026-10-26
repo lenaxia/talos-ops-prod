@@ -28,8 +28,7 @@ spec:
         || PathPrefix(`/trading-seed`) || PathPrefix(`/reconcile`) || PathPrefix(`/status`))
       kind: Rule
       middlewares:
-        - name: chain-authelia
-          namespace: networking
+        - name: trading-chain
       services:
         - name: router
           port: 80

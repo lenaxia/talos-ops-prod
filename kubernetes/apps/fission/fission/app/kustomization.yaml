@@ -5,6 +5,7 @@ resources:
   - ./helmrelease.yaml
   - ./ingress.yaml
   - ./ingress-trading.yaml
+  - ./middlewares-trading.yaml
   # ../environments, ../functions, ../httptriggers are intentionally NOT
   # accumulated here: each is the direct build target of its own Flux
   # Kustomization (fission-environments/-functions/-triggers in ../ks.yaml,
