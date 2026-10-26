@@ -322,6 +322,15 @@ spec:
             - "amole.${SECRET_DEV_DOMAIN}"
           policy: two_factor
 
+        # Fission router trading endpoints (fission/fission/app/
+        # ingress-trading.yaml wires these through networking-chain-authelia).
+        # Unauthenticated access here can place paper orders / burn the LLM
+        # budget; the chains themselves invoke in-cluster and bypass Traefik.
+        - domain: "f.${SECRET_DEV_DOMAIN}"
+          resources:
+            - "^/(debate|decide|execute|score|digest|morning-chain|afternoon-chain|trading-seed|reconcile|status)(/.*)?$"
+          policy: two_factor
+
         # Vaultwarden admin auth
         - domain: 
             - "vault.${SECRET_DEV_DOMAIN}"

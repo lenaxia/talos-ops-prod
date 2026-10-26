@@ -5,6 +5,7 @@
 # mission's offsets):
 #   morning-chain   13:45 (debate -> decide -> execute, just after US open)
 #   afternoon-chain 22:30 (score -> digest, after the US close + scoreboard)
+#   reconcile       22:50 (DB vs Alpaca drift + schedule watchdog)
 apiVersion: fission.io/v1
 kind: HTTPTrigger
 metadata:
@@ -137,4 +138,42 @@ spec:
   cron: "30 22 * * 1-5"
   functionref:
     name: afternoon-chain
+    type: name
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: reconcile
+  namespace: fission
+spec:
+  functionref:
+    name: reconcile
+    type: name
+  relativeurl: /reconcile
+  methods:
+    - GET
+    - POST
+---
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: status
+  namespace: fission
+spec:
+  functionref:
+    name: status
+    type: name
+  relativeurl: /status
+  methods:
+    - GET
+---
+apiVersion: fission.io/v1
+kind: TimeTrigger
+metadata:
+  name: reconcile-weekdays
+  namespace: fission
+spec:
+  cron: "50 22 * * 1-5"
+  functionref:
+    name: reconcile
     type: name

@@ -1,0 +1,37 @@
+---
+# Authelia-protected routes for the trading endpoints on the fission
+# router. This IngressRoute is MORE SPECIFIC than the catch-all Ingress
+# (ingress.yaml, path=/), so Traefik prefers it for exactly these paths;
+# everything else on f.${SECRET_DEV_DOMAIN} keeps the existing no-auth
+# behavior.
+#
+# The fission TimeTriggers invoke the chain functions in-cluster
+# (timer -> router service directly) and do NOT traverse Traefik, so the
+# 13:45 / 22:30 / 22:50 schedules are unaffected by the auth gate.
+#
+# Residual: the router's Cilium LoadBalancer (LAN IP) still exposes the
+# raw endpoints to anything on the LAN segment. Public/zero-trust
+# exposure goes through this route.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: fission-router-trading
+  namespace: fission
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: >-
+        Host(`f.${SECRET_DEV_DOMAIN}`) && (PathPrefix(`/debate`) || PathPrefix(`/decide`)
+        || PathPrefix(`/execute`) || PathPrefix(`/score`) || PathPrefix(`/digest`)
+        || PathPrefix(`/morning-chain`) || PathPrefix(`/afternoon-chain`)
+        || PathPrefix(`/trading-seed`) || PathPrefix(`/reconcile`) || PathPrefix(`/status`))
+      kind: Rule
+      middlewares:
+        - name: chain-authelia
+          namespace: networking
+      services:
+        - name: router
+          port: 80
+  tls:
+    secretName: f.${SECRET_DEV_DOMAIN}
