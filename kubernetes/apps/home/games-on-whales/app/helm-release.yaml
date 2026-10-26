@@ -7,6 +7,12 @@ metadata:
   namespace: &namespace home
 spec:
   interval: 15m
+  # 2026-10-26: suspended — unused for weeks (direwolf operator already 0
+  # since Oct 12). Config PVC and the daily kopia snapshot CronJob are
+  # retained, so state and backup coverage are unaffected. To restore:
+  # delete this suspend line, let flux reconcile, then flip
+  # direwolf_operator.replicas back to 1 if streaming is wanted.
+  suspend: true
   chartRef:
     kind: OCIRepository
     name: direwolf-operator
