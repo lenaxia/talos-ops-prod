@@ -21,7 +21,7 @@ spec:
         node-role.kubernetes.io/worker: "true"
       containers:
         - name: meta-backup
-          image: chrislusf/seaweedfs:4.48
+          image: chrislusf/seaweedfs:4.51
           # Explicit command bypasses the image entrypoint's privilege drop
           # (matches the chart's own invocation style). This deployment only
           # worked before because the NFS dirs are world-writable.
