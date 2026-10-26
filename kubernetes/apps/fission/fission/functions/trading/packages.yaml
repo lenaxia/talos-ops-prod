@@ -130,4 +130,4 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/status-0.1.0/status-0.1.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/status-0.1.1/status-0.1.1.zip
