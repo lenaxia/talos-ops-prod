@@ -68,7 +68,7 @@ spec:
               # NOTE: used only for its bundled uv/uvx runtime, NOT for
               # supergateway itself (we run hass-mcp --http directly).
               tag: 
-                4.2.0-uvx@sha256:f5289d1f4c8925f6a7c9666368af5bd3b19ecb3c50ab08325f991124166b8b62
+                4.2.1-uvx@sha256:f285119b1dc1c83b7cf6e0fdd29d4fe36892e575f32730396b09e55939cbe278
               pullPolicy: IfNotPresent
             command:
               - uvx
