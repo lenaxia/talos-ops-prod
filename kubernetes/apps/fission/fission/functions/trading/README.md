@@ -1,22 +1,44 @@
 # trading/ — Fission port of the ai-trading system (shadow mode)
 
-Staged from `lenaxia/functions` `deploy/trading/` (release zips
-`<fn>-<version>`, all currently 0.1.2 — matching the packages.yaml
-pins in this PR).
+Staged from `lenaxia/functions` `deploy/trading/` (release zips;
+morning-chain/afternoon-chain 0.1.3, reconcile/status 0.1.0, the rest
+0.1.2 — matching the packages.yaml pins in this PR).
 Full architecture + caveats: `README-TRADING.md` in that repo.
 
 ## What lands with this directory
 
 - `packages.yaml` / `functions.yaml` — Package + Function CRs (debate,
   decide, execute, score, digest, morning-chain, afternoon-chain,
-  trading-seed; env `python3-trading`, newdeploy MinScale 0). All
-  functions mount the ONE shared `trading` secret.
+  trading-seed, reconcile, status; env `python3-trading`, newdeploy
+  MinScale 0). All functions mount the ONE shared `trading` secret.
 - `triggers.yaml` (../httptriggers/trading/) — HTTP routes + TimeTriggers
-  (13:45 / 22:30 UTC weekdays)
+  (13:45 / 22:30 / 22:50 UTC weekdays)
 - `../../environments/python3-trading.yaml` — pinned env images (1.35.0)
 - databases: CNPG cluster `tradingpg` with `bootstrap.initdb.secret` —
   the `tradingpg-app` sops secret (username+password) makes CNPG create
   the `trading` role + database at first boot. **No db-init Job.**
+
+## Resilience + observability (0.1.3)
+
+- Chain retry: morning/afternoon chains retry failed required steps for
+  up to 2 extra passes within their time budget (idempotent per step).
+- Alerting: every chain run and reconcile writes an `events` row;
+  failures page via the in-cluster Alertmanager (default route =
+  pushover): `TradingChainIncomplete`, `TradingScheduleGap`,
+  `TradingDriftDetected`, `TradingReconcileBrokerUnreachable`
+  (critical), `TradingChainRecovered` (info).
+- reconcile (22:50 UTC weekdays): DB-vs-Alpaca drift (positions +
+  cash) + schedule watchdog for chains that never fired.
+- status: read-only `GET /status` snapshot (DB only).
+
+## Auth (edge)
+
+`app/ingress-trading.yaml` routes the trading paths on
+`f.${SECRET_DEV_DOMAIN}` through `networking-chain-authelia`
+(two_factor ACL rule in the authelia helmrelease). The TimeTriggers
+invoke in-cluster and bypass Traefik — schedules are unaffected.
+Residual: the router's Cilium LoadBalancer IP still serves the raw
+endpoints to the LAN segment.
 
 ## REQUIRED before first live use — AFTER merging this PR, BEFORE any cluster delete/recreate (sops key holder) — TWO files
 

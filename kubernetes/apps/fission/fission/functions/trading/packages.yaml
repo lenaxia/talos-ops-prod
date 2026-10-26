@@ -78,7 +78,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/morning-chain-0.1.2/morning-chain-0.1.2.zip
+    url: https://github.com/lenaxia/functions/releases/download/morning-chain-0.1.3/morning-chain-0.1.3.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -91,7 +91,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/afternoon-chain-0.1.2/afternoon-chain-0.1.2.zip
+    url: https://github.com/lenaxia/functions/releases/download/afternoon-chain-0.1.3/afternoon-chain-0.1.3.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -105,3 +105,29 @@ spec:
   deployment:
     type: url
     url: https://github.com/lenaxia/functions/releases/download/trading-seed-0.1.2/trading-seed-0.1.2.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: reconcile
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/reconcile-0.1.0/reconcile-0.1.0.zip
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  name: status
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  deployment:
+    type: url
+    url: https://github.com/lenaxia/functions/releases/download/status-0.1.0/status-0.1.0.zip

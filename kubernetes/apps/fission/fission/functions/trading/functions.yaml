@@ -6,7 +6,8 @@
 #
 # functionTimeout values (seconds) cover the step budgets:
 #   debate 2400 (40 min LLM) | decide 480 | execute 300 | score 900 |
-#   digest 120 | morning-chain 3480 (sum + slack) | afternoon-chain 1140
+#   digest 120 | morning-chain 3480 (sum + slack) | afternoon-chain 1140 |
+#   reconcile 300 | status 60
 #
 # idletimeout (seconds) must EXCEED functionTimeout: the newdeploy idle
 # reaper (pkg/executor/reaper/idle, default 2m) scales deployments to
@@ -227,6 +228,60 @@ spec:
       namespace: fission
   functionTimeout: 300
   idletimeout: 420
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: reconcile
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: reconcile
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading
+      namespace: fission
+  functionTimeout: 300
+  idletimeout: 420
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: status
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: status
+      namespace: fission
+    functionName: main
+  secrets:
+    - name: trading
+      namespace: fission
+  functionTimeout: 60
+  idletimeout: 180
   InvokeStrategy:
     StrategyType: execution
     ExecutionStrategy:
