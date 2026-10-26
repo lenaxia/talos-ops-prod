@@ -1,0 +1,63 @@
+---
+# Local (fission namespace) copies of the networking middlewares used by
+# ingress-trading.yaml. Traefik runs with allowCrossNamespace=false, so an
+# IngressRoute in fission cannot reference networking/ middlewares directly;
+# the forwardAuth address is a service DNS name and works from anywhere.
+# Keep values in sync with networking/traefik/middlewares/.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: trading-rate-limit
+  namespace: fission
+spec:
+  rateLimit:
+    average: 500
+    burst: 1000
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: trading-secure-headers
+  namespace: fission
+spec:
+  headers:
+    browserXssFilter: true
+    contentTypeNosniff: true
+    customResponseHeaders:
+      X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex,"
+    forceSTSHeader: true
+    frameDeny: true
+    hostsProxyHeaders:
+      - X-Forwarded-Host
+    permissionsPolicy: "camera=(), geolocation=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+    referrerPolicy: strict-origin-when-cross-origin
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 63072000
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: trading-authelia
+  namespace: fission
+spec:
+  forwardAuth:
+    address: http://authelia.networking.svc.cluster.local/api/authz/forward-auth
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Name
+      - Remote-Email
+      - Remote-Groups
+    trustForwardHeader: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: trading-chain
+  namespace: fission
+spec:
+  chain:
+    middlewares:
+      - name: trading-rate-limit
+      - name: trading-secure-headers
+      - name: trading-authelia
