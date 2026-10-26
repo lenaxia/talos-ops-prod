@@ -50,7 +50,7 @@ spec:
         node-role.kubernetes.io/worker: "true"
       containers:
         - name: meta-backup
-          image: chrislusf/seaweedfs:4.48
+          image: chrislusf/seaweedfs:4.51
           # The image's default entrypoint drops privileges to an unprivileged
           # user, which cannot write the root-owned Longhorn volume. The chart
           # always invokes /usr/bin/weed explicitly for the same reason.
