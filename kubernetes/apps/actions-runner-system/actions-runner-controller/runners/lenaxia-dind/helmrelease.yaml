@@ -71,7 +71,7 @@ spec:
           - name: dind
             # Digest-pinned to match gokore's reproducibility posture
             # (review round 1). docker:27-dind @ sha256:aa3df78ecf320f5fafdce71c659f1629e96e9de0968305fe1de670e0ca9176ce
-            image: docker@sha256:3e5756e2b6dad6a5f1f5deacf0a19f9eaa2581b76ae092b2d4a118162e1d4d4e
+            image: docker@sha256:9e79b879b177fbd72c34376a3dd3d91747da5db49e1f560f76aea59561471977
             securityContext:
               privileged: true
             env:
