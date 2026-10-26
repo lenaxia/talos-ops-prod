@@ -7,12 +7,11 @@ metadata:
   namespace: &namespace home
 spec:
   interval: 15m
-  # 2026-10-26: suspended — unused for weeks (direwolf operator already 0
-  # since Oct 12). Config PVC and the daily kopia snapshot CronJob are
-  # retained, so state and backup coverage are unaffected. To restore:
-  # delete this suspend line, let flux reconcile, then flip
-  # direwolf_operator.replicas back to 1 if streaming is wanted.
-  suspend: true
+  # 2026-10-26: disabled — unused for weeks. All controllers scaled to 0;
+  # flux reconciles them at zero, so nothing runs. Config PVC and the daily
+  # kopia snapshot CronJob are retained (state + backup coverage). To
+  # restore: flip the three replicas values back to 1 (scale comfyui's
+  # GPU usage first if streaming needs the 3090).
   chartRef:
     kind: OCIRepository
     name: direwolf-operator
@@ -84,6 +83,8 @@ spec:
               AGENT_IMAGE: docker.io/shrinedogg/wolf-agent@sha256:f51e52cee40645dd6a4cb8d216dcf94f9c35257e2a884be35eaceccc2bb966bc
               WOLF_IMAGE: ghcr.io/lenaxia/games-on-whales-wolf@sha256:9df50178aacbb21e4cf837f72ff1f1c5602db803ecba558476f85f99c8e4041b
       moonlight_proxy:
+        # 2026-10-26: scaled to 0 (see interval comment above)
+        replicas: 0
         containers:
           proxy:
             image:
@@ -93,6 +94,8 @@ spec:
               pullPolicy: IfNotPresent
     service:
       app:
+        # 2026-10-26: scaled to 0 (see interval comment above)
+        replicas: 0
         controller: moonlight_proxy
         type: LoadBalancer
         externalTrafficPolicy: Cluster
