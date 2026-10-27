@@ -13,7 +13,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/debate-0.1.2/debate-0.1.2.zip
+    url: https://github.com/lenaxia/functions/releases/download/debate-0.1.3/debate-0.1.3.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -26,7 +26,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/decide-0.1.2/decide-0.1.2.zip
+    url: https://github.com/lenaxia/functions/releases/download/decide-0.1.3/decide-0.1.3.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -39,7 +39,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/execute-0.1.2/execute-0.1.2.zip
+    url: https://github.com/lenaxia/functions/releases/download/execute-0.1.3/execute-0.1.3.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -52,7 +52,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/score-0.1.2/score-0.1.2.zip
+    url: https://github.com/lenaxia/functions/releases/download/score-0.1.3/score-0.1.3.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -65,7 +65,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/digest-0.1.2/digest-0.1.2.zip
+    url: https://github.com/lenaxia/functions/releases/download/digest-0.1.3/digest-0.1.3.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
