@@ -17,7 +17,7 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (current: v0.34.14). Rationale: if we ever move a
+      # is now pinned to a semver tag (current: v0.44.5). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -158,7 +158,7 @@ spec:
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:e86bd7c4e9fb7fe644a2b53c6596bd7cd8226e43e5d22d75382c28cb1f582cc2
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:a280aaa3019dc7b70701577a05a3dd8c5039fcd91235728aafa22f89cf027a37
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
