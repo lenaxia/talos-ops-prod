@@ -154,7 +154,7 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.44.0 (run 40210361336, merge-agentd canonical push) — digest-GET verifiable.
+      # Digest source: release v0.44.6 (run 40612057284, merge-agentd canonical push) — digest-GET verified: sha256:9933bb41….
       agentdSidecar:
         enabled: true
       agentdDelivery:
