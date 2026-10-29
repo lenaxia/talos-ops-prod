@@ -482,6 +482,7 @@ spec:
           resources:
             - "^/login$"
             - "^/api/v1/status$"
+            - "^/api/v1/settings/public$"
             - "^/api/v1/auth/oidc/.*$"
             - "^/_next/static/.*$"
             - "^/favicon\\.ico$"
