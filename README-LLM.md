@@ -328,7 +328,7 @@ traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kube
 Authelia provides OIDC SSO for:
 `tailscale`, `minio`, `open-webui`, `pgadmin`, `grafana`, `outline`, `overseerr`, `komga`, `linkwarden`, `forgejo`, `litellm`, `seerr`
 
-Note: `overseerr` (legacy fork, `client_secret_post`) and `seerr` (new build, `client_secret_basic`) are separate clients because the two apps disagree on token endpoint auth method.
+Note: `overseerr` (legacy fork) and `seerr` (preview build) are separate clients. Both use `client_secret_post` (seerr's was verified empirically 2026-10-29 — the build sends post despite using openid-client, whose documented default is basic).
 
 OIDC client secrets are stored in `secret.sops.yaml` as `SECRET_<APP>_OAUTH_CLIENT_SECRET`.
 
@@ -371,7 +371,7 @@ To add a new OIDC client, add an entry to the `identity_providers.oidc.clients` 
 - `main.applicationUrl` MUST be set behind Traefik; otherwise the OIDC `redirect_uri` is built from `req.protocol` (`http://` — unregistered at Authelia → rejected). `main.trustProxy: true` also fixes the cookies' `secure` flag.
 - Overwriting `settings.json` with a partial config breaks boot (`Settings.load` expects the full schema, incl. nested `apiKey`) — the app keeps a `settings.old.json` backup of the last good config; merge from that, never from scratch.
 
-- Authelia client `seerr`: redirect URIs `https://seerr.${SECRET_DEV_DOMAIN}/login` and `https://seerr.${SECRET_DEV_DOMAIN}/profile/settings/linked-accounts`; `token_endpoint_auth_method: client_secret_basic` (openid-client default). If token exchange fails with `invalid_client`, flip to `client_secret_post` (what the legacy overseerr fork uses).
+- Authelia client `seerr`: redirect URIs `https://seerr.${SECRET_DEV_DOMAIN}/login` and `https://seerr.${SECRET_DEV_DOMAIN}/profile/settings/linked-accounts`; `token_endpoint_auth_method: client_secret_post` (verified empirically — the build sends post at the token endpoint despite the openid-client basic default). If a future build flips to basic, update the client accordingly.
 - Callback paths differ from the old fork: new build uses `/api/v1/auth/oidc/login/{slug}` + `/api/v1/auth/oidc/callback/{slug}`; the old fork used `/api/v1/auth/oidc-callback`.
 - Existing seerr/overseerr users must link OIDC via their profile → Linked Accounts page (the PR has no auto-link by email). `newUserLogin: true` allows self-registration for new OIDC users.
 - Issuer URL must exactly match Authelia's discovery document (no trailing slash).

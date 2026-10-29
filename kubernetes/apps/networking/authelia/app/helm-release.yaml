@@ -889,12 +889,13 @@ spec:
             redirect_uris: ["https://request.${SECRET_DEV_DOMAIN}/api/v1/auth/oidc-callback","https://request2.${SECRET_DEV_DOMAIN}/api/v1/auth/oidc-callback", "https://overseerr.${SECRET_DEV_DOMAIN}/api/v1/auth/oidc-callback"]
             token_endpoint_auth_method: 'client_secret_post'
           # Seerr (seerr.${SECRET_DEV_DOMAIN}) — OIDC preview build of
-          # seerr-team/seerr#2715. Separate client from overseerr because the
-          # new build uses openid-client (token auth = client_secret_basic,
-          # PKCE) while the legacy overseerr fork needs client_secret_post.
-          # If the token exchange fails with invalid_client, flip the method
-          # to client_secret_post. Redirect URIs follow the new build's
-          # callback layout (/login + /profile/settings/linked-accounts).
+          # seerr-team/seerr#2715. Separate client from overseerr so the two
+          # apps can evolve independently. Verified empirically 2026-10-29:
+          # this build authenticates at the token endpoint via
+          # client_secret_post (despite using openid-client, whose basic
+          # default I had assumed). If a future build flips to basic, flip
+          # this back. Redirect URIs follow the new build's callback layout
+          # (/login + /profile/settings/linked-accounts).
           - client_id: seerr
             client_name: Seerr
             client_secret: "${SECRET_SEERR_OAUTH_CLIENT_SECRET_HASHED}"
@@ -904,7 +905,7 @@ spec:
             pre_configured_consent_duration: 1y
             scopes: ["openid", "profile", "email"]
             redirect_uris: ["https://seerr.${SECRET_DEV_DOMAIN}/login","https://seerr.${SECRET_DEV_DOMAIN}/profile/settings/linked-accounts"]
-            token_endpoint_auth_method: 'client_secret_basic'
+            token_endpoint_auth_method: 'client_secret_post'
           - client_id: komga
             client_name: komga
             client_secret: "${SECRET_KOMGA_OAUTH_CLIENT_SECRET_HASHED}"
