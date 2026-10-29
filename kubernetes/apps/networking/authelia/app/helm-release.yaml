@@ -471,6 +471,34 @@ spec:
             - "s3.${SECRET_DEV_DOMAIN}"
           policy: bypass
 
+        # Seerr OIDC preview (seerr.${SECRET_DEV_DOMAIN}) — the app self-gates
+        # via OIDC (Authelia as IdP), so its login surface must stay public,
+        # but the preview build (seerr-team/seerr#2715) predates the v3.3-v3.5
+        # security patches, including unauthenticated user-info leaks on
+        # /movie/:id and /tv/:id. Bypass ONLY the auth flow + static assets;
+        # everything else on the host stays behind forward-auth until stable
+        # v3.6.0 (with OIDC merged) is deployed.
+        - domain: seerr.${SECRET_DEV_DOMAIN}
+          resources:
+            - "^/login$"
+            - "^/api/v1/status$"
+            - "^/api/v1/auth/oidc/.*$"
+            - "^/_next/static/.*$"
+            - "^/favicon\\.ico$"
+            - "^/apple-touch-icon\\.png$"
+            - "^/site\\.webmanifest$"
+          policy: bypass
+
+        # Seerr host remainder — authenticated family/admin access only, so
+        # unauthenticated visitors cannot reach data endpoints during the
+        # preview period. Remove once stable v3.6.0 lands and the host can go
+        # full-bypass like request.${SECRET_DEV_DOMAIN}.
+        - domain: seerr.${SECRET_DEV_DOMAIN}
+          policy: one_factor
+          subject:
+            - "group:kaofamily"
+            - "group:administrators"
+
         # Admin services - 2 Factor
         - domain:
             - "traefik.${SECRET_DEV_DOMAIN}"
@@ -859,6 +887,23 @@ spec:
             scopes: ["openid", "profile", "email"]
             redirect_uris: ["https://request.${SECRET_DEV_DOMAIN}/api/v1/auth/oidc-callback","https://request2.${SECRET_DEV_DOMAIN}/api/v1/auth/oidc-callback", "https://overseerr.${SECRET_DEV_DOMAIN}/api/v1/auth/oidc-callback"]
             token_endpoint_auth_method: 'client_secret_post'
+          # Seerr (seerr.${SECRET_DEV_DOMAIN}) — OIDC preview build of
+          # seerr-team/seerr#2715. Separate client from overseerr because the
+          # new build uses openid-client (token auth = client_secret_basic,
+          # PKCE) while the legacy overseerr fork needs client_secret_post.
+          # If the token exchange fails with invalid_client, flip the method
+          # to client_secret_post. Redirect URIs follow the new build's
+          # callback layout (/login + /profile/settings/linked-accounts).
+          - client_id: seerr
+            client_name: Seerr
+            client_secret: "${SECRET_SEERR_OAUTH_CLIENT_SECRET_HASHED}"
+            public: false
+            authorization_policy: one_factor
+            consent_mode: implicit
+            pre_configured_consent_duration: 1y
+            scopes: ["openid", "profile", "email"]
+            redirect_uris: ["https://seerr.${SECRET_DEV_DOMAIN}/login","https://seerr.${SECRET_DEV_DOMAIN}/profile/settings/linked-accounts"]
+            token_endpoint_auth_method: 'client_secret_basic'
           - client_id: komga
             client_name: komga
             client_secret: "${SECRET_KOMGA_OAUTH_CLIENT_SECRET_HASHED}"
