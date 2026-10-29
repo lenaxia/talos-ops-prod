@@ -721,14 +721,14 @@ Variable substitution happens at the `apps` Kustomization level, injecting all `
 
 ### Version in this cluster
 
-The cluster currently uses **app-template `5.0.1`** for the vast majority of apps (some older apps may still be on `4.x`, and one on `3.1.0`). The chart is fetched from the `bjw-s` HelmRepository (Helm repo at `https://bjw-s-labs.github.io/helm-charts`).
+The cluster currently uses **app-template `5.3.0`** for the vast majority of apps (some older apps may still be on `4.x`–`5.0.x`, and one on `3.1.0`). The chart is fetched from the `bjw-s` HelmRepository (Helm repo at `https://bjw-s-labs.github.io/helm-charts`).
 
 ```yaml
 # How to reference it in a HelmRelease
 chart:
   spec:
     chart: app-template
-    version: 5.0.1
+    version: 5.3.0
     sourceRef:
       kind: HelmRepository
       name: bjw-s
@@ -1211,7 +1211,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 5.0.1
+      version: 5.3.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
