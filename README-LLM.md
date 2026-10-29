@@ -348,7 +348,11 @@ To add a new OIDC client, add an entry to the `identity_providers.oidc.clients` 
 
 ```json
 {
-  "oidcLogin": true,
+  "main": {
+    "oidcLogin": true,
+    "applicationUrl": "https://seerr.${SECRET_DEV_DOMAIN}",
+    "trustProxy": true
+  },
   "oidc": {
     "providers": [{
       "slug": "authelia",
@@ -361,6 +365,11 @@ To add a new OIDC client, add an entry to the `identity_providers.oidc.clients` 
   }
 }
 ```
+
+**Schema notes (learned the hard way — do not deviate):**
+- `oidcLogin` lives **inside `main`**, NOT at top level (`this.data.main.oidcLogin` in the settings loader). A top-level flag is silently ignored → login endpoint returns 403.
+- `main.applicationUrl` MUST be set behind Traefik; otherwise the OIDC `redirect_uri` is built from `req.protocol` (`http://` — unregistered at Authelia → rejected). `main.trustProxy: true` also fixes the cookies' `secure` flag.
+- Overwriting `settings.json` with a partial config breaks boot (`Settings.load` expects the full schema, incl. nested `apiKey`) — the app keeps a `settings.old.json` backup of the last good config; merge from that, never from scratch.
 
 - Authelia client `seerr`: redirect URIs `https://seerr.${SECRET_DEV_DOMAIN}/login` and `https://seerr.${SECRET_DEV_DOMAIN}/profile/settings/linked-accounts`; `token_endpoint_auth_method: client_secret_basic` (openid-client default). If token exchange fails with `invalid_client`, flip to `client_secret_post` (what the legacy overseerr fork uses).
 - Callback paths differ from the old fork: new build uses `/api/v1/auth/oidc/login/{slug}` + `/api/v1/auth/oidc/callback/{slug}`; the old fork used `/api/v1/auth/oidc-callback`.
