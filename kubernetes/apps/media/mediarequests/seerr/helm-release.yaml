@@ -35,9 +35,11 @@ spec:
           main:
             image:
               # Seerr OIDC preview build (seerr-team/seerr#2715).
-              # preview-new-oidc tag pinned by digest (2026-06-01 build, based
-              # on v3.2.x — MISSING v3.3-v3.5 security patches). Re-pin
-              # manually when the tag is rebuilt or v3.6.0 ships with OIDC.
+              # preview-new-oidc tag pinned by digest (2026-09-18 build of the
+              # PR branch — predates v3.5.0 security patches, 2026-09-28;
+              # branch HEAD is 2026-10-10 and carries additional OIDC fixes
+              # not in this build). Re-pin manually when the tag is rebuilt or
+              # v3.6.0 ships with OIDC.
               repository: ghcr.io/seerr-team/seerr
               tag:
                 preview-new-oidc@sha256:28744b1ced522beb7af8e5c966b73c6e46b1dc2c4c8cb497ad2f12d3139699a3

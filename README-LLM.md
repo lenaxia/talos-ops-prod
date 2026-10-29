@@ -339,10 +339,10 @@ To add a new OIDC client, add an entry to the `identity_providers.oidc.clients` 
 **Status (2026-10):** in progress — seerr preview running in parallel with prod overseerr.
 
 - Prod `request.${SECRET_DEV_DOMAIN}` runs the custom `overseerr-oidc` fork (`ghcr.io/lenaxia/overseerr-oidc:oidc-support` + `pullPolicy: Always` — a grandfathered violation of rule #4; pin it before touching).
-- `seerr.${SECRET_DEV_DOMAIN}` runs the official seerr OIDC preview (`ghcr.io/seerr-team/seerr:preview-new-oidc`), **digest-pinned** (2026-06-01 build, based on v3.2.x).
+- `seerr.${SECRET_DEV_DOMAIN}` runs the official seerr OIDC preview (`ghcr.io/seerr-team/seerr:preview-new-oidc`), **digest-pinned** (2026-09-18 build of the #2715 branch; branch HEAD 2026-10-10 carries additional OIDC fixes — IDP email normalization, session-cookie signing — not yet in any published preview image).
 - Overseerr upstream is abandoned; `seerr-team/seerr` is the official continuation. Its OIDC support is PR #2715, milestone v3.6.0 (not released as of 2026-10; latest stable is v3.5.1).
 
-**Why `seerr.` is NOT fully bypassed like `request.`:** the preview build predates the v3.3.0–v3.5.0 security patches, including unauthenticated user-object/email leaks via `mediaInfo` on `/movie/:id` and `/tv/:id` and an ImageProxy path-traversal RCE (CVE-2026-73291). Authelia therefore bypasses only the login flow + static assets on `seerr.`; the rest of the host is `one_factor`. Relax to full-host bypass only after stable v3.6.0+ is deployed.
+**Why `seerr.` is NOT fully bypassed like `request.`:** the pinned preview build predates v3.5.0's security patches (2026-09-28), including unauthenticated user-object/email leaks via `mediaInfo` on `/movie/:id` and `/tv/:id` and the ImageProxy path-traversal RCE (CVE-2026-73291). Authelia therefore bypasses only the login flow + static assets on `seerr.`; the rest of the host is `one_factor`. Relax to full-host bypass only after stable v3.6.0+ is deployed.
 
 **Seerr OIDC configuration** (no settings UI yet — edit `settings.json` on the PVC at `/app/config/settings.json`):
 
