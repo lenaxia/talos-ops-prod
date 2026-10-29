@@ -318,6 +318,7 @@ traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kube
 - Default policy: **deny**
 - Admin services (`traefik`, `grafana`, `code`, `sonarr`, `radarr`, etc.): `two_factor` — `group:administrators` only
 - Public bypasses: `vault`, `s3`, `status`, `photos`, `drive`, `w`, `request`
+- Scoped bypass: `seerr` — auth surface (`/login`, `/api/v1/auth/oidc/*`, `/api/v1/status`) + static assets only; rest of host is `one_factor` (`kaofamily`/`administrators`) while on the OIDC preview build
 - Local network bypasses: `hass`, `jelly`, `minio`, `ollama`, `ai`, `overseerr`
 - Catchall: `*.${SECRET_DEV_DOMAIN}` → `two_factor`
 - API paths on many apps: bypass for unauthenticated API access
@@ -325,11 +326,54 @@ traefik.ingress.kubernetes.io/router.middlewares: networking-chain-authelia@kube
 ### OIDC Clients
 
 Authelia provides OIDC SSO for:
-`tailscale`, `minio`, `open-webui`, `pgadmin`, `grafana`, `outline`, `overseerr`, `komga`, `linkwarden`, `forgejo`, `litellm`
+`tailscale`, `minio`, `open-webui`, `pgadmin`, `grafana`, `outline`, `overseerr`, `komga`, `linkwarden`, `forgejo`, `litellm`, `seerr`
+
+Note: `overseerr` (legacy fork, `client_secret_post`) and `seerr` (new build, `client_secret_basic`) are separate clients because the two apps disagree on token endpoint auth method.
 
 OIDC client secrets are stored in `secret.sops.yaml` as `SECRET_<APP>_OAUTH_CLIENT_SECRET`.
 
 To add a new OIDC client, add an entry to the `identity_providers.oidc.clients` list in `kubernetes/apps/networking/authelia/app/helm-release.yaml`.
+
+### Media Requests Migration (overseerr → seerr)
+
+**Status (2026-10):** in progress — seerr preview running in parallel with prod overseerr.
+
+- Prod `request.${SECRET_DEV_DOMAIN}` runs the custom `overseerr-oidc` fork (`ghcr.io/lenaxia/overseerr-oidc:oidc-support` + `pullPolicy: Always` — a grandfathered violation of rule #4; pin it before touching).
+- `seerr.${SECRET_DEV_DOMAIN}` runs the official seerr OIDC preview (`ghcr.io/seerr-team/seerr:preview-new-oidc`), **digest-pinned** (2026-06-01 build, based on v3.2.x).
+- Overseerr upstream is abandoned; `seerr-team/seerr` is the official continuation. Its OIDC support is PR #2715, milestone v3.6.0 (not released as of 2026-10; latest stable is v3.5.1).
+
+**Why `seerr.` is NOT fully bypassed like `request.`:** the preview build predates the v3.3.0–v3.5.0 security patches, including unauthenticated user-object/email leaks via `mediaInfo` on `/movie/:id` and `/tv/:id` and an ImageProxy path-traversal RCE (CVE-2026-73291). Authelia therefore bypasses only the login flow + static assets on `seerr.`; the rest of the host is `one_factor`. Relax to full-host bypass only after stable v3.6.0+ is deployed.
+
+**Seerr OIDC configuration** (no settings UI yet — edit `settings.json` on the PVC at `/app/config/settings.json`):
+
+```json
+{
+  "oidcLogin": true,
+  "oidc": {
+    "providers": [{
+      "slug": "authelia",
+      "name": "TheKaoCloud",
+      "issuerUrl": "https://authelia.${SECRET_DEV_DOMAIN}",
+      "clientId": "seerr",
+      "clientSecret": "<plaintext secret whose argon2id hash is SECRET_SEERR_OAUTH_CLIENT_SECRET_HASHED>",
+      "newUserLogin": true
+    }]
+  }
+}
+```
+
+- Authelia client `seerr`: redirect URIs `https://seerr.${SECRET_DEV_DOMAIN}/login` and `https://seerr.${SECRET_DEV_DOMAIN}/profile/settings/linked-accounts`; `token_endpoint_auth_method: client_secret_basic` (openid-client default). If token exchange fails with `invalid_client`, flip to `client_secret_post` (what the legacy overseerr fork uses).
+- Callback paths differ from the old fork: new build uses `/api/v1/auth/oidc/login/{slug}` + `/api/v1/auth/oidc/callback/{slug}`; the old fork used `/api/v1/auth/oidc-callback`.
+- Existing seerr/overseerr users must link OIDC via their profile → Linked Accounts page (the PR has no auto-link by email). `newUserLogin: true` allows self-registration for new OIDC users.
+- Issuer URL must exactly match Authelia's discovery document (no trailing slash).
+
+**Cutover plan (when preview validates or v3.6.0 ships):**
+
+1. Validate OIDC end-to-end on `seerr.`: login, account linking, `newUserLogin`, session persistence across restarts.
+2. Longhorn snapshot the `overseerr` PVCs, then `flux suspend kustomization cluster-media-overseerr` (keep for rollback — do not delete).
+3. Migrate data: copy the overseerr PVC's `db.sqlite3` + `settings.json` into the seerr PVC's `/app/config` (strip the old fork's oidc block from `settings.json`, then apply the new `oidc` block above), or start fresh and re-add Plex/*arr config.
+4. Point the `request.` ingress at the seerr service, add `https://request.${SECRET_DEV_DOMAIN}/login` and `https://request.${SECRET_DEV_DOMAIN}/profile/settings/linked-accounts` to the **`seerr`** client's `redirect_uris` (seerr's `settings.json` keeps `clientId: seerr` — the legacy `overseerr` client entry is retired with the fork), widen the Authelia bypass to full host, then retire the fork HelmRelease.
+5. Track PR #2715 — when it merges and v3.6.0 releases, bump the seerr image to the stable tag (digest-pinned), delete the one_factor remainder rule, and remove the `seerr` scoped-bypass block.
 
 ---
 
