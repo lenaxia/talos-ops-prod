@@ -26,6 +26,11 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+      # Official seerr image is rootless (runs as 1000:1000); fsGroup lets
+      # kubelet chown the longhorn volume root so uid 1000 can write.
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
     controllers:
       main:
         type: statefulset
