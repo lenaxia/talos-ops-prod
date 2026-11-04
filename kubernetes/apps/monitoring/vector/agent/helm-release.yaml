@@ -65,6 +65,12 @@ spec:
             securityContext:
               privileged: true
             args: [--config, /etc/vector/vector.yaml]
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
     service:
       main:
         enabled: false
