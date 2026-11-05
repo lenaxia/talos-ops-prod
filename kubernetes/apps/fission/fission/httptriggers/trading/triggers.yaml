@@ -124,7 +124,10 @@ metadata:
   name: morning-chain-weekdays
   namespace: fission
 spec:
-  cron: "45 13 * * 1-5"
+  # 14:45 UTC = 9:45 ET (EST) / 10:45 ET (EDT) — inside regular market hours
+  # year-round. 13:45 UTC silently became 8:45 ET after the 2026 DST fall-back,
+  # putting execute pre-open ("market closed — diff queued" every run).
+  cron: "45 14 * * 1-5"
   functionref:
     name: morning-chain
     type: name
