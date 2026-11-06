@@ -39,7 +39,7 @@ spec:
             image:
               repository: docker.io/library/eclipse-mosquitto
               tag: 
-                2.0.22@sha256:199ea8ef2e35ec2b1b37e59cfd1dbae538ed4dfa4a2251a121a52215a6248a21
+                2.0.22@sha256:81a6193ae693942a3231cd3ac52875b02b7e3a19da671b2fb4b55cc874c5b279
             probes:
               liveness:
                 enabled: true
