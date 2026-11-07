@@ -67,7 +67,7 @@ spec:
               - name: TZ
                 value: ${TIMEZONE}
               - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337" # 3090 FE
+                value: "GPU-755d8528-c8c7-5fd4-f441-f061368f4547" # 3090 FE (replacement card, hw maint 2026-11-07; previous: GPU-bec81ab7-67a6-cfeb-98d0-dd3f8599e337)
               - name: VLLM_USE_MODELSCOPE
                 value: "false"
             envFrom:
