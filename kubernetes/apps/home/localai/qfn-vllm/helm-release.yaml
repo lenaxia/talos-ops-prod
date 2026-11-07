@@ -1,0 +1,174 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname qfn-vllm
+  namespace: &namespace home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    createNamespace: true
+    timeout: 60m
+    remediation:
+      retries: 2
+  upgrade:
+    timeout: 60m
+    remediation:
+      retries: 2
+  values:
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: 'true'
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "special"
+          effect: "NoSchedule"
+    controllers:
+      app:
+        type: deployment
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        initContainers:
+          # 165 GB: AWQ W4A16 quantized experts (shards 2-5) + BF16 PLE n-gram
+          # table (shard 1, ~95 GB) + MTP draft head (4 GB). Resumable.
+          model-download:
+            image:
+              repository: python
+              tag: 3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e89e19dfb86704
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                pip install --quiet huggingface_hub
+                python - <<'EOF'
+                from huggingface_hub import snapshot_download
+                snapshot_download(
+                    repo_id="wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16",
+                    local_dir="/models",
+                    max_workers=4,
+                )
+                EOF
+            envFrom:
+              - secretRef:
+                  name: *appname
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
+        containers:
+          app:
+            image:
+              repository: vllm/vllm-openai
+              # v0.33.0rc3 — qwen4_exp arch + MTP spec decode; rc because the
+              # stable line lacks the QFN fixes we need (upstream release notes)
+              tag: v0.33.0rc3
+            args:
+              - serve
+              - /models
+              - --served-model-name
+              - qfn
+              - --host
+              - 0.0.0.0
+              - --port
+              - "8000"
+              # --- TP2 across the two 4090-48 (identical sm_89; 2 KV heads
+              # and moe_intermediate 640 both divide by 2 — TP3 was the
+              # impossible one on the 3090s) ---
+              - --tensor-parallel-size
+              - "2"
+              - --max-model-len
+              - "262144"
+              - --max-num-seqs
+              - "2"
+              - --kv-cache-dtype
+              - fp8
+              - --gpu-memory-utilization
+              - "0.92"
+              - --enable-prefix-caching
+              # parity with the 27B default serving config
+              - --enable-auto-tool-choice
+              - --tool-call-parser
+              - qwen3_xml
+              # MTP draft head (model_mtp.safetensors): depth 3 to start
+              - --speculative-config
+              - '{"method": "mtp", "num_speculative_tokens": 3}'
+            env:
+              - name: TZ
+                value: ${TIMEZONE}
+              - name: NVIDIA_VISIBLE_DEVICES
+                value: "GPU-52d95ccc-2df5-7179-ad4a-e7b280f04822,GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 2x 4090 48GB
+              - name: VLLM_WORKER_MULTIPROC_METHOD
+                value: spawn
+            envFrom:
+              - secretRef:
+                  name: *appname
+            probes:
+              # 65.5 GB weights + 100 GB PLE mmap from hostpath: allow a slow
+              # boot; /health 503s until serving
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8000
+                  periodSeconds: 30
+                  failureThreshold: 40
+                  timeoutSeconds: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8000
+                  periodSeconds: 30
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8000
+                  periodSeconds: 15
+                  failureThreshold: 5
+            resources:
+              # PLE (~100 GB) is mmap'd from the PVC; host RSS stays bounded,
+              # page cache is reclaimable. Weight-staging during load spikes.
+              requests:
+                cpu: "8"
+                memory: 48Gi
+                nvidia.com/gpu: "2"
+              limits:
+                memory: 100Gi
+                nvidia.com/gpu: "2"
+
+    persistence:
+      models:
+        enabled: true
+        type: persistentVolumeClaim
+        storageClass: openebs-hostpath
+        accessMode: ReadWriteOnce
+        size: 200Gi
+        # see llamacpp: uninstall remediation must not wipe the 165 GB model
+        retain: true
+        globalMounts:
+          - path: /models
+    service:
+      app:
+        ports:
+          http:
+            port: 8000
+        primary: true
+        type: ClusterIP
