@@ -12,16 +12,14 @@ machine:
       - name: nvidia_modeset
       # Games on Whales virtual input devices. The module ships via the
       # `siderolabs/uinput` system extension (schematic 465efb88…, active on
-      # worker-04 since 2026-10-02, node on v1.13.11) — the machine-config
-      # entry below loads it at boot. Required for inputtino virtual gamepads/keyboards;
-      # feeds the kube-system/uinput-device-plugin (squat.ai/uinput).      - name: uinput
+      # worker-04 since 2026-10-02, node on v1.13.11) — this entry loads it
+      # at boot. Required for inputtino virtual gamepads/keyboards; feeds
+      # the kube-system/uinput-device-plugin (squat.ai/uinput).
+      - name: uinput
 
   sysctls:
     net.core.bpf_jit_harden: 1
-
-# Steam (and flatpak-style sandboxes) require user namespaces. Talos ships
-# max_user_namespaces=0; set at runtime 2026-10-03 via privileged pod and
-# persisted here for future applies/reboots.
-machine:
-  sysctls:
+    # Steam (and flatpak-style sandboxes) require user namespaces. Talos ships
+    # max_user_namespaces=0; set at runtime 2026-10-03 via privileged pod and
+    # persisted here for future applies/reboots.
     user.max_user_namespaces: "15000"
