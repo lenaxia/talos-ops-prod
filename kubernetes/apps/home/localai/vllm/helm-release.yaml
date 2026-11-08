@@ -32,6 +32,11 @@ spec:
           operator: "Equal"
           value: "special"
           effect: "NoSchedule"
+        # 2026-11-07: node spent the day flapping DiskPressure (QFN download
+        # + image GC); without this the serving pod could not reschedule.
+        - key: "node.kubernetes.io/disk-pressure"
+          operator: "Exists"
+          effect: "NoSchedule"
     controllers:
       app:
         type: deployment
@@ -42,8 +47,11 @@ spec:
             image:
               repository: vllm/vllm-openai
               # renovate: depName=vllm/vllm-openai
+              # 2026-11-07: kubelet image GC removed the -cu129 variant during the
+              # disk-pressure incident; running the plain v0.27.1 digest (already
+              # cached — the classifiers pull it). Behaviour unchanged.
               tag:
-                v0.27.1-cu129-ubuntu2404@sha256:0e1ee52750c67718a596ba63176034aa18b439c4a69896ac5a0a8393919aa4df
+                v0.27.1@sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967
             command: ["/bin/sh", "-c"]
             args:
               - |

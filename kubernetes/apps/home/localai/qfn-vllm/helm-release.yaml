@@ -5,6 +5,12 @@ metadata:
   name: &appname qfn-vllm
   namespace: &namespace home
 spec:
+  suspend: true
+  # 2026-11-07: PARKED — vLLM+AWQ path is infeasible on this host: the W4A16
+  # group-size (128) makes TP2 illegal (640/2=320 % 128 != 0, TP1-only quant),
+  # and with expert parallelism the 95 GB BF16 PLE table OOMs a 128 GiB host.
+  # QFN lives in ../llamacpp (llama.cpp streams the PLE from disk by design).
+  # Kept for a future single-96GB-card or PLE-light quant attempt.
   interval: 15m
   chart:
     spec:
@@ -71,9 +77,8 @@ spec:
               repository: vllm/vllm-openai
               # v0.33.0rc3 — qwen4_exp arch + MTP spec decode; rc because the
               # stable line lacks the QFN fixes we need (upstream release notes)
-              tag: v0.33.0rc3
+              tag: v0.33.0@sha256:d825baf9ce4b1b6bfc5ecc7b79880c7e6748c65a72d697ce3d47607aafa84c6e
             args:
-              - serve
               - /models
               - --served-model-name
               - qfn
