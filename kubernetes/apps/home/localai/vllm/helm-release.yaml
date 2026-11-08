@@ -59,10 +59,9 @@ spec:
                     Qwen/Qwen3.8-27B-FP8 \
                     --served-model-name qwen3 \
                     --dtype auto \
-                    --max-model-len 524288 \
+                    --max-model-len 262144 \
                     --gpu-memory-utilization 0.97 \
-                    --hf-overrides '{"rope_scaling":{"rope_type":"yarn","factor":2.0,"original_max_position_embeddings":262144}}' \
-                    --tensor-parallel-size 2 \
+                                        --tensor-parallel-size 1 \
                     --max-num-seqs 2 \
                     --limit-mm-per-prompt '{"image":2,"video":1}' \
                     --trust-remote-code \
@@ -140,10 +139,10 @@ spec:
               requests:
                 cpu: 100m
                 memory: 20Gi
-                nvidia.com/gpu: "2"
+                nvidia.com/gpu: "1"
               limits:
                 memory: 24Gi
-                nvidia.com/gpu: "2"
+                nvidia.com/gpu: "1"
 
     persistence:
       data:
