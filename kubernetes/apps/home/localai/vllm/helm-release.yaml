@@ -5,6 +5,9 @@ metadata:
   name: &appname vllm
   namespace: &namespace home
 spec:
+  suspend: true
+  # 2026-11-08: disabled — `default` now routes to QFN (strata) at user
+  # direction. Manifests + TP2-512k config retained; unsuspend to restore.
   interval: 15m
   chart:
     spec:
