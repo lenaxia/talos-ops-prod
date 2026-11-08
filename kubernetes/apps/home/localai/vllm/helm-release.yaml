@@ -61,8 +61,7 @@ spec:
                     --dtype auto \
                     --max-model-len 524288 \
                     --gpu-memory-utilization 0.97 \
-                    --rope-scaling yarn \
-                    --rope-scaling-factor 2.0 \
+                    --rope-scaling '{"rope_type":"yarn","factor":2.0,"original_max_position_embeddings":262144}' \
                     --tensor-parallel-size 2 \
                     --max-num-seqs 2 \
                     --limit-mm-per-prompt '{"image":2,"video":1}' \
