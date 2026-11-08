@@ -97,7 +97,8 @@ spec:
                 memory: 32Gi
                 nvidia.com/gpu: "2"
               limits:
-                memory: 64Gi
+                # 2026-11-07: no memory limit — Strata plans from host RAM
+                # (/proc/meminfo); a 64Gi limit killed the load (upstream warns).
                 nvidia.com/gpu: "2"
     persistence:
       models:

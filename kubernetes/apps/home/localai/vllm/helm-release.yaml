@@ -5,9 +5,6 @@ metadata:
   name: &appname vllm
   namespace: &namespace home
 spec:
-  suspend: true
-  # 2026-11-07: suspended for the QFN-vs-27B benchmark window (Strata on the
-  # 2x 4090s). Unsuspend to restore the default model.
   interval: 15m
   chart:
     spec:
