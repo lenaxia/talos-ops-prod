@@ -81,7 +81,7 @@ spec:
               - name: TZ
                 value: ${TIMEZONE}
               - name: NVIDIA_VISIBLE_DEVICES
-                value: "GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 4090 48GB
+                value: "GPU-52d95ccc-2df5-7179-ad4a-e7b280f04822,GPU-ec4bf65c-4e9e-b857-11e7-bcc716f11d93" # 2x 4090 48GB
               - name: PYTORCH_CUDA_ALLOC_CONF
                 value: "expandable_segments:True,max_split_size_mb:512"
             envFrom:
