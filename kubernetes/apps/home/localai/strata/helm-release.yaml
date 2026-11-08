@@ -52,6 +52,10 @@ spec:
                 value: qwen
               - name: MODEL
                 value: IQ3_S
+              - name: CONTEXT
+                value: "512k"
+              - name: PARALLEL
+                value: "2"
               # model GGUFs are pre-downloaded on the shared PVC — no engine download
               - name: MODEL_PATH
                 value: /models
