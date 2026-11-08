@@ -359,10 +359,9 @@ spec:
               model_info:
                 input_cost_per_token: 0.00001
                 output_cost_per_token: 0.00001
-                # engine launches with --max-context 131072 (docker preset
-                # default); raise the engine's --max-context before raising these
-                max_input_tokens: 131072
-                max_tokens: 131072
+                # engine CONTEXT=512k (int8 KV ~7GB on the 96GB pool)
+                max_input_tokens: 524288
+                max_tokens: 524288
                 supports_tool_choice: true
                 supports_function_calling: true
                 supports_response_schema: true
