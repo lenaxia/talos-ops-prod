@@ -346,11 +346,16 @@ spec:
 
 
             model_list:
+            # 2026-11-08: `default` now = Qwen3.8-Flash-Next (Strata, IQ3_S,
+            # 2x 4090-48) at user direction — benchmark showed 220 t/s decode,
+            # 7.2k t/s prefill, PLE prefix-cache re-reads. 27B remains
+            # deployed (vllm HR suspended) and can be re-added by flipping
+            # this entry back.
             - model_name: default
               litellm_params:
-                model: openai/qwen3
-                api_base: http://vllm.home.svc.cluster.local:8000/v1
-                api_key: doesnotmatter
+                model: openai/IQ3_S
+                api_base: http://strata.home.svc.cluster.local:8080/v1
+                api_key: local-benchmark
               model_info:
                 input_cost_per_token: 0.00001
                 output_cost_per_token: 0.00001
