@@ -37,6 +37,10 @@ spec:
         type: deployment
         annotations:
           reloader.stakater.com/auto: 'true'
+        # 2026-11-07: replicas 0 — QFN benchmark is opened deliberately (27B
+        # scales down first; see vllm). Model files now live on the shared
+        # qfn-vllm PVC — the init download below verifies and resumes.
+        replicas: 0
         initContainers:
           # 83.6 GB total: IQ3_S core 54.8 GB (2-part split GGUF) + shared 28.8 GB
           # PLE n-gram table (part 2). Resumable; subsequent pod starts just HEAD
@@ -198,10 +202,10 @@ spec:
               requests:
                 cpu: 2
                 memory: 8Gi
-                nvidia.com/gpu: "3"
+                nvidia.com/gpu: "2"
               limits:
                 memory: 16Gi
-                nvidia.com/gpu: "3"
+                nvidia.com/gpu: "2"
 
     persistence:
       models:
