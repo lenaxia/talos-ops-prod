@@ -51,7 +51,7 @@ spec:
               - name: FAMILY
                 value: qwen
               - name: MODEL
-                value: IQ4_XS
+                value: IQ3_S
               # model GGUFs are pre-downloaded on the shared PVC — no engine download
               - name: MODEL_PATH
                 value: /models
