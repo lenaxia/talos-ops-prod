@@ -53,7 +53,7 @@ spec:
               - name: MODEL
                 value: IQ3_S
               - name: CONTEXT
-                value: "512k"
+                value: "1048576"
               - name: PARALLEL
                 value: "2"
               # model GGUFs are pre-downloaded on the shared PVC — no engine download
