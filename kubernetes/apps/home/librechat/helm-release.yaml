@@ -271,21 +271,21 @@ spec:
                     fetch: true
                   titleConvo: true
                   titleModel: 'current_model'
-                        titleConvo: true
-      titleModel: 'current_model'
-      modelDisplayLabel: 'The Kao Cloud'
-      # 2026-11-08: per-model context windows (LibreChat tokenConfig) —
-      # default = QFN IQ3_S on the 2x 4090s (512k); classifier = 15k real.
-      # Without entries, LibreChat name-guesses context (showed wrong 32k).
-      tokenConfig:
-        default:
-          prompt: 0.00001
-          completion: 0.00001
-          context: 524288
-        classifier:
-          prompt: 0.00001
-          completion: 0.00001
-          context: 15360
+                  titleModel: 'current_model'
+                  modelDisplayLabel: 'The Kao Cloud'
+                  # 2026-11-08: per-model context windows (LibreChat
+                  # tokenConfig) — default = QFN IQ3_S on the 2x 4090s
+                  # (512k); classifier = 15k real. Without entries,
+                  # LibreChat name-guesses context (showed wrong 32k).
+                  tokenConfig:
+                    default:
+                      prompt: 0.00001
+                      completion: 0.00001
+                      context: 524288
+                    classifier:
+                      prompt: 0.00001
+                      completion: 0.00001
+                      context: 15360
 
     persistence:
       # /app/uploads — RAG/file uploads
