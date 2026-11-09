@@ -271,7 +271,6 @@ spec:
                     fetch: true
                   titleConvo: true
                   titleModel: 'current_model'
-                  titleModel: 'current_model'
                   modelDisplayLabel: 'The Kao Cloud'
                   # 2026-11-08: per-model context windows (LibreChat
                   # tokenConfig) — default = QFN IQ3_S on the 2x 4090s
