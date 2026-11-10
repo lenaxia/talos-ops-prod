@@ -113,6 +113,18 @@ spec:
       replicaCount: 2
       image:
         tag: "0.44.11"
+      # Memory bump (2026-11-09): the chart default 1Gi limit pins both
+      # replicas at the ceiling (~1Gi RSS each); wvb5n OOMKilled 8x in
+      # 4.5d, and on 2026-11-09 ~03:19 UTC both replicas + a workspace
+      # container OOM-died simultaneously — frontend blank, chat
+      # deliveries timing out in the queue.
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
       # V2 delivery + agentd state authority — FIFTH FLIP (2026-09-05,
       # 0.27.0): the US-70 delivery pool ran fully green for the first
       # time under exactly these flags (delivery suite + revisions +
