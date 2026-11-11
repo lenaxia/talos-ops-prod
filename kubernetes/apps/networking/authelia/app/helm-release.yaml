@@ -328,7 +328,7 @@ spec:
         # budget; the chains themselves invoke in-cluster and bypass Traefik.
         - domain: "f.${SECRET_DEV_DOMAIN}"
           resources:
-            - "^/(debate|decide|execute|score|digest|morning-chain|afternoon-chain|trading-seed|reconcile|status)(/.*)?$"
+            - "^/(debate|decide|execute|score|digest|morning-chain|afternoon-chain|trading-seed|reconcile|status|decide-v228|execute-v228|reconcile-v228|status-v228)(/.*)?$"
           policy: two_factor
 
         # Vaultwarden admin auth

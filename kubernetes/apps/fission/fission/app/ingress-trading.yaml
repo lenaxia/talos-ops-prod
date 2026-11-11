@@ -25,7 +25,8 @@ spec:
         Host(`f.${SECRET_DEV_DOMAIN}`) && (PathPrefix(`/debate`) || PathPrefix(`/decide`)
         || PathPrefix(`/execute`) || PathPrefix(`/score`) || PathPrefix(`/digest`)
         || PathPrefix(`/morning-chain`) || PathPrefix(`/afternoon-chain`)
-        || PathPrefix(`/trading-seed`) || PathPrefix(`/reconcile`) || PathPrefix(`/status`))
+        || PathPrefix(`/trading-seed`) || PathPrefix(`/reconcile`) || PathPrefix(`/decide-v228`) || PathPrefix(`/execute-v228`)
+        || PathPrefix(`/reconcile-v228`) || PathPrefix(`/status-v228`) || PathPrefix(`/status`))
       kind: Rule
       middlewares:
         - name: trading-chain

@@ -13,7 +13,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/debate-0.2.0/debate-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/debate-0.3.0/debate-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -26,7 +26,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/decide-0.2.0/decide-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/decide-0.3.0/decide-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -39,7 +39,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/execute-0.2.0/execute-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/execute-0.3.0/execute-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -52,7 +52,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/score-0.2.0/score-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/score-0.3.0/score-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -65,7 +65,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/digest-0.2.0/digest-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/digest-0.3.0/digest-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -78,7 +78,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/morning-chain-0.2.0/morning-chain-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/morning-chain-0.3.0/morning-chain-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -91,7 +91,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/afternoon-chain-0.2.0/afternoon-chain-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/afternoon-chain-0.3.0/afternoon-chain-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -104,7 +104,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/trading-seed-0.2.0/trading-seed-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/trading-seed-0.3.0/trading-seed-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -117,7 +117,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/reconcile-0.2.0/reconcile-0.2.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/reconcile-0.3.0/reconcile-0.3.0.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -130,4 +130,4 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/status-0.2.1/status-0.2.1.zip
+    url: https://github.com/lenaxia/functions/releases/download/status-0.3.0/status-0.3.0.zip

@@ -20,6 +20,7 @@
 #
 # All functions mount the single shared `trading` secret (one sops
 # file; see secret-trading.yaml.template).
+---
 apiVersion: fission.io/v1
 kind: Function
 metadata:
@@ -35,8 +36,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 2400
   idletimeout: 2520
   InvokeStrategy:
@@ -62,8 +63,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 480
   idletimeout: 600
   InvokeStrategy:
@@ -89,8 +90,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 300
   idletimeout: 420
   InvokeStrategy:
@@ -116,8 +117,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 900
   idletimeout: 1020
   InvokeStrategy:
@@ -143,8 +144,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 120
   idletimeout: 240
   InvokeStrategy:
@@ -170,8 +171,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 3480
   idletimeout: 3600
   InvokeStrategy:
@@ -197,8 +198,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 1140
   idletimeout: 1260
   InvokeStrategy:
@@ -224,8 +225,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 300
   idletimeout: 420
   InvokeStrategy:
@@ -251,8 +252,8 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
-      namespace: fission
+  - name: trading
+    namespace: fission
   functionTimeout: 300
   idletimeout: 420
   InvokeStrategy:
@@ -278,8 +279,143 @@ spec:
       namespace: fission
     functionName: main
   secrets:
-    - name: trading
+  - name: trading
+    namespace: fission
+  functionTimeout: 60
+  idletimeout: 180
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: decide-v228
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: decide
       namespace: fission
+    functionName: main
+  secrets:
+  - name: trading-v228
+    namespace: fission
+  functionTimeout: 480
+  idletimeout: 600
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: execute-v228
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: execute
+      namespace: fission
+    functionName: main
+  secrets:
+  - name: trading-v228
+    namespace: fission
+  functionTimeout: 300
+  idletimeout: 420
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: v228-chain
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: morning-chain
+      namespace: fission
+    functionName: main
+  secrets:
+  - name: trading-v228
+    namespace: fission
+  functionTimeout: 1140
+  idletimeout: 1260
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: reconcile-v228
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: reconcile
+      namespace: fission
+    functionName: main
+  secrets:
+  - name: trading-v228
+    namespace: fission
+  functionTimeout: 300
+  idletimeout: 420
+  InvokeStrategy:
+    StrategyType: execution
+    ExecutionStrategy:
+      ExecutorType: newdeploy
+      MinScale: 0
+      MaxScale: 1
+      SpecializationTimeout: 240
+---
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: status-v228
+  namespace: fission
+spec:
+  environment:
+    name: python3-trading
+    namespace: fission
+  package:
+    packageref:
+      name: status
+      namespace: fission
+    functionName: main
+  secrets:
+  - name: trading-v228
+    namespace: fission
   functionTimeout: 60
   idletimeout: 180
   InvokeStrategy:

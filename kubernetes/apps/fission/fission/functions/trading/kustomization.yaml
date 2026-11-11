@@ -13,3 +13,4 @@ resources:
   # Functions stay unspecialized
   # (pods fail) until it exists:
   - ./secret-trading.sops.yaml
+  - ./secret-trading-v228.sops.yaml
