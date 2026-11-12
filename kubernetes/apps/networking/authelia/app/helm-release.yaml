@@ -404,7 +404,12 @@ spec:
             - "^/v1/rerank"
           policy: bypass
 
-        # OpenWebUI static assets and health
+        # OpenWebUI static assets, health, and API. Native clients (Conduit
+        # iOS/Android) call the API directly from the app's own HTTP client,
+        # outside the SSO WebView, so they cannot carry the Authelia session
+        # cookie and would get 401 from forward-auth ("SSO Auth failed").
+        # OpenWebUI's own JWT auth gates all /api endpoints, same pattern as
+        # the Jellyfin and LiteLLM bypasses.
         - domain:
             - "chat.${SECRET_DEV_DOMAIN}"
           resources:
@@ -412,6 +417,7 @@ spec:
             - "^/static/.*$"
             - "^/manifest.json$"
             - "^/api/config"
+            - "^/api/.*$"
           policy: bypass
 
         # LibreChat static assets and health
