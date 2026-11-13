@@ -26,7 +26,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/decide-0.4.0/decide-0.4.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/decide-0.4.2/decide-0.4.2.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
@@ -39,7 +39,7 @@ spec:
     namespace: fission
   deployment:
     type: url
-    url: https://github.com/lenaxia/functions/releases/download/execute-0.4.0/execute-0.4.0.zip
+    url: https://github.com/lenaxia/functions/releases/download/execute-0.4.2/execute-0.4.2.zip
 ---
 apiVersion: fission.io/v1
 kind: Package
