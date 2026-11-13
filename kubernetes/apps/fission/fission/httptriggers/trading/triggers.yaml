@@ -241,7 +241,10 @@ metadata:
   name: v228-chain-weekdays
   namespace: fission
 spec:
-  cron: 46 13 * * 1-5
+  # 14:46 UTC = 9:46 ET (EST) / 10:46 ET (EDT) — same DST-safe convention as
+  # the pilot chain (13:46 UTC became 8:46 ET after the 2026 fall-back, which
+  # would strand V228 entries as "market closed — diff queued" on dip days).
+  cron: 46 14 * * 1-5
   functionref:
     name: v228-chain
     type: name
