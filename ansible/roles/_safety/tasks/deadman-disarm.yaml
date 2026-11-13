@@ -1,0 +1,26 @@
+---
+# Dead-man's switch — DISARM.
+#
+# Cancels the self-revert timer armed by deadman-arm.yaml. Call this ONLY
+# after a passing health check, so that if health failed the timer is left
+# to fire and restore a known-good state.
+#
+# Stopping the transient timer unit prevents the pending revert; the unit is
+# transient so it disappears once stopped.
+
+- name: "Deadman: disarm self-revert timer"
+  ansible.builtin.command:
+    cmd: "systemctl stop {{ safety_deadman_unit }}.timer"
+  register: _deadman_disarm
+  changed_when: _deadman_disarm.rc == 0
+  failed_when: false
+
+- name: "Deadman: also stop the pending service unit if it exists"
+  ansible.builtin.command:
+    cmd: "systemctl stop {{ safety_deadman_unit }}.service"
+  changed_when: false
+  failed_when: false
+
+- name: "Deadman: disarmed"
+  ansible.builtin.debug:
+    msg: "Dead-man's switch disarmed on {{ inventory_hostname }} (health passed)."

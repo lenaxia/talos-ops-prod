@@ -1,0 +1,35 @@
+---
+# Least-privilege access for the ansible-runner to persist its
+# "last-known-good" deploy SHA. Scoped to get/create/update/patch ONLY,
+# on ConfigMaps in the home namespace. resourceNames can't be enforced for
+# create (name is in the body, not the request path), so this Role is
+# limited to the configmaps verb set rather than cluster-wide anything.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ansible-runner
+  namespace: home
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ansible-runner-lkg
+  namespace: home
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ansible-runner-lkg
+  namespace: home
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ansible-runner-lkg
+subjects:
+  - kind: ServiceAccount
+    name: ansible-runner
+    namespace: home

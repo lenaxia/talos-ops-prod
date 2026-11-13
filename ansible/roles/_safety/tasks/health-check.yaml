@@ -1,0 +1,86 @@
+---
+# Deep, per-node-class health check. Run AFTER a change (and after handlers
+# flush) to decide whether the node is truly healthy. Designed to be called
+# via include_role/include_tasks with safety_node_class set.
+#
+# Checks run from the CONTROLLER (delegate_to: localhost) wherever possible,
+# so they exercise the same path a real client/the cluster uses — this is
+# what catches a node that "looks up" locally but has been firewalled off.
+#
+# On any failure this fails the task (and therefore the play / serial batch),
+# which is the signal the caller's rescue / the runner's rollback keys off.
+
+- name: "Health: resolve target address for {{ inventory_hostname }}"
+  ansible.builtin.set_fact:
+    _hc_addr: "{{ ansible_host | default(network_ip | default(inventory_hostname)) }}"
+
+# ---- Reachability (all classes) -------------------------------------------
+- name: "Health: SSH/22 reachable on {{ _hc_addr }}"
+  ansible.builtin.wait_for:
+    host: "{{ _hc_addr }}"
+    port: 22
+    timeout: "{{ safety_health_timeout }}"
+    state: started
+  delegate_to: localhost
+
+# ---- Service survives reboot (all classes, when a service is named) -------
+# Caller may pass safety_health_services: [list] of systemd units that must
+# be BOTH active AND enabled (enabled = will come back after a reboot, the
+# exact gap that bit dns01).
+- name: "Health: required services active and enabled"
+  ansible.builtin.service_facts:
+  when: safety_health_services | default([]) | length > 0
+
+- name: "Health: assert each required service is running + enabled"
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.services[item ~ '.service'] is defined
+      - ansible_facts.services[item ~ '.service'].state == 'running'
+      - ansible_facts.services[item ~ '.service'].status == 'enabled'
+    fail_msg: >-
+      Service {{ item }} on {{ inventory_hostname }} is not running+enabled
+      (state={{ ansible_facts.services[item ~ '.service'].state | default('absent') }},
+      status={{ ansible_facts.services[item ~ '.service'].status | default('absent') }}).
+      A not-enabled service will not survive reboot.
+  loop: "{{ safety_health_services | default([]) }}"
+
+# ---- DNS class: functional resolution through the node + cluster path -----
+- name: "Health: DNS/53 reachable on {{ _hc_addr }}"
+  ansible.builtin.wait_for:
+    host: "{{ _hc_addr }}"
+    port: 53
+    timeout: "{{ safety_health_timeout }}"
+  delegate_to: localhost
+  when: safety_node_class == 'dns'
+
+- name: "Health: build DNS resolver list to probe"
+  ansible.builtin.set_fact:
+    _hc_dns_servers: "{{ (safety_health_dns_servers | default([])) + [_hc_addr] | unique }}"
+  when: safety_node_class == 'dns'
+
+- name: "Health: functional resolution through each resolver (from controller)"
+  ansible.builtin.set_fact:
+    _hc_answer: "{{ lookup('dig', safety_health_dns_name, '@' ~ item) }}"
+  loop: "{{ _hc_dns_servers }}"
+  register: _hc_dns_results
+  delegate_to: localhost
+  when: safety_node_class == 'dns'
+
+- name: "Health: assert every resolver returned a real answer"
+  ansible.builtin.assert:
+    that:
+      - item.ansible_facts._hc_answer not in ['NXDOMAIN', 'SERVFAIL', 'TIMEOUT', '']
+    fail_msg: >-
+      Resolver {{ item.item }} failed to resolve {{ safety_health_dns_name }}
+      (got '{{ item.ansible_facts._hc_answer }}').
+  loop: "{{ _hc_dns_results.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: safety_node_class == 'dns'
+
+- name: "Health: {{ inventory_hostname }} passed deep health check"
+  ansible.builtin.debug:
+    msg: >-
+      {{ inventory_hostname }} healthy — class={{ safety_node_class }},
+      ssh+{{ 'dns ' if safety_node_class == 'dns' else '' }}services
+      {{ safety_health_services | default([]) }} ok.
