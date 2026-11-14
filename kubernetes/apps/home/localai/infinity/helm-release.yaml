@@ -40,7 +40,7 @@ spec:
             image:
               repository: michaelf34/infinity
               # renovate: depName=michaelf34/infinity
-              tag: 0.0.77-cpu@sha256:94db836145f609c508f3f296f3b9bd0e78ae088025e879664d073dfd9f929e96
+              tag: 0.0.80-cpu@sha256:2e1bc9e82f06c9f4616813dc66617ebe2caa241351f602f3e97453de1ef55896
             # Image ENTRYPOINT is `infinity_emb`; args start at the `v2` subcommand.
             # Verified against 0.0.77: --engine optimum (ONNX, image default),
             # --device cpu, routes POST /embeddings, GET /models, GET /health
