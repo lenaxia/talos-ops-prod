@@ -17,5 +17,12 @@ kind: Kustomization
 # v0.34.7: workspace.yaml adds status.secretsDelivery.relayRevision (string,
 # optional) — US-72.4 relay-only token emission lineage. Additive and
 # optional; safe to apply before the chart upgrade (the v0.26.0 precedent).
+# v0.44.17: workspace.yaml adds spec.harness (string, enum opencode/pi,
+# bind-once) + spec.agentdDelivery + status.agentSupervisor. Additive, but
+# NOT optional in practice: the 0.44.17 controller backfills spec.harness on
+# legacy workspaces and new creations bind the harness at first session —
+# with the pre-0.44.15 CRD those writes fail ("unknown field spec.harness")
+# and new workspaces wedge in Creating with HarnessBindingPending. Synced
+# after the v0.44.17 chart upgrade went out first (2026-11-18 incident).
 resources:
   - workspace.yaml

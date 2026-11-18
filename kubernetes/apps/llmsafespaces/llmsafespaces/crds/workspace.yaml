@@ -36,6 +36,10 @@ spec:
                 runtime:
                   type: string
                   description: "Runtime environment (e.g. python:3.11)"
+                harness:
+                  type: string
+                  enum: ["opencode", "pi"]
+                  description: "Coding-agent harness this workspace runs. Nullable and bind-once (owner ruling 2026-11-16): empty = unbound, set exactly once (at create, explicit bind while unbound, or atomically with the first session); immutable forever after — enforced by the validating webhook. There is no switch or recreate path."
                 architecture:
                   type: string
                   enum: ["amd64", "arm64"]
@@ -167,6 +171,20 @@ spec:
                   type: boolean
                   nullable: true
                   description: "Tri-state request flag (US-23.3). nil=unspecified/acknowledged; true=request suspend; false=request resume from Suspended. No default — the nil state must be reachable so the controller doesn't auto-resume."
+                agentdDelivery:
+                  type: object
+                  description: "Per-workspace agentd overlay delivery policy override (#1746). Absent = the controller's instance-level default (--agentd-update-policy / controller.agentdDelivery.updatePolicy, OnRefresh unless pinned). updatePolicy deliberately carries NO default: an agentdDelivery object written without it (e.g. a forceRoll-only patch) inherits the instance default — a schema default would materialize on such partial writes and silently pin the workspace."
+                  properties:
+                    updatePolicy:
+                      type: string
+                      enum:
+                        - Rolling
+                        - OnRefresh
+                      description: "Rolling: the controller recreates the pod on agentd digest drift, drain-aware (#761). OnRefresh (product default): running pods are untouched; the desired digest is recorded on status (agentdPendingDigest) and applies at the next natural pod recreation (compute refresh, suspend/resume, other). Empty = inherit the instance-level default."
+                    forceRoll:
+                      type: boolean
+                      default: false
+                      description: "Security-critical escape hatch: on agentd digest drift, reconcile the pod IMMEDIATELY regardless of updatePolicy, bypassing the session drain (in-flight turns are cut). Level-triggered; clear after use."
             status:
               type: object
               properties:
@@ -240,6 +258,63 @@ spec:
                         token_expired / router reject reasons) ride
                         degradedReason. Absent on pre-US-72.4 runtimes
                         and flag-off pods.
+                agentSupervisor:
+                  type: object
+                  description: |
+                    Supervisor/watchdog agent-restart state (#1760),
+                    mirrored by the controller from agentd's /v1/healthz
+                    supervisor slice. Absent (nil) means no evidence
+                    (unreachable pod, or a pre-#1760 runtime that does
+                    not report it).
+                  properties:
+                    agentRestarts:
+                      type: integer
+                      description: |
+                        Total recorded agent restarts since the pod's
+                        agentd boot — supervisor-watchdog restarts plus
+                        supervisor-attributed process-crash (crash/oom)
+                        restarts, in both container topologies. A
+                        lifetime count, never a resetting crash-loop
+                        counter.
+                    lastAgentRestart:
+                      type: object
+                      description: |
+                        Attribution of the most recent recorded agent
+                        restart; absent when none was recorded this boot.
+                      properties:
+                        reason:
+                          type: string
+                          description: |
+                            Why the agent was restarted
+                            (health_watchdog,
+                            health_watchdog_unknown_episode, crash, oom).
+                        verdict:
+                          type: string
+                          description: |
+                            The supervisor watchdog's classification of
+                            the agent process at the restart decision
+                            (hung, starved, flat, respawn, unknown).
+                            Empty when the restart was not
+                            watchdog-initiated or was uncorroborated.
+                        lastError:
+                          type: string
+                          description: |
+                            The health-check error of the episode that
+                            led to the restart, if any.
+                        at:
+                          type: string
+                          format: date-time
+                    suppressedRestarts:
+                      type: integer
+                      description: |
+                        Total would-fire watchdog restarts suppressed by
+                        corroborating evidence (the agent was alive) since
+                        agentd boot.
+                    lastSuppressedVerdict:
+                      type: string
+                      description: |
+                        Verdict of the most recent suppression (hung,
+                        starved, flat, respawn, unknown); empty when none.
                 conditions:
                   type: array
                   items:
@@ -312,6 +387,21 @@ spec:
                 consecutiveHealthFailures:
                   type: integer
                   format: int32
+                agentdEffectiveDigest:
+                  type: string
+                  description: "agentd overlay image digest (sha256:<64 hex>) the current pod was built with (#1746). Empty in legacy baked-in mode."
+                agentdPendingDigest:
+                  type: string
+                  description: "Desired agentd digest recorded while it differs from agentdEffectiveDigest (updatePolicy OnRefresh, or a roll still deferred) — applies on the next pod recreation. Empty when converged (#1746)."
+                agentdVersion:
+                  type: string
+                  description: "RUNNING agentd's self-reported build version from /v1/healthz (RC-A, 2026-10-30) — e.g. \"0.44.7\". Empty while the pod is unreachable; the AgentdVersionStale condition flags a version older than the fleet release."
+                agentdCommit:
+                  type: string
+                  description: "RUNNING agentd's self-reported git commit (commit_sha on /v1/healthz; RC-A, 2026-10-30). \"unknown\" when the build was not stamped."
+                agentdBuildTime:
+                  type: string
+                  description: "RUNNING agentd's self-reported UTC build timestamp (build_time on /v1/healthz; RC-A, 2026-10-30)."
                 # Agent-reported fields (populated from agentd /v1/statusz scrape).
                 sessions:
                   type: array
