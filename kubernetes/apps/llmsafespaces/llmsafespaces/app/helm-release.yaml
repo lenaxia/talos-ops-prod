@@ -17,7 +17,7 @@ spec:
         namespace: flux-system
       interval: 15m
       # `reconcileStrategy: Revision` is retained even though the GitRepository
-      # is now pinned to a semver tag (current: v0.44.16). Rationale: if we ever move a
+      # is now pinned to a semver tag (current: v0.44.17). Rationale: if we ever move a
       # tag or point at a branch during an emergency rollback, ChartVersion
       # would refuse to re-package (Chart.yaml version wouldn't change). With
       # Revision, source-controller re-packages on every commit SHA change,
@@ -112,7 +112,7 @@ spec:
     api:
       replicaCount: 2
       image:
-        tag: "0.44.16"
+        tag: "0.44.17"
       # Memory bump (2026-11-09): the chart default 1Gi limit pins both
       # replicas at the ceiling (~1Gi RSS each); wvb5n OOMKilled 8x in
       # 4.5d, and on 2026-11-09 ~03:19 UTC both replicas + a workspace
@@ -163,7 +163,7 @@ spec:
       replicaCount: 1
       # Same semver-tag policy as api.image.tag above.
       image:
-        tag: "0.44.16"
+        tag: "0.44.17"
       # #1257: fleet resume was linear at the default 1 concurrent
       # reconcile (~8s/workspace). 4 is the product default; plenty for
       # a solo-operator fleet.
@@ -174,27 +174,27 @@ spec:
       # runtimes/base. The per-arch binary sha256s resolve at controller
       # startup from the image index annotations (stamped by CI's
       # merge-agentd job) — do NOT set binarySHA256*.
-      # Digest source: release v0.44.16 (Release run 44114269696, merge-agentd canonical delivery-pin print) — digest-GET verified 200.
+      # Digest source: release v0.44.17 (Release run 44206689434, merge-agentd canonical delivery-pin print) — digest-GET verified 200.
       agentdSidecar:
         enabled: true
       agentdDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:c79e84ccd826dad662d1157562d25b70ecb7c674788e01e2fce138b4a74b1d8c
+        image: ghcr.io/lenaxia/llmsafespaces/agentd@sha256:84f47542d08619c11eb9ef2b894e095b441f7e98ad04d151544f743288933bab
       # ── Opencode overlay delivery (design 0053 §4.2, MANDATORY) ───────────
       # 0.26.0 strips opencode out of runtimes/base; the controller
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.44.16 (Release run 44114269696, merge-opencode canonical delivery-pin print) — digest-GET verified 200.
+      # Digest source: release v0.44.17 (Release run 44206689434, merge-opencode canonical delivery-pin print) — digest-GET verified 200.
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:fde4c3442f1a96beb8fab4c1ad4a50ca78288336eb90800c807a7b4b01efa3d3
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:095e41048aec9d6ef30272d4a7656902104daaf6c8cb6e524fa0e53f07438a69
       # ── Pi overlay delivery (design 0053 §5.4, MANDATORY from v0.44.15) ──
       # The second-harness pi overlay joins the delivery-pin set; the
       # 0.44.15 chart's render gate requires a digest-pinned pi image
       # (no baked fallback exists). Image-only form per the merge-pi
       # canonical print — do NOT set binarySHA256* (index annotations).
-      # Digest source: release v0.44.16 (Release run 44114269696, merge-pi canonical delivery-pin print) — digest-GET verified 200.
+      # Digest source: release v0.44.17 (Release run 44206689434, merge-pi canonical delivery-pin print) — digest-GET verified 200.
       piDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/pi@sha256:0800ca0c452dc56f769e1bcd5aac68b3e2a825760906d17168595a9eb38cc73c
+        image: ghcr.io/lenaxia/llmsafespaces/pi@sha256:1f7e36ce47d51d7223bf30163b9a3cf6725468a6aca069aeb03490343cec67fe
       # InferenceRelay router enabled; fleet (cloud VMs) is NOT provisioned.
       # The relay-router Deployment renders in this namespace and the
       # controller's InferenceRelay reconciler starts, but no InferenceRelay
@@ -214,7 +214,7 @@ spec:
         # on main and every release tag builds all five.)
         router:
           image:
-            tag: "0.44.16"
+            tag: "0.44.17"
       # ── v0.34.8 render guard (design 0061 §8.1 residual) ───────────────────
       # The v0.34.8 chart hard-FAILS the render when
       # controller.inferenceRelay.enabled=true under rbac.scope=namespace
@@ -330,7 +330,7 @@ spec:
       # release-tag build produces `frontend:<same semver>` alongside the
       # other four images.
       image:
-        tag: "0.44.16"
+        tag: "0.44.17"
       apiBaseUrl: https://api.safespaces.dev/api/v1
       ingress:
         enabled: false
