@@ -184,9 +184,21 @@ spec:
       # mounts this digest-pinned image volume at /opencode and the
       # supervisor sha256-verifies before spawn (exit 83/84 →
       # OpencodeVerified condition). Render fails without it — by design.
-      # Digest source: release v0.44.18 (Release run 44694532335, merge-opencode canonical delivery-pin print) — digest-GET verified 200.
+      # EMERGENCY REVERT (2026-11-20): rolled back to the last validated
+      # opencode 1.18.15 overlay (release v0.44.16, Release run 44114269696,
+      # merge-opencode canonical print) — binary version verified locally
+      # (docker pull + extract → `opencode --version` = 1.18.15). The 1.19.5
+      # overlay (095e4104 @ v0.44.17, 033b0f1a @ v0.44.18) silently broke the
+      # legacy GET /provider + GET /config/providers routes (instant HTTP 499,
+      # empty body; moved to /api/provider + /api/model), which blanks the
+      # frontend model picker ("could not load models"), zeroes the
+      # ProviderReady condition, and breaks agentd model-catalog/context-limit
+      # consumers. 1.19.5 was bump-validated for SSE/events only (worklog
+      # 1295) — the model-catalog surface was never re-validated. Forward fix
+      # tracked on lenaxia/llmsafespaces; re-pin to 1.19.5+ only after the
+      # /api/* migration lands.
       opencodeDelivery:
-        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:033b0f1aca63ea4cbee9857658062691d13b7dbe721fbee40f95a7438ec77e8f
+        image: ghcr.io/lenaxia/llmsafespaces/opencode@sha256:fde4c3442f1a96beb8fab4c1ad4a50ca78288336eb90800c807a7b4b01efa3d3
       # ── Pi overlay delivery (design 0053 §5.4, MANDATORY from v0.44.15) ──
       # The second-harness pi overlay joins the delivery-pin set; the
       # 0.44.15 chart's render gate requires a digest-pinned pi image
