@@ -343,6 +343,15 @@ spec:
                 allow_all_keys: true
                 auth_type: bearer_token
                 auth_value: os.environ/FIREFLY_MCP_PAT
+              # Read-only Kubernetes inspection (Flux159/mcp-server-kubernetes).
+              # Server-side ALLOW_ONLY_READONLY_TOOLS + read-only RBAC
+              # (kubernetes-mcp-readonly ClusterRole); credential-free
+              # server, in-cluster SA token does the authz.
+              kubernetes:
+                url: http://kubernetes-mcp.utilities.svc.cluster.local:3000/mcp
+                transport: http
+                description: Read-only Kubernetes cluster inspection (get, describe, logs)
+                allow_all_keys: true
 
 
             model_list:
