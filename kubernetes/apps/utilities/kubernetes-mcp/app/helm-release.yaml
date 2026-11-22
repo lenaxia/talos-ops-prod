@@ -1,0 +1,176 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.6.2/charts/other/app-template/values.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &appname kubernetes-mcp
+  namespace: &namespace utilities
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 5.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 4
+  uninstall:
+    keepHistory: false
+  values:
+    # ──────────────────────────────────────────────────────────────────────
+    # kubernetes-mcp (Flux159/mcp-server-kubernetes) — read-only k8s MCP
+    #
+    # Serves native stateless streamable-http at /mcp
+    # (ENABLE_UNSAFE_STREAMABLE_HTTP_TRANSPORT). Read-only enforced
+    # server-side via ALLOW_ONLY_READONLY_TOOLS: only get/describe/logs/
+    # explain/list_api_resources/context are registered.
+    #
+    # Auth: none on the server. ClusterIP only; LiteLLM is the documented
+    # client (registered under mcp_servers.kubernetes in the litellm
+    # HelmRelease) and LiteLLM itself is Authelia-protected.
+    #
+    # Cluster access: the upstream image bundles kubectl + helm, but kubectl
+    # does NOT use in-cluster SA auth — it needs a kubeconfig. The chart
+    # renders one (configMaps.kubeconfig) that points at the projected SA
+    # token/ca via tokenFile/certificate-authority, so the credential is
+    # re-read fresh on every invocation (rotation-safe, no static token).
+    # rbac.yaml grants a read-only ClusterRole (get/list/watch + pods/log).
+    #
+    # SPAWN_MAX_BUFFER: the server shells out to kubectl for some tools;
+    # default 1MB spawnSync buffer ENOBUFS-fails on long-lived pods'
+    # logs (helm-controller alone is ~4MB). Raised to 20MB.
+    # ──────────────────────────────────────────────────────────────────────
+    configMaps:
+      kubeconfig:
+        data:
+          config: |
+            apiVersion: v1
+            kind: Config
+            clusters:
+              - name: in-cluster
+                cluster:
+                  server: https://kubernetes.default.svc
+                  certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            contexts:
+              - name: in-cluster
+                context:
+                  cluster: in-cluster
+                  user: service-account
+            current-context: in-cluster
+            users:
+              - name: service-account
+                user:
+                  tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    # Chart-managed SA named to match the ClusterRoleBinding subject in
+    # rbac.yaml (which deliberately does NOT declare the ServiceAccount —
+    # helm owns it here, kustomize owns the RBAC objects).
+    serviceAccount:
+      kubernetes-mcp:
+        forceRename: kubernetes-mcp
+    defaultPodOptions:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+      # Chart default is false when a serviceAccount is set; kubectl
+      # needs the projected SA token for the kubeconfig's tokenFile.
+      automountServiceAccountToken: true
+    controllers:
+      main:
+        type: deployment
+        replicas: 1
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        # Workload binds to the SA created in rbac.yaml (same name — the
+        # chart's auto-generated release-named SA adopts it).
+        containers:
+          main:
+            image:
+              repository: docker.io/flux159/mcp-server-kubernetes
+              # Pinned to digest of flux159/mcp-server-kubernetes:v4.2.3
+              # (Docker Hub — the ghcr.io v4.2.3 tag is an OCI helm chart,
+              # not an image). Verified 2026-11-21 from Docker Hub.
+              tag:
+                v4.2.3@sha256:8b0d664336b8e66941b10760c6eb9e2d1c17df6734f624832d4ef134581e3f3c
+              pullPolicy: IfNotPresent
+            # Image CMD is `node dist/index.js` — do not override.
+            env:
+              ENABLE_UNSAFE_STREAMABLE_HTTP_TRANSPORT: "true"
+              ALLOW_ONLY_READONLY_TOOLS: "true"
+              SPAWN_MAX_BUFFER: "20971520"
+              HOST: 0.0.0.0
+              PORT: "3000"
+              # DNS rebinding protection does an exact Host-header string
+              # match (host AND port) against this single value, replacing
+              # the default localhost-only allowlist. Must match exactly
+              # what LiteLLM sends to the Service DNS name.
+              DNS_REBINDING_ALLOWED_HOST: kubernetes-mcp.utilities.svc.cluster.local:3000
+              # kubectl subprocesses are spawned with only KUBECONFIG from
+              # the parent env — point it at the chart-managed kubeconfig
+              # above (image HOME=/ may leave $HOME/.kube unset anyway).
+              KUBECONFIG: /home/appuser/.kube/config
+              HOME: /home/appuser
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  # No /health endpoint on this server; /mcp is POST-only.
+                  tcpSocket:
+                    port: 3000
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                  failureThreshold: 3
+                  timeoutSeconds: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 3000
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 3
+                  timeoutSeconds: 5
+              startup:
+                enabled: false
+    service:
+      main:
+        primary: true
+        controller: main
+        type: ClusterIP
+        ports:
+          http:
+            port: 3000
+            protocol: TCP
+    persistence:
+      kubeconfig:
+        enabled: true
+        type: configMap
+        # Chart renders the configMaps.kubeconfig entry under the release
+        # name (configmap/kubernetes-mcp), not the key name.
+        name: kubernetes-mcp
+        # Mounted files are root-owned; others-read bit is required for
+        # the image's non-root appuser (UID 1000) to read them.
+        defaultMode: 0444
+        advancedMounts:
+          main:
+            main:
+              - path: /home/appuser/.kube/config
+                subPath: config
+                readOnly: true

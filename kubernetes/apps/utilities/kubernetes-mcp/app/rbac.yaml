@@ -1,0 +1,134 @@
+---
+# Read-only cluster access for kubernetes-mcp.
+#
+# The MCP pod runs kubectl with a ServiceAccount kubeconfig; this grants
+# exactly the ALLOW_ONLY_READONLY_TOOLS surface (get/describe/logs/explain)
+# and nothing else. Deliberately NO catch-all: core-group secrets are
+# excluded so the LLM can never read credential material (kubectl_describe
+# of a Secret is not masked server-side — only kubectl_get is). This also
+# blocks helm release-state Secrets, which embed full chart values.
+#
+# RBAC has no deny rules, so exclusion is done by enumerating:
+#   - rule 1: named core (v1) resources EXCEPT secrets
+#   - rule 2: every non-core apiGroup, all resources
+# When a new operator with CRDs lands in the cluster, add its apiGroup to
+# rule 2 or the MCP will get Forbidden on it (kubectl surfaces the error
+# clearly — the fix is one line here).
+#
+# The ServiceAccount itself is chart-managed (serviceAccount block in
+# helm-release.yaml, forceRename: kubernetes-mcp) — only RBAC objects here.
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubernetes-mcp-readonly
+rules:
+  # Core group, secrets excluded.
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+      - pods/status
+      - services
+      - endpoints
+      - namespaces
+      - nodes
+      - nodes/status
+      - events
+      - persistentvolumes
+      - persistentvolumeclaims
+      - configmaps
+      - replicationcontrollers
+      - limitranges
+      - resourcequotas
+      - componentstatuses
+    verbs: ["get", "list", "watch"]
+  # All non-core apiGroups (standard groups + every operator/CRD group
+  # present in the cluster as of 2026-11-21).
+  - apiGroups:
+      # standard groups
+      - apps
+      - autoscaling
+      - batch
+      - policy
+      - storage.k8s.io
+      - snapshot.storage.k8s.io
+      - groupsnapshot.storage.k8s.io
+      - networking.k8s.io
+      - gateway.networking.k8s.io
+      - discovery.k8s.io
+      - coordination.k8s.io
+      - events.k8s.io
+      - scheduling.k8s.io
+      - node.k8s.io
+      - resource.k8s.io
+      - apiextensions.k8s.io
+      - admissionregistration.k8s.io
+      - apiregistration.k8s.io
+      - certificates.k8s.io
+      - authentication.k8s.io
+      - authorization.k8s.io
+      - rbac.authorization.k8s.io
+      - flowcontrol.apiserver.k8s.io
+      - metrics.k8s.io
+      - externaldns.k8s.io
+      - k8s.cni.cncf.io
+      - nfd.k8s-sigs.io
+      - wgpolicyk8s.io
+      # flux
+      - helm.toolkit.fluxcd.io
+      - kustomize.toolkit.fluxcd.io
+      - source.toolkit.fluxcd.io
+      - source.extensions.fluxcd.io
+      - image.toolkit.fluxcd.io
+      - notification.toolkit.fluxcd.io
+      # operators / CRDs
+      - cilium.io
+      - longhorn.io
+      - volsync.backube
+      - postgresql.cnpg.io
+      - k8s.mariadb.com
+      - mariadb.com
+      - kyverno.io
+      - policies.kyverno.io
+      - reports.kyverno.io
+      - monitoring.coreos.com
+      - monitoring.grafana.com
+      - grafana.com
+      - traefik.io
+      - hub.traefik.io
+      - cert-manager.io
+      - acme.cert-manager.io
+      - fission.io
+      - deviceplugin.intel.com
+      - fpga.intel.com
+      - intel.com
+      - actions.github.com
+      - github.com
+      - github.io
+      - games-on-whales.github.io
+      - hajimari.io
+      - llmsafespaces.dev
+      - mechanic.io
+      - mongodb.com
+      - mongodbcommunity.mongodb.com
+      - voyageais.ai.mongodb.com
+      - operator.victoriametrics.com
+      - talos.dev
+      - coreos.com
+      - cncf.io
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubernetes-mcp-readonly
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubernetes-mcp-readonly
+subjects:
+  - kind: ServiceAccount
+    name: kubernetes-mcp
+    namespace: utilities
