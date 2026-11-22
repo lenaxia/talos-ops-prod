@@ -34,12 +34,19 @@ spec:
     #   supergateway (Node, HTTP/SSE on :8000)
     #     └── stdio child: python3 -m opengist_mcp
     #
-    # The ghcr.io/lenaxia/opengist-mcp image bundles supergateway and sets
-    # the stdio/port/healthEndpoint CMD, so no command/args override is
-    # needed.
+    # The image's built-in CMD runs supergateway's legacy stdio→SSE gateway,
+    # which keeps exactly ONE session on the single stdio child: a second
+    # /sse connection (LiteLLM health-checks + chat clients overlap) throws
+    # "Already connected to a transport" and kills the node process — 124
+    # restarts in 15 days. The image bundles supergateway 3.4.3, so we override
+    # the CMD to run the stdio→Streamable HTTP gateway instead (--stateful:
+    # one stdio child per MCP session, sessions reaped after 10m idle), which
+    # is verified stable under concurrent clients.
+    # Long-term fix upstream: publish opengist-mcp with native streamable-http
+    # at /mcp (like hass-mcp's --http mode) and drop this override.
     #
     # Network exposure: ClusterIP only. Reachable as
-    #   http://opengist-mcp.home.svc.cluster.local:8000/sse
+    #   http://opengist-mcp.home.svc.cluster.local:8000/mcp
     # Security note: supergateway has no inbound auth (verified via --help).
     # In-cluster access is the only protection. LiteLLM consumes this and
     # is the documented client; LiteLLM itself is Authelia-protected.
@@ -65,6 +72,27 @@ spec:
               repository: ghcr.io/lenaxia/opengist-mcp
               tag: "0.1.0"
               pullPolicy: IfNotPresent
+            command: ["/usr/bin/node"]
+            args:
+              - /usr/local/lib/node_modules/supergateway/dist/index.js
+              - --stdio
+              - python3 -m opengist_mcp
+              - --outputTransport
+              - streamableHttp
+              - --port
+              - "8000"
+              - --streamableHttpPath
+              - /mcp
+              - --healthEndpoint
+              - /healthz
+              # stateful = one stdio child per MCP session (LiteLLM holds a
+              # session per connection) instead of stateless's child-per-
+              # request, which OOM-killed the old 256Mi limit under polling.
+              - --stateful
+              - --sessionTimeout
+              - "600000"
+              - --logLevel
+              - info
             env:
               # Base URL of the in-cluster Opengist instance (REST API).
               OPENGIST_URL: http://opengist.home.svc.cluster.local:6157
@@ -79,9 +107,12 @@ spec:
             resources:
               requests:
                 cpu: 10m
-                memory: 128Mi
-              limits:
+                # 256Mi limit OOMKilled the container once LiteLLM started
+                # holding sessions: each live MCP session pins a python child
+                # (~30Mi idle, more while a tools/call is in flight).
                 memory: 256Mi
+              limits:
+                memory: 768Mi
             probes:
               liveness:
                 enabled: true
