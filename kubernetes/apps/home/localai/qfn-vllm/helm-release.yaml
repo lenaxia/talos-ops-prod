@@ -49,7 +49,7 @@ spec:
           model-download:
             image:
               repository: python
-              tag: 3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e89e19dfb86704
+              tag: 3.15-slim@sha256:63bb298d2b7b88f176f51b5189f54ce6535c997682ea70885d2132f5d473a8a5
             command: ["/bin/sh", "-c"]
             args:
               - |
