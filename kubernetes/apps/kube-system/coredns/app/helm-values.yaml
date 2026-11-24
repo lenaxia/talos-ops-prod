@@ -31,14 +31,23 @@ servers:
           fallthrough in-addr.arpa ip6.arpa
       - name: forward
         #parameters: . /etc/resolv.conf
-        # Upstream order (policy sequential = strict priority). IPs come from
-        # Flux postBuild substitution (kubernetes/flux/vars/cluster-settings.yaml):
-        #   ${ADGUARD_ADDR}   192.168.0.5   dns01  (Blocky on Pi, primary)
+        # IPs come from Flux postBuild substitution (kubernetes/flux/vars/cluster-settings.yaml):
+        #   ${ADGUARD_ADDR}   192.168.0.5   dns01  (Blocky on Pi, was primary)
         #   ${SVC_DNS02_ADDR} 192.168.0.6   dns02  (Blocky on Pi, secondary)
         #   ${SVC_DNSLB_ADDR} 192.168.5.53  dnslb  (in-cluster Blocky VIP, last-resort)
+        #
+        # 2026-11-24: policy sequential meant every query waited on dns01
+        # (Blocky on a Pi) before failing over, so whenever the Pi flapped
+        # — nightly filter reloads, and badly during the Nov 22 Sonarr
+        # grab flood — pods saw multi-second DNS stalls and hard resolve
+        # failures. Plex Media Server surfaced it as "Remote Access is
+        # offline" (curl error 6 against servers.plex.tv: 4,055 resolve
+        # failures logged over 12 days). policy random spreads queries
+        # across all three upstreams; health_check 5s still pulls a dead
+        # one from rotation, and loadbalance reorders healthy answers.
         parameters: . ${ADGUARD_ADDR} ${SVC_DNS02_ADDR} ${SVC_DNSLB_ADDR}
         configBlock: |-
-          policy sequential
+          policy random
           health_check 5s
       - name: cache
         parameters: 30
