@@ -14,7 +14,7 @@ spec:
     githubConfigUrl: https://github.com/lenaxia/ai-trading
     githubConfigSecret: *app
     minRunners: 0
-    maxRunners: 3
+    maxRunners: 0
     containerMode:
       type: kubernetes-novolume
     controllerServiceAccount:

@@ -5,6 +5,7 @@ metadata:
   name: ragnarok 
   labels:
     kustomize.toolkit.fluxcd.io/prune: disabled
+    kao.family/db-secret-sync: "true"
 ---
 apiVersion: v1
 kind: Namespace

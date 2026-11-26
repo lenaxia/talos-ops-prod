@@ -20,7 +20,7 @@ spec:
     githubConfigUrl: https://github.com/lenaxia/LLMSafeSpaces
     githubConfigSecret: actions-runner
     minRunners: 0
-    maxRunners: 4
+    maxRunners: 0
     controllerServiceAccount:
       name: actions-runner-controller
       namespace: actions-runner-system
