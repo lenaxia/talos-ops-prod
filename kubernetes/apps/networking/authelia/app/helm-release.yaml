@@ -722,7 +722,12 @@ spec:
       notifier:
         # Verify SMTP connectivity/creds at boot so a broken SES credential
         # fails loudly instead of surfacing at the first password reset.
-        disable_startup_check: false
+        # TEMPORARY (incident 2026-11-25): set true because the AWS SES SMTP
+        # credential in cluster-secrets is rejected (535 Authentication
+        # Credentials Invalid) and the fatal startup check was crash-looping
+        # Authelia, which would take SSO for the whole cluster down. Restore
+        # to false once SECRET_AWS_SMTP_PASSWORD is rotated.
+        disable_startup_check: true
     
         ##
         ## SMTP (Notification Provider)
