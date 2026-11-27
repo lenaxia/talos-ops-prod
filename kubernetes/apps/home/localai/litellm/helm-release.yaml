@@ -137,11 +137,6 @@ spec:
               - "--config"
               - "/app/proxy_server_config.yaml"
             env:
-              - name: LITELLM_LICENSE
-                valueFrom:
-                  secretKeyRef:
-                    name: litellm
-                    key: LITELLM_LICENSE
               - name: TZ
                 value: 'America/Los_Angeles'
               # Production Environment Settings
