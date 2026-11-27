@@ -30,6 +30,10 @@ spec:
     remediation:
       retries: 2
   values:
+    # 2026-11-07: replicas pinned to 0 — see suspend comment above. Without
+    # this, every flux re-apply resurrects the pod (OOMKilled loop holding
+    # 2 GPU slots on worker-04).
+    replicas: 0
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'

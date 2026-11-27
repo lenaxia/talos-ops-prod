@@ -9,7 +9,7 @@ resources:
   - synology-file.yaml
   - synology-photos.yaml
   - synology-drive.yaml
-  - synology-moments.yaml
+  #- synology-moments.yaml  # disabled 2026-10-31: unauthenticated chain (no authelia), fronts DSM on 192.168.0.120 during active C3RB3R ransomware campaign (CVE-2026-13639/13684)
   - portainer.yaml
     #- phpmyadmin.yaml
     #- plex.yaml
