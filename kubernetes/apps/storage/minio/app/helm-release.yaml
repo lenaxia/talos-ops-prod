@@ -31,6 +31,9 @@ spec:
           - 100
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+        # TEMPORARY: MinIO removed the public docker.io/minio/minio images, so this tag can
+        # only come from worker-01's containerd cache; remove once mirrored to ghcr.io/lenaxia.
+        kubernetes.io/hostname: worker-01
     controllers:
       main:
         containers:
@@ -38,7 +41,7 @@ spec:
             image:
               repository: docker.io/minio/minio
               tag: RELEASE.2024-11-07T00-52-20Z
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
             envFrom:
               - secretRef:
                   name: &app minio
