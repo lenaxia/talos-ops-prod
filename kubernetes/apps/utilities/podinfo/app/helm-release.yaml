@@ -18,7 +18,7 @@ spec:
   interval: 5m
   values:
     image:
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
     service:
       type: LoadBalancer
     ingress:

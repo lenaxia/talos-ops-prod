@@ -26,7 +26,7 @@ spec:
             image:
               repository: linuxserver/librespeed
               tag: version-5.2.4
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
 
             env:
               TZ: ${TIMEZONE}

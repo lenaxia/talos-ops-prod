@@ -30,7 +30,7 @@ spec:
             image:
               repository: nzbgetcom/nzbget
               tag: v26.3
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
 
             securityContext:
               runAsUser: 1000

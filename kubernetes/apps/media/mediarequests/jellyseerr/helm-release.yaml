@@ -31,7 +31,7 @@ spec:
             image:
               repository: docker.io/fallenbagel/jellyseerr
               tag: 2.7.3
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
               PUID: 1000

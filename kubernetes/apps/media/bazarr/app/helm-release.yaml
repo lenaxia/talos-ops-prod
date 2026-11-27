@@ -47,7 +47,7 @@ spec:
             image:
               repository: linuxserver/bazarr
               tag: latest
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
               PUID: 911

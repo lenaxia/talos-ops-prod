@@ -41,7 +41,7 @@ spec:
             image:
               repository: ghcr.io/linuxserver/calibre-web
               tag: version-0.6.19
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
             env:
               DOCKER_MODS: ghcr.io/linuxserver/mods:universal-calibre
               PGID: '65539'

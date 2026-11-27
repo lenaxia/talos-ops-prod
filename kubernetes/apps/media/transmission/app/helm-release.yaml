@@ -37,7 +37,7 @@ spec:
               repository: ghcr.io/lenaxia/transmission
               tag: 
                 4.0.6@sha256:2ffe8b1b1774553c5783aba8c9a34cbad6195bfc0af912ea2e5f2d40b5b60b4b
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
 
             env:
               TZ: ${TIMEZONE}

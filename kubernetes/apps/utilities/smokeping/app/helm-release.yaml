@@ -36,7 +36,7 @@ spec:
             image:
               repository: ghcr.io/linuxserver/smokeping
               tag: version-2.7.3-r5
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
 

@@ -134,7 +134,7 @@ spec:
     - /bin/sh
     - -c
     image: busybox
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     name: download-model
     resources: {}
     terminationMessagePath: /dev/termination-log

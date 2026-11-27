@@ -28,7 +28,7 @@ spec:
             image:
               repository: ghcr.io/lenaxia/docker-openkore
               tag: latest
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
             envFrom:
               - secretRef:
                   name: &app openkore-primary

@@ -41,7 +41,7 @@ spec:
               #repository: ghcr.io/linuxserver/overseerr
               repository: ghcr.io/lenaxia/overseerr-oidc
               tag: oidc-support
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
             env:
               TZ: ${TIMEZONE}
               PUID: 1000

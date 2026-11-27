@@ -42,7 +42,7 @@ spec:
         repository: quay.io/go-skynet/local-ai
         tag: v2.28.0-cublas-cuda12-ffmpeg
       pullPolicy: IfNotPresent
-      #pullPolicy: Always 
+      #pullPolicy: IfNotPresent 
       #args:
       #  - --p2p
       env:

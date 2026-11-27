@@ -41,7 +41,7 @@ spec:
             image:
               repository: docker.io/nextcloud/aio-imaginary
               tag: latest
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
 
             probes:
               liveness: &probes

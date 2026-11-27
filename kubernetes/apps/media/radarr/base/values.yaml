@@ -17,7 +17,7 @@ controllers:
         image:
           repository: ghcr.io/k8s-at-home/radarr-develop
           tag: v4.3.0.6671
-          pullPolicy: Always
+          pullPolicy: IfNotPresent
         env:
           TZ: ${TIMEZONE}
     statefulset:

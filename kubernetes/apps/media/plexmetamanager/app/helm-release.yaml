@@ -80,7 +80,7 @@ spec:
     image:
       repository: meisnate12/plex-meta-manager
       tag: v1.21.0
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
     env:
       TZ: "${TIMEZONE}"
 #    podSecurityContext:

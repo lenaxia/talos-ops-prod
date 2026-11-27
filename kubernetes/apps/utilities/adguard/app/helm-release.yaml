@@ -27,7 +27,7 @@ spec:
             image:
               repository: adguard/adguardhome
               tag: v0.107.79
-              pullPolicy: Always
+              pullPolicy: IfNotPresent
 
             env:
               TZ: America/Los_Angeles
