@@ -64,7 +64,7 @@ spec:
               - secretRef:
                   name: *app
             env:
-              REDLIB_DEFAULT_THEME: "gruvboxdark"
+              REDLIB_DEFAULT_THEME: "dark"
               REDLIB_REDDIT_COOKIE_FILE: /cookie/reddit_session
             probes:
               liveness: &probes
