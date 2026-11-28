@@ -11,15 +11,21 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-production
     solvers:
-      - dns01:
+      - selector:
+          dnsZones:
+            - ${SECRET_DEV_DOMAIN}
+            - ${SECRET_LENAXIA_DOMAIN}
+            - ${SECRET_PROD_DOMAIN_KF}
+        dns01:
           cloudflare:
-            email: "${SECRET_CLOUDFLARE_EMAIL}"
             apiTokenSecretRef:
               name: cloudflare-api-token
               key: api-token
-        selector:
+      - selector:
           dnsZones:
-            - ${SECRET_DEV_DOMAIN}
             - ${SECRET_SAFESPACES_DOMAIN}
-            - ${SECRET_LENAXIA_DOMAIN}
-            - ${SECRET_PROD_DOMAIN_KF}
+        dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-safespaces-api-token
+              key: api-token
