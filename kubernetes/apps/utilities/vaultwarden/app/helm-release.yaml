@@ -36,7 +36,7 @@ spec:
           main:
             image:
               repository: ghcr.io/dani-garcia/vaultwarden
-              tag: 1.37.4
+              tag: 1.37.5
 
     # -- environment variables.
             envFrom:
@@ -44,14 +44,14 @@ spec:
                   name: &app vaultwarden
             env:
               DATA_FOLDER: config
+              DOMAIN: https://vault.${SECRET_DEV_DOMAIN}
               TZ: ${TIMEZONE}
               SIGNUPS_ALLOWED: false
               WEBSOCKET_ENABLED: true
 
     service:
       main:
-        type: LoadBalancer
-        externalTrafficPolicy: Cluster
+        type: ClusterIP
 
         ports:
           http:
