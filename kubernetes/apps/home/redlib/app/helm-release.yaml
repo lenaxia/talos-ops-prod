@@ -29,18 +29,42 @@ spec:
       redlib:
         replicas: 1
         strategy: RollingUpdate
+        # Fresh reddit_session on every pod start: Reddit only serves some
+        # pages (post comments, user pages) to logged-in sessions since it
+        # hard-blocked anonymous JSON API access from this IP (2026-10).
+        initContainers:
+          cookie-init:
+            image:
+              repository: mcr.microsoft.com/playwright
+              tag:
+                v1.65.1-noble@sha256:1507cbfc550a63a6b7396791ca4f00df17beb56342d2447b3f106c306f525579
+              pullPolicy: IfNotPresent
+            command: [/bin/bash, /scripts/refresh.sh]
+            envFrom:
+              - secretRef:
+                  name: redlib-refresher
+            env:
+              PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+              HOME: /tmp
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
         containers:
           app:
             image:
-              repository: ghcr.io/auricom/redlib
-              tag: 
-                0.35.2@sha256:859df997f98d078d5fd3119922a9c8e9486233932c37e1426e786d526b7759c5
+              repository: ghcr.io/nachtalb/redlib
+              tag:
+                latest@sha256:ae0a3f7a7a10401848a194257832efd69b4d8240a39e6b6501f869ff071b05fd
               pullPolicy: IfNotPresent
             envFrom:
               - secretRef:
                   name: *app
             env:
               REDLIB_DEFAULT_THEME: "gruvboxdark"
+              REDLIB_REDDIT_COOKIE_FILE: /cookie/reddit_session
             probes:
               liveness: &probes
                 enabled: true
@@ -62,6 +86,77 @@ spec:
                 memory: 256Mi
               limits:
                 memory: 256Mi
+    configMaps:
+      redlib-scripts:
+        data:
+          refresh.sh: |
+            #!/usr/bin/env bash
+            set -euo pipefail
+            export PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+            export HOME=/tmp
+            cd /tmp
+            npm install --no-fund --no-audit --silent patchright@1.65.1
+            xvfb-run -a node /scripts/login.js
+            grep -q '^reddit_session=eyJ' /cookie/reddit_session
+            echo "cookie-init complete"
+          login.js: |
+            const { chromium } = require('patchright');
+            const fs = require('fs');
+
+            (async () => {
+              const USER = process.env.REDDIT_USERNAME;
+              const PASS = process.env.REDDIT_PASSWORD;
+              if (!USER || !PASS) {
+                console.error('missing REDDIT_USERNAME / REDDIT_PASSWORD');
+                process.exit(1);
+              }
+              const ctx = await chromium.launchPersistentContext('/tmp/profile', {
+                headless: false,
+                viewport: { width: 1366, height: 768 },
+                locale: 'en-US',
+                timezoneId: 'America/New_York',
+                args: ['--disable-blink-features=AutomationControlled'],
+              });
+              const page = ctx.pages()[0] || (await ctx.newPage());
+              const warm = async (url, ms) => {
+                await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
+                await page.waitForTimeout(ms);
+                await page.mouse.wheel(0, 900).catch(() => {});
+                await page.waitForTimeout(2000);
+              };
+              // behavioral warm-up: Reddit's risk engine rejects logins from a
+              // fresh browser context, even with valid credentials
+              await warm('https://www.reddit.com/', 4000);
+              await warm('https://www.reddit.com/r/LocalLLM/', 4000);
+              await page.goto('https://www.reddit.com/login/', { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
+              await page.waitForTimeout(6000);
+              const u = page.locator('input[name=username]');
+              await u.click();
+              await u.pressSequentially(USER, { delay: 90 });
+              await page.waitForTimeout(3000);
+              const p = page.locator('input[name=password]');
+              await p.click();
+              await p.pressSequentially(PASS, { delay: 60 });
+              await page.waitForTimeout(1500);
+              await page.locator('button:has-text("Log In")').first().click();
+              await page.waitForTimeout(12000);
+              const cookies = await ctx.cookies('https://www.reddit.com');
+              const sess = cookies.find((c) => c.name === 'reddit_session');
+              if (!sess) {
+                console.error('LOGIN FAILED: no reddit_session cookie set');
+                await ctx.close().catch(() => {});
+                process.exit(1);
+              }
+              const payload = JSON.parse(Buffer.from(sess.value.split('.')[1], 'base64url').toString());
+              fs.writeFileSync('/cookie/.reddit_session.tmp', 'reddit_session=' + sess.value);
+              fs.renameSync('/cookie/.reddit_session.tmp', '/cookie/reddit_session');
+              console.log('OK: cookie written, expires ' + new Date(payload.exp * 1000).toISOString());
+              await ctx.close().catch(() => {});
+              process.exit(0);
+            })().catch((e) => {
+              console.error('login error:', e.message);
+              process.exit(1);
+            });
     service:
       app:
         ports:
@@ -78,7 +173,7 @@ spec:
           hajimari.io/group: Home
           cert-manager.io/cluster-issuer: letsencrypt-production
           traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares: 
+          traefik.ingress.kubernetes.io/router.middlewares:
             networking-chain-authelia@kubernetescrd
         hosts:
           - host: &uri reddit.${SECRET_DEV_DOMAIN}
@@ -92,3 +187,14 @@ spec:
               - *uri
             secretName: *uri
         className: traefik
+    persistence:
+      cookie:
+        type: emptyDir
+        globalMounts:
+          - path: /cookie
+      scripts:
+        type: configMap
+        identifier: redlib-scripts
+        globalMounts:
+          - path: /scripts
+            readOnly: true
