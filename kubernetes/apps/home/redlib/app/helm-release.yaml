@@ -5,6 +5,7 @@ metadata:
   name: &app redlib
 spec:
   interval: 30m
+  timeout: 10m
   chart:
     spec:
       chart: app-template
@@ -37,7 +38,7 @@ spec:
             image:
               repository: mcr.microsoft.com/playwright
               tag:
-                v1.65.1-noble@sha256:1507cbfc550a63a6b7396791ca4f00df17beb56342d2447b3f106c306f525579
+                v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
               pullPolicy: IfNotPresent
             command: [/bin/bash, /scripts/refresh.sh]
             envFrom:
@@ -95,13 +96,61 @@ spec:
             export PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
             export HOME=/tmp
             cd /tmp
-            npm install --no-fund --no-audit --silent patchright@1.65.1
-            xvfb-run -a node /scripts/login.js
+            npm install --no-fund --no-audit --silent patchright@1.64.1
+            cp /scripts/login.js /tmp/login.js
+            xvfb-run -a node /tmp/login.js
             grep -q '^reddit_session=eyJ' /cookie/reddit_session
             echo "cookie-init complete"
           login.js: |
             const { chromium } = require('patchright');
             const fs = require('fs');
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+            async function attempt(n) {
+              const ctx = await chromium.launchPersistentContext('/tmp/profile' + n, {
+                headless: false,
+                viewport: { width: 1366, height: 768 },
+                locale: 'en-US',
+                timezoneId: 'America/New_York',
+                args: ['--disable-blink-features=AutomationControlled'],
+              });
+              const page = ctx.pages()[0] || (await ctx.newPage());
+              const warm = async (url) => {
+                await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
+                await sleep(4000);
+                await page.mouse.wheel(0, 900).catch(() => {});
+                await sleep(2000);
+              };
+              // behavioral warm-up: Reddit's risk engine rejects logins from a
+              // fresh browser context, even with valid credentials
+              await warm('https://www.reddit.com/');
+              await warm('https://www.reddit.com/r/LocalLLM/');
+              await page.goto('https://www.reddit.com/login/', { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
+              // reddit occasionally renders the login form late
+              await page.waitForSelector('input[name=username]', { timeout: 20000 });
+              await sleep(2000);
+              const u = page.locator('input[name=username]');
+              await u.click();
+              await u.pressSequentially(USER, { delay: 90 });
+              await sleep(3000);
+              const p = page.locator('input[name=password]');
+              await p.click();
+              await p.pressSequentially(PASS, { delay: 60 });
+              await sleep(1500);
+              await page.locator('button:has-text("Log In")').first().click();
+              await sleep(12000);
+              const cookies = await ctx.cookies('https://www.reddit.com');
+              const sess = cookies.find((c) => c.name === 'reddit_session');
+              if (!sess) {
+                await ctx.close().catch(() => {});
+                throw new Error('no reddit_session cookie after submit');
+              }
+              const payload = JSON.parse(Buffer.from(sess.value.split('.')[1], 'base64url').toString());
+              fs.writeFileSync('/cookie/.reddit_session.tmp', 'reddit_session=' + sess.value);
+              fs.renameSync('/cookie/.reddit_session.tmp', '/cookie/reddit_session');
+              await ctx.close().catch(() => {});
+              return payload.exp;
+            }
 
             (async () => {
               const USER = process.env.REDDIT_USERNAME;
@@ -110,83 +159,22 @@ spec:
                 console.error('missing REDDIT_USERNAME / REDDIT_PASSWORD');
                 process.exit(1);
               }
-              const ctx = await chromium.launchPersistentContext('/tmp/profile', {
-                headless: false,
-                viewport: { width: 1366, height: 768 },
-                locale: 'en-US',
-                timezoneId: 'America/New_York',
-                args: ['--disable-blink-features=AutomationControlled'],
-              });
-              const page = ctx.pages()[0] || (await ctx.newPage());
-              const warm = async (url, ms) => {
-                await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
-                await page.waitForTimeout(ms);
-                await page.mouse.wheel(0, 900).catch(() => {});
-                await page.waitForTimeout(2000);
-              };
-              // behavioral warm-up: Reddit's risk engine rejects logins from a
-              // fresh browser context, even with valid credentials
-              await warm('https://www.reddit.com/', 4000);
-              await warm('https://www.reddit.com/r/LocalLLM/', 4000);
-              await page.goto('https://www.reddit.com/login/', { waitUntil: 'networkidle', timeout: 60000 }).catch(() => {});
-              await page.waitForTimeout(6000);
-              const u = page.locator('input[name=username]');
-              await u.click();
-              await u.pressSequentially(USER, { delay: 90 });
-              await page.waitForTimeout(3000);
-              const p = page.locator('input[name=password]');
-              await p.click();
-              await p.pressSequentially(PASS, { delay: 60 });
-              await page.waitForTimeout(1500);
-              await page.locator('button:has-text("Log In")').first().click();
-              await page.waitForTimeout(12000);
-              const cookies = await ctx.cookies('https://www.reddit.com');
-              const sess = cookies.find((c) => c.name === 'reddit_session');
-              if (!sess) {
-                console.error('LOGIN FAILED: no reddit_session cookie set');
-                await ctx.close().catch(() => {});
-                process.exit(1);
+              let lastErr;
+              for (let n = 1; n <= 3; n++) {
+                try {
+                  const exp = await attempt(n);
+                  console.log('OK: cookie written, expires ' + new Date(exp * 1000).toISOString());
+                  process.exit(0);
+                } catch (e) {
+                  lastErr = e;
+                  console.error('attempt ' + n + ' failed: ' + e.message);
+                  await sleep(10000);
+                }
               }
-              const payload = JSON.parse(Buffer.from(sess.value.split('.')[1], 'base64url').toString());
-              fs.writeFileSync('/cookie/.reddit_session.tmp', 'reddit_session=' + sess.value);
-              fs.renameSync('/cookie/.reddit_session.tmp', '/cookie/reddit_session');
-              console.log('OK: cookie written, expires ' + new Date(payload.exp * 1000).toISOString());
-              await ctx.close().catch(() => {});
-              process.exit(0);
-            })().catch((e) => {
-              console.error('login error:', e.message);
+              console.error('LOGIN FAILED after 3 attempts: ' + (lastErr && lastErr.message));
               process.exit(1);
-            });
-    service:
-      app:
-        ports:
-          http:
-            port: *port
-    ingress:
-      app:
-        enabled: true
-        annotations:
-          hajimari.io/enable: 'true'
-          hajimari.io/visible-groups: 'administrators'
-          hajimari.io/icon: simple-icons:reddit
-          hajimari.io/aeppName: Reddit
-          hajimari.io/group: Home
-          cert-manager.io/cluster-issuer: letsencrypt-production
-          traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          traefik.ingress.kubernetes.io/router.middlewares:
-            networking-chain-authelia@kubernetescrd
-        hosts:
-          - host: &uri reddit.${SECRET_DEV_DOMAIN}
-            paths:
-              - path: /
-                pathType: Prefix
-                service:
-                  port: http
-        tls:
-          - hosts:
-              - *uri
-            secretName: *uri
-        className: traefik
+            })();
+
     persistence:
       cookie:
         type: emptyDir
