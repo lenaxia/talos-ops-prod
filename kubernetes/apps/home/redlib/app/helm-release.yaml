@@ -152,9 +152,10 @@ spec:
               return payload.exp;
             }
 
+            const USER = process.env.REDDIT_USERNAME;
+            const PASS = process.env.REDDIT_PASSWORD;
+
             (async () => {
-              const USER = process.env.REDDIT_USERNAME;
-              const PASS = process.env.REDDIT_PASSWORD;
               if (!USER || !PASS) {
                 console.error('missing REDDIT_USERNAME / REDDIT_PASSWORD');
                 process.exit(1);
