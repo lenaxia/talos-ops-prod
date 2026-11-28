@@ -27,6 +27,8 @@ spec:
     defaultPodOptions:
       nodeSelector:
         node-role.kubernetes.io/worker: 'true'
+      securityContext:
+        fsGroup: 568
     controllers:
       main:
         strategy: Recreate
@@ -45,9 +47,17 @@ spec:
             env:
               DATA_FOLDER: config
               DOMAIN: https://vault.${SECRET_DEV_DOMAIN}
+              ROCKET_PORT: 8080
               TZ: ${TIMEZONE}
               SIGNUPS_ALLOWED: false
               WEBSOCKET_ENABLED: true
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+              runAsGroup: 568
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
 
     service:
       main:
@@ -55,7 +65,7 @@ spec:
 
         ports:
           http:
-            port: 80
+            port: 8080
           websocket:
             port: 3012
             enabled: true
