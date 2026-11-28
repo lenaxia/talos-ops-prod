@@ -57,7 +57,17 @@ retry() {
     local attempt=1
 
     while [ $attempt -le $max_attempts ]; do
-        log "Attempt $attempt/$max_attempts: $*"
+        local command_text="$*"
+        if [[ -n "${CLOUDFLARE_TOKEN:-}" ]]; then
+            command_text="${command_text//Authorization: Bearer $CLOUDFLARE_TOKEN/Authorization: Bearer [REDACTED]}"
+        fi
+        if [[ -n "${PUSHOVER_TOKEN:-}" ]]; then
+            command_text="${command_text//token=$PUSHOVER_TOKEN/token=[REDACTED]}"
+        fi
+        if [[ -n "${PUSHOVER_USER_KEY:-}" ]]; then
+            command_text="${command_text//user=$PUSHOVER_USER_KEY/user=[REDACTED]}"
+        fi
+        log "Attempt $attempt/$max_attempts: $command_text"
         if "$@"; then
             return 0
         fi
